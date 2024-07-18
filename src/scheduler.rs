@@ -1,6 +1,3 @@
-// File: scheduler.rs
-// Description: Scheduler module responsible for running tests and generating test reports.
-
 use std::fs::File;
 use std::io::prelude::*;
 use std::path::Path;
@@ -9,6 +6,16 @@ use ssh2::Session;
 use std::net::TcpStream;
 use std::io::Read;
 use crate::utils::{Report, TestResult};
+
+struct TempFile {
+    path: String,
+}
+
+impl Drop for TempFile {
+    fn drop(&mut self) {
+        let _ = std::fs::remove_file(&self.path);
+    }
+}
 
 pub fn run_test(remote_ip: &str, port: u16, username: &str, password: Option<&str>, distro: &str, package: &str) -> Result<(), Box<dyn std::error::Error>> {
     // Create SSH session
@@ -36,6 +43,9 @@ pub fn run_test(remote_ip: &str, port: u16, username: &str, password: Option<&st
         .arg(&tar_file)
         .arg(&local_dir)
         .output()?;
+
+    // Create TempFile instance to ensure cleanup
+    let _temp_file = TempFile { path: tar_file.clone() };
 
     // Upload the compressed file to the remote server
     let mut remote_file = sess.scp_send(Path::new(&tar_file), 0o644, std::fs::metadata(&tar_file)?.len(), None)?;
@@ -76,9 +86,6 @@ pub fn run_test(remote_ip: &str, port: u16, username: &str, password: Option<&st
     // Parse and print the report
     let report: Report = toml::from_str(&contents)?;
     println!("{:?}", report);
-
-    // Clean up temporary files
-    std::fs::remove_file(&tar_file)?;
 
     Ok(())
 }
