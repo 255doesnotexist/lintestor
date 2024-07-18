@@ -1,9 +1,9 @@
 // File: utils.rs
 // Description: 工具模块，包含辅助函数和结构体定义。
 
-use serde::Deserialize;
+use serde::{Serialize, Deserialize};
 
-#[derive(Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct Report {
     pub os_version: String,
     pub kernel_version: String,
@@ -12,7 +12,7 @@ pub struct Report {
     pub all_tests_passed: bool,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct TestResult {
     pub test_name: String,
     pub passed: bool,
