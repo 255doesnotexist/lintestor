@@ -13,7 +13,7 @@ fn main() {
 
     for distro in &distros {
         for package in &packages {
-            match scheduler::run_test(distro, package) {
+            match scheduler::run_test("localhost", 2222, "root", Some("root"), distro, package) {
                 Ok(_) => println!("Test passed for {}/{}", distro, package),
                 Err(e) => println!("Test failed for {}/{}: {}", distro, package, e),
             }
