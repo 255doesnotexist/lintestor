@@ -1,0 +1,4 @@
+os_version = "#1 SMP Debian 6.9.9-1 (2024-07-13)"
+kernel_version = "6.9.9-riscv64"
+package_name = "gcc"
+package_version = "4:13.2.0-7"
