@@ -94,7 +94,7 @@ pub fn run_test(remote_ip: &str, port: u16, username: &str, password: Option<&st
 
     // Run the test command
     let mut channel = sess.channel_session()?;
-    channel.exec(&format!("cd {} && make test", remote_dir))?;
+    channel.exec(&format!("cd {} && ./test.sh", remote_dir))?;
     print_ssh_msg(&format!("Running tests in directory {}", remote_dir));
     let mut s = String::new();
     channel.read_to_string(&mut s)?;
@@ -156,6 +156,10 @@ pub fn run_test(remote_ip: &str, port: u16, username: &str, password: Option<&st
         // Parse and print the report
         let report: Report = serde_json::from_str(&contents)?;
         println!("{}-{} report:\n {:?}", distro, package, report);
+
+        if !report.all_tests_passed {
+            return Err(format!("Not all tests passed {}/{}", distro, package).into());
+        }
     } else {
         print_ssh_msg("Test report not found.");
     }
