@@ -44,7 +44,7 @@ pub fn generate_markdown_report(distros: &[&str], packages: &[&str]) -> Result<(
 
         // println!("{:?}", report);
         // Write a row for the test name and result
-        markdown.push_str(&format!("| {} {}-{} |\n",
+        markdown.push_str(&format!("| {} {}-{} |",
             if report.all_tests_passed { "✅" } else { "⚠️" },
             report.package_name, report.package_version
         ));
