@@ -51,7 +51,9 @@ pub fn run_test(remote_ip: &str, port: u16, username: &str, password: Option<&st
     Command::new("tar")
         .arg("czf")
         .arg(&tar_file)
+        .arg("-C")
         .arg(&local_dir)
+        .arg(".")
         .output()?;
     print_ssh_msg(&format!("Local directory {} compressed into {}", local_dir, tar_file));
 
@@ -101,16 +103,59 @@ pub fn run_test(remote_ip: &str, port: u16, username: &str, password: Option<&st
         return Err(format!("Test failed for {}/{}: {}", distro, package, s).into());
     }
 
-    // Download the test report
-    let report_path = format!("{}/report.toml", remote_dir);
-    let (mut remote_file, _) = sess.scp_recv(Path::new(&report_path))?;
-    let mut contents = String::new();
-    remote_file.read_to_string(&mut contents)?;
-    print_ssh_msg(&format!("Downloaded test report from remote server: {}", report_path));
+    // Compress the remote test directory
+    let remote_tar_file = format!("/tmp/{}_result.tar.gz", package);
+    let mut channel = sess.channel_session()?;
+    channel.exec(&format!("cd /tmp && tar czf {} -C {} .", remote_tar_file, package))?;
+    print_ssh_msg(&format!("Compressing remote directory {} into {}", remote_dir, remote_tar_file));
 
-    // Parse and print the report
-    let report: Report = toml::from_str(&contents)?;
-    println!("{:?}", report);
+    // Read the remote command's output to prevent deadlock
+    let mut s = String::new();
+    channel.read_to_string(&mut s)?;
+    print_ssh_msg(&format!("Command output: {}", s));
+    channel.send_eof();
+    channel.wait_close()?;  // Ensure the channel is properly closed
+    let exit_status = channel.exit_status()?;
+    if exit_status != 0 {
+        return Err("Failed to compress test results on remote server".into());
+    }
+
+    // Download the compressed test directory
+    let local_result_tar_file = format!("{}/{}_result.tar.gz", local_dir, package);
+    let (mut remote_file, _) = sess.scp_recv(Path::new(&remote_tar_file))?;
+    let mut local_file = File::create(&local_result_tar_file)?;
+    let mut buffer = Vec::new();
+    remote_file.read_to_end(&mut buffer)?;
+    local_file.write_all(&buffer)?;
+    print_ssh_msg(&format!("Downloaded test results to local file {}", local_result_tar_file));
+
+    // Extract the downloaded test results
+    Command::new("tar")
+        .arg("xzf")
+        .arg(&local_result_tar_file)
+        .arg("-C")
+        .arg(&local_dir)
+        .output()?;
+    print_ssh_msg(&format!("Extracted test results into local directory {}", local_dir));
+
+    // Clean up
+    let _ = std::fs::remove_file(&local_result_tar_file);
+
+    // Download the test report
+    let report_path = format!("{}/report.toml", local_dir);
+    let report_file_path = Path::new(&report_path);
+    if report_file_path.exists() {
+        let mut file = File::open(&report_path)?;
+        let mut contents = String::new();
+        file.read_to_string(&mut contents)?;
+        print_ssh_msg(&format!("Downloaded test report: {}", report_path));
+
+        // Parse and print the report
+        let report: Report = toml::from_str(&contents)?;
+        println!("{:?}", report);
+    } else {
+        print_ssh_msg("Test report not found.");
+    }
 
     Ok(())
 }
