@@ -74,10 +74,11 @@ pub fn run_test(remote_ip: &str, port: u16, username: &str, password: Option<&st
     // Ensure remote file is closed before proceeding
     drop(remote_file);
 
-    // Extract the file and run the tests on the remote server
+    // Clean remote dir, extract the file and run the tests on the remote server
     let remote_dir = format!("/tmp/{}", package);
     let mut channel = sess.channel_session()?;
-    channel.exec(&format!("mkdir -p {} && tar xzf {} -C {}  --overwrite", remote_dir, tar_file, remote_dir))?;
+
+    channel.exec(&format!("rm -rf {}; mkdir -p {} && tar xzf {} -C {}  --overwrite", remote_dir, remote_dir, tar_file, remote_dir))?;
     print_ssh_msg(&format!("Extracting file {} on remote server at {}", tar_file, remote_dir));
 
     // Read the remote command's output to prevent deadlock
