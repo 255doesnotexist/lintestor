@@ -9,7 +9,8 @@ mod utils;
 fn main() {
     // let distros = ["debian", "gentoo", "opensuse", "arch", "freebsd", "openbsd"];
     let distros = ["debian"];
-    let packages = ["mariadb", "postgresql", "sqlite", "apache", "haproxy", "lighttpd", "nginx", "squid", "varnish", "python", "libmemcached", "redis", "numpy", "scipy", "zookeeper", "openssl", "docker", "runc", "clang", "cmake", "gcc", "gdb", "llvm", "nodejs", "ocaml", "erlang", "golang", "openjdk", "perl", "python", "ruby", "rust"];
+    // let packages = ["mariadb", "postgresql", "sqlite", "apache", "haproxy", "lighttpd", "nginx", "squid", "varnish", "python", "libmemcached", "redis", "numpy", "scipy", "zookeeper", "openssl", "docker", "runc", "clang", "cmake", "gcc", "gdb", "llvm", "nodejs", "ocaml", "erlang", "golang", "openjdk", "perl", "python", "ruby", "rust"];
+    let packages = ["gcc"];
 
     for distro in &distros {
         for package in &packages {
