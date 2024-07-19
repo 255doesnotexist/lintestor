@@ -5,6 +5,7 @@ use std::process::Command;
 use ssh2::Session;
 use std::net::TcpStream;
 use std::io::Read;
+use std::env;
 use crate::utils::{Report, TestResult};
 
 struct TempFile {
@@ -17,18 +18,27 @@ impl Drop for TempFile {
     }
 }
 
+fn print_ssh_msg(msg: &str) {
+    if env::var("PRINT_SSH_MSG").is_ok() {
+        println!("{}", msg);
+    }
+}
+
 pub fn run_test(remote_ip: &str, port: u16, username: &str, password: Option<&str>, distro: &str, package: &str) -> Result<(), Box<dyn std::error::Error>> {
     // Create SSH session
     let tcp = TcpStream::connect((remote_ip, port))?;
     let mut sess = Session::new()?;
     sess.set_tcp_stream(tcp);
     sess.handshake()?;
+    print_ssh_msg("SSH handshake completed");
 
     // Authenticate
     if let Some(password) = password {
         sess.userauth_password(username, password)?;
+        print_ssh_msg("SSH password authentication completed");
     } else {
         sess.userauth_agent(username)?;
+        print_ssh_msg("SSH agent authentication completed");
     }
 
     if !sess.authenticated() {
@@ -43,6 +53,7 @@ pub fn run_test(remote_ip: &str, port: u16, username: &str, password: Option<&st
         .arg(&tar_file)
         .arg(&local_dir)
         .output()?;
+    print_ssh_msg(&format!("Local directory {} compressed into {}", local_dir, tar_file));
 
     // Create TempFile instance to ensure cleanup
     let _temp_file = TempFile { path: tar_file.clone() };
@@ -53,13 +64,24 @@ pub fn run_test(remote_ip: &str, port: u16, username: &str, password: Option<&st
     let mut buffer = Vec::new();
     local_file.read_to_end(&mut buffer)?;
     remote_file.write_all(&buffer)?;
+    print_ssh_msg(&format!("File {} uploaded to remote server", tar_file));
+
+    // Ensure remote file is closed before proceeding
+    drop(remote_file);
 
     // Extract the file and run the tests on the remote server
     let remote_dir = format!("/tmp/{}", package);
     let mut channel = sess.channel_session()?;
     channel.exec(&format!("mkdir -p {} && tar xzf {} -C {}", remote_dir, tar_file, remote_dir))?;
+    print_ssh_msg(&format!("Extracting file {} on remote server at {}", tar_file, remote_dir));
+
+    // Read the remote command's output to prevent deadlock
+    let mut s = String::new();
+    channel.read_to_string(&mut s)?;
+    print_ssh_msg(&format!("Command output: {}", s));
+
     channel.send_eof();
-    channel.wait_close()?;
+    channel.wait_close()?;  // Ensure the channel is properly closed
     let exit_status = channel.exit_status()?;
     if exit_status != 0 {
         return Err("Failed to extract test files on remote server".into());
@@ -67,21 +89,24 @@ pub fn run_test(remote_ip: &str, port: u16, username: &str, password: Option<&st
 
     // Run the test command
     let mut channel = sess.channel_session()?;
-    channel.exec(&format!("cd {}/{} && make test", remote_dir, package))?;
+    channel.exec(&format!("cd {} && make test", remote_dir))?;
+    print_ssh_msg(&format!("Running tests in directory {}", remote_dir));
     let mut s = String::new();
     channel.read_to_string(&mut s)?;
+    print_ssh_msg(&format!("Test command output: {}", s));
     channel.send_eof();
-    channel.wait_close()?;
+    channel.wait_close()?;  // Ensure the channel is properly closed
     let exit_status = channel.exit_status()?;
     if exit_status != 0 {
         return Err(format!("Test failed for {}/{}: {}", distro, package, s).into());
     }
 
     // Download the test report
-    let report_path = format!("{}/{}/report.toml", remote_dir, package);
+    let report_path = format!("{}/report.toml", remote_dir);
     let (mut remote_file, _) = sess.scp_recv(Path::new(&report_path))?;
     let mut contents = String::new();
     remote_file.read_to_string(&mut contents)?;
+    print_ssh_msg(&format!("Downloaded test report from remote server: {}", report_path));
 
     // Parse and print the report
     let report: Report = toml::from_str(&contents)?;
