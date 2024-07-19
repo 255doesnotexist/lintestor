@@ -25,7 +25,7 @@ fn main() {
         eprintln!("Failed to aggregate reports: {}", e);
     }
 
-    if let Err(e) = markdown_report::generate_markdown_report() {
+    if let Err(e) = markdown_report::generate_markdown_report(&distros, &packages) {
         eprintln!("Failed to generate markdown report: {}", e);
     }
 }

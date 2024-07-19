@@ -1,10 +1,12 @@
 use std::fs::File;
 use std::io::prelude::*;
 use std::path::Path;
+use std::path::PathBuf;
 use std::process::Command;
 use ssh2::Session;
 use std::net::TcpStream;
 use std::io::Read;
+use std::io;
 use std::env;
 use crate::utils::{Report, TestResult};
 
@@ -21,6 +23,7 @@ impl Drop for TempFile {
 fn print_ssh_msg(msg: &str) {
     if env::var("PRINT_SSH_MSG").is_ok() {
         println!("{}", msg);
+        // let _ = io::stdin().read(&mut [0u8]).unwrap();
     }
 }
 
@@ -74,7 +77,7 @@ pub fn run_test(remote_ip: &str, port: u16, username: &str, password: Option<&st
     // Extract the file and run the tests on the remote server
     let remote_dir = format!("/tmp/{}", package);
     let mut channel = sess.channel_session()?;
-    channel.exec(&format!("mkdir -p {} && tar xzf {} -C {}", remote_dir, tar_file, remote_dir))?;
+    channel.exec(&format!("mkdir -p {} && tar xzf {} -C {}  --overwrite", remote_dir, tar_file, remote_dir))?;
     print_ssh_msg(&format!("Extracting file {} on remote server at {}", tar_file, remote_dir));
 
     // Read the remote command's output to prevent deadlock
@@ -106,7 +109,7 @@ pub fn run_test(remote_ip: &str, port: u16, username: &str, password: Option<&st
     // Compress the remote test directory
     let remote_tar_file = format!("/tmp/{}_result.tar.gz", package);
     let mut channel = sess.channel_session()?;
-    channel.exec(&format!("cd /tmp && tar czf {} -C {} .", remote_tar_file, package))?;
+    channel.exec(&format!("cd /tmp && tar czf {} -C {} .  --overwrite", remote_tar_file, package))?;
     print_ssh_msg(&format!("Compressing remote directory {} into {}", remote_dir, remote_tar_file));
 
     // Read the remote command's output to prevent deadlock
@@ -142,7 +145,7 @@ pub fn run_test(remote_ip: &str, port: u16, username: &str, password: Option<&st
     let _ = std::fs::remove_file(&local_result_tar_file);
 
     // Download the test report
-    let report_path = format!("{}/report.toml", local_dir);
+    let report_path = format!("{}/report.json", local_dir);
     let report_file_path = Path::new(&report_path);
     if report_file_path.exists() {
         let mut file = File::open(&report_path)?;
@@ -151,8 +154,8 @@ pub fn run_test(remote_ip: &str, port: u16, username: &str, password: Option<&st
         print_ssh_msg(&format!("Downloaded test report: {}", report_path));
 
         // Parse and print the report
-        let report: Report = toml::from_str(&contents)?;
-        println!("{:?}", report);
+        let report: Report = serde_json::from_str(&contents)?;
+        println!("{}-{} report:\n {:?}", distro, package, report);
     } else {
         print_ssh_msg("Test report not found.");
     }

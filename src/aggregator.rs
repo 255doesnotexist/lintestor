@@ -1,28 +1,23 @@
-// File: aggregator.rs
-// Description: 汇总模块，负责汇总所有测试报告并生成综合报告。
-
 use std::fs::File;
 use std::io::prelude::*;
-use crate::utils::Report;
-use toml;
+use serde_json;
+use crate::utils::{Report, TestResult};
 
 pub fn aggregate_reports(distros: &[&str], packages: &[&str]) -> Result<(), Box<dyn std::error::Error>> {
     let mut consolidated_report = vec![];
 
     for distro in distros {
         for package in packages {
-            let report_path = format!("{}/{}/report.toml", distro, package);
-            if let Ok(mut file) = File::open(&report_path) {
-                let mut contents = String::new();
-                file.read_to_string(&mut contents)?;
-                let report: Report = toml::from_str(&contents)?;
+            let report_path = format!("{}/{}/report.json", distro, package);
+            if let Ok(file) = File::open(&report_path) {
+                let report: Report = serde_json::from_reader(file)?;
                 consolidated_report.push(report);
             }
         }
     }
 
-    let consolidated_toml = toml::to_string(&consolidated_report)?;
-    let mut file = File::create("reports.toml")?;
-    file.write_all(consolidated_toml.as_bytes())?;
+    let consolidated_json = serde_json::to_string_pretty(&consolidated_report)?;
+    let mut file = File::create("reports.json")?;
+    file.write_all(consolidated_json.as_bytes())?;
     Ok(())
 }
