@@ -4,3 +4,4 @@
 |:------|:-----| :-------|
 | gcc | Toolchain | ✅ gcc-13.3.0 |
 | cmake | Toolchain | ✅ cmake-3.30.0 |
+| clang | Compiler | ✅ clang-version |
