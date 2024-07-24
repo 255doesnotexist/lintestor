@@ -6,11 +6,12 @@ use crate::utils::{Report, TestResult};
 pub fn aggregate_reports(distros: &[&str], packages: &[&str]) -> Result<(), Box<dyn std::error::Error>> {
     let mut consolidated_report = vec![];
 
-    for distro in distros {
-        for package in packages {
+    for &distro in distros {
+        for &package in packages {
             let report_path = format!("{}/{}/report.json", distro, package);
             if let Ok(file) = File::open(&report_path) {
-                let report: Report = serde_json::from_reader(file)?;
+                let mut report: Report = serde_json::from_reader(file)?;
+                report.distro = distro.to_string();
                 consolidated_report.push(report);
             }
         }
