@@ -29,7 +29,7 @@ install_erlang_package() {
 generate_report() {
     local os_version=$(cat /proc/version)
     local kernel_version=$(uname -r)
-    local package_version=$(dpkg -l | grep$PACKAGE_NAME | awk '{print $3}')
+    local package_version=$(dpkg -l | grep $PACKAGE_NAME | head -n 1 | awk '{print $3}')
     local test_name="Erlang Service Test"
     local test_passed=false
 
@@ -41,6 +41,7 @@ generate_report() {
     # Prepare the report content
     local report_content=$(cat <<EOF
 {
+    "distro": "debian",
     "os_version": "$os_version",
     "kernel_version": "$kernel_version",
     "package_name": "$PACKAGE_NAME",
