@@ -23,8 +23,10 @@ PACKAGE_NAME="cmake"
 PACKAGE_TYPE="Toolchain"
 PACKAGE_VERSION=$(cmake --version | head -n1 | cut -d' ' -f3)
 CURRENT_DIR=$(pwd)
+DISTRO="debian"
 # Initialize the JSON structure
 JSON="{"
+JSON+="\"distro\": \"$DISTRO\","
 JSON+="\"os_version\": \"$OS_VERSION\","
 JSON+="\"kernel_version\": \"$KERNEL_VERSION\","
 JSON+="\"package_name\": \"$PACKAGE_NAME\","
