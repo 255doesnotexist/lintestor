@@ -6,9 +6,11 @@ KERNEL_VERSION=$(uname -r)
 PACKAGE_NAME="gcc"
 PACKAGE_TYPE="Toolchain"
 PACKAGE_VERSION=$(gcc --version | head -n1 | cut -d' ' -f4)
+distro="debian"
 
 # Initialize the JSON structure
 JSON="{"
+JSON+="\"distro\": \"$distro\","
 JSON+="\"os_version\": \"$OS_VERSION\","
 JSON+="\"kernel_version\": \"$KERNEL_VERSION\","
 JSON+="\"package_name\": \"$PACKAGE_NAME\","
