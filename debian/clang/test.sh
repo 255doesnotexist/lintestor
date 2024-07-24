@@ -54,10 +54,12 @@ rm test.c test_program
 os_version=$(uname -v)
 kernel_version=$(uname -r)
 clang_version=$(clang --version | head -n 1 | awk '{print $3}')
+distro="debian"
 
 # 生成report.json
 cat << EOF > report.json
 {
+    "distro": "$distro",
     "os_version": "$os_version",
     "kernel_version": "$kernel_version",
     "package_name": "clang",
