@@ -2,6 +2,7 @@ use serde::{Serialize, Deserialize};
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Report {
+    pub distro: String,
     pub os_version: String,
     pub kernel_version: String,
     pub package_name: String,
