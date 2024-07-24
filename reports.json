@@ -1,33 +1,36 @@
 [
   {
+    "distro": "debian",
     "os_version": "Linux version 6.9.9-riscv64 (debian-kernel@lists.debian.org) (riscv64-linux-gnu-gcc-13 (Debian 13.3.0-1) 13.3.0, GNU ld (GNU Binutils for Debian) 2.42.50.20240710) #1 SMP Debian 6.9.9-1 (2024-07-13)",
     "kernel_version": "6.9.9-riscv64",
     "package_name": "apache2",
     "package_type": "Web Server",
-    "package_version": "",
+    "package_version": "2.4.62-1",
     "test_results": [
       {
         "test_name": "Apache Service Test",
-        "passed": true
+        "passed": false
       }
     ],
-    "all_tests_passed": true
+    "all_tests_passed": false
   },
   {
+    "distro": "debian",
     "os_version": "#1 SMP Debian 6.9.9-1 (2024-07-13)",
     "kernel_version": "6.9.9-riscv64",
-    "package_name": "gcc",
-    "package_type": "Toolchain",
-    "package_version": "13.3.0",
+    "package_name": "clang",
+    "package_type": "Compiler",
+    "package_version": "version",
     "test_results": [
       {
-        "test_name": "GCC Compilation Test",
+        "test_name": "Clang Compilation Test",
         "passed": true
       }
     ],
     "all_tests_passed": true
   },
   {
+    "distro": "debian",
     "os_version": "#1 SMP Debian 6.9.9-1 (2024-07-13)",
     "kernel_version": "6.9.9-riscv64",
     "package_name": "cmake",
@@ -42,17 +45,168 @@
     "all_tests_passed": true
   },
   {
-    "os_version": "#1 SMP Debian 6.9.9-1 (2024-07-13)",
+    "distro": "debian",
+    "os_version": "Linux version 6.9.9-riscv64 (debian-kernel@lists.debian.org) (riscv64-linux-gnu-gcc-13 (Debian 13.3.0-1) 13.3.0, GNU ld (GNU Binutils for Debian) 2.42.50.20240710) #1 SMP Debian 6.9.9-1 (2024-07-13)",
     "kernel_version": "6.9.9-riscv64",
-    "package_name": "clang",
-    "package_type": "Compiler",
-    "package_version": "version",
+    "package_name": "erlang",
+    "package_type": "Programming Language",
+    "package_version": "1:25.3.2.12+dfsg-1",
     "test_results": [
       {
-        "test_name": "Clang Compilation Test",
+        "test_name": "Erlang Service Test",
+        "passed": false
+      }
+    ],
+    "all_tests_passed": false
+  },
+  {
+    "distro": "debian",
+    "os_version": "#1 SMP Debian 6.9.9-1 (2024-07-13)",
+    "kernel_version": "6.9.9-riscv64",
+    "package_name": "gcc",
+    "package_type": "Toolchain",
+    "package_version": "13.3.0",
+    "test_results": [
+      {
+        "test_name": "GCC Compilation Test",
         "passed": true
       }
     ],
     "all_tests_passed": true
+  },
+  {
+    "distro": "debian",
+    "os_version": "Linux version 6.9.9-riscv64 (debian-kernel@lists.debian.org) (riscv64-linux-gnu-gcc-13 (Debian 13.3.0-1) 13.3.0, GNU ld (GNU Binutils for Debian) 2.42.50.20240710) #1 SMP Debian 6.9.9-1 (2024-07-13)",
+    "kernel_version": "6.9.9-riscv64",
+    "package_name": "gdb",
+    "package_type": "Debugger",
+    "package_version": "13.2-1+b3",
+    "test_results": [
+      {
+        "test_name": "GDB Functionality Test",
+        "passed": true
+      }
+    ],
+    "all_tests_passed": true
+  },
+  {
+    "distro": "debian",
+    "os_version": "Linux version 6.9.9-riscv64 (debian-kernel@lists.debian.org) (riscv64-linux-gnu-gcc-13 (Debian 13.3.0-1) 13.3.0, GNU ld (GNU Binutils for Debian) 2.42.50.20240710) #1 SMP Debian 6.9.9-1 (2024-07-13)",
+    "kernel_version": "6.9.9-riscv64",
+    "package_name": "golang-go",
+    "package_type": "Programming Language",
+    "package_version": "",
+    "test_results": [
+      {
+        "test_name": "Go Compilation Test",
+        "passed": true
+      }
+    ],
+    "all_tests_passed": true
+  },
+  {
+    "distro": "debian",
+    "os_version": "Linux version 6.9.9-riscv64 (debian-kernel@lists.debian.org) (riscv64-linux-gnu-gcc-13 (Debian 13.3.0-1) 13.3.0, GNU ld (GNU Binutils for Debian) 2.42.50.20240710) #1 SMP Debian 6.9.9-1 (2024-07-13)",
+    "kernel_version": "6.9.9-riscv64",
+    "package_name": "haproxy",
+    "package_type": "Load Balancer",
+    "package_version": "2.9.9-1",
+    "test_results": [
+      {
+        "test_name": "HAProxy Service Test",
+        "passed": false
+      }
+    ],
+    "all_tests_passed": false
+  },
+  {
+    "distro": "debian",
+    "os_version": "Linux version 6.9.9-riscv64 (debian-kernel@lists.debian.org) (riscv64-linux-gnu-gcc-13 (Debian 13.3.0-1) 13.3.0, GNU ld (GNU Binutils for Debian) 2.42.50.20240710) #1 SMP Debian 6.9.9-1 (2024-07-13)",
+    "kernel_version": "6.9.9-riscv64",
+    "package_name": "lighttpd",
+    "package_type": "Web Server",
+    "package_version": "1.4.76-1",
+    "test_results": [
+      {
+        "test_name": "Lighttpd Service Test",
+        "passed": true
+      }
+    ],
+    "all_tests_passed": true
+  },
+  {
+    "distro": "debian",
+    "os_version": "Linux version 6.9.9-riscv64 (debian-kernel@lists.debian.org) (riscv64-linux-gnu-gcc-13 (Debian 13.3.0-1) 13.3.0, GNU ld (GNU Binutils for Debian) 2.42.50.20240710) #1 SMP Debian 6.9.9-1 (2024-07-13)",
+    "kernel_version": "6.9.9-riscv64",
+    "package_name": "mariadb-server",
+    "package_type": "Database Server",
+    "package_version": "1:11.4.2-4",
+    "test_results": [
+      {
+        "test_name": "MariaDB Service Test",
+        "passed": false
+      }
+    ],
+    "all_tests_passed": false
+  },
+  {
+    "distro": "debian",
+    "os_version": "Linux version 6.9.9-riscv64 (debian-kernel@lists.debian.org) (riscv64-linux-gnu-gcc-13 (Debian 13.3.0-1) 13.3.0, GNU ld (GNU Binutils for Debian) 2.42.50.20240710) #1 SMP Debian 6.9.9-1 (2024-07-13)",
+    "kernel_version": "6.9.9-riscv64",
+    "package_name": "nginx",
+    "package_type": "Web Server",
+    "package_version": "1.26.0-1",
+    "test_results": [
+      {
+        "test_name": "Nginx Service Test",
+        "passed": true
+      }
+    ],
+    "all_tests_passed": true
+  },
+  {
+    "distro": "debian",
+    "os_version": "Linux version 6.9.9-riscv64 (debian-kernel@lists.debian.org) (riscv64-linux-gnu-gcc-13 (Debian 13.3.0-1) 13.3.0, GNU ld (GNU Binutils for Debian) 2.42.50.20240710) #1 SMP Debian 6.9.9-1 (2024-07-13)",
+    "kernel_version": "6.9.9-riscv64",
+    "package_name": "nodejs",
+    "package_type": "JavaScript Runtime",
+    "package_version": "20.15.1+dfsg-1",
+    "test_results": [
+      {
+        "test_name": "Node.js Functionality Test",
+        "passed": false
+      }
+    ],
+    "all_tests_passed": false
+  },
+  {
+    "distro": "debian",
+    "os_version": "Linux version 6.9.9-riscv64 (debian-kernel@lists.debian.org) (riscv64-linux-gnu-gcc-13 (Debian 13.3.0-1) 13.3.0, GNU ld (GNU Binutils for Debian) 2.42.50.20240710) #1 SMP Debian 6.9.9-1 (2024-07-13)",
+    "kernel_version": "6.9.9-riscv64",
+    "package_name": "numpy",
+    "package_type": "Python Scientific Library",
+    "package_version": " (Python 3.12.4)",
+    "test_results": [
+      {
+        "test_name": "Numpy Functionality Test",
+        "passed": false
+      }
+    ],
+    "all_tests_passed": false
+  },
+  {
+    "distro": "debian",
+    "os_version": "Linux version 6.9.9-riscv64 (debian-kernel@lists.debian.org) (riscv64-linux-gnu-gcc-13 (Debian 13.3.0-1) 13.3.0, GNU ld (GNU Binutils for Debian) 2.42.50.20240710) #1 SMP Debian 6.9.9-1 (2024-07-13)",
+    "kernel_version": "6.9.9-riscv64",
+    "package_name": "ocaml",
+    "package_type": "Programming Language",
+    "package_version": "4.14.1-1+b1",
+    "test_results": [
+      {
+        "test_name": "OCaml Functionality Test",
+        "passed": false
+      }
+    ],
+    "all_tests_passed": false
   }
 ]
