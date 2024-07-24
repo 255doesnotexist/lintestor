@@ -1,0 +1,15 @@
+{
+    "distro": "debian",
+    "os_version": "Linux version 6.9.9-riscv64 (debian-kernel@lists.debian.org) (riscv64-linux-gnu-gcc-13 (Debian 13.3.0-1) 13.3.0, GNU ld (GNU Binutils for Debian) 2.42.50.20240710) #1 SMP Debian 6.9.9-1 (2024-07-13)",
+    "kernel_version": "6.9.9-riscv64",
+    "package_name": "ocaml",
+    "package_type": "Programming Language",
+    "package_version": "4.14.1-1+b1",
+    "test_results": [
+        {
+            "test_name": "OCaml Functionality Test",
+            "passed": false
+        }
+    ],
+    "all_tests_passed": false
+}
