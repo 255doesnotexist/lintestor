@@ -9,9 +9,10 @@ mod utils;
 fn main() {
     // let distros = ["debian", "gentoo", "opensuse", "arch", "freebsd", "openbsd"];
     let distros = ["debian"];
+    // let packages = ["gcc"];
     // let packages = ["mariadb", "postgresql", "sqlite", "apache", "haproxy", "lighttpd", "nginx", "squid", "varnish", "python", "libmemcached", "redis", "numpy", "scipy", "zookeeper", "openssl", "docker", "runc", "clang", "cmake", "gcc", "gdb", "llvm", "nodejs", "ocaml", "erlang", "golang", "openjdk", "perl", "python", "ruby", "rust"];
     // let packages = ["gcc", "cmake", "gdb", "llvm", "nodejs"];
-    let packages = ["apache", "clang", "cmake", "docker", "erlang", "gcc", "gdb", "golang", "haproxy"];
+    let packages = ["apache", "clang", "cmake", "docker", "erlang", "gcc", "gdb", "golang", "haproxy", "libmemcached", "lighttpd", "llvm", "mariadb", "nginx", "nodejs", "numpy", "ocaml"];
 
     for distro in &distros {
         for package in &packages {
