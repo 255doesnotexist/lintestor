@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Define the package details
-PACKAGE_NAME="apache2"
+PACKAGE_NAME="apache"
 PACKAGE_TYPE="Web Server"
 REPORT_FILE="report.json"
 
