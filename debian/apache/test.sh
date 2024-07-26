@@ -1,7 +1,8 @@
 #!/bin/bash
 
 # Define the package details
-PACKAGE_NAME="apache"
+PACKAGE_NAME="apache2"
+PACKAGE_SHOWNAME="apache"
 PACKAGE_TYPE="Web Server"
 REPORT_FILE="report.json"
 
@@ -49,7 +50,7 @@ generate_report() {
     "distro": "debian",
     "os_version": "$os_version",
     "kernel_version": "$kernel_version",
-    "package_name": "$PACKAGE_NAME",
+    "package_name": "$PACKAGE_SHOWNAME",
     "package_type": "$PACKAGE_TYPE",
     "package_version": "$package_version",
     "test_results": [
@@ -84,8 +85,8 @@ else
 fi
 
 # Check the initial state of Apache service
-initial_state_active=$(is_apache_active; echo$?)
-initial_state_enabled=$(is_apache_enabled; echo$?)
+initial_state_active=$(is_apache_active; echo $?)
+initial_state_enabled=$(is_apache_enabled; echo $?)
 
 # Check if Apache service is running
 if is_apache_active; then
