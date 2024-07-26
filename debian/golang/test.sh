@@ -52,7 +52,7 @@ EOF
 generate_report() {
     local os_version=$(cat /proc/version)
     local kernel_version=$(uname -r)
-    local package_version=$(dpkg -l | grep$PACKAGE_NAME | head -n 1 | awk '{print $3}')
+    local package_version=$(dpkg -l | grep $PACKAGE_NAME | head -n 1 | awk '{print $3}')
     local test_name="Go Compilation Test"
     local test_passed=false
 
