@@ -1,48 +1,40 @@
 #!/bin/bash
 
-# Define the package details
 PACKAGE_NAME="nodejs"
 PACKAGE_TYPE="JavaScript Runtime"
 REPORT_FILE="report.json"
 
-# Function to check if Node.js is installed
 is_nodejs_installed() {
     dpkg -l | grep -qw $PACKAGE_NAME
     return $?
 }
 
-# Function to install Node.js package
 install_nodejs_package() {
     apt-get update
     apt-get install -y $PACKAGE_NAME
     return $?
 }
 
-# Function to compile a simple JavaScript program and test functionality
 test_nodejs_functionality() {
     local temp_dir=$(mktemp -d)
-    local js_file="${temp_dir}/hello.js"
-    local executable="${temp_dir}/hello"
+    echo "Temp dir: $temp_dir"
 
-    # Write a simple JavaScript program to test compilation
+    local js_file="${temp_dir}/hello.js"
+
     cat <<EOF > "$js_file"
 console.log('Hello, Node.js!');
 EOF
 
-    # Compile the JavaScript program with Node.js
-    node "$js_file" > "$executable"
-
-    # Check if the executable was created and runs without error
-    if [[ -x "$executable" && "$("${executable}")" == "Hello, Node.js!" ]]; then
+    local output=$(node "$js_file")
+    if [[ "$output" == "Hello, Node.js!" ]]; then
         echo "Node.js is functioning correctly."
         return 0
     else
-        echo "Failed to compile or run Node.js test program."
+        echo "Failed to run Node.js test program correctly."
         return 1
     fi
 }
 
-# Function to generate the report.json
 generate_report() {
     local os_version=$(cat /proc/version)
     local kernel_version=$(uname -r)
@@ -50,12 +42,10 @@ generate_report() {
     local test_name="Node.js Functionality Test"
     local test_passed=false
 
-    # Check Node.js functionality
     if test_nodejs_functionality; then
         test_passed=true
     fi
 
-    # Prepare the report content
     local report_content=$(cat <<EOF
 {
     "distro": "debian",
@@ -75,18 +65,13 @@ generate_report() {
 EOF
 )
 
-    # Write the report to the file
     echo "$report_content" >$REPORT_FILE
 }
 
-# Main script execution starts here
-
-# Check if Node.js is installed
 if is_nodejs_installed; then
     echo "Package $PACKAGE_NAME is installed."
 else
     echo "Package $PACKAGE_NAME is not installed. Attempting to install..."
-    # Attempt to install the Node.js package
     if install_nodejs_package; then
         echo "Package $PACKAGE_NAME installed successfully."
     else
@@ -95,17 +80,12 @@ else
     fi
 fi
 
-# Check Node.js functionality by compiling and running a simple JavaScript program
 if test_nodejs_functionality; then
     echo "Node.js is functioning correctly."
-    # Generate the report
     generate_report
     echo "Report generated at $REPORT_FILE"
 else
     echo "Node.js is not functioning correctly."
-    # Generate the report with test failed
     generate_report
     echo "Report generated at $REPORT_FILE with failed test."
 fi
-
-# End of the script
