@@ -39,7 +39,7 @@ install_docker_package() {
 generate_report() {
     local os_version=$(cat /proc/version)
     local kernel_version=$(uname -r)
-    local package_version=$(dpkg -l | grep $PACKAGE_NAME | awk '{print $3}')
+    local package_version=$(dpkg -l | grep $PACKAGE_NAME | head -n 1 | awk '{print $3}')
     local test_name="Docker Service Test"
     local test_passed=false
     local distro="debian"
@@ -90,7 +90,7 @@ else
 fi
 
 # Check the initial state of Docker service
-initial_state_active=$(is_docker_active; echo$?)
+initial_state_active=$(is_docker_active; echo $?)
 
 # Check if Docker service is running
 if is_docker_active; then
