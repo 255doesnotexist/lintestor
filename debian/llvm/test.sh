@@ -14,7 +14,7 @@ is_llvm_installed() {
 # Function to install LLVM package
 install_llvm_package() {
     apt-get update
-    apt-get install -y $PACKAGE_NAME
+    apt-get install -y $PACKAGE_NAME clang
     return $?
 }
 
@@ -51,7 +51,7 @@ EOF
 generate_report() {
     local os_version=$(cat /proc/version)
     local kernel_version=$(uname -r)
-    local package_version=$(dpkg -l | grep $PACKAGE_NAME | awk '{print $3}')
+    local package_version=$(dpkg -l | grep $PACKAGE_NAME | head -n 1 | awk '{print $3}')
     local test_name="LLVM Functionality Test"
     local test_passed=false
 
