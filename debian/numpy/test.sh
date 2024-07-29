@@ -1,7 +1,8 @@
 #!/bin/bash
 
 # Define the package details
-PACKAGE_NAME="numpy"
+PACKAGE_NAME="python3-numpy"
+PACKAGE_SHOW_NAME="numpy"
 PACKAGE_TYPE="Python Scientific Library"
 REPORT_FILE="report.json"
 
@@ -16,7 +17,7 @@ install_python3_package() {
     apt-get update
     apt-get install -y python3-full
     apt-get install -y python-is-python3 python3-pip
-    pip install --break-system-packages numpy
+    apt-get install -y $PACKAGE_NAME
 
     return $?
 }
@@ -68,7 +69,7 @@ generate_report() {
     "os_version": "$os_version",
     "kernel_version": "$kernel_version",
     "package_version": "$numpy_version ($python_version)",
-    "package_name": "$PACKAGE_NAME",
+    "package_name": "$PACKAGE_SHOW_NAME",
     "package_type": "$PACKAGE_TYPE",
     "test_results": [
         {

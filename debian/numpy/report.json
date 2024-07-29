@@ -2,14 +2,14 @@
     "distro": "debian",
     "os_version": "Linux version 6.9.9-riscv64 (debian-kernel@lists.debian.org) (riscv64-linux-gnu-gcc-13 (Debian 13.3.0-1) 13.3.0, GNU ld (GNU Binutils for Debian) 2.42.50.20240710) #1 SMP Debian 6.9.9-1 (2024-07-13)",
     "kernel_version": "6.9.9-riscv64",
-    "package_version": " (Python 3.12.4)",
+    "package_version": "1.26.4 (Python 3.12.4)",
     "package_name": "numpy",
     "package_type": "Python Scientific Library",
     "test_results": [
         {
             "test_name": "Numpy Functionality Test",
-            "passed": false
+            "passed": true
         }
     ],
-    "all_tests_passed": false
+    "all_tests_passed": true
 }
