@@ -1,50 +1,71 @@
 #!/bin/bash
 
-# Define the package details
 PACKAGE_NAME="apache2"
 PACKAGE_SHOWNAME="apache"
 PACKAGE_TYPE="Web Server"
 REPORT_FILE="report.json"
+APACHE_CONF_FILE="/etc/apache2/ports.conf"
+DEFAULT_PORT=80
 
-# Function to check if Apache service is active
+# 检查端口是否被占用
+is_port_in_use() {
+    local port=$1
+    netstat -tuln | grep -q ":${port} "
+    return $?
+}
+
+# 找到一个随机的可用端口
+find_available_port() {
+    local port
+    while true; do
+        port=$((RANDOM % 65535 + 1024))
+        if ! is_port_in_use $port; then
+            echo $port
+            return
+        fi
+    done
+}
+
+# 更新 Apache 配置使用新的端口
+update_apache_port() {
+    local new_port=$1
+    sed -i "s/Listen $DEFAULT_PORT/Listen $new_port/" $APACHE_CONF_FILE
+    return $?
+}
+
+# 检查 Apache 服务是否正在运行
 is_apache_active() {
     systemctl is-active --quiet apache2
     return $?
 }
 
-# Function to check if Apache service is enabled
+# 检查 Apache 服务是否启用
 is_apache_enabled() {
     systemctl is-enabled --quiet apache2
     return $?
 }
 
-# Function to check if a package is installed
+# 检查包是否安装
 is_package_installed() {
     dpkg -l | grep -qw $PACKAGE_NAME
     return $?
 }
 
-# Function to install Apache package
+# 安装 Apache 包
 install_apache_package() {
     apt-get update
     apt-get install -y $PACKAGE_NAME
     return $?
 }
 
-# Function to generate the report.json
+# 生成报告
 generate_report() {
+    local test_passed=$1
     local os_version=$(cat /proc/version)
     local kernel_version=$(uname -r)
     local package_version=$(dpkg -l | grep $PACKAGE_NAME | head -n 1 | awk '{print $3}')
     local test_name="Apache Service Test"
-    local test_passed=false
 
-    # Check if Apache service is running
-    if is_apache_active; then
-        test_passed=true
-    fi
-
-    # Prepare the report content
     local report_content=$(cat <<EOF
 {
     "distro": "debian",
@@ -63,71 +84,63 @@ generate_report() {
 }
 EOF
 )
-
-    # Write the report to the file
-    echo "$report_content" >$REPORT_FILE
+    echo "$report_content" > $REPORT_FILE
 }
 
-# Main script execution starts here
-
-# Check if the package is installed
-if is_package_installed; then
-    echo "Package $PACKAGE_NAME is installed."
-else
-    echo "Package $PACKAGE_NAME is not installed. Attempting to install..."
-    # Attempt to install the Apache package
-    if install_apache_package; then
-        echo "Package $PACKAGE_NAME installed successfully."
+# 主函数逻辑
+main() {
+    if is_package_installed; then
+        echo "Package $PACKAGE_NAME is installed."
     else
-        echo "Failed to install package $PACKAGE_NAME."
-        exit 1
+        echo "Package $PACKAGE_NAME is not installed. Attempting to install..."
+        if install_apache_package; then
+            echo "Package $PACKAGE_NAME installed successfully."
+        else
+            echo "Failed to install package $PACKAGE_NAME."
+            exit 1
+        fi
     fi
-fi
 
-# Check the initial state of Apache service
-initial_state_active=$(is_apache_active; echo $?)
-initial_state_enabled=$(is_apache_enabled; echo $?)
+    initial_state_active=$(is_apache_active; echo $?)
+    initial_state_enabled=$(is_apache_enabled; echo $?)
 
-# Check if Apache service is running
-if is_apache_active; then
-    echo "Apache service is running."
-    # Generate the report
-    generate_report
-    echo "Report generated at $REPORT_FILE"
-else
-    echo "Apache service is not running."
-    # Try to start Apache service
-    systemctl start apache2
-    # Check again if Apache service is running
     if is_apache_active; then
-        echo "Apache service started successfully."
-        # Generate the report
-        generate_report
-        echo "Report generated at $REPORT_FILE"
+        echo "Apache service is running."
     else
-        echo "Failed to start Apache service."
-        # Generate the report with test failed
-        generate_report
-        echo "Report generated at $REPORT_FILE with failed test."
+        echo "Apache service is not running."
+        if is_port_in_use $DEFAULT_PORT; then
+            echo "Port $DEFAULT_PORT is in use. Finding a new port..."
+            new_port=$(find_available_port)
+            echo "Configuring Apache to use port $new_port..."
+            update_apache_port $new_port
+        fi
+
+        systemctl start apache2
+        if is_apache_active; then
+            echo "Apache service started successfully."
+            generate_report true
+        else
+            echo "Failed to start Apache service."
+            generate_report false
+        fi
     fi
-fi
 
-# Restore the initial state of Apache service
-if [ "$initial_state_active" -eq 0 ]; then
-    # If Apache was active initially, ensure it's still active
-    systemctl start apache2
-else
-    # If Apache was not active initially, stop it
-    systemctl stop apache2
-fi
+    echo "Report generated at $REPORT_FILE"
 
-# If Apache was enabled initially, ensure it's still enabled
-if [ "$initial_state_enabled" -eq 0 ]; then
-    systemctl enable apache2
-else
-    systemctl disable apache2
-fi
+    if [ "$initial_state_active" -eq 0 ]; then
+        systemctl start apache2
+    else
+        systemctl stop apache2
+    fi
 
-echo "Apache service state has been restored."
+    if [ "$initial_state_enabled" -eq 0 ]; then
+        systemctl enable apache2
+    else
+        systemctl disable apache2
+    fi
 
-# End of the script
+    echo "Apache service state has been restored."
+}
+
+# 执行主函数
+main
