@@ -1,7 +1,8 @@
 #!/bin/bash
 
 # Define the package details
-PACKAGE_NAME="llvm-13"
+PACKAGE_NAME="llvm"
+PACKAGE_SHOW_NAME="llvm"
 PACKAGE_TYPE="Compiler Toolchain"
 REPORT_FILE="report.json"
 
@@ -66,7 +67,7 @@ generate_report() {
     "distro": "debian",
     "os_version": "$os_version",
     "kernel_version": "$kernel_version",
-    "package_name": "$PACKAGE_NAME",
+    "package_name": "$PACKAGE_SHOW_NAME",
     "package_type": "$PACKAGE_TYPE",
     "package_version": "$package_version",
     "test_results": [
