@@ -2,6 +2,7 @@
 
 # Define the package details
 PACKAGE_NAME="golang-go"
+PACKAGE_SHOW_NAME="golang"
 PACKAGE_TYPE="Programming Language"
 REPORT_FILE="report.json"
 
@@ -67,7 +68,7 @@ generate_report() {
     "distro": "debian",
     "os_version": "$os_version",
     "kernel_version": "$kernel_version",
-    "package_name": "$PACKAGE_NAME",
+    "package_name": "$PACKAGE_SHOW_NAME",
     "package_type": "$PACKAGE_TYPE",
     "package_version": "$package_version",
     "test_results": [
