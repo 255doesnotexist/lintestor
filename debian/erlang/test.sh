@@ -1,44 +1,61 @@
 #!/bin/bash
 
-# Define the package details
+# 定义包的详细信息
 PACKAGE_NAME="erlang"
 PACKAGE_TYPE="Programming Language"
 REPORT_FILE="report.json"
 
-# Function to check if Erlang service is active
-is_erlang_active() {
-    # Erlang does not run as a service like Apache, so we check if the Erlang shell is running
-    pgrep -x beam.smp &>/dev/null
-    return $?
-}
-
-# Function to check if a package is installed
+# 检查包是否已安装
 is_package_installed() {
     dpkg -l | grep -qw $PACKAGE_NAME
     return $?
 }
 
-# Function to install Erlang package
+# 安装 Erlang 包
 install_erlang_package() {
     apt-get update
     apt-get install -y $PACKAGE_NAME
     return $?
 }
 
-# Function to generate the report.json
+# 测试 Erlang 的功能
+test_erlang_functionality() {
+    local initial_dir=$(pwd)
+    local temp_dir=$(mktemp -d)
+    local erlang_file="${temp_dir}/hello.erl"
+    local module_name="hello"
+    local erl_output
+
+    # 创建 Erlang 源文件
+    cat <<EOF > "$erlang_file"
+-module($module_name).
+-export([start/0]).
+
+start() ->
+    io:format("Hello, Erlang!~n").
+EOF
+
+    cd "$temp_dir"
+    erl -compile $module_name
+    if [[ -f "${module_name}.beam" ]]; then
+        erl_output=$(erl -noshell -s $module_name start -s init stop)
+        cd "$initial_dir"  # 返回到初始目录
+        if [[ "$erl_output" == "Hello, Erlang!" ]]; then
+            return 0
+        fi
+    fi
+    cd "$initial_dir"  # 返回到初始目录
+    return 1
+}
+
+# 生成报告
 generate_report() {
+    local test_passed=$1
     local os_version=$(cat /proc/version)
     local kernel_version=$(uname -r)
     local package_version=$(dpkg -l | grep $PACKAGE_NAME | head -n 1 | awk '{print $3}')
-    local test_name="Erlang Service Test"
-    local test_passed=false
+    local test_name="Erlang Functionality Test"
 
-    # Check if Erlang shell is running
-    if is_erlang_active; then
-        test_passed=true
-    fi
-
-    # Prepare the report content
     local report_content=$(cat <<EOF
 {
     "distro": "debian",
@@ -57,39 +74,35 @@ generate_report() {
 }
 EOF
 )
-
-    # Write the report to the file
-    echo "$report_content" >$REPORT_FILE
+    echo "$report_content" > $REPORT_FILE
 }
 
-# Main script execution starts here
-
-# Check if the package is installed
-if is_package_installed; then
-    echo "Package $PACKAGE_NAME is installed."
-else
-    echo "Package $PACKAGE_NAME is not installed. Attempting to install..."
-    # Attempt to install the Erlang package
-    if install_erlang_package; then
-        echo "Package $PACKAGE_NAME installed successfully."
+# 主函数逻辑
+main() {
+    # 检查包是否已安装
+    if is_package_installed; then
+        echo "Package $PACKAGE_NAME is installed."
     else
-        echo "Failed to install package $PACKAGE_NAME."
-        exit 1
+        echo "Package $PACKAGE_NAME is not installed. Attempting to install..."
+        if install_erlang_package; then
+            echo "Package $PACKAGE_NAME installed successfully."
+        else
+            echo "Failed to install package $PACKAGE_NAME."
+            exit 1
+        fi
     fi
-fi
 
-# Check if Erlang shell is running
-if is_erlang_active; then
-    echo "Erlang shell is running."
-    # Generate the report
-    generate_report
+    # 测试 Erlang 的功能
+    if test_erlang_functionality; then
+        echo "Erlang is functioning correctly."
+        generate_report true
+    else
+        echo "Erlang is not functioning correctly."
+        generate_report false
+    fi
+
     echo "Report generated at $REPORT_FILE"
-else
-    echo "Erlang shell is not running."
-    # Erlang does not have a service to start like Apache, so we skip this step
-    # Generate the report with test failed
-    generate_report
-    echo "Report generated at $REPORT_FILE with failed test."
-fi
+}
 
-# End of the script
+# 执行主函数
+main

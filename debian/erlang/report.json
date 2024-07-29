@@ -7,9 +7,9 @@
     "package_version": "1:25.3.2.12+dfsg-1",
     "test_results": [
         {
-            "test_name": "Erlang Service Test",
-            "passed": false
+            "test_name": "Erlang Functionality Test",
+            "passed": true
         }
     ],
-    "all_tests_passed": false
+    "all_tests_passed": true
 }
