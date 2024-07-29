@@ -8,8 +8,8 @@
     "test_results": [
         {
             "test_name": "MariaDB Service Test",
-            "passed": false
+            "passed": true
         }
     ],
-    "all_tests_passed": false
+    "all_tests_passed": true
 }

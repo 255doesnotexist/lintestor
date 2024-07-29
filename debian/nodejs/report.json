@@ -1,10 +1,10 @@
 {
     "distro": "debian",
-    "os_version": "Linux version 6.1.0-22-amd64 (debian-kernel@lists.debian.org) (gcc-12 (Debian 12.2.0-14) 12.2.0, GNU ld (GNU Binutils for Debian) 2.40) #1 SMP PREEMPT_DYNAMIC Debian 6.1.94-1 (2024-06-21)",
-    "kernel_version": "6.1.0-22-amd64",
+    "os_version": "Linux version 6.9.9-riscv64 (debian-kernel@lists.debian.org) (riscv64-linux-gnu-gcc-13 (Debian 13.3.0-1) 13.3.0, GNU ld (GNU Binutils for Debian) 2.42.50.20240710) #1 SMP Debian 6.9.9-1 (2024-07-13)",
+    "kernel_version": "6.9.9-riscv64",
     "package_name": "nodejs",
     "package_type": "JavaScript Runtime",
-    "package_version": "18.19.0+dfsg-6~deb12u2",
+    "package_version": "20.15.1+dfsg-1",
     "test_results": [
         {
             "test_name": "Node.js Functionality Test",

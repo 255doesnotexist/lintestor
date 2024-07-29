@@ -3,16 +3,16 @@
     "distro": "debian",
     "os_version": "Linux version 6.9.9-riscv64 (debian-kernel@lists.debian.org) (riscv64-linux-gnu-gcc-13 (Debian 13.3.0-1) 13.3.0, GNU ld (GNU Binutils for Debian) 2.42.50.20240710) #1 SMP Debian 6.9.9-1 (2024-07-13)",
     "kernel_version": "6.9.9-riscv64",
-    "package_name": "apache2",
+    "package_name": "apache",
     "package_type": "Web Server",
     "package_version": "2.4.62-1",
     "test_results": [
       {
         "test_name": "Apache Service Test",
-        "passed": false
+        "passed": true
       }
     ],
-    "all_tests_passed": false
+    "all_tests_passed": true
   },
   {
     "distro": "debian",
@@ -46,6 +46,21 @@
   },
   {
     "distro": "debian",
+    "os_version": "Linux version 6.1.0-22-amd64 (debian-kernel@lists.debian.org) (gcc-12 (Debian 12.2.0-14) 12.2.0, GNU ld (GNU Binutils for Debian) 2.40) #1 SMP PREEMPT_DYNAMIC Debian 6.1.94-1 (2024-06-21)",
+    "kernel_version": "6.1.0-22-amd64",
+    "package_name": "docker-ce",
+    "package_type": "Container Platform",
+    "package_version": "5:27.1.1-1~debian.12~bookworm",
+    "test_results": [
+      {
+        "test_name": "Docker Service Test",
+        "passed": true
+      }
+    ],
+    "all_tests_passed": true
+  },
+  {
+    "distro": "debian",
     "os_version": "Linux version 6.9.9-riscv64 (debian-kernel@lists.debian.org) (riscv64-linux-gnu-gcc-13 (Debian 13.3.0-1) 13.3.0, GNU ld (GNU Binutils for Debian) 2.42.50.20240710) #1 SMP Debian 6.9.9-1 (2024-07-13)",
     "kernel_version": "6.9.9-riscv64",
     "package_name": "erlang",
@@ -53,11 +68,11 @@
     "package_version": "1:25.3.2.12+dfsg-1",
     "test_results": [
       {
-        "test_name": "Erlang Service Test",
-        "passed": false
+        "test_name": "Erlang Functionality Test",
+        "passed": true
       }
     ],
-    "all_tests_passed": false
+    "all_tests_passed": true
   },
   {
     "distro": "debian",
@@ -93,9 +108,9 @@
     "distro": "debian",
     "os_version": "Linux version 6.9.9-riscv64 (debian-kernel@lists.debian.org) (riscv64-linux-gnu-gcc-13 (Debian 13.3.0-1) 13.3.0, GNU ld (GNU Binutils for Debian) 2.42.50.20240710) #1 SMP Debian 6.9.9-1 (2024-07-13)",
     "kernel_version": "6.9.9-riscv64",
-    "package_name": "golang-go",
+    "package_name": "golang",
     "package_type": "Programming Language",
-    "package_version": "",
+    "package_version": "2:1.22~3",
     "test_results": [
       {
         "test_name": "Go Compilation Test",
@@ -123,6 +138,21 @@
     "distro": "debian",
     "os_version": "Linux version 6.9.9-riscv64 (debian-kernel@lists.debian.org) (riscv64-linux-gnu-gcc-13 (Debian 13.3.0-1) 13.3.0, GNU ld (GNU Binutils for Debian) 2.42.50.20240710) #1 SMP Debian 6.9.9-1 (2024-07-13)",
     "kernel_version": "6.9.9-riscv64",
+    "package_name": "libmemcached",
+    "package_type": "Caching Library",
+    "package_version": "1.1.4-1.1+b1",
+    "test_results": [
+      {
+        "test_name": "libmemcached Functionality Test",
+        "passed": true
+      }
+    ],
+    "all_tests_passed": true
+  },
+  {
+    "distro": "debian",
+    "os_version": "Linux version 6.9.9-riscv64 (debian-kernel@lists.debian.org) (riscv64-linux-gnu-gcc-13 (Debian 13.3.0-1) 13.3.0, GNU ld (GNU Binutils for Debian) 2.42.50.20240710) #1 SMP Debian 6.9.9-1 (2024-07-13)",
+    "kernel_version": "6.9.9-riscv64",
     "package_name": "lighttpd",
     "package_type": "Web Server",
     "package_version": "1.4.76-1",
@@ -138,16 +168,31 @@
     "distro": "debian",
     "os_version": "Linux version 6.9.9-riscv64 (debian-kernel@lists.debian.org) (riscv64-linux-gnu-gcc-13 (Debian 13.3.0-1) 13.3.0, GNU ld (GNU Binutils for Debian) 2.42.50.20240710) #1 SMP Debian 6.9.9-1 (2024-07-13)",
     "kernel_version": "6.9.9-riscv64",
+    "package_name": "llvm",
+    "package_type": "Compiler Toolchain",
+    "package_version": "1:16.0.6-27+b1",
+    "test_results": [
+      {
+        "test_name": "LLVM Functionality Test",
+        "passed": true
+      }
+    ],
+    "all_tests_passed": true
+  },
+  {
+    "distro": "debian",
+    "os_version": "Linux version 6.9.9-riscv64 (debian-kernel@lists.debian.org) (riscv64-linux-gnu-gcc-13 (Debian 13.3.0-1) 13.3.0, GNU ld (GNU Binutils for Debian) 2.42.50.20240710) #1 SMP Debian 6.9.9-1 (2024-07-13)",
+    "kernel_version": "6.9.9-riscv64",
     "package_name": "mariadb-server",
     "package_type": "Database Server",
     "package_version": "1:11.4.2-4",
     "test_results": [
       {
         "test_name": "MariaDB Service Test",
-        "passed": false
+        "passed": true
       }
     ],
-    "all_tests_passed": false
+    "all_tests_passed": true
   },
   {
     "distro": "debian",
@@ -174,10 +219,10 @@
     "test_results": [
       {
         "test_name": "Node.js Functionality Test",
-        "passed": false
+        "passed": true
       }
     ],
-    "all_tests_passed": false
+    "all_tests_passed": true
   },
   {
     "distro": "debian",
@@ -185,14 +230,14 @@
     "kernel_version": "6.9.9-riscv64",
     "package_name": "numpy",
     "package_type": "Python Scientific Library",
-    "package_version": " (Python 3.12.4)",
+    "package_version": "1.26.4 (Python 3.12.4)",
     "test_results": [
       {
         "test_name": "Numpy Functionality Test",
-        "passed": false
+        "passed": true
       }
     ],
-    "all_tests_passed": false
+    "all_tests_passed": true
   },
   {
     "distro": "debian",
@@ -204,9 +249,9 @@
     "test_results": [
       {
         "test_name": "OCaml Functionality Test",
-        "passed": false
+        "passed": true
       }
     ],
-    "all_tests_passed": false
+    "all_tests_passed": true
   }
 ]
