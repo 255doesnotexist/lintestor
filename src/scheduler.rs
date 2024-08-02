@@ -6,7 +6,7 @@ use ssh2::Session;
 use std::net::TcpStream;
 use std::io::Read;
 use std::env;
-use crate::utils::{Report, TestResult};
+use crate::utils::Report;
 
 struct TempFile {
     path: String,
