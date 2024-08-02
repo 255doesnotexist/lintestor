@@ -1,0 +1,8 @@
+startup_script = "path/to/start_qemu.sh"
+
+[connection]
+method = "ssh"
+ip = "localhost"
+port = 2222
+username = "root"
+password = "root"
