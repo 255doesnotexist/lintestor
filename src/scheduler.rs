@@ -1,12 +1,10 @@
 use std::fs::File;
 use std::io::prelude::*;
 use std::path::Path;
-use std::path::PathBuf;
 use std::process::Command;
 use ssh2::Session;
 use std::net::TcpStream;
 use std::io::Read;
-use std::io;
 use std::env;
 use crate::utils::{Report, TestResult};
 

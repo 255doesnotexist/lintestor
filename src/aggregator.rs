@@ -1,7 +1,7 @@
 use std::fs::File;
 use std::io::prelude::*;
 use serde_json;
-use crate::utils::{Report, TestResult};
+use crate::utils::Report;
 
 pub fn aggregate_reports(distros: &[&str], packages: &[&str]) -> Result<(), Box<dyn std::error::Error>> {
     let mut consolidated_report = vec![];
