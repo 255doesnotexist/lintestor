@@ -106,6 +106,7 @@ main() {
 
     if is_apache_active; then
         echo "Apache service is running."
+        generate_report true
     else
         echo "Apache service is not running."
         if is_port_in_use $DEFAULT_PORT; then
