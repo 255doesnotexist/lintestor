@@ -1,18 +1,22 @@
-// File: main.rs
-// Description: 主模块，负责调用调度器、汇总模块和Markdown报告生成模块。
-
 mod scheduler;
 mod aggregator;
 mod markdown_report;
 mod utils;
+mod config;
 
 fn main() {
-    // let distros = ["debian", "gentoo", "opensuse", "arch", "freebsd", "openbsd"];
-    let distros = ["debian"];
-    // let packages = ["gcc"];
-    // let packages = ["mariadb", "postgresql", "sqlite", "apache", "haproxy", "lighttpd", "nginx", "squid", "varnish", "python", "libmemcached", "redis", "numpy", "scipy", "zookeeper", "openssl", "docker", "runc", "clang", "cmake", "gcc", "gdb", "llvm", "nodejs", "ocaml", "erlang", "golang", "openjdk", "perl", "python", "ruby", "rust"];
-    // let packages = ["gcc", "cmake", "gdb", "llvm", "nodejs"];
-    let packages = ["apache", "clang", "cmake", "docker", "erlang", "gcc", "gdb", "golang", "haproxy", "libmemcached", "lighttpd", "llvm", "mariadb", "nginx", "nodejs", "numpy", "ocaml"];
+    let config = match config::Config::from_file("config.toml") {
+        Ok(config) => config,
+        Err(e) => {
+            eprintln!("Failed to load config: {}", e);
+            return;
+        }
+    };
+
+    let distros: Vec<&str> = config.distros.iter().map(|s| &**s).collect();
+    println!("Distros: {:?}", distros);
+    let packages: Vec<&str> = config.packages.iter().map(|s| &**s).collect();
+    println!("Packages: {:?}", packages);
 
     for distro in &distros {
         for package in &packages {
