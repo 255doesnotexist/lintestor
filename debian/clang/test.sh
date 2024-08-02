@@ -5,15 +5,15 @@ check_and_install_clang() {
     if ! command -v clang &> /dev/null; then
         echo "clang not found. Attempting to install..."
         if command -v apt-get &> /dev/null; then
-            sudo apt-get update && sudo apt-get install -y clang
+            apt-get update && apt-get install -y clang
         elif command -v yum &> /dev/null; then
-            sudo yum install -y clang
+            yum install -y clang
         elif command -v dnf &> /dev/null; then
-            sudo dnf install -y clang
+            dnf install -y clang
         elif command -v zypper &> /dev/null; then
-            sudo zypper install -y clang
+            zypper install -y clang
         elif command -v pacman &> /dev/null; then
-            sudo pacman -S --noconfirm clang
+            pacman -S --noconfirm clang
         else
             echo "Unable to install clang. Please install it manually."
             exit 1

@@ -4,12 +4,12 @@
 if ! command -v cmake &> /dev/null; then
     echo "CMake is not installed. Installing..."
     if [ -x "$(command -v apt-get)" ]; then
-        sudo apt-get update
-        sudo apt-get install -y cmake
+        apt-get update
+        apt-get install -y cmake
     elif [ -x "$(command -v yum)" ]; then
-        sudo yum install -y cmake
+        yum install -y cmake
     elif [ -x "$(command -v dnf)" ]; then
-        sudo dnf install -y cmake
+        dnf install -y cmake
     else
         echo "Unable to install CMake. Please install it manually."
         exit 1
