@@ -11,6 +11,8 @@ pub struct Config {
 pub struct DistroConfig {
     #[serde(rename = "startup_script")]
     pub startup_script: String,
+    #[serde(rename = "stop_script")]
+    pub stop_script: String,
     #[serde(rename = "connection")]
     pub connection: ConnectionConfig,
     pub skip_packages: Option<Vec<String>>,
