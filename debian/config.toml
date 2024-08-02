@@ -1,4 +1,5 @@
-startup_script = "path/to/start_qemu.sh"
+startup_script = "./debian/start_qemu.sh"
+stop_script = "./debian/stop_qemu.sh"
 skip_packages = ["docker"]
 
 [connection]
