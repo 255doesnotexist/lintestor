@@ -1,0 +1,56 @@
+name: Lintestor Test
+
+on:
+  schedule:
+    - cron: '0 2 * * 1'  # 每周一凌晨2点运行
+  workflow_dispatch:  # 允许手动触发
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v2
+    
+    - name: Set up Rust
+      uses: actions-rs/toolchain@v1
+      with:
+        profile: minimal
+        toolchain: stable
+    
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y qemu-utils qemu-system-x86 qemu-system-misc opensbi u-boot-qemu
+    
+    - name: Setup RISC-V Debian QEMU
+      run: |
+        cd ..
+        wget -O rv64deb.zip "https://gitlab.com/api/v4/projects/giomasce%2Fdqib/jobs/artifacts/master/download?job=convert_riscv64-virt"
+        unzip rv64deb.zip
+        cd dqib_riscv64-virt
+        mkdir -p boot
+        echo 'qemu-system-riscv64 -machine virt -m 1G -smp 8 -cpu rv64 \' > boot/boot.sh
+        echo '-device virtio-blk-device,drive=hd \' >> boot/boot.sh
+        echo '-drive file=image.qcow2,if=none,id=hd \' >> boot/boot.sh
+        echo '-device virtio-net-device,netdev=net \' >> boot/boot.sh
+        echo '-netdev user,id=net,hostfwd=tcp::2222-:22 \' >> boot/boot.sh
+        echo '-bios /usr/lib/riscv64-linux-gnu/opensbi/generic/fw_jump.elf \' >> boot/boot.sh
+        echo '-kernel /usr/lib/u-boot/qemu-riscv64_smode/uboot.elf \' >> boot/boot.sh
+        echo '-object rng-random,filename=/dev/urandom,id=rng \' >> boot/boot.sh
+        echo '-device virtio-rng-device,rng=rng \' >> boot/boot.sh
+        echo '-nographic -append "root=LABEL=rootfs console=ttyS0"' >> boot/boot.sh
+        chmod +x boot/boot.sh
+        cd ../lintestor  # 回到项目目录
+    
+    - name: Run Lintestor
+      run: |
+        cargo run -- --test --aggr --summ
+    
+    - name: Upload test results
+      uses: actions/upload-artifact@v2
+      with:
+        name: test-results
+        path: |
+          reports.json
+          summary.md
