@@ -29,18 +29,17 @@ jobs:
         wget -O rv64deb.zip "https://gitlab.com/api/v4/projects/giomasce%2Fdqib/jobs/artifacts/master/download?job=convert_riscv64-virt"
         unzip rv64deb.zip
         cd dqib_riscv64-virt
-        mkdir -p boot
-        echo 'qemu-system-riscv64 -machine virt -m 1G -smp 8 -cpu rv64 \' > boot/boot.sh
-        echo '-device virtio-blk-device,drive=hd \' >> boot/boot.sh
-        echo '-drive file=image.qcow2,if=none,id=hd \' >> boot/boot.sh
-        echo '-device virtio-net-device,netdev=net \' >> boot/boot.sh
-        echo '-netdev user,id=net,hostfwd=tcp::2222-:22 \' >> boot/boot.sh
-        echo '-bios /usr/lib/riscv64-linux-gnu/opensbi/generic/fw_jump.elf \' >> boot/boot.sh
-        echo '-kernel /usr/lib/u-boot/qemu-riscv64_smode/uboot.elf \' >> boot/boot.sh
-        echo '-object rng-random,filename=/dev/urandom,id=rng \' >> boot/boot.sh
-        echo '-device virtio-rng-device,rng=rng \' >> boot/boot.sh
-        echo '-nographic -append "root=LABEL=rootfs console=ttyS0"' >> boot/boot.sh
-        chmod +x boot/boot.sh
+        echo 'qemu-system-riscv64 -machine virt -m 1G -smp 8 -cpu rv64 \' > boot.sh
+        echo '-device virtio-blk-device,drive=hd \' >> boot.sh
+        echo '-drive file=image.qcow2,if=none,id=hd \' >> boot.sh
+        echo '-device virtio-net-device,netdev=net \' >> boot.sh
+        echo '-netdev user,id=net,hostfwd=tcp::2222-:22 \' >> boot.sh
+        echo '-bios /usr/lib/riscv64-linux-gnu/opensbi/generic/fw_jump.elf \' >> boot.sh
+        echo '-kernel /usr/lib/u-boot/qemu-riscv64_smode/uboot.elf \' >> boot.sh
+        echo '-object rng-random,filename=/dev/urandom,id=rng \' >> boot.sh
+        echo '-device virtio-rng-device,rng=rng \' >> boot.sh
+        echo '-nographic -append "root=LABEL=rootfs console=ttyS0"' >> boot.sh
+        chmod +x boot.sh
         cd ../lintestor  # 回到项目目录
     
     - name: Run Lintestor
