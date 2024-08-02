@@ -3,6 +3,7 @@ mod aggregator;
 mod markdown_report;
 mod utils;
 mod config;
+mod qemu_manager;
 
 fn main() {
     let base_config = match config::Config::from_file("config.toml") {
@@ -28,6 +29,14 @@ fn main() {
             }
         };
 
+        let qemu_manager = crate::qemu_manager::QemuManager::new(&distro_config);
+
+        // launch qemu after tests
+        if let Err(e) = qemu_manager.start() {
+            eprintln!("Failed to start QEMU for {}: {}", distro, e);
+            continue;
+        }
+
         for package in &packages {
             if let Some(skip_packages) = &distro_config.skip_packages {
                 if skip_packages.contains(&package.to_string()) {
@@ -50,6 +59,11 @@ fn main() {
                 Ok(_) => println!("Test passed for {}/{}", distro, package),
                 Err(e) => println!("Test failed for {}/{}: {}", distro, package, e),
             }
+        }
+
+        // stop qemu after tests
+        if let Err(e) = qemu_manager.stop() {
+            eprintln!("Failed to stop QEMU for {}: {}", distro, e);
         }
     }
 
