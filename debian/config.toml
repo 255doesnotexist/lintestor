@@ -1,4 +1,5 @@
 startup_script = "path/to/start_qemu.sh"
+skip_packages = ["docker"]
 
 [connection]
 method = "ssh"

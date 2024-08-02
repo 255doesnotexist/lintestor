@@ -29,6 +29,13 @@ fn main() {
         };
 
         for package in &packages {
+            if let Some(skip_packages) = &distro_config.skip_packages {
+                if skip_packages.contains(&package.to_string()) {
+                    println!("Skipping test for {}/{}", distro, package);
+                    continue;
+                }
+            }
+
             assert!(distro_config.connection.method == "ssh"); // Only SSH is supported now
 
             let ip = distro_config.connection.ip.as_deref().unwrap_or("localhost");

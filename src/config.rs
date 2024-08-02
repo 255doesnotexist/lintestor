@@ -13,6 +13,7 @@ pub struct DistroConfig {
     pub startup_script: String,
     #[serde(rename = "connection")]
     pub connection: ConnectionConfig,
+    pub skip_packages: Option<Vec<String>>,
 }
 
 #[derive(Debug, Deserialize)]
