@@ -11,9 +11,7 @@ Lintestor 是一个基于 Rust 的自动化测试系统，支持多发行版（�
 
 ## 使用方法
 
-如不附加任何命令行参数，则默认执行全部测试过程。
-
-如附加任意命令行参数，则按附加的参数增量执行对应功能。
+附加任意命令行参数，将按附加的参数增量执行对应功能。
 
 `--test` 参数将执行全部发行版的测试。
 
@@ -21,10 +19,10 @@ Lintestor 是一个基于 Rust 的自动化测试系统，支持多发行版（�
 
 `--summ` 参数将执行生成结果操作。
 
-### 运行测试
+### 运行全部测试
 
 ```bash
-cargo run
+cargo run -- --test --aggr --summ
 ```
 
 这会读取 config.toml，执行其中包含的发行版和包的测试。
@@ -57,4 +55,22 @@ ip = "localhost"
 port = 2222
 username = "root"
 password = "root"
+```
+
+执行下面的命令，可查看全部命令行参数。
+
+```sh
+cargo run -- --help
+```
+
+```sh
+Usage: lintestor [OPTIONS]
+
+Options:
+      --test                       Run tests for all distributions
+      --aggr                       Aggregate multiple report.json files into a single reports.json
+      --summ                       Generate a summary report
+      --config <Config file name>  Specify a different base configuration file
+  -h, --help                       Print help
+  -V, --version                    Print version
 ```

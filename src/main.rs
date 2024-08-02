@@ -5,11 +5,24 @@ mod utils;
 mod config;
 mod qemu_manager;
 
+use clap::{Arg, ArgMatches, Command};
+
+const VERSION: &str = env!("CARGO_PKG_VERSION");
+const NAME: &str = env!("CARGO_PKG_NAME");
+const AUTHORS: &str = env!("CARGO_PKG_AUTHORS");
+const DESCRIPTION: &str = env!("CARGO_PKG_DESCRIPTION");
+
 fn main() {
-    let base_config = match config::Config::from_file("config.toml") {
+    let matches = parse_args();
+
+    let test = matches.get_flag("test");
+    let aggr = matches.get_flag("aggr");
+    let summ = matches.get_flag("summ");
+    let config_file = matches.get_one::<String>("config").map(|s| s.as_str()).unwrap_or("config.toml");
+    let base_config = match config::Config::from_file(config_file) {
         Ok(base_config) => base_config,
         Err(e) => {
-            eprintln!("Failed to load config: {}", e);
+            eprintln!("Failed to load config from {}: {}", config_file, e);
             return;
         }
     };
@@ -19,7 +32,52 @@ fn main() {
     let packages: Vec<&str> = base_config.packages.iter().map(|s| &**s).collect();
     println!("Packages: {:?}", packages);
 
-    for distro in &distros {
+    if test  {
+        println!("Running tests");
+        run_tests(&distros, &packages, &base_config);
+    }
+
+    if aggr {
+        println!("Aggregating reports");
+        if let Err(e) = aggregator::aggregate_reports(&distros, &packages) {
+            eprintln!("Failed to aggregate reports: {}", e);
+        }
+    }
+
+    if summ {
+        println!("Generating summary report");
+        if let Err(e) = markdown_report::generate_markdown_report(&distros, &packages) {
+            eprintln!("Failed to generate markdown report: {}", e);
+        }
+    }
+}
+
+fn parse_args() -> ArgMatches {
+    Command::new(NAME)
+        .version(VERSION)
+        .author(AUTHORS)
+        .about(DESCRIPTION)
+        .arg(Arg::new("test")
+            .long("test")
+            .action(clap::ArgAction::SetTrue)
+            .help("Run tests for all distributions"))
+        .arg(Arg::new("aggr")
+            .long("aggr")
+            .action(clap::ArgAction::SetTrue)
+            .help("Aggregate multiple report.json files into a single reports.json"))
+        .arg(Arg::new("summ")
+            .long("summ")
+            .action(clap::ArgAction::SetTrue)
+            .help("Generate a summary report"))
+        .arg(Arg::new("config")
+            .long("config")
+            .value_name("Config file name")
+            .help("Specify a different base configuration file"))
+        .get_matches()
+}
+
+fn run_tests(distros: &[&str], packages: &[&str], base_config: &config::Config) {
+    for distro in distros {
         let distro_config_path = format!("{}/config.toml", distro);
         let distro_config = match config::DistroConfig::from_file(&distro_config_path) {
             Ok(config) => config,
@@ -31,13 +89,12 @@ fn main() {
 
         let qemu_manager = crate::qemu_manager::QemuManager::new(&distro_config);
 
-        // launch qemu after tests
         if let Err(e) = qemu_manager.start() {
             eprintln!("Failed to start QEMU for {}: {}", distro, e);
             continue;
         }
 
-        for package in &packages {
+        for package in packages {
             if let Some(skip_packages) = &distro_config.skip_packages {
                 if skip_packages.contains(&package.to_string()) {
                     println!("Skipping test for {}/{}", distro, package);
@@ -45,7 +102,7 @@ fn main() {
                 }
             }
 
-            assert!(distro_config.connection.method == "ssh"); // Only SSH is supported now
+            assert!(distro_config.connection.method == "ssh");
 
             let ip = distro_config.connection.ip.as_deref().unwrap_or("localhost");
             let port = distro_config.connection.port.unwrap_or(2222);
@@ -61,17 +118,8 @@ fn main() {
             }
         }
 
-        // stop qemu after tests
         if let Err(e) = qemu_manager.stop() {
             eprintln!("Failed to stop QEMU for {}: {}", distro, e);
         }
-    }
-
-    if let Err(e) = aggregator::aggregate_reports(&distros, &packages) {
-        eprintln!("Failed to aggregate reports: {}", e);
-    }
-
-    if let Err(e) = markdown_report::generate_markdown_report(&distros, &packages) {
-        eprintln!("Failed to generate markdown report: {}", e);
     }
 }
