@@ -1,7 +1,7 @@
 {
     "distro": "debian",
-    "os_version": "#1 SMP Debian 6.9.12-1 (2024-07-27)",
-    "kernel_version": "6.9.12-riscv64",
+    "os_version": "#1 SMP Debian 6.9.9-1 (2024-07-13)",
+    "kernel_version": "6.9.9-riscv64",
     "package_name": "clang",
     "package_type": "Compiler",
     "package_version": "version",

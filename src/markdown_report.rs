@@ -38,7 +38,8 @@ pub fn generate_markdown_report(distros: &[&str], packages: &[&str]) -> Result<(
         
         for distro_idx in 0..distros.len() {
             if let Some(report) = report_matrix[pkg_idx][distro_idx] {
-                markdown.push_str(&format!("| {} {}-{} ", if report.all_tests_passed { "✅" } else { "⚠️" }, report.package_name, report.package_version));
+                markdown.push_str(&format!("| {} {}-{} ", 
+                    if report.all_tests_passed { "✅" } else { "⚠️" }, report.package_name, report.package_version));
             } else {
                 markdown.push_str("| ❓ ");
             }
