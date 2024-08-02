@@ -1,7 +1,7 @@
 {
     "distro": "debian",
-    "os_version": "Linux version 6.8.12-riscv64 (debian-kernel@lists.debian.org) (riscv64-linux-gnu-gcc-13 (Debian 13.2.0-25) 13.2.0, GNU ld (GNU Binutils for Debian) 2.42) #1 SMP Debian 6.8.12-1 (2024-05-31)",
-    "kernel_version": "6.8.12-riscv64",
+    "os_version": "Linux version 6.9.12-riscv64 (debian-kernel@lists.debian.org) (riscv64-linux-gnu-gcc-13 (Debian 13.3.0-3) 13.3.0, GNU ld (GNU Binutils for Debian) 2.42.90.20240720) #1 SMP Debian 6.9.12-1 (2024-07-27)",
+    "kernel_version": "6.9.12-riscv64",
     "package_name": "libmemcached",
     "package_type": "Caching Library",
     "package_version": "1.1.4-1.1+b1",
