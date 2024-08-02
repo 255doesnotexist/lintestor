@@ -20,12 +20,14 @@ install_haproxy_package() {
 
 # Function to check HAProxy service status
 test_haproxy_service() {
-    local service_status=$(systemctl is-active --quiet haproxy)
-    if [[ $service_status == "active" ]]; then
-        return 0
-    else
-        return 1
-    fi
+    systemctl is-active --quiet haproxy
+    return $?
+}
+
+# Function to start HAProxy service
+start_haproxy_service() {
+    systemctl start haproxy
+    return $?
 }
 
 # Function to generate the report.json
@@ -34,12 +36,7 @@ generate_report() {
     local kernel_version=$(uname -r)
     local package_version=$(dpkg -l | grep $PACKAGE_NAME | awk '{print $3}')
     local test_name="HAProxy Service Test"
-    local test_passed=false
-
-    # Check HAProxy service status
-    if test_haproxy_service; then
-        test_passed=true
-    fi
+    local test_passed=$1
 
     # Prepare the report content
     local report_content=$(cat <<EOF
@@ -62,7 +59,7 @@ EOF
 )
 
     # Write the report to the file
-    echo "$report_content" >$REPORT_FILE
+    echo "$report_content" > $REPORT_FILE
 }
 
 # Main script execution starts here
@@ -77,6 +74,8 @@ else
         echo "Package $PACKAGE_NAME installed successfully."
     else
         echo "Failed to install package $PACKAGE_NAME."
+        generate_report false
+        echo "Report generated at $REPORT_FILE with failed installation."
         exit 1
     fi
 fi
@@ -85,13 +84,26 @@ fi
 if test_haproxy_service; then
     echo "HAProxy service is active."
     # Generate the report
-    generate_report
+    generate_report true
     echo "Report generated at $REPORT_FILE"
 else
-    echo "HAProxy service is not active."
-    # Generate the report with test failed
-    generate_report
-    echo "Report generated at $REPORT_FILE with failed test."
+    echo "HAProxy service is not active. Attempting to start the service..."
+    # Attempt to start the HAProxy service
+    if start_haproxy_service; then
+        echo "HAProxy service started successfully."
+        # Recheck HAProxy service status
+        if test_haproxy_service; then
+            echo "HAProxy service is now active."
+            generate_report true
+        else
+            echo "HAProxy service failed to start."
+            generate_report false
+        fi
+    else
+        echo "Failed to start HAProxy service."
+        generate_report false
+    fi
+    echo "Report generated at $REPORT_FILE with service start attempt."
 fi
 
 # End of the script
