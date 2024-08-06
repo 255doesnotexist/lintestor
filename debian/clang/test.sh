@@ -5,7 +5,8 @@ check_and_install_clang() {
     if ! command -v clang &> /dev/null; then
         echo "clang not found. Attempting to install..."
         if command -v apt-get &> /dev/null; then
-            apt-get update && apt-get install -y clang
+            export DEBIAN_FRONTEND=noninteractive # 防止apt-get交互式安装
+            apt-get install -y clang
         elif command -v yum &> /dev/null; then
             yum install -y clang
         elif command -v dnf &> /dev/null; then
