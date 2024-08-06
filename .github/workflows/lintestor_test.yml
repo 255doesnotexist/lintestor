@@ -22,6 +22,7 @@ jobs:
     - name: Install dependencies
       run: |
         sudo apt-get update
+        sudo apt-get install -y libssl-dev # lintestor build dependencies
         sudo apt-get install -y qemu-utils qemu-system-x86 qemu-system-misc opensbi u-boot-qemu
     
     - name: Setup RISC-V Debian QEMU
