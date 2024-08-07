@@ -36,7 +36,7 @@ fn main() {
 
     if test  {
         println!("Running tests");
-        run_tests(&distros, &packages, &base_config, run_locally);
+        run_tests(&distros, &packages, run_locally);
     }
 
     if aggr {
@@ -82,7 +82,7 @@ fn parse_args() -> ArgMatches {
         .get_matches()
 }
 
-fn run_tests(distros: &[&str], packages: &[&str], base_config: &config::Config, run_locally: bool) {
+fn run_tests(distros: &[&str], packages: &[&str], run_locally: bool) {
     for distro in distros {
         let distro_config_path = format!("{}/config.toml", distro);
         let distro_config = match config::DistroConfig::from_file(&distro_config_path) {
