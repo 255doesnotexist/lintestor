@@ -1,4 +1,3 @@
-mod scheduler;
 mod aggregator;
 mod markdown_report;
 mod utils;
@@ -20,6 +19,7 @@ fn main() {
     let test = matches.get_flag("test");
     let aggr = matches.get_flag("aggr");
     let summ = matches.get_flag("summ");
+    let run_locally = matches.get_flag("locally");
     let config_file = matches.get_one::<String>("config").map(|s| s.as_str()).unwrap_or("config.toml");
     let base_config = match config::Config::from_file(config_file) {
         Ok(base_config) => base_config,
@@ -36,7 +36,7 @@ fn main() {
 
     if test  {
         println!("Running tests");
-        run_tests(&distros, &packages, &base_config);
+        run_tests(&distros, &packages, &base_config, run_locally);
     }
 
     if aggr {
@@ -82,7 +82,7 @@ fn parse_args() -> ArgMatches {
         .get_matches()
 }
 
-fn run_tests(distros: &[&str], packages: &[&str], base_config: &config::Config) {
+fn run_tests(distros: &[&str], packages: &[&str], base_config: &config::Config, run_locally: bool) {
     for distro in distros {
         let distro_config_path = format!("{}/config.toml", distro);
         let distro_config = match config::DistroConfig::from_file(&distro_config_path) {
@@ -118,7 +118,7 @@ fn run_tests(distros: &[&str], packages: &[&str], base_config: &config::Config) 
             println!("Connecting to QEMU with credentials: IP={}, Port={}, Username={}, Password={}", ip, port, username, password.unwrap_or("None"));
             println!("Running test for {}/{}", distro, package);
 
-            let test_runner: Box<dyn TestRunner> = if base_config.run_locally {
+            let test_runner: Box<dyn TestRunner> = if run_locally {
                 Box::new(LocalTestRunner::new(distro, package))
             } else {
                 Box::new(RemoteTestRunner::new(
