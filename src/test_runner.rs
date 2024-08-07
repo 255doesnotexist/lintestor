@@ -125,7 +125,7 @@ impl TestRunner for RemoteTestRunner {
         channel.read_to_string(&mut s)?;
         self.print_ssh_msg(&format!("Command output: {}", s));
 
-        channel.send_eof();
+        channel.send_eof()?;
         channel.wait_close()?;
         let exit_status = channel.exit_status()?;
         if exit_status != 0 {
@@ -139,7 +139,7 @@ impl TestRunner for RemoteTestRunner {
         let mut s = String::new();
         channel.read_to_string(&mut s)?;
         self.print_ssh_msg(&format!("Test command output: {}", s));
-        channel.send_eof();
+        channel.send_eof()?;
         channel.wait_close()?;
         let exit_status = channel.exit_status()?;
         if exit_status != 0 {
@@ -156,7 +156,7 @@ impl TestRunner for RemoteTestRunner {
         let mut s = String::new();
         channel.read_to_string(&mut s)?;
         self.print_ssh_msg(&format!("Command output: {}", s));
-        channel.send_eof();
+        channel.send_eof()?;
         channel.wait_close()?;
         let exit_status = channel.exit_status()?;
         if exit_status != 0 {
