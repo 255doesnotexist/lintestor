@@ -17,3 +17,19 @@ pub struct TestResult {
     pub test_name: String,
     pub passed: bool,
 }
+
+pub struct TempFile {
+    path: String,
+}
+
+impl TempFile {
+    pub fn new(path: String) -> Self {
+        TempFile { path }
+    }
+}
+
+impl Drop for TempFile {
+    fn drop(&mut self) {
+        let _ = std::fs::remove_file(&self.path);
+    }
+}
