@@ -2,10 +2,9 @@ use std::path::Path;
 use std::process::Command;
 use std::net::TcpStream;
 use ssh2::Session;
-use crate::utils::Report;
+use crate::utils::{Report, TempFile};
 use std::fs::File;
 use std::io::{Read, Write};
-use std::net::ToSocketAddrs;
 
 pub trait TestRunner {
     fn run_test(&self, distro: &str, package: &str) -> Result<(), Box<dyn std::error::Error>>;
@@ -93,6 +92,7 @@ impl TestRunner for RemoteTestRunner {
         // 压缩本地测试目录
         let local_dir = format!("{}/{}", distro, package);
         let tar_file = format!("{}.tar.gz", package);
+        let _temp_tar = TempFile::new(tar_file.clone());
         Command::new("tar")
             .arg("czf")
             .arg(&tar_file)
@@ -165,6 +165,7 @@ impl TestRunner for RemoteTestRunner {
 
         // 下载压缩的测试目录
         let local_result_tar_file = format!("{}/{}_result.tar.gz", local_dir, package);
+        let _temp_result_tar = TempFile::new(local_result_tar_file.clone());
         let (mut remote_file, _) = sess.scp_recv(Path::new(&remote_tar_file))?;
         let mut local_file = File::create(&local_result_tar_file)?;
         let mut buffer = Vec::new();
@@ -180,9 +181,6 @@ impl TestRunner for RemoteTestRunner {
             .arg(&local_dir)
             .output()?;
         self.print_ssh_msg(&format!("Extracted test results into local directory {}", local_dir));
-
-        // 清理
-        let _ = std::fs::remove_file(&local_result_tar_file);
 
         // 下载测试报告
         let report_path = format!("{}/report.json", local_dir);
