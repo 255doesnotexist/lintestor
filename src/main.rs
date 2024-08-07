@@ -4,8 +4,10 @@ mod markdown_report;
 mod utils;
 mod config;
 mod qemu_manager;
+mod test_runner;
 
 use clap::{Arg, ArgMatches, Command};
+use crate::test_runner::{TestRunner, LocalTestRunner, RemoteTestRunner};
 
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 const NAME: &str = env!("CARGO_PKG_NAME");
@@ -116,7 +118,18 @@ fn run_tests(distros: &[&str], packages: &[&str], base_config: &config::Config) 
             println!("Connecting to QEMU with credentials: IP={}, Port={}, Username={}, Password={}", ip, port, username, password.unwrap_or("None"));
             println!("Running test for {}/{}", distro, package);
 
-            match scheduler::run_test(ip, port, username, password, distro, package) {
+            let test_runner: Box<dyn TestRunner> = if base_config.run_locally {
+                Box::new(LocalTestRunner::new(distro, package))
+            } else {
+                Box::new(RemoteTestRunner::new(
+                    ip.to_string(),
+                    port,
+                    username.to_string(),
+                    password.map(|p| p.to_string()),
+                ))
+            };
+    
+            match test_runner.run_test(&distro, &package) {
                 Ok(_) => println!("Test passed for {}/{}", distro, package),
                 Err(e) => println!("Test failed for {}/{}: {}", distro, package, e),
             }

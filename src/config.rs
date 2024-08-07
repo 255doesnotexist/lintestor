@@ -5,6 +5,7 @@ use std::fs;
 pub struct Config {
     pub distros: Vec<String>,
     pub packages: Vec<String>,
+    pub run_locally: bool,
 }
 
 #[derive(Debug, Deserialize)]
