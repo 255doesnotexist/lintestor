@@ -1,0 +1,16 @@
+{
+    "distro": "debian",
+    "os_version": "Debian GNU/Linux 12 (bookworm)",
+    "kernel_version": "6.1.0-22-amd64",
+    "package_version": "1.80.1",
+    "cargo_version": "1.80.1",
+    "package_name": "Rust",
+    "package_type": "Programming Language",
+    "test_results": [
+        {
+            "test_name": "Rust Functionality Test",
+            "passed": true
+        }
+    ],
+    "all_tests_passed": true
+}
