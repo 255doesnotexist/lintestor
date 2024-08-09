@@ -1,0 +1,16 @@
+{
+    "distro": "12
+debian",
+    "os_version": "Debian GNU/Linux 12 (bookworm)",
+    "kernel_version": "6.1.0-22-amd64",
+    "package_version": "1.7.19",
+    "package_name": "runC",
+    "package_type": "Container Runtime",
+    "test_results": [
+        {
+            "test_name": "runC Functionality Test",
+            "passed": false
+        }
+    ],
+    "all_tests_passed": false
+}
