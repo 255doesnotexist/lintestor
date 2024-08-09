@@ -1,0 +1,15 @@
+{
+    "distro": "debian",
+    "os_version": "Linux version 6.1.0-22-amd64 (debian-kernel@lists.debian.org) (gcc-12 (Debian 12.2.0-14) 12.2.0, GNU ld (GNU Binutils for Debian) 2.40) #1 SMP PREEMPT_DYNAMIC Debian 6.1.94-1 (2024-06-21)",
+    "kernel_version": "6.1.0-22-amd64",
+    "package_version": "3.1.2p20",
+    "package_name": "Ruby",
+    "package_type": "Dynamic, Object-Oriented Programming Language",
+    "test_results": [
+        {
+            "test_name": "Ruby Functionality Test",
+            "passed": true
+        }
+    ],
+    "all_tests_passed": true
+}
