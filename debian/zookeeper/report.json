@@ -1,0 +1,15 @@
+{
+    "distro": "debian",
+    "os_version": "Debian GNU/Linux 12 (bookworm)",
+    "kernel_version": "6.1.0-22-amd64",
+    "package_version": "Unknown",
+    "package_name": "Apache ZooKeeper",
+    "package_type": "Distributed Coordination Service",
+    "test_results": [
+        {
+            "test_name": "ZooKeeper Functionality Test",
+            "passed": true
+        }
+    ],
+    "all_tests_passed": true
+}
