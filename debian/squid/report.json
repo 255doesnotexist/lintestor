@@ -1,0 +1,15 @@
+{
+    "distro": "debian",
+    "os_version": "Debian GNU/Linux 12 (bookworm)",
+    "kernel_version": "6.1.0-22-amd64",
+    "package_version": "5.7",
+    "package_name": "Squid",
+    "package_type": "Proxy Server",
+    "test_results": [
+        {
+            "test_name": "Squid Functionality Test",
+            "passed": true
+        }
+    ],
+    "all_tests_passed": true
+}
