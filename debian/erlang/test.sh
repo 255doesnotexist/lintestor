@@ -1,5 +1,5 @@
 #!/bin/bash
-
+export DEBIAN_FRONTEND=noninteractive # 防止apt-get交互式安装
 # 定义包的详细信息
 PACKAGE_NAME="erlang"
 PACKAGE_TYPE="Programming Language"
