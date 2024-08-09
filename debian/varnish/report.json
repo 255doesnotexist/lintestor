@@ -1,0 +1,15 @@
+{
+    "distro": "debian",
+    "os_version": "Debian GNU/Linux 12 (bookworm)",
+    "kernel_version": "6.1.0-22-amd64",
+    "package_version": "7.1.1",
+    "package_name": "Varnish",
+    "package_type": "HTTP Cache",
+    "test_results": [
+        {
+            "test_name": "Varnish Functionality Test",
+            "passed": true
+        }
+    ],
+    "all_tests_passed": true
+}
