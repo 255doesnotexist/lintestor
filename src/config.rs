@@ -18,7 +18,7 @@ pub struct DistroConfig {
     pub skip_packages: Option<Vec<String>>,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize)]
 pub struct ConnectionConfig {
     pub method: String,
     pub ip: Option<String>,

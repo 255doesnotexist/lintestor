@@ -1,14 +1,18 @@
+use crate::utils::Report;
+use serde_json;
 use std::fs::File;
 use std::io::prelude::*;
-use serde_json;
-use crate::utils::Report;
 
-pub fn aggregate_reports(distros: &[&str], packages: &[&str]) -> Result<(), Box<dyn std::error::Error>> {
+pub fn aggregate_reports(
+    distros: &[&str],
+    packages: &[&str],
+) -> Result<(), Box<dyn std::error::Error>> {
     let mut consolidated_report = vec![];
 
     for &distro in distros {
         for &package in packages {
             let report_path = format!("{}/{}/report.json", distro, package);
+            println!("Aggregating {}", report_path);
             if let Ok(file) = File::open(&report_path) {
                 let mut report: Report = serde_json::from_reader(file)?;
                 report.distro = distro.to_string();
