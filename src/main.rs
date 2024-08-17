@@ -23,6 +23,7 @@ fn main() {
     let summ = matches.get_flag("summ");
     let run_locally = matches.get_flag("locally");
     let cleanup = matches.get_flag("cleanup");
+    let verbose = matches.get_flag("verbose");
     let config_file = matches
         .get_one::<String>("config")
         .map(|s| s.as_str())
@@ -42,7 +43,7 @@ fn main() {
 
     if test {
         println!("Running tests");
-        run_tests(&distros, &packages, run_locally, cleanup);
+        run_tests(&distros, &packages, run_locally, cleanup, verbose);
     }
 
     if aggr {
@@ -101,10 +102,16 @@ fn parse_args() -> ArgMatches {
                 .action(clap::ArgAction::SetTrue)
                 .help("Clean up report.json files left by previous runs"),
         )
+        .arg(
+            Arg::new("verbose")
+                .long("verbose")
+                .action(clap::ArgAction::SetTrue)
+                .help("Show all runtime output of test scripts in stdout"),
+        )
         .get_matches()
 }
 
-fn run_tests(distros: &[&str], packages: &[&str], run_locally: bool, cleanup: bool) {
+fn run_tests(distros: &[&str], packages: &[&str], run_locally: bool, cleanup: bool, verbose: bool) {
     for distro in distros {
         if !Path::new(distro).exists() {
             eprintln!("Distro directory '{}' not found, skipping", distro);
@@ -130,6 +137,21 @@ fn run_tests(distros: &[&str], packages: &[&str], run_locally: bool, cleanup: bo
         }
 
         for package in packages {
+            if cleanup {
+                let report_path = format!("{}/{}/report.json", distro, package);
+                let report_file_path = Path::new(&report_path);
+                if report_file_path.exists() {
+                    if let Err(e) = remove_file(report_file_path) {
+                        eprintln!(
+                            "Failed to remove previous report file {}: {}",
+                            report_path, e
+                        );
+                    } else {
+                        println!("Removed previous report file {}", report_path);
+                    }
+                }
+            }
+
             if let Some(skip_packages) = &distro_config.skip_packages {
                 if skip_packages.contains(&package.to_string()) {
                     println!("Skipping test for {}/{}", distro, package);
@@ -141,18 +163,6 @@ fn run_tests(distros: &[&str], packages: &[&str], run_locally: bool, cleanup: bo
                 continue;
             }
 
-            let report_path = format!("{}/{}/report.json", distro, package);
-            let report_file_path = Path::new(&report_path);
-            if cleanup && report_file_path.exists() {
-                if let Err(e) = remove_file(report_file_path) {
-                    eprintln!(
-                        "Failed to remove previous report file {}: {}",
-                        report_path, e
-                    );
-                } else {
-                    println!("Removed previous report file {}", report_path);
-                }
-            }
             println!("Running test for {}/{}", distro, package);
 
             let test_runner: Box<dyn TestRunner> = if run_locally {
@@ -181,7 +191,7 @@ fn run_tests(distros: &[&str], packages: &[&str], run_locally: bool, cleanup: bo
                 ))
             };
 
-            match test_runner.run_test(&distro, &package) {
+            match test_runner.run_test(&distro, &package, verbose) {
                 Ok(_) => println!("Test passed for {}/{}", distro, package),
                 Err(e) => println!("Test failed for {}/{}: {}", distro, package, e),
             }

@@ -4,10 +4,15 @@ use std::fs::File;
 use std::io::{Read, Write};
 use std::net::TcpStream;
 use std::path::Path;
-use std::process::Command;
+use std::process::{Command, Stdio};
 
 pub trait TestRunner {
-    fn run_test(&self, distro: &str, package: &str) -> Result<(), Box<dyn std::error::Error>>;
+    fn run_test(
+        &self,
+        distro: &str,
+        package: &str,
+        verbose: bool,
+    ) -> Result<(), Box<dyn std::error::Error>>;
 }
 
 pub struct LocalTestRunner;
@@ -19,9 +24,22 @@ impl LocalTestRunner {
 }
 
 impl TestRunner for LocalTestRunner {
-    fn run_test(&self, distro: &str, package: &str) -> Result<(), Box<dyn std::error::Error>> {
+    fn run_test(
+        &self,
+        distro: &str,
+        package: &str,
+        verbose: bool,
+    ) -> Result<(), Box<dyn std::error::Error>> {
         let script_path = format!("{}/{}/test.sh", distro, package);
-        let output = Command::new("bash").arg("-c").arg(&script_path).output()?;
+        let output = Command::new("bash")
+            .arg("-c")
+            .arg(&script_path)
+            .stdout(if verbose {
+                Stdio::inherit()
+            } else {
+                Stdio::null()
+            })
+            .output()?;
 
         if !output.status.success() {
             return Err(format!(
@@ -71,7 +89,13 @@ impl RemoteTestRunner {
 }
 
 impl TestRunner for RemoteTestRunner {
-    fn run_test(&self, distro: &str, package: &str) -> Result<(), Box<dyn std::error::Error>> {
+    fn run_test(
+        &self,
+        distro: &str,
+        package: &str,
+        _verbose: bool,
+    ) -> Result<(), Box<dyn std::error::Error>> {
+        // TODO: add support for `verbose` flag
         // 创建 SSH 会话
         let tcp = TcpStream::connect((self.remote_ip.as_str(), self.port))?;
         let mut sess = Session::new()?;
