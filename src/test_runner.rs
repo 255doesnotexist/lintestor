@@ -20,10 +20,13 @@ impl LocalTestRunner {
 
 impl TestRunner for LocalTestRunner {
     fn run_test(&self, distro: &str, package: &str) -> Result<(), Box<dyn std::error::Error>> {
+        let prerequisite_path = format!("{}/prerequisite.sh", distro);
         let script_path = format!("{}/{}/test.sh", distro, package);
+        
+        // 执行 prerequisite.sh 和 test.sh 在同一个 bash 环境中
         let output = Command::new("bash")
             .arg("-c")
-            .arg(&script_path)
+            .arg(format!("source {} && bash {}", prerequisite_path, script_path))
             .output()?;
 
         if !output.status.success() {
@@ -110,6 +113,16 @@ impl TestRunner for RemoteTestRunner {
         remote_file.write_all(&buffer)?;
         self.print_ssh_msg(&format!("File {} uploaded to remote server", tar_file));
 
+        // 上传 prerequisite.sh 到远程服务器
+        let prerequisite_path = format!("{}/prerequisite.sh", distro);
+        let remote_prerequisite_path = format!("/tmp/prerequisite.sh");
+        let mut remote_file = sess.scp_send(Path::new(&remote_prerequisite_path), 0o644, std::fs::metadata(&prerequisite_path)?.len(), None)?;
+        let mut local_file = File::open(&prerequisite_path)?;
+        let mut buffer = Vec::new();
+        local_file.read_to_end(&mut buffer)?;
+        remote_file.write_all(&buffer)?;
+        self.print_ssh_msg(&format!("File {} uploaded to remote server", prerequisite_path));
+
         // 确保远程文件在继续之前关闭
         drop(remote_file);
 
@@ -134,7 +147,7 @@ impl TestRunner for RemoteTestRunner {
 
         // 运行测试命令
         let mut channel = sess.channel_session()?;
-        channel.exec(&format!("cd {} && ./test.sh", remote_dir))?;
+        channel.exec(&format!("cd {} && source /tmp/prerequisite.sh && ./test.sh", remote_dir))?;
         self.print_ssh_msg(&format!("Running tests in directory {}", remote_dir));
         let mut s = String::new();
         channel.read_to_string(&mut s)?;
