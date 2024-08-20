@@ -2,11 +2,8 @@
 
 # 定义包的详细信息
 PACKAGE_NAME="libmemcached11t64"
-PACKAGE_SHOW_NAME="libmemcached"
 PACKAGE_DEV_NAME="libmemcached-dev"
 MEMCACHED_PACKAGE="memcached"
-PACKAGE_TYPE="Caching Library"
-REPORT_FILE="report.json"
 
 # 检查包是否已安装
 is_package_installed() {
@@ -16,6 +13,7 @@ is_package_installed() {
 
 # 安装 libmemcached 和 memcached 包
 install_libmemcached_package() {
+    export DEBIAN_FRONTEND=noninteractive
     apt-get update
     apt-get install -y $PACKAGE_NAME $PACKAGE_DEV_NAME $MEMCACHED_PACKAGE
     return $?
@@ -100,35 +98,6 @@ EOF
     fi
 }
 
-# 生成报告
-generate_report() {
-    local test_passed=$1
-    local os_version=$(cat /proc/version)
-    local kernel_version=$(uname -r)
-    local package_version=$(dpkg -l | grep $PACKAGE_NAME | head -n 1 | awk '{print $3}')
-    local test_name="libmemcached Functionality Test"
-
-    local report_content=$(cat <<EOF
-{
-    "distro": "debian",
-    "os_version": "$os_version",
-    "kernel_version": "$kernel_version",
-    "package_name": "$PACKAGE_SHOW_NAME",
-    "package_type": "$PACKAGE_TYPE",
-    "package_version": "$package_version",
-    "test_results": [
-        {
-            "test_name": "$test_name",
-            "passed": $test_passed
-        }
-    ],
-    "all_tests_passed": $test_passed
-}
-EOF
-)
-    echo "$report_content" > $REPORT_FILE
-}
-
 # 主函数逻辑
 main() {
     # 检查包是否已安装
@@ -140,37 +109,36 @@ main() {
             echo "Package $PACKAGE_NAME installed successfully."
         else
             echo "Failed to install package $PACKAGE_NAME."
-            exit 1
+            return 1
         fi
     fi
 
+    PACKAGE_VERSION=$(dpkg -l | grep $PACKAGE_NAME | head -n 1 | awk '{print $3}')
     # 启动 memcached 服务
     if command -v memcached &> /dev/null; then
         if start_memcached; then
             echo "memcached service started successfully."
         else
             echo "Failed to start memcached service."
-            exit 1
+            return 1
         fi
     else
         echo "memcached command not found. Please ensure memcached is installed correctly."
-        exit 1
+        return 1
     fi
 
     # 测试 libmemcached 的功能
     if test_libmemcached_functionality; then
         echo "libmemcached is functioning correctly."
-        generate_report true
+        return 0
     else
         echo "libmemcached is not functioning correctly."
-        generate_report false
+        return 0
     fi
 
     # 停止 memcached 服务
     stop_memcached
     echo "memcached service stopped."
-
-    echo "Report generated at $REPORT_FILE"
 }
 
 # 执行主函数

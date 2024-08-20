@@ -17,7 +17,7 @@ check_and_install_clang() {
             pacman -S --noconfirm clang
         else
             echo "Unable to install clang. Please install it manually."
-            exit 1
+            return 1
         fi
     fi
 }
@@ -40,9 +40,9 @@ clang test.c -o test_program
 
 # 检查编译是否成功
 if [ $? -eq 0 ]; then
-    test_passed=true
+    exit_status=0
 else
-    test_passed=false
+    exit_status=1
 fi
 
 # 运行编译后的程序
@@ -51,29 +51,6 @@ fi
 # 清理临时文件
 rm test.c test_program
 
-# 获取系统信息
-os_version=$(uname -v)
-kernel_version=$(uname -r)
-clang_version=$(clang --version | head -n 1 | awk '{print $3}')
-distro="debian"
+PACKAGE_VERSION=$(clang --version | head -n 1 | awk '{print $3}')
 
-# 生成report.json
-cat << EOF > report.json
-{
-    "distro": "$distro",
-    "os_version": "$os_version",
-    "kernel_version": "$kernel_version",
-    "package_name": "clang",
-    "package_type": "Compiler",
-    "package_version": "$clang_version",
-    "test_results": [
-        {
-            "test_name": "Clang Compilation Test",
-            "passed": $test_passed
-        }
-    ],
-    "all_tests_passed": $test_passed
-}
-EOF
-
-echo "测试完成,结果已保存到report.json"
+return $exit_status
