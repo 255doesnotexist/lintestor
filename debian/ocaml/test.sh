@@ -1,8 +1,6 @@
 #!/bin/bash
 
 PACKAGE_NAME="ocaml"
-PACKAGE_TYPE="Programming Language"
-REPORT_FILE="report.json"
 
 # 检查 OCaml 是否已安装
 is_ocaml_installed() {
@@ -12,6 +10,7 @@ is_ocaml_installed() {
 
 # 安装 OCaml 包
 install_ocaml_package() {
+    export DEBIAN_FRONTEND=noninteractive
     apt-get update
     apt-get install -y $PACKAGE_NAME ocamlbuild
     return $?
@@ -43,35 +42,6 @@ EOF
     return 1
 }
 
-# 生成报告
-generate_report() {
-    local test_passed=$1
-    local os_version=$(cat /proc/version)
-    local kernel_version=$(uname -r)
-    local package_version=$(dpkg -l | grep $PACKAGE_NAME | head -n 1 | awk '{print $3}')
-    local test_name="OCaml Functionality Test"
-
-    local report_content=$(cat <<EOF
-{
-    "distro": "debian",
-    "os_version": "$os_version",
-    "kernel_version": "$kernel_version",
-    "package_name": "$PACKAGE_NAME",
-    "package_type": "$PACKAGE_TYPE",
-    "package_version": "$package_version",
-    "test_results": [
-        {
-            "test_name": "$test_name",
-            "passed": $test_passed
-        }
-    ],
-    "all_tests_passed": $test_passed
-}
-EOF
-)
-    echo "$report_content" > $REPORT_FILE
-}
-
 # 主函数逻辑
 main() {
     if is_ocaml_installed; then
@@ -82,19 +52,19 @@ main() {
             echo "Package $PACKAGE_NAME installed successfully."
         else
             echo "Failed to install package $PACKAGE_NAME."
-            exit 1
+            return 1
         fi
     fi
 
+    PACKAGE_VERSION=$(dpkg -l | grep $PACKAGE_NAME | head -n 1 | awk '{print $3}')
+
     if test_ocaml_functionality; then
         echo "OCaml is functioning correctly."
-        generate_report true
+        return 0
     else
         echo "OCaml is not functioning correctly."
-        generate_report false
+        return 1
     fi
-
-    echo "Report generated at $REPORT_FILE"
 }
 
 # 执行主函数

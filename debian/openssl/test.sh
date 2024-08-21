@@ -2,9 +2,6 @@
 
 # Define the package details
 PACKAGE_NAME="openssl"
-PACKAGE_SHOW_NAME="OpenSSL"
-PACKAGE_TYPE="Cryptography and SSL/TLS Toolkit"
-REPORT_FILE="report.json"
 
 # Function to check if OpenSSL is installed
 is_openssl_installed() {
@@ -14,6 +11,7 @@ is_openssl_installed() {
 
 # Function to install OpenSSL package
 install_openssl_package() {
+    export DEBIAN_FRONTEND=noninteractive
     apt-get update
     apt-get install -y $PACKAGE_NAME
 
@@ -46,43 +44,6 @@ test_openssl_functionality() {
     fi
 }
 
-# Function to generate the report.json
-generate_report() {
-    local os_version=$(cat /proc/version)
-    local kernel_version=$(uname -r)
-    local openssl_version=$(openssl version | awk '{print $2}')
-    local test_name="OpenSSL Functionality Test"
-    local test_passed=false
-
-    # Check OpenSSL functionality
-    if test_openssl_functionality; then
-        test_passed=true
-    fi
-
-    # Prepare the report content
-    local report_content=$(cat <<EOF
-{
-    "distro": "debian",
-    "os_version": "$os_version",
-    "kernel_version": "$kernel_version",
-    "package_version": "$openssl_version",
-    "package_name": "$PACKAGE_SHOW_NAME",
-    "package_type": "$PACKAGE_TYPE",
-    "test_results": [
-        {
-            "test_name": "$test_name",
-            "passed": $test_passed
-        }
-    ],
-    "all_tests_passed": $test_passed
-}
-EOF
-)
-
-    # Write the report to the file
-    echo "$report_content" >$REPORT_FILE
-}
-
 # Main script execution starts here
 
 # Check if OpenSSL is installed
@@ -95,21 +56,18 @@ else
         echo "OpenSSL installed successfully."
     else
         echo "Failed to install OpenSSL."
-        exit 1
+        return 1
     fi
 fi
 
+PACKAGE_VERSION=$(openssl version | awk '{print $2}')
 # Check OpenSSL functionality by performing encryption and decryption
 if test_openssl_functionality; then
     echo "OpenSSL is functioning correctly."
-    # Generate the report
-    generate_report
-    echo "Report generated at $REPORT_FILE"
+    return 0
 else
     echo "OpenSSL is not functioning correctly."
-    # Generate the report with test failed
-    generate_report
-    echo "Report generated at $REPORT_FILE with failed test."
+    return 1
 fi
 
 # End of the script

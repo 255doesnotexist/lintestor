@@ -2,9 +2,6 @@
 
 # Define the package details
 PACKAGE_NAME="perl"
-PACKAGE_SHOW_NAME="Perl"
-PACKAGE_TYPE="Practical Extraction and Reporting Language"
-REPORT_FILE="report.json"
 
 # Function to check if Perl is installed
 is_perl_installed() {
@@ -14,6 +11,7 @@ is_perl_installed() {
 
 # Function to install Perl package
 install_perl_package() {
+    export DEBIAN_FRONTEND=noninteractive
     apt-get update
     apt-get install -y $PACKAGE_NAME
 
@@ -51,43 +49,6 @@ EOF
     fi
 }
 
-# Function to generate the report.json
-generate_report() {
-    local os_version=$(cat /proc/version)
-    local kernel_version=$(uname -r)
-    local perl_version=$(perl -v | grep -oP "This is perl \K(\d+\.\d+\.\d+)")
-    local test_name="Perl Functionality Test"
-    local test_passed=false
-
-    # Check Perl functionality
-    if test_perl_functionality; then
-        test_passed=true
-    fi
-
-    # Prepare the report content
-    local report_content=$(cat <<EOF
-{
-    "distro": "debian",
-    "os_version": "$os_version",
-    "kernel_version": "$kernel_version",
-    "package_version": "$perl_version",
-    "package_name": "$PACKAGE_SHOW_NAME",
-    "package_type": "$PACKAGE_TYPE",
-    "test_results": [
-        {
-            "test_name": "$test_name",
-            "passed": $test_passed
-        }
-    ],
-    "all_tests_passed": $test_passed
-}
-EOF
-)
-
-    # Write the report to the file
-    echo "$report_content" >$REPORT_FILE
-}
-
 # Main script execution starts here
 
 # Check if Perl is installed
@@ -100,21 +61,19 @@ else
         echo "Perl installed successfully."
     else
         echo "Failed to install Perl."
-        exit 1
+        return 1
     fi
 fi
+
+PACKAGE_VERSION=$(perl -v | grep -oP "This is perl \K(\d+\.\d+\.\d+)")
 
 # Check Perl functionality by running a simple Perl script
 if test_perl_functionality; then
     echo "Perl is functioning correctly."
-    # Generate the report
-    generate_report
-    echo "Report generated at $REPORT_FILE"
+    return 0
 else
     echo "Perl is not functioning correctly."
-    # Generate the report with test failed
-    generate_report
-    echo "Report generated at $REPORT_FILE with failed test."
+    return 1
 fi
 
 # End of the script
