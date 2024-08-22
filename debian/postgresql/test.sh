@@ -2,9 +2,6 @@
 
 # Define the package details
 PACKAGE_NAME="postgresql"
-PACKAGE_SHOW_NAME="PostgreSQL"
-PACKAGE_TYPE="Relational Database Management System"
-REPORT_FILE="report.json"
 
 # Function to check if PostgreSQL is installed
 is_postgresql_installed() {
@@ -14,6 +11,7 @@ is_postgresql_installed() {
 
 # Function to install PostgreSQL package
 install_postgresql_package() {
+    export DEBIAN_FRONTEND=noninteractive
     apt-get update
     apt-get install -y $PACKAGE_NAME postgresql-contrib
     systemctl start postgresql
@@ -48,43 +46,6 @@ test_postgresql_functionality() {
     fi
 }
 
-# Function to generate the report.json
-generate_report() {
-    local os_version=$(cat /proc/version)
-    local kernel_version=$(uname -r)
-    local postgresql_version=$(psql --version | awk '{print $3}')
-    local test_name="PostgreSQL Functionality Test"
-    local test_passed=false
-
-    # Check PostgreSQL functionality
-    if test_postgresql_functionality; then
-        test_passed=true
-    fi
-
-    # Prepare the report content
-    local report_content=$(cat <<EOF
-{
-    "distro": "debian",
-    "os_version": "$os_version",
-    "kernel_version": "$kernel_version",
-    "package_version": "$postgresql_version",
-    "package_name": "$PACKAGE_SHOW_NAME",
-    "package_type": "$PACKAGE_TYPE",
-    "test_results": [
-        {
-            "test_name": "$test_name",
-            "passed": $test_passed
-        }
-    ],
-    "all_tests_passed": $test_passed
-}
-EOF
-)
-
-    # Write the report to the file
-    echo "$report_content" >$REPORT_FILE
-}
-
 # Main script execution starts here
 
 # Check if PostgreSQL is installed
@@ -97,21 +58,19 @@ else
         echo "PostgreSQL installed successfully."
     else
         echo "Failed to install PostgreSQL."
-        exit 1
+        return 1
     fi
 fi
+
+PACKAGE_VERSION=$(psql --version | awk '{print $3}')
 
 # Check PostgreSQL functionality by running a simple query
 if test_postgresql_functionality; then
     echo "PostgreSQL is functioning correctly."
-    # Generate the report
-    generate_report
-    echo "Report generated at $REPORT_FILE"
+    return 0
 else
     echo "PostgreSQL is not functioning correctly."
-    # Generate the report with test failed
-    generate_report
-    echo "Report generated at $REPORT_FILE with failed test."
+    return 1
 fi
 
 # End of the script

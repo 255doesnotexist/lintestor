@@ -10,6 +10,10 @@ echo "This is an example dummy test script..."
 # Do your stuff here
 sleep 1
 
-# Do NOT use "exit" throughout your script; use "return" instead, 
+# Do NOT use "exit" at all times; use "return" instead, 
 # otherwise the PACKAGE_VERSION could not be fetched properly in report.json
+
+# note that when used in sub-functions, "return" may only be able to jump out of the function,
+# not exiting from the script itself. If a main function is used, consider adding
+# related checks there to ensure that the script will exit on error.
 return 0

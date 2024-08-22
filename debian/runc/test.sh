@@ -4,19 +4,10 @@ set -euo pipefail
 
 # Define the package details
 PACKAGE_NAME="runc"
-PACKAGE_SHOW_NAME="runC"
-PACKAGE_TYPE="Container Runtime"
-REPORT_FILE="report.json"
 
 # Logging function
 log() {
     echo "[$(date '+%Y-%m-%d %H:%M:%S')] $1"
-}
-
-# Error handling function
-error_exit() {
-    log "ERROR: $1"
-    exit 1
 }
 
 # Function to check if runc is installed
@@ -32,12 +23,15 @@ is_runc_installed() {
 
 # Function to install runc package
 install_runc_package() {
+    export DEBIAN_FRONTEND=noninteractive
     log "Attempting to install runC..."
     if ! apt-get update; then
-        error_exit "Failed to update package lists."
+        echo "Failed to update package lists."
+        return 1
     fi
     if ! apt-get install -y runc; then
-        error_exit "Failed to install runC."
+        echo "Failed to install runC."
+        return 1
     fi
     log "runC installed successfully."
 }
@@ -48,7 +42,8 @@ check_prerequisites() {
 
     # Check if running as root
     if [[ $EUID -ne 0 ]]; then
-        error_exit "This script must be run as root."
+        echo "This script must be run as root."
+        return 1
     fi
 
     # Check kernel version
@@ -60,7 +55,8 @@ check_prerequisites() {
     if ! mount | grep -q "proc on /proc type proc"; then
         log "WARNING: /proc is not mounted correctly. Attempting to remount..."
         if ! mount -t proc proc /proc; then
-            error_exit "Failed to mount /proc."
+            echo "Failed to mount /proc."
+            return 1
         fi
     fi
 
@@ -71,7 +67,8 @@ check_prerequisites() {
         grep CONFIG_NAMESPACES /boot/config-"$(uname -r)" || log "Unable to find namespace configuration"
         log "Contents of /proc/self:"
         ls -l /proc/self || log "Unable to list /proc/self"
-        error_exit "Namespace support is not available."
+        echo "Namespace support is not available."
+        return 1
     fi
 
     # Check specific namespaces
@@ -83,7 +80,8 @@ check_prerequisites() {
 
     # Check cgroups support
     if [[ ! -d /sys/fs/cgroup ]]; then
-        error_exit "Cgroups are not available."
+        echo "Cgroups are not available."
+        return 1
     fi
 
     # Check unshare command
@@ -166,60 +164,29 @@ EOF
     fi
 }
 
-# Function to generate the report.json
-generate_report() {
-    local test_passed=$1
-    local os_version
-    local kernel_version
-    local runc_version
-
-    os_version=$(cat /etc/os-release | grep PRETTY_NAME | cut -d'"' -f2) || os_version="Unknown"
-    kernel_version=$(uname -r) || kernel_version="Unknown"
-    runc_version=$(runc --version | awk '/runc version/{print $3}') || runc_version="Unknown"
-
-    local report_content
-    report_content=$(cat <<EOF
-{
-    "distro": "$(cat /etc/os-release | grep ID | cut -d'=' -f2 | tr -d '"')",
-    "os_version": "$os_version",
-    "kernel_version": "$kernel_version",
-    "package_version": "$runc_version",
-    "package_name": "$PACKAGE_SHOW_NAME",
-    "package_type": "$PACKAGE_TYPE",
-    "test_results": [
-        {
-            "test_name": "runC Functionality Test",
-            "passed": $test_passed
-        }
-    ],
-    "all_tests_passed": $test_passed
-}
-EOF
-)
-
-    echo "$report_content" > "$REPORT_FILE"
-    log "Report generated at $REPORT_FILE"
-}
-
 # Main script execution
 main() {
     log "Starting runC test script..."
 
-    check_prerequisites
-
-    if ! is_runc_installed; then
-        install_runc_package
+    if !check_prerequisites; then
+        return 1
     fi
 
+    if !is_runc_installed; then
+        if !install_runc_package; then
+            return 1
+        fi
+    fi
+
+    PACKAGE_VERSION=$(runc --version | awk '/runc version/{print $3}') || PACKAGE_VERSION="Unknown"
+    
     if test_runc_functionality; then
         log "runC is functioning correctly."
-        generate_report true
+        return 0
     else
         log "runC is not functioning correctly."
-        generate_report false
+        return 1
     fi
-
-    log "runC test script completed."
 }
 
 # Run the main function

@@ -15,15 +15,6 @@ cd "$temp_dir"
 
 # Define the package details
 PACKAGE_NAME="varnish"
-PACKAGE_SHOW_NAME="Varnish"
-PACKAGE_TYPE="HTTP Cache"
-REPORT_FILE="report.json"
-
-# Error handling function
-error_exit() {
-    log "ERROR: $1"
-    exit 1
-}
 
 # Function to check if Varnish is installed
 is_varnish_installed() {
@@ -39,13 +30,16 @@ is_varnish_installed() {
 # Function to install Varnish
 install_varnish() {
     log "Attempting to install Varnish..."
+    export DEBIAN_FRONTEND=noninteractive
     apt-get update
     if ! apt-get install -y varnish; then
-        error_exit "Failed to install Varnish."
+        echo "Failed to install Varnish."
+        return 1
     fi
     log "Varnish installation command completed. Verifying installation..."
     if ! is_varnish_installed; then
-        error_exit "Varnish installation failed. The 'varnishd' command is still not available."
+        echo "Varnish installation failed. The 'varnishd' command is still not available."
+        return 1
     fi
     log "Varnish installed successfully."
 }
@@ -93,71 +87,43 @@ test_varnish_functionality() {
     return 0
 }
 
-# Function to generate the report.json
-generate_report() {
-    local test_passed=$1
-    local os_version
-    local kernel_version
-    local varnish_version
-
-    os_version=$(cat /etc/os-release | grep PRETTY_NAME | cut -d'"' -f2) || os_version="Unknown"
-    kernel_version=$(uname -r) || kernel_version="Unknown"
-    varnish_version=$(varnishd -V 2>&1 | grep -oP 'varnish-\K\d+\.\d+\.\d+' | head -1) || varnish_version="Unknown"
-
-    local report_content
-    report_content=$(cat <<EOF
-{
-    "distro": "debian",
-    "os_version": "$os_version",
-    "kernel_version": "$kernel_version",
-    "package_version": "$varnish_version",
-    "package_name": "$PACKAGE_SHOW_NAME",
-    "package_type": "$PACKAGE_TYPE",
-    "test_results": [
-        {
-            "test_name": "Varnish Functionality Test",
-            "passed": $test_passed
-        }
-    ],
-    "all_tests_passed": $test_passed
-}
-EOF
-)
-
-    echo "$report_content" > "$REPORT_FILE"
-    log "Report generated at $REPORT_FILE"
-}
-
 # Main script execution
 main() {
     log "Starting Varnish test script..."
 
-    check_prerequisites
+    if !check_prerequisites; then
+        return 1
+    fi
 
-    if ! is_varnish_installed; then
-        install_varnish
+    if !is_varnish_installed; then
+        if !install_varnish; then
+            return 1
+        fi
     fi
 
     log "Verifying Varnish installation again..."
     if ! is_varnish_installed; then
-        error_exit "Varnish installation verification failed."
+        echo "Varnish installation verification failed."
+        return 1
     fi
+
+
+    PACKAGE_VERSION=$(varnishd -V 2>&1 | grep -oP 'varnish-\K\d+\.\d+\.\d+' | head -1) || PACKAGE_VERSION="Unknown"
 
     cd "$original_dir"
     if test_varnish_functionality; then
         log "Varnish is functioning correctly."
-        generate_report true
+        return 0
     else
         log "Varnish is not functioning correctly."
-        generate_report false
+        return 1
     fi
-
-    # Clean up
-    rm -rf "$temp_dir"
-    log "Cleaned up temporary directory."
-
-    log "Varnish test script completed."
 }
 
 # Run the main function
 main
+
+# Clean up
+rm -rf "$temp_dir"
+log "Cleaned up temporary directory."
+log "Varnish test script completed."

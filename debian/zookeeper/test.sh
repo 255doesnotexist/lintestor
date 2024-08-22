@@ -15,15 +15,6 @@ cd "$temp_dir"
 
 # Define the package details
 PACKAGE_NAME="zookeeper"
-PACKAGE_SHOW_NAME="Apache ZooKeeper"
-PACKAGE_TYPE="Distributed Coordination Service"
-REPORT_FILE="report.json"
-
-# Error handling function
-error_exit() {
-    log "ERROR: $1"
-    exit 1
-}
 
 # Function to check if ZooKeeper is installed
 is_zookeeper_installed() {
@@ -39,13 +30,14 @@ is_zookeeper_installed() {
 # Function to install ZooKeeper
 install_zookeeper() {
     log "Attempting to install ZooKeeper..."
-    
+    export DEBIAN_FRONTEND=noninteractive
     # Install Java if not already installed
     if ! command -v java >/dev/null 2>&1; then
         log "Java not found. Installing OpenJDK..."
         sudo apt-get update
         if ! sudo apt-get install -y openjdk-*-jdk; then
-            error_exit "Failed to install Java."
+            echo "Failed to install Java."
+            return 1
         fi
     fi
 
@@ -54,25 +46,30 @@ install_zookeeper() {
     local zk_url="https://dlcdn.apache.org/zookeeper/zookeeper-${zk_version}/apache-zookeeper-${zk_version}-bin.tar.gz"
     
     if ! wget "$zk_url" -O zookeeper.tar.gz; then
-        error_exit "Failed to download ZooKeeper."
+        echo "Failed to download ZooKeeper."
+        return 1
     fi
 
     if ! sudo tar -xzf zookeeper.tar.gz -C /opt; then
-        error_exit "Failed to extract ZooKeeper."
+        echo "Failed to extract ZooKeeper."
+        return 1
     fi
 
     if ! sudo mv /opt/apache-zookeeper-${zk_version}-bin /opt/zookeeper; then
-        error_exit "Failed to rename ZooKeeper directory."
+        echo "Failed to rename ZooKeeper directory."
+        return 1
     fi
 
     # Configure ZooKeeper
     if ! sudo cp /opt/zookeeper/conf/zoo_sample.cfg /opt/zookeeper/conf/zoo.cfg; then
-        error_exit "Failed to create ZooKeeper configuration."
+        echo "Failed to create ZooKeeper configuration."
+        return 1
     fi
 
     log "ZooKeeper installation completed. Verifying installation..."
     if ! is_zookeeper_installed; then
-        error_exit "ZooKeeper installation failed. ZooKeeper is not available at the expected location."
+        echo "ZooKeeper installation failed. ZooKeeper is not available at the expected location."
+        return 1
     fi
     log "ZooKeeper installed successfully."
 }
@@ -119,71 +116,42 @@ test_zookeeper_functionality() {
     return 0
 }
 
-# Function to generate the report.json
-generate_report() {
-    local test_passed=$1
-    local os_version
-    local kernel_version
-    local zookeeper_version
-
-    os_version=$(cat /etc/os-release | grep PRETTY_NAME | cut -d'"' -f2) || os_version="Unknown"
-    kernel_version=$(uname -r) || kernel_version="Unknown"
-    zookeeper_version=$(/opt/zookeeper/bin/zkServer.sh version 2>&1 | grep -oP 'version: \K[0-9.]+' | head -1) || zookeeper_version="Unknown"
-
-    local report_content
-    report_content=$(cat <<EOF
-{
-    "distro": "debian",
-    "os_version": "$os_version",
-    "kernel_version": "$kernel_version",
-    "package_version": "$zookeeper_version",
-    "package_name": "$PACKAGE_SHOW_NAME",
-    "package_type": "$PACKAGE_TYPE",
-    "test_results": [
-        {
-            "test_name": "ZooKeeper Functionality Test",
-            "passed": $test_passed
-        }
-    ],
-    "all_tests_passed": $test_passed
-}
-EOF
-)
-
-    echo "$report_content" > "$REPORT_FILE"
-    log "Report generated at $REPORT_FILE"
-}
-
 # Main script execution
 main() {
     log "Starting ZooKeeper test script..."
 
-    check_prerequisites
+    if !check_prerequisites; then
+        return 1
+    fi
 
     if ! is_zookeeper_installed; then
-        install_zookeeper
+        if !install_zookeeper; then
+            return 1
+        fi
     fi
 
     log "Verifying ZooKeeper installation again..."
     if ! is_zookeeper_installed; then
-        error_exit "ZooKeeper installation verification failed."
+        echo "ZooKeeper installation verification failed."
+        return 1
     fi
+
+    PACKAGE_VERSION=$(/opt/zookeeper/bin/zkServer.sh version 2>&1 | grep -oP 'version: \K[0-9.]+' | head -1) || PACKAGE_VERSION="Unknown"
 
     cd "$original_dir"
     if test_zookeeper_functionality; then
         log "ZooKeeper is functioning correctly."
-        generate_report true
+        return 0
     else
         log "ZooKeeper is not functioning correctly."
-        generate_report false
+        return 1
     fi
-
-    # Clean up
-    rm -rf "$temp_dir"
-    log "Cleaned up temporary directory."
-
-    log "ZooKeeper test script completed."
 }
 
 # Run the main function
 main
+
+# Clean up
+rm -rf "$temp_dir"
+log "Cleaned up temporary directory."
+log "ZooKeeper test script completed."

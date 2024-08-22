@@ -15,15 +15,6 @@ cd "$temp_dir"
 
 # Define the package details
 PACKAGE_NAME="sqlite3"
-PACKAGE_SHOW_NAME="SQLite"
-PACKAGE_TYPE="Database"
-REPORT_FILE="report.json"
-
-# Error handling function
-error_exit() {
-    log "ERROR: $1"
-    exit 1
-}
 
 # Function to check if SQLite is installed
 is_sqlite_installed() {
@@ -39,11 +30,13 @@ is_sqlite_installed() {
 # Function to install SQLite
 install_sqlite() {
     log "Attempting to install SQLite..."
+    export DEBIAN_FRONTEND=noninteractive
     apt-get update
     apt-get install -y sqlite3
     
     if ! is_sqlite_installed; then
-        error_exit "SQLite installation failed. The 'sqlite3' command is still not available."
+        echo "SQLite installation failed. The 'sqlite3' command is still not available."
+        return 1
     fi
 
     log "SQLite installed successfully."
@@ -86,50 +79,22 @@ EOF
     fi
 }
 
-# Function to generate the report.json
-generate_report() {
-    local test_passed=$1
-    local os_version
-    local kernel_version
-    local sqlite_version
-
-    os_version=$(cat /etc/os-release | grep PRETTY_NAME | cut -d'"' -f2) || os_version="Unknown"
-    kernel_version=$(uname -r) || kernel_version="Unknown"
-    sqlite_version=$(sqlite3 --version | awk '{print $1}') || sqlite_version="Unknown"
-
-    local report_content
-    report_content=$(cat <<EOF
-{
-    "distro": "debian",
-    "os_version": "$os_version",
-    "kernel_version": "$kernel_version",
-    "package_version": "$sqlite_version",
-    "package_name": "$PACKAGE_SHOW_NAME",
-    "package_type": "$PACKAGE_TYPE",
-    "test_results": [
-        {
-            "test_name": "SQLite Functionality Test",
-            "passed": $test_passed
-        }
-    ],
-    "all_tests_passed": $test_passed
-}
-EOF
-)
-
-    echo "$report_content" > "$REPORT_FILE"
-    log "Report generated at $REPORT_FILE"
-}
-
 # Main script execution
 main() {
     log "Starting SQLite test script..."
 
-    check_prerequisites
-
-    if ! is_sqlite_installed; then
-        install_sqlite
+    
+    if !check_prerequisites; then
+        return 1;
     fi
+
+    if !is_sqlite_installed; then
+        if !install_sqlite; then
+            return 1;
+        fi
+    fi
+
+    PACKAGE_VERSION=$(sqlite3 --version | awk '{print $1}') || PACKAGE_VERSION="Unknown"
 
     # Clean up
     cd "$original_dir"
@@ -139,13 +104,11 @@ main() {
 
     if test_sqlite_functionality; then
         log "SQLite is functioning correctly."
-        generate_report true
+        return 0
     else
         log "SQLite is not functioning correctly."
-        generate_report false
+        return 1
     fi
-
-    log "SQLite test script completed."
 }
 
 # Run the main function
