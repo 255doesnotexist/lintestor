@@ -62,9 +62,7 @@ else
     fi
 fi
 
-local python_version=$(python3 --version)
-local numpy_version=$(python3 -c "import numpy; print(numpy.__version__)")
-PACKAGE_VERSION="$numpy_version ($python_version)"
+PACKAGE_VERSION="$(python3 --version) ($(python3 -c "import numpy; print(numpy.__version__)"))"
 
 # Check Numpy functionality by compiling and running a simple Python script
 if test_numpy_functionality; then

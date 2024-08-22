@@ -84,12 +84,12 @@ main() {
     log "Starting SQLite test script..."
 
     
-    if !check_prerequisites; then
+    if ! check_prerequisites; then
         return 1;
     fi
 
-    if !is_sqlite_installed; then
-        if !install_sqlite; then
+    if ! is_sqlite_installed; then
+        if ! install_sqlite; then
             return 1;
         fi
     fi

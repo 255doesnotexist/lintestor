@@ -168,12 +168,12 @@ EOF
 main() {
     log "Starting runC test script..."
 
-    if !check_prerequisites; then
+    if ! check_prerequisites; then
         return 1
     fi
 
-    if !is_runc_installed; then
-        if !install_runc_package; then
+    if ! is_runc_installed; then
+        if ! install_runc_package; then
             return 1
         fi
     fi

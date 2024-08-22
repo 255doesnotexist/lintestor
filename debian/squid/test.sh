@@ -85,12 +85,12 @@ test_squid_functionality() {
 main() {
     log "Starting Squid test script..."
 
-    if !check_prerequisites; then
+    if ! check_prerequisites; then
         return 1
     fi
 
-    if !is_squid_installed; then
-        if !install_squid; then
+    if ! is_squid_installed; then
+        if ! install_squid; then
             return 1
         fi
     fi

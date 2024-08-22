@@ -51,6 +51,6 @@ fi
 # 清理临时文件
 rm test.c test_program
 
-PACKAGE_VERSION=$(clang --version | head -n 1 | awk '{print $3}')
+PACKAGE_VERSION=$(clang --version | grep -oP "version\W?\K.*")
 
 return $exit_status

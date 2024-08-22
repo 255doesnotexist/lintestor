@@ -117,12 +117,12 @@ EOF
 main() {
     log "Starting SciPy test script..."
 
-    if !check_prerequisites; then
+    if ! check_prerequisites; then
         return 1
     fi
 
     if ! is_scipy_installed; then
-        if !install_scipy; then
+        if ! install_scipy; then
             return 1
         fi
     fi

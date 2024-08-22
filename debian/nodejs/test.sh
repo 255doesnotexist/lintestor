@@ -45,7 +45,7 @@ else
         return 1
     fi
 fi
-
+PACKAGE_VERSION=$(dpkg -l | grep $PACKAGE_NAME | head -n 1 | awk '{print $3}')
 if test_nodejs_functionality; then
     echo "Node.js is functioning correctly."
     return 0

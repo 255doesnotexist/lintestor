@@ -118,12 +118,12 @@ test_rust_functionality() {
 main() {
     log "Starting Rust test script..."
 
-    if !check_prerequisites; then
+    if ! check_prerequisites; then
         return 1
     fi
 
     if ! is_rust_installed; then
-        if !install_rust; then
+        if ! install_rust; then
             return 1
         fi
     fi

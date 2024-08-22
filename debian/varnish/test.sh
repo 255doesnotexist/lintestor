@@ -91,12 +91,12 @@ test_varnish_functionality() {
 main() {
     log "Starting Varnish test script..."
 
-    if !check_prerequisites; then
+    if ! check_prerequisites; then
         return 1
     fi
 
-    if !is_varnish_installed; then
-        if !install_varnish; then
+    if ! is_varnish_installed; then
+        if ! install_varnish; then
             return 1
         fi
     fi

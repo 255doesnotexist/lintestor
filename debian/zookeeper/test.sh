@@ -45,7 +45,8 @@ install_zookeeper() {
     local zk_version="3.9.2"
     local zk_url="https://dlcdn.apache.org/zookeeper/zookeeper-${zk_version}/apache-zookeeper-${zk_version}-bin.tar.gz"
     
-    if ! wget "$zk_url" -O zookeeper.tar.gz; then
+    if ! curl -o zookeeper.tar.gz "$zk_url"; then
+        # use curl since wget may not be present on certain systems
         echo "Failed to download ZooKeeper."
         return 1
     fi
@@ -120,12 +121,12 @@ test_zookeeper_functionality() {
 main() {
     log "Starting ZooKeeper test script..."
 
-    if !check_prerequisites; then
+    if ! check_prerequisites; then
         return 1
     fi
 
     if ! is_zookeeper_installed; then
-        if !install_zookeeper; then
+        if ! install_zookeeper; then
             return 1
         fi
     fi
@@ -136,7 +137,7 @@ main() {
         return 1
     fi
 
-    PACKAGE_VERSION=$(/opt/zookeeper/bin/zkServer.sh version 2>&1 | grep -oP 'version: \K[0-9.]+' | head -1) || PACKAGE_VERSION="Unknown"
+    PACKAGE_VERSION=$(/opt/zookeeper/bin/zkServer.sh version 2>&1 | grep -oP 'version \K[0-9.]+' | head -1) || PACKAGE_VERSION="Unknown"
 
     cd "$original_dir"
     if test_zookeeper_functionality; then

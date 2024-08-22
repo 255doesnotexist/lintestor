@@ -65,7 +65,7 @@ else
     fi
 fi
 
-PACKAGE_VERSION=$(perl -v | grep -oP "This is perl \K(\d+\.\d+\.\d+)")
+PACKAGE_VERSION=$(perl -v | grep -oP "v\K(\d+\.\d+\.\d+)")
 
 # Check Perl functionality by running a simple Perl script
 if test_perl_functionality; then

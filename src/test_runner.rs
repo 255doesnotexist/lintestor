@@ -42,7 +42,7 @@ impl TestRunner for LocalTestRunner {
         let output = Command::new("bash")
             .arg("-c")
             .arg(&format!(
-                "mkdir -p {} && source {} && echo $PACKAGE_VERSION > {}",
+                "mkdir -p {} && source {} && echo -n $PACKAGE_VERSION > {}",
                 REMOTE_TMP_DIR, script_path, pkgver_tmpfile
             ))
             .stdout(if verbose {
@@ -238,7 +238,7 @@ impl TestRunner for RemoteTestRunner {
         let result = self.run_command(
             &sess,
             &format!(
-                "source {} && echo $PACKAGE_VERSION > {}",
+                "source {} && echo -n $PACKAGE_VERSION > {}",
                 script_path, &pkgver_tmpfile
             ),
         );
