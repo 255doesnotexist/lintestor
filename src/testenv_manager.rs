@@ -17,9 +17,9 @@ impl TestEnvManager {
         }
     }
 
-    pub fn start(&self) -> Result<(), Error> {
+    fn run_script(&self, script: &String) -> Result<(), Error> {
         Command::new("bash")
-            .arg(&self.startup_script)
+            .arg(script)
             .env_remove("USER")
             .env_remove("PASSWORD")
             .env_remove("ADDRESS")
@@ -42,11 +42,11 @@ impl TestEnvManager {
         Ok(())
     }
 
+    pub fn start(&self) -> Result<(), Error> {
+        self.run_script(&self.startup_script)
+    }
+
     pub fn stop(&self) -> Result<(), Error> {
-        Command::new("bash")
-            .arg(&self.stop_script)
-            .spawn()?
-            .wait()?;
-        Ok(())
+        self.run_script(&self.stop_script)
     }
 }

@@ -38,7 +38,7 @@ stop_environment_ssh() {
 # Check if sshpass is installed
 check_sshpass
 
-#stop_environment_ssh
+stop_environment_ssh
 
 # Exit the script
 exit 0
