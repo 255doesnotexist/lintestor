@@ -39,7 +39,11 @@ else
         echo "Package $PACKAGE_NAME installed successfully."
     else
         echo "Failed to install package $PACKAGE_NAME."
-        exit 1
+        if [ "${BASH_SOURCE[0]}" = "${0}" ]; then
+            exit 1
+        else
+            return 1
+        fi
     fi
 fi
 
@@ -48,10 +52,18 @@ PACKAGE_VERSION=$(dpkg -l | grep $PACKAGE_NAME | head -n 1 | awk '{print $3}')
 # Check MariaDB service status
 if test_mariadb_service; then
     echo "MariaDB service is active and responding."
-    exit 0
+        if [ "${BASH_SOURCE[0]}" = "${0}" ]; then
+            exit 0
+        else
+            return 0
+        fi
 else
     echo "MariaDB service is active but not responding."
-    exit 1
+        if [ "${BASH_SOURCE[0]}" = "${0}" ]; then
+            exit 1
+        else
+            return 1
+        fi
 fi
 
 # End of the script
