@@ -1,7 +1,10 @@
 #!/bin/bash
 
 # Define the package details
-PACKAGE_NAME="openjdk-*-jdk"
+PACKAGE_NAME="openjdk-11-jdk"
+PACKAGE_SHOW_NAME="OpenJDK"
+PACKAGE_TYPE="Java Development Kit"
+REPORT_FILE="report.json"
 
 # Function to check if OpenJDK is installed
 is_openjdk_installed() {
