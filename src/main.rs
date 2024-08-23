@@ -166,7 +166,7 @@ fn run_tests(distros: &[&str], packages: &[&str], run_locally: bool, cleanup: bo
             println!("Running test for {}/{}", distro, package);
 
             let test_runner: Box<dyn TestRunner> = if run_locally {
-                Box::new(LocalTestRunner::new(distro, package))
+                Box::new(LocalTestRunner::new(distro, package, verbose))
             } else {
                 // assert!(distro_config.connection.method == "ssh");
 
@@ -187,11 +187,12 @@ fn run_tests(distros: &[&str], packages: &[&str], run_locally: bool, cleanup: bo
                     ip.to_string(),
                     port,
                     username.to_string(),
-                    password.map(|p| p.to_string()),
+                    password.map(|p| p.to_string(),),
+                    verbose,
                 ))
             };
 
-            match test_runner.run_test(&distro, &package, verbose) {
+            match test_runner.run_test(&distro, &package) {
                 Ok(_) => println!("Test passed for {}/{}", distro, package),
                 Err(e) => println!("Test failed for {}/{}: {}", distro, package, e),
             }

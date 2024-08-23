@@ -12,15 +12,16 @@ pub trait TestRunner {
         &self,
         distro: &str,
         package: &str,
-        verbose: bool,
     ) -> Result<(), Box<dyn std::error::Error>>;
 }
 
-pub struct LocalTestRunner;
+pub struct LocalTestRunner{
+    verbose: bool,
+}
 
 impl LocalTestRunner {
-    pub fn new(_distro: &str, _package: &str) -> Self {
-        LocalTestRunner
+    pub fn new(_distro: &str, _package: &str, _verbose: bool) -> Self {
+        LocalTestRunner{verbose: _verbose}
     }
 }
 
@@ -29,7 +30,6 @@ impl TestRunner for LocalTestRunner {
         &self,
         distro: &str,
         package: &str,
-        verbose: bool,
     ) -> Result<(), Box<dyn std::error::Error>> {
         let script_path = format!("{}/{}/test.sh", distro, package);
 
@@ -45,7 +45,7 @@ impl TestRunner for LocalTestRunner {
                 "mkdir -p {} && source {} && echo -n $PACKAGE_VERSION > {}",
                 REMOTE_TMP_DIR, script_path, pkgver_tmpfile
             ))
-            .stdout(if verbose {
+            .stdout(if self.verbose {
                 Stdio::inherit()
             } else {
                 Stdio::null()
@@ -102,20 +102,23 @@ pub struct RemoteTestRunner {
     port: u16,
     username: String,
     password: Option<String>,
+    verbose: bool,
 }
 
 impl RemoteTestRunner {
-    pub fn new(remote_ip: String, port: u16, username: String, password: Option<String>) -> Self {
+    pub fn new(remote_ip: String, port: u16, username: String, password: Option<String>, verbose: bool) -> Self {
         RemoteTestRunner {
             remote_ip,
             port,
             username,
             password,
+            verbose,
         }
     }
 
     fn print_ssh_msg(&self, msg: &str) {
-        if std::env::var("PRINT_SSH_MSG").is_ok() {
+        // support verbose flag here
+        if std::env::var("PRINT_SSH_MSG").is_ok() || self.verbose {
             println!("{}", msg);
         }
     }
@@ -147,9 +150,7 @@ impl TestRunner for RemoteTestRunner {
         &self,
         distro: &str,
         package: &str,
-        _verbose: bool,
     ) -> Result<(), Box<dyn std::error::Error>> {
-        // TODO: add support for `verbose` flag
         // 创建 SSH 会话
         let tcp = TcpStream::connect((self.remote_ip.as_str(), self.port))?;
         let mut sess = Session::new()?;
