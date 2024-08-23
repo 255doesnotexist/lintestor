@@ -14,6 +14,7 @@ is_openjdk_installed() {
 
 # Function to install OpenJDK package
 install_openjdk_package() {
+    export DEBIAN_FRONTEND=noninteractive
     apt-get update
     apt-get install -y $PACKAGE_NAME
 
@@ -58,43 +59,6 @@ EOF
     fi
 }
 
-# Function to generate the report.json
-generate_report() {
-    local os_version=$(cat /proc/version)
-    local kernel_version=$(uname -r)
-    local java_version=$(java -version 2>&1 | awk -F '"' '/version/ {print $2}')
-    local test_name="OpenJDK Functionality Test"
-    local test_passed=false
-
-    # Check OpenJDK functionality
-    if test_openjdk_functionality; then
-        test_passed=true
-    fi
-
-    # Prepare the report content
-    local report_content=$(cat <<EOF
-{
-    "distro": "debian",
-    "os_version": "$os_version",
-    "kernel_version": "$kernel_version",
-    "package_version": "$java_version",
-    "package_name": "$PACKAGE_SHOW_NAME",
-    "package_type": "$PACKAGE_TYPE",
-    "test_results": [
-        {
-            "test_name": "$test_name",
-            "passed": $test_passed
-        }
-    ],
-    "all_tests_passed": $test_passed
-}
-EOF
-)
-
-    # Write the report to the file
-    echo "$report_content" >$REPORT_FILE
-}
-
 # Main script execution starts here
 
 # Check if OpenJDK is installed
@@ -107,21 +71,19 @@ else
         echo "OpenJDK installed successfully."
     else
         echo "Failed to install OpenJDK."
-        exit 1
+        return 1
     fi
 fi
+
+PACKAGE_VERSION=$(java -version 2>&1 | awk -F '"' '/version/ {print $2}')
 
 # Check OpenJDK functionality by compiling and running a simple Java program
 if test_openjdk_functionality; then
     echo "OpenJDK is functioning correctly."
-    # Generate the report
-    generate_report
-    echo "Report generated at $REPORT_FILE"
+    return 0
 else
     echo "OpenJDK is not functioning correctly."
-    # Generate the report with test failed
-    generate_report
-    echo "Report generated at $REPORT_FILE with failed test."
+    return 1
 fi
 
 # End of the script

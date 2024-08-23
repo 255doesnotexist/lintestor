@@ -1,13 +1,17 @@
-use std::fs::File;
-use std::io::prelude::*;
 use crate::utils::Report;
 use serde_json;
+use std::fs::File;
+use std::io::prelude::*;
 
-pub fn generate_markdown_report(distros: &[&str], packages: &[&str]) -> Result<(), Box<dyn std::error::Error>> {
+pub fn generate_markdown_report(
+    distros: &[&str],
+    packages: &[&str],
+) -> Result<(), Box<dyn std::error::Error>> {
     let file = File::open("reports.json")?;
     let reports: Vec<Report> = serde_json::from_reader(file)?;
 
-    let mut report_matrix: Vec<Vec<Option<&Report>>> = vec![vec![None; distros.len()]; packages.len()];
+    let mut report_matrix: Vec<Vec<Option<&Report>>> =
+        vec![vec![None; distros.len()]; packages.len()];
 
     for report in &reports {
         if let (Some(pkg_idx), Some(distro_idx)) = (
@@ -33,13 +37,28 @@ pub fn generate_markdown_report(distros: &[&str], packages: &[&str]) -> Result<(
     markdown.push_str("\n");
 
     for (pkg_idx, &package) in packages.iter().enumerate() {
-        let package_type = reports.iter().find(|r| r.package_name == package).map_or("", |r| r.package_type.as_str());
+        let package_type = reports
+            .iter()
+            .find(|r| r.package_name == package)
+            .map_or("", |r| r.package_type.as_str());
         markdown.push_str(&format!("| {} | {} ", package, package_type));
-        
+
         for distro_idx in 0..distros.len() {
             if let Some(report) = report_matrix[pkg_idx][distro_idx] {
-                markdown.push_str(&format!("| {} {}-{} ", 
-                    if report.all_tests_passed { "✅" } else { "⚠️" }, report.package_name, report.package_version));
+                markdown.push_str(&format!(
+                    "| {} {}{} ",
+                    if report.all_tests_passed {
+                        "✅"
+                    } else {
+                        "⚠️"
+                    },
+                    if !report.package_version.is_empty() {
+                        format!("{}=", report.package_name)
+                    } else {
+                        String::from("")
+                    },
+                    report.package_version
+                ));
             } else {
                 markdown.push_str("| ❓ ");
             }

@@ -2,9 +2,6 @@
 
 # Define the package details
 PACKAGE_NAME="llvm"
-PACKAGE_SHOW_NAME="llvm"
-PACKAGE_TYPE="Compiler Toolchain"
-REPORT_FILE="report.json"
 
 # Function to check if LLVM is installed
 is_llvm_installed() {
@@ -14,6 +11,7 @@ is_llvm_installed() {
 
 # Function to install LLVM package
 install_llvm_package() {
+    export DEBIAN_FRONTEND=noninteractive
     apt-get update
     apt-get install -y $PACKAGE_NAME clang
     return $?
@@ -48,43 +46,6 @@ EOF
     fi
 }
 
-# Function to generate the report.json
-generate_report() {
-    local os_version=$(cat /proc/version)
-    local kernel_version=$(uname -r)
-    local package_version=$(dpkg -l | grep $PACKAGE_NAME | head -n 1 | awk '{print $3}')
-    local test_name="LLVM Functionality Test"
-    local test_passed=false
-
-    # Check LLVM functionality
-    if test_llvm_functionality; then
-        test_passed=true
-    fi
-
-    # Prepare the report content
-    local report_content=$(cat <<EOF
-{
-    "distro": "debian",
-    "os_version": "$os_version",
-    "kernel_version": "$kernel_version",
-    "package_name": "$PACKAGE_SHOW_NAME",
-    "package_type": "$PACKAGE_TYPE",
-    "package_version": "$package_version",
-    "test_results": [
-        {
-            "test_name": "$test_name",
-            "passed": $test_passed
-        }
-    ],
-    "all_tests_passed": $test_passed
-}
-EOF
-)
-
-    # Write the report to the file
-    echo "$report_content" >$REPORT_FILE
-}
-
 # Main script execution starts here
 
 # Check if LLVM is installed
@@ -97,21 +58,19 @@ else
         echo "Package $PACKAGE_NAME installed successfully."
     else
         echo "Failed to install package $PACKAGE_NAME."
-        exit 1
+        return 1
     fi
 fi
+
+PACKAGE_VERSION=$(dpkg -l | grep $PACKAGE_NAME | head -n 1 | awk '{print $3}')
 
 # Check LLVM functionality by compiling and running a simple C program
 if test_llvm_functionality; then
     echo "LLVM is functioning correctly."
-    # Generate the report
-    generate_report
-    echo "Report generated at $REPORT_FILE"
+    return 0
 else
     echo "LLVM is not functioning correctly."
-    # Generate the report with test failed
-    generate_report
-    echo "Report generated at $REPORT_FILE with failed test."
+    return 1
 fi
 
 # End of the script

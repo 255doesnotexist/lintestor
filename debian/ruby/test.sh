@@ -2,9 +2,6 @@
 
 # Define the package details
 PACKAGE_NAME="ruby"
-PACKAGE_SHOW_NAME="Ruby"
-PACKAGE_TYPE="Dynamic, Object-Oriented Programming Language"
-REPORT_FILE="report.json"
 
 # Function to check if Ruby is installed
 is_ruby_installed() {
@@ -14,6 +11,7 @@ is_ruby_installed() {
 
 # Function to install Ruby package
 install_ruby_package() {
+    export DEBIAN_FRONTEND=noninteractive
     apt-get update
     apt-get install -y $PACKAGE_NAME
     return $?
@@ -65,43 +63,6 @@ EOF
     fi
 }
 
-# Function to generate the report.json
-generate_report() {
-    local os_version=$(cat /proc/version)
-    local kernel_version=$(uname -r)
-    local ruby_version=$(ruby --version | awk '{print $2}')
-    local test_name="Ruby Functionality Test"
-    local test_passed=false
-
-    # Check Ruby functionality
-    if test_ruby_functionality; then
-        test_passed=true
-    fi
-
-    # Prepare the report content
-    local report_content=$(cat <<EOF
-{
-    "distro": "debian",
-    "os_version": "$os_version",
-    "kernel_version": "$kernel_version",
-    "package_version": "$ruby_version",
-    "package_name": "$PACKAGE_SHOW_NAME",
-    "package_type": "$PACKAGE_TYPE",
-    "test_results": [
-        {
-            "test_name": "$test_name",
-            "passed": $test_passed
-        }
-    ],
-    "all_tests_passed": $test_passed
-}
-EOF
-)
-
-    # Write the report to the file
-    echo "$report_content" >$REPORT_FILE
-}
-
 # Main script execution starts here
 
 # Check if Ruby is installed
@@ -114,22 +75,21 @@ else
         echo "Ruby installed successfully."
     else
         echo "Failed to install Ruby."
-        exit 1
+        return 1
     fi
 fi
+
+PACKAGE_VERSION=$(ruby --version | awk '{print $2}')
 
 # Check Ruby functionality by running a test script
 if test_ruby_functionality; then
     echo "Ruby is functioning correctly."
-    # Generate the report
-    generate_report
-    echo "Report generated at $REPORT_FILE"
+    exit_status=0
 else
     echo "Ruby is not functioning correctly."
-    # Generate the report with test failed
-    generate_report
-    echo "Report generated at $REPORT_FILE with failed test."
+    exit_status=1
 fi
 
 rm test_file.txt
+return $exit_status
 # End of the script

@@ -9,14 +9,11 @@ TEMP_DIR := ./temp
 # Test script
 GENERATE_REPORT_SCRIPT := ./run_tests.sh
 
-# Report file
-REPORT_FILE := report.json
-
 .PHONY: clean test check_dependencies verify_gcc generate_report install_gcc
 
 # Clean up temporary files
 clean:
-	@rm -rf $(TEMP_DIR) $(REPORT_FILE)
+	@rm -rf $(TEMP_DIR)
 
 # Check for GCC and install if not present
 check_dependencies: install_gcc
@@ -48,4 +45,4 @@ generate_report:
 
 # Main test target
 test: clean check_dependencies verify_gcc generate_report
-	@echo "Tests completed. Report generated in $(REPORT_FILE)."
+	@echo "Tests completed."

@@ -15,15 +15,6 @@ cd "$temp_dir"
 
 # Define the package details
 PACKAGE_NAME="python3-scipy"
-PACKAGE_SHOW_NAME="SciPy"
-PACKAGE_TYPE="Python Scientific Library"
-REPORT_FILE="report.json"
-
-# Error handling function
-error_exit() {
-    log "ERROR: $1"
-    exit 1
-}
 
 # Function to check if Python 3 and SciPy are installed
 is_scipy_installed() {
@@ -39,9 +30,11 @@ is_scipy_installed() {
 # Function to install SciPy
 install_scipy() {
     log "Attempting to install SciPy..."
+    export DEBIAN_FRONTEND=noninteractive
     apt-get update
     if ! apt-get install -y python3-scipy; then
-        error_exit "Failed to install SciPy."
+        echo "Failed to install SciPy."
+        return 1
     fi
     log "SciPy installed successfully."
 }
@@ -52,7 +45,8 @@ check_prerequisites() {
 
     # Check for Python 3
     if ! command -v python3 >/dev/null 2>&1; then
-        error_exit "Python 3 is not installed. Please install Python 3 and try again."
+        echo "Python 3 is not installed. Please install Python 3 and try again."
+        return 1
     fi
 
     log "System prerequisites check passed."
@@ -61,7 +55,7 @@ check_prerequisites() {
 # Function to test SciPy functionality
 test_scipy_functionality() {
     local temp_dir
-    temp_dir=$(mktemp -d) || error_exit "Failed to create temporary directory."
+    temp_dir=$(mktemp -d) || (echo "Failed to create temporary directory." && return 1)
     log "Created temporary directory: $temp_dir"
 
     cd "$temp_dir"
@@ -119,62 +113,30 @@ EOF
     fi
 }
 
-# Function to generate the report.json
-generate_report() {
-    local test_passed=$1
-    local os_version
-    local kernel_version
-    local python_version
-    local scipy_version
-
-    os_version=$(cat /etc/os-release | grep PRETTY_NAME | cut -d'"' -f2) || os_version="Unknown"
-    kernel_version=$(uname -r) || kernel_version="Unknown"
-    python_version=$(python3 --version | awk '{print $2}') || python_version="Unknown"
-    scipy_version=$(python3 -c "import scipy; print(scipy.__version__)") || scipy_version="Unknown"
-
-    local report_content
-    report_content=$(cat <<EOF
-{
-    "distro": "debian",
-    "os_version": "$os_version",
-    "kernel_version": "$kernel_version",
-    "package_version": "$scipy_version (Python $python_version)",
-    "package_name": "$PACKAGE_SHOW_NAME",
-    "package_type": "$PACKAGE_TYPE",
-    "test_results": [
-        {
-            "test_name": "SciPy Functionality Test",
-            "passed": $test_passed
-        }
-    ],
-    "all_tests_passed": $test_passed
-}
-EOF
-)
-
-    echo "$report_content" > "$REPORT_FILE"
-    log "Report generated at $REPORT_FILE"
-}
-
 # Main script execution
 main() {
     log "Starting SciPy test script..."
 
-    check_prerequisites
+    if ! check_prerequisites; then
+        return 1
+    fi
 
     if ! is_scipy_installed; then
-        install_scipy
+        if ! install_scipy; then
+            return 1
+        fi
     fi
 
+    local python_version=$(python3 --version | awk '{print $2}') || python_version="Unknown"
+    local scipy_version=$(python3 -c "import scipy; print(scipy.__version__)") || scipy_version="Unknown"
+    PACKAGE_VERSION="$scipy_version (python $python_version)"
     if test_scipy_functionality; then
         log "SciPy is functioning correctly."
-        generate_report true
+        return 0
     else
         log "SciPy is not functioning correctly."
-        generate_report false
+        return 1
     fi
-
-    log "SciPy test script completed."
 }
 
 # Run the main function
