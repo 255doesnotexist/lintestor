@@ -1,15 +1,1 @@
-{
-    "distro": "debian",
-    "os_version": "Linux version 6.1.0-22-amd64 (debian-kernel@lists.debian.org) (gcc-12 (Debian 12.2.0-14) 12.2.0, GNU ld (GNU Binutils for Debian) 2.40) #1 SMP PREEMPT_DYNAMIC Debian 6.1.94-1 (2024-06-21)",
-    "kernel_version": "6.1.0-22-amd64",
-    "package_version": "",
-    "package_name": "Perl",
-    "package_type": "Practical Extraction and Reporting Language",
-    "test_results": [
-        {
-            "test_name": "Perl Functionality Test",
-            "passed": true
-        }
-    ],
-    "all_tests_passed": true
-}
+{"distro":"debian","os_version":"Linux version 6.8.12-riscv64 (debian-kernel@lists.debian.org) (riscv64-linux-gnu-gcc-13 (Debian 13.2.0-25) 13.2.0, GNU ld (GNU Binutils for Debian) 2.42) #1 SMP Debian 6.8.12-1 (2024-05-31)\n","kernel_version":"6.8.12-riscv64\n","package_name":"perl","package_type":"package","package_version":"5.38.2","test_results":[{"test_name":"test.sh","passed":true}],"all_tests_passed":true}

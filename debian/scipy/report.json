@@ -1,15 +1,1 @@
-{
-    "distro": "debian",
-    "os_version": "Debian GNU/Linux 12 (bookworm)",
-    "kernel_version": "6.1.0-22-amd64",
-    "package_version": "1.10.1 (Python 3.11.2)",
-    "package_name": "SciPy",
-    "package_type": "Python Scientific Library",
-    "test_results": [
-        {
-            "test_name": "SciPy Functionality Test",
-            "passed": true
-        }
-    ],
-    "all_tests_passed": true
-}
+{"distro":"debian","os_version":"Linux version 6.8.12-riscv64 (debian-kernel@lists.debian.org) (riscv64-linux-gnu-gcc-13 (Debian 13.2.0-25) 13.2.0, GNU ld (GNU Binutils for Debian) 2.42) #1 SMP Debian 6.8.12-1 (2024-05-31)\n","kernel_version":"6.8.12-riscv64\n","package_name":"scipy","package_type":"package","package_version":"","test_results":[{"test_name":"test.sh","passed":false}],"all_tests_passed":false}

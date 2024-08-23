@@ -1,15 +1,1 @@
-{
-    "distro": "debian",
-    "os_version": "Linux version 6.9.9-riscv64 (debian-kernel@lists.debian.org) (riscv64-linux-gnu-gcc-13 (Debian 13.3.0-1) 13.3.0, GNU ld (GNU Binutils for Debian) 2.42.50.20240710) #1 SMP Debian 6.9.9-1 (2024-07-13)",
-    "kernel_version": "6.9.9-riscv64",
-    "package_name": "nodejs",
-    "package_type": "JavaScript Runtime",
-    "package_version": "20.15.1+dfsg-1",
-    "test_results": [
-        {
-            "test_name": "Node.js Functionality Test",
-            "passed": true
-        }
-    ],
-    "all_tests_passed": true
-}
+{"distro":"debian","os_version":"Linux version 6.8.12-riscv64 (debian-kernel@lists.debian.org) (riscv64-linux-gnu-gcc-13 (Debian 13.2.0-25) 13.2.0, GNU ld (GNU Binutils for Debian) 2.42) #1 SMP Debian 6.8.12-1 (2024-05-31)\n","kernel_version":"6.8.12-riscv64\n","package_name":"nodejs","package_type":"package","package_version":"","test_results":[{"test_name":"test.sh","passed":false}],"all_tests_passed":false}
