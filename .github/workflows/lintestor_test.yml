@@ -41,7 +41,7 @@ jobs:
         echo '-kernel /usr/lib/u-boot/qemu-riscv64_smode/uboot.elf \' >> boot.sh
         echo '-object rng-random,filename=/dev/urandom,id=rng \' >> boot.sh
         echo '-device virtio-rng-device,rng=rng \' >> boot.sh
-        echo '-nographic -append "root=LABEL=rootfs console=ttyS0"' >> boot.sh
+        echo '-nographic -append "root=LABEL=rootfs console=ttyS0  cmdline no4lvl"' >> boot.sh
         chmod +x boot.sh
         ls -l # 展示文件结构
         cd ../lintestor  # 回到项目目录
