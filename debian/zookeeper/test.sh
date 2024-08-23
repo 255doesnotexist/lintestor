@@ -86,6 +86,8 @@ check_prerequisites() {
 
 # Function to test ZooKeeper functionality
 test_zookeeper_functionality() {
+    # TODO: check if zookeeper server is already running
+    
     log "Starting ZooKeeper server..."
     if ! sudo /opt/zookeeper/bin/zkServer.sh start; then
         log "Failed to start ZooKeeper server."
@@ -142,17 +144,18 @@ main() {
     cd "$original_dir"
     if test_zookeeper_functionality; then
         log "ZooKeeper is functioning correctly."
-        return 0
+        exit_code=0
     else
         log "ZooKeeper is not functioning correctly."
-        return 1
+        exit_code=1
     fi
+    # Clean up
+    rm -rf "$temp_dir"
+    log "Cleaned up temporary directory."
+    log "ZooKeeper test script completed."
+
+    return $exit_code
 }
 
 # Run the main function
 main
-
-# Clean up
-rm -rf "$temp_dir"
-log "Cleaned up temporary directory."
-log "ZooKeeper test script completed."

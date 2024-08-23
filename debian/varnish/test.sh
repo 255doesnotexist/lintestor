@@ -113,17 +113,18 @@ main() {
     cd "$original_dir"
     if test_varnish_functionality; then
         log "Varnish is functioning correctly."
-        return 0
+        exit_code=0
     else
         log "Varnish is not functioning correctly."
-        return 1
+        exit_code=1
     fi
+    # Clean up
+    rm -rf "$temp_dir"
+    log "Cleaned up temporary directory."
+    log "Varnish test script completed."
+
+    return $exit_code
 }
 
 # Run the main function
 main
-
-# Clean up
-rm -rf "$temp_dir"
-log "Cleaned up temporary directory."
-log "Varnish test script completed."
