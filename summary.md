@@ -5,7 +5,7 @@
 | apache | package | ✅ apache=2.4.62-1 |
 | clang | package | ✅ clang=16.0.6 (27+b1) |
 | cmake | package | ✅ cmake=3.30.2 |
-| docker |  | ❓ |
+| docker | package | ✅ docker=5:27.1.1-1~debian.12~bookworm |
 | erlang | package | ✅ erlang=1:25.3.2.12+dfsg-1 |
 | gcc | package | ✅ gcc=14.2.0 |
 | gdb | package | ✅ gdb=GNU gdb (Debian 15.1-1) 15.1 |
