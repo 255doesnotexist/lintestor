@@ -9,14 +9,24 @@ is_python3_installed() {
     return $?
 }
 
+# Function to check if NumPy is installed
+is_numpy_installed() {
+    python3 -c "import numpy" 2>/dev/null
+    return $?
+}
+
 # Function to install Python 3 package
 install_python3_package() {
     export DEBIAN_FRONTEND=noninteractive
     apt-get update
     apt-get install -y python3-full
     apt-get install -y python-is-python3 python3-pip
-    apt-get install -y $PACKAGE_NAME
+    return $?
+}
 
+# Function to install NumPy
+install_numpy() {
+    apt-get install -y $PACKAGE_NAME
     return $?
 }
 
@@ -58,19 +68,34 @@ else
         echo "Python 3 installed successfully."
     else
         echo "Failed to install Python 3."
-        return 1
+        exit 1
+    fi
+fi
+
+# Check if NumPy is installed
+if is_numpy_installed; then
+    echo "NumPy is installed."
+else
+    echo "NumPy is not installed. Attempting to install..."
+    # Attempt to install NumPy
+    if install_numpy; then
+        echo "NumPy installed successfully."
+    else
+        echo "Failed to install NumPy."
+        exit 1
     fi
 fi
 
 PACKAGE_VERSION="$(python3 --version) ($(python3 -c "import numpy; print(numpy.__version__)"))"
+echo "Python and NumPy versions: $PACKAGE_VERSION"
 
 # Check Numpy functionality by compiling and running a simple Python script
 if test_numpy_functionality; then
     echo "Numpy is functioning correctly."
-    return 0
+    exit 0
 else
     echo "Numpy is not functioning correctly."
-    return 1
+    exit 1
 fi
 
 # End of the script
