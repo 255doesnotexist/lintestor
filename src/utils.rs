@@ -16,6 +16,7 @@ pub struct Report {
 #[derive(Serialize, Deserialize, Debug)]
 pub struct TestResult {
     pub test_name: String,
+    pub output: String,
     pub passed: bool,
 }
 
