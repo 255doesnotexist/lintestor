@@ -63,6 +63,11 @@ impl TestRunner for LocalTestRunner {
         let all_tests_passed = output.status.success();
         let test_results: Vec<TestResult> = Vec::from([TestResult {
             test_name: String::from("test.sh"),
+            output: format!(
+                "{}{}",
+                String::from_utf8_lossy(&output.stdout).to_string(),
+                String::from_utf8_lossy(&output.stderr).to_string()
+            ),
             passed: output.status.success(),
         }]);
 
@@ -265,25 +270,23 @@ impl TestRunner for RemoteTestRunner {
 
         let mut test_passed = false;
 
-        match result {
-            Ok(i) => {
-                if i.exit_status == 0 {
-                    test_passed = true;
-                    self.print_ssh_msg(&format!("Test successful for {}/{}", distro, package));
-                } else {
-                    self.print_ssh_msg(&format!(
-                        "Test failed for {}/{}: {}",
-                        distro, package, i.output
-                    ));
-                }
-            }
+        let test_result = match result {
+            Ok(i) => TestResult {
+                test_name: String::from("test.sh"),
+                output: i.output,
+                passed: i.exit_status == 0,
+            },
             Err(e) => return Err(format!("Test failed for {}/{}: {}", distro, package, e).into()),
+        };
+        if test_result.passed {
+            self.print_ssh_msg(&format!("Test successful for {}/{}", distro, package));
+        } else {
+            self.print_ssh_msg(&format!(
+                "Test failed for {}/{}: {}",
+                distro, package, test_result.output
+            ));
         }
-        // TODO: support multiple tests
-        let test_results: Vec<TestResult> = Vec::from([TestResult {
-            test_name: String::from("test.sh"),
-            passed: test_passed,
-        }]);
+        let test_results = vec![test_result];
         let report: Report = Report {
             distro: distro.to_string(),
             os_version: os_version.output,
