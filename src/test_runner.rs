@@ -39,10 +39,12 @@ impl TestRunner for LocalTestRunner {
         let mut all_tests_passed = true;
         let mut test_results = Vec::new();
 
+        let pkgver_tmpfile = format!("{}/pkgver", REMOTE_TMP_DIR);
+
         for script in script_manager?.get_test_scripts() {
             let output = Command::new("bash")
                 .arg("-c")
-                .arg(&format!("source {}", script))
+                .arg(&format!("source {} && echo -n $PACKAGE_VERSION > {}", script, pkgver_tmpfile))
                 .stdout(if self.verbose {
                     Stdio::inherit()
                 } else {
@@ -64,13 +66,15 @@ impl TestRunner for LocalTestRunner {
             });
         }
 
+        let package_version = read_to_string(&pkgver_tmpfile)?;
+
         let report = Report {
             distro: distro.to_string(),
             os_version,
             kernel_version,
             package_name: package.to_string(),
             package_type: String::from("package"),
-            package_version: String::new(), // partially removed
+            package_version: package_version, // partially removed
             // TODO: add a metadata.sh script for every package
             // which generate a metadata.json file containing package version
             // and other metadata (different distros / packages have really different
@@ -242,7 +246,6 @@ impl TestRunner for RemoteTestRunner {
 
         let pkgver_tmpfile = format!("{}/pkgver", REMOTE_TMP_DIR);
         for script in script_manager?.get_test_scripts() {
-
             let result = self.run_command(
                 &sess,
                 &format!("source {} && echo -n $PACKAGE_VERSION > {}", script, pkgver_tmpfile),
