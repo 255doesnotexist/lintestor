@@ -8,7 +8,7 @@ impl TestScriptManager {
     pub fn new(distro: &str, package: &str) -> Result<Self, Box<dyn std::error::Error>> {
         let dir = format!("./{}/{}", distro, package);
         let mut test_scripts = Vec::new();
-        for entry in std::fs::read_dir(&dir)? {
+        for entry in std::fs::read_dir(dir)? {
             let entry = entry?;
             let path = entry.path();
             if path.is_file() && path.extension().unwrap_or_default() == "sh" {
@@ -26,3 +26,4 @@ impl TestScriptManager {
         &self.test_scripts
     }
 }
+
