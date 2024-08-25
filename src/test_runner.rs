@@ -1,4 +1,5 @@
 use crate::aggregator::generate_report;
+use crate::testscript_manager::TestScriptManager;
 use crate::utils::{CommandOutput, Report, TempFile, TestResult, REMOTE_TMP_DIR};
 use ssh2::Session;
 use std::fs::{read_to_string, File};
@@ -31,68 +32,55 @@ impl TestRunner for LocalTestRunner {
         distro: &str,
         package: &str,
     ) -> Result<(), Box<dyn std::error::Error>> {
-        let script_path = format!("{}/{}/test.sh", distro, package);
-
-        // get system version and package version
+        let script_manager = TestScriptManager::new(distro, package);
         let os_version = read_to_string("/proc/version")?;
         let kernelver_output = Command::new("uname").arg("-r").output()?;
         let kernel_version = String::from_utf8_lossy(&kernelver_output.stdout).to_string();
+        let mut all_tests_passed = true;
+        let mut test_results = Vec::new();
 
-        let pkgver_tmpfile = format!("{}/pkgver.tmp", REMOTE_TMP_DIR); // dirty hack for now
-        let output = Command::new("bash")
-            .arg("-c")
-            .arg(&format!(
-                "mkdir -p {} && source {} && echo -n $PACKAGE_VERSION > {}",
-                REMOTE_TMP_DIR, script_path, pkgver_tmpfile
-            ))
-            .stdout(if self.verbose {
-                Stdio::inherit()
-            } else {
-                Stdio::null()
-            })
-            .output()?;
+        for script in script_manager?.get_test_scripts() {
+            let output = Command::new("bash")
+                .arg("-c")
+                .arg(&format!("source {}", script))
+                .stdout(if self.verbose {
+                    Stdio::inherit()
+                } else {
+                    Stdio::null()
+                })
+                .output()?;
 
-        let pkgver_output = Command::new("bash")
-            .arg("-c")
-            .arg(&format!("cat {} && rm {}", pkgver_tmpfile, pkgver_tmpfile))
-            .stdout(Stdio::piped())
-            .output()?;
-        let package_version = String::from_utf8_lossy(&pkgver_output.stdout).to_string();
+            let test_passed = output.status.success();
+            all_tests_passed &= test_passed;
 
-        // TODO: support multiple tests
-        let all_tests_passed = output.status.success();
-        let test_results: Vec<TestResult> = Vec::from([TestResult {
-            test_name: String::from("test.sh"),
-            output: format!(
-                "{}{}",
-                String::from_utf8_lossy(&output.stdout).to_string(),
-                String::from_utf8_lossy(&output.stderr).to_string()
-            ),
-            passed: output.status.success(),
-        }]);
+            test_results.push(TestResult {
+                test_name: script.to_string(),
+                output: format!(
+                    "{}{}",
+                    String::from_utf8_lossy(&output.stdout).to_string(),
+                    String::from_utf8_lossy(&output.stderr).to_string()
+                ),
+                passed: test_passed,
+            });
+        }
 
-        let report: Report = Report {
+        let report = Report {
             distro: distro.to_string(),
             os_version,
-            kernel_version, // deprecated
+            kernel_version,
             package_name: package.to_string(),
-            package_type: String::from("package"), // temporarily deprecated
-            package_version,
+            package_type: String::from("package"),
+            package_version: String::new(), // partially removed
+            // TODO: add a metadata.sh script for every package
+            // which generate a metadata.json file containing package version
+            // and other metadata (different distros / packages have really different
+            // metadata fetching methods so it is essential to write a metadata.sh for each one seperately)
             test_results,
             all_tests_passed,
         };
 
         let report_path = format!("{}/{}/report.json", distro, package);
         generate_report(report_path, report)?;
-        if !output.status.success() {
-            return Err(format!(
-                "Test failed for {}/{}: {}",
-                distro,
-                package,
-                String::from_utf8_lossy(&output.stderr)
-            )
-            .into());
-        }
 
         if !all_tests_passed {
             return Err(format!("Not all tests passed for {}/{}", distro, package).into());
@@ -248,16 +236,27 @@ impl TestRunner for RemoteTestRunner {
 
         // 运行测试命令
         self.print_ssh_msg(&format!("Running tests in directory {}", remote_dir));
+        let script_manager = TestScriptManager::new(distro, package);
+        let mut all_tests_passed = true;
+        let mut test_results = Vec::new();
 
-        let script_path = format!("{}/test.sh", remote_dir);
-        let pkgver_tmpfile = format!("{}/pkgver.tmp", REMOTE_TMP_DIR);
-        let result = self.run_command(
-            &sess,
-            &format!(
-                "source {} && echo -n $PACKAGE_VERSION > {}",
-                script_path, &pkgver_tmpfile
-            ),
-        );
+        let pkgver_tmpfile = format!("{}/pkgver", REMOTE_TMP_DIR);
+        for script in script_manager?.get_test_scripts() {
+
+            let result = self.run_command(
+                &sess,
+                &format!("source {} && echo -n $PACKAGE_VERSION > {}", script, pkgver_tmpfile),
+            );
+
+            let test_passed = result.is_ok();
+            all_tests_passed &= test_passed;
+
+            test_results.push(TestResult {
+                test_name: script.to_string(),
+                output: result.unwrap().output,
+                passed: test_passed,
+            });
+        }
 
         // get system version and package version
         let os_version = self.run_command(&sess, "cat /proc/version")?;
@@ -268,25 +267,15 @@ impl TestRunner for RemoteTestRunner {
 
         let kernel_version = self.run_command(&sess, "uname -r")?;
 
-        let mut test_passed = false;
-
-        let test_result = match result {
-            Ok(i) => TestResult {
-                test_name: String::from("test.sh"),
-                output: i.output,
-                passed: i.exit_status == 0,
-            },
-            Err(e) => return Err(format!("Test failed for {}/{}: {}", distro, package, e).into()),
-        };
-        if test_result.passed {
+        if all_tests_passed {
             self.print_ssh_msg(&format!("Test successful for {}/{}", distro, package));
         } else {
             self.print_ssh_msg(&format!(
-                "Test failed for {}/{}: {}",
-                distro, package, test_result.output
+                "Test failed for {}/{}",
+                distro, package
             ));
         }
-        let test_results = vec![test_result];
+
         let report: Report = Report {
             distro: distro.to_string(),
             os_version: os_version.output,
@@ -295,7 +284,7 @@ impl TestRunner for RemoteTestRunner {
             package_type: String::from("package"), // temporarily deprecated
             package_version: package_version.output,
             test_results,
-            all_tests_passed: test_passed,
+            all_tests_passed: all_tests_passed,
         };
 
         // 压缩远程测试目录
