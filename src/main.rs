@@ -128,12 +128,14 @@ fn run_tests(distros: &[&str], packages: &[&str], run_locally: bool, cleanup: bo
 
         let testenv_manager = crate::testenv_manager::TestEnvManager::new(&distro_config);
 
-        if let Err(e) = testenv_manager.start() {
-            eprintln!(
-                "Failed to initialize test environment for {}: {}",
-                distro, e
-            );
-            continue;
+        if !run_locally {
+            if let Err(e) = testenv_manager.start() {
+                eprintln!(
+                    "Failed to initialize test environment for {}: {}",
+                    distro, e
+                );
+                continue;
+            }
         }
 
         for package in packages {
@@ -163,7 +165,7 @@ fn run_tests(distros: &[&str], packages: &[&str], run_locally: bool, cleanup: bo
                 continue;
             }
 
-            println!("Running test for {}/{}", distro, package);
+            println!("Running test for {}/{}, {}.", distro, package, if run_locally {"locally"} else {"with QEMU"});
 
             let test_runner: Box<dyn TestRunner> = if run_locally {
                 Box::new(LocalTestRunner::new(distro, package, verbose))
@@ -198,8 +200,10 @@ fn run_tests(distros: &[&str], packages: &[&str], run_locally: bool, cleanup: bo
             }
         }
 
-        if let Err(e) = testenv_manager.stop() {
-            eprintln!("Failed to stop environment for {}: {}", distro, e);
+        if !run_locally {
+            if let Err(e) = testenv_manager.stop() {
+                eprintln!("Failed to stop environment for {}: {}", distro, e);
+            }
         }
     }
 }
