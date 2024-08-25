@@ -3,6 +3,7 @@ mod config;
 mod markdown_report;
 mod test_runner;
 mod testenv_manager;
+mod testscript_manager;
 mod utils;
 
 use crate::test_runner::{LocalTestRunner, RemoteTestRunner, TestRunner};
