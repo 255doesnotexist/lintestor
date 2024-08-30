@@ -22,7 +22,6 @@ fn main() {
     let test = matches.get_flag("test");
     let aggr = matches.get_flag("aggr");
     let summ = matches.get_flag("summ");
-    let run_locally = matches.get_flag("locally");
     let cleanup = matches.get_flag("cleanup");
     let verbose = matches.get_flag("verbose");
     let config_file = matches
@@ -44,7 +43,7 @@ fn main() {
 
     if test {
         println!("Running tests");
-        run_tests(&distros, &packages, run_locally, cleanup, verbose);
+        run_tests(&distros, &packages, cleanup, verbose);
     }
 
     if aggr {
@@ -86,12 +85,6 @@ fn parse_args() -> ArgMatches {
                 .help("Generate a summary report"),
         )
         .arg(
-            Arg::new("locally")
-                .long("locally")
-                .action(clap::ArgAction::SetTrue)
-                .help("Run tests locally"),
-        )
-        .arg(
             Arg::new("config")
                 .long("config")
                 .value_name("Config file name")
@@ -112,7 +105,7 @@ fn parse_args() -> ArgMatches {
         .get_matches()
 }
 
-fn run_tests(distros: &[&str], packages: &[&str], run_locally: bool, cleanup: bool, verbose: bool) {
+fn run_tests(distros: &[&str], packages: &[&str], cleanup: bool, verbose: bool) {
     for distro in distros {
         if !Path::new(distro).exists() {
             eprintln!("Distro directory '{}' not found, skipping", distro);
@@ -127,6 +120,7 @@ fn run_tests(distros: &[&str], packages: &[&str], run_locally: bool, cleanup: bo
             }
         };
 
+        let run_locally = distro_config.testing_type == "locally";
         let testenv_manager = crate::testenv_manager::TestEnvManager::new(&distro_config);
 
         if !run_locally {

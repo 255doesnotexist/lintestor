@@ -47,6 +47,8 @@ packages = ["apache", "clang", "cmake", "docker", "erlang", "gcc", "gdb", "golan
 示例发行版配置：
 
 ```toml
+testing_type = "qemu-based-remote" # 或 "locally"、"remote"
+# 在参数为 locally、remote 时不需求 qemu 启动脚本。在 locally 时不需求连接信息。
 startup_script = "./debian/start_qemu.sh"
 stop_script = "./debian/stop_qemu.sh"
 skip_packages = ["docker"]
