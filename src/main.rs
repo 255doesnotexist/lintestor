@@ -6,7 +6,7 @@ mod testenv_manager;
 mod testscript_manager;
 mod utils;
 
-use crate::test_runner::{LocalTestRunner, RemoteTestRunner, TestRunner};
+use crate::test_runner::{local::LocalTestRunner, remote::RemoteTestRunner, TestRunner};
 use clap::{Arg, ArgMatches, Command};
 use std::fs::remove_file;
 use std::path::Path;

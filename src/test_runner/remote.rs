@@ -1,98 +1,13 @@
-use crate::aggregator::generate_report;
+use crate::test_runner::TestRunner;
 use crate::testscript_manager::TestScriptManager;
+use crate::aggregator::generate_report;
 use crate::utils::{CommandOutput, Report, TempFile, TestResult, REMOTE_TMP_DIR};
 use ssh2::Session;
-use std::fs::{read_to_string, File};
+use std::fs::{File, read_to_string};
 use std::io::{Read, Write};
 use std::net::TcpStream;
 use std::path::Path;
-use std::process::{Command, Stdio};
-
-pub trait TestRunner {
-    fn run_test(
-        &self,
-        distro: &str,
-        package: &str,
-    ) -> Result<(), Box<dyn std::error::Error>>;
-}
-
-pub struct LocalTestRunner{
-    verbose: bool,
-}
-
-impl LocalTestRunner {
-    pub fn new(_distro: &str, _package: &str, _verbose: bool) -> Self {
-        LocalTestRunner{verbose: _verbose}
-    }
-}
-
-impl TestRunner for LocalTestRunner {
-    fn run_test(
-        &self,
-        distro: &str,
-        package: &str,
-    ) -> Result<(), Box<dyn std::error::Error>> {
-        let script_manager = TestScriptManager::new(distro, package);
-        let os_version = read_to_string("/proc/version")?;
-        let kernelver_output = Command::new("uname").arg("-r").output()?;
-        let kernel_version = String::from_utf8_lossy(&kernelver_output.stdout).to_string();
-        let mut all_tests_passed = true;
-        let mut test_results = Vec::new();
-
-        let pkgver_tmpfile = format!("{}/pkgver", REMOTE_TMP_DIR);
-
-        for script in script_manager?.get_test_scripts() {
-            let output = Command::new("bash")
-                .arg("-c")
-                .arg(&format!("source {} && echo -n $PACKAGE_VERSION > {}", script, pkgver_tmpfile))
-                .stdout(if self.verbose {
-                    Stdio::inherit()
-                } else {
-                    Stdio::null()
-                })
-                .output()?;
-
-            let test_passed = output.status.success();
-            all_tests_passed &= test_passed;
-
-            test_results.push(TestResult {
-                test_name: script.to_string(),
-                output: format!(
-                    "{}{}",
-                    String::from_utf8_lossy(&output.stdout).to_string(),
-                    String::from_utf8_lossy(&output.stderr).to_string()
-                ),
-                passed: test_passed,
-            });
-        }
-
-        let package_version = read_to_string(&pkgver_tmpfile)?;
-
-        let report = Report {
-            distro: distro.to_string(),
-            os_version,
-            kernel_version,
-            package_name: package.to_string(),
-            package_type: String::from("package"),
-            package_version: package_version, // partially removed
-            // TODO: add a metadata.sh script for every package
-            // which generate a metadata.json file containing package version
-            // and other metadata (different distros / packages have really different
-            // metadata fetching methods so it is essential to write a metadata.sh for each one seperately)
-            test_results,
-            all_tests_passed,
-        };
-
-        let report_path = format!("{}/{}/report.json", distro, package);
-        generate_report(report_path, report)?;
-
-        if !all_tests_passed {
-            return Err(format!("Not all tests passed for {}/{}", distro, package).into());
-        }
-
-        Ok(())
-    }
-}
+use std::process::Command;
 
 pub struct RemoteTestRunner {
     remote_ip: String,
@@ -114,7 +29,6 @@ impl RemoteTestRunner {
     }
 
     fn print_ssh_msg(&self, msg: &str) {
-        // support verbose flag here
         if std::env::var("PRINT_SSH_MSG").is_ok() || self.verbose {
             println!("{}", msg);
         }
@@ -128,7 +42,6 @@ impl RemoteTestRunner {
         let mut channel = sess.channel_session()?;
         channel.exec(command)?;
 
-        // read output of remote command to prevent deadlocks
         let mut s = String::new();
         channel.read_to_string(&mut s)?;
         channel.send_eof()?;
@@ -163,7 +76,6 @@ impl TestRunner for RemoteTestRunner {
             sess.userauth_agent(&self.username)?;
             self.print_ssh_msg("SSH agent authentication completed");
         }
-
         if !sess.authenticated() {
             return Err("Authentication failed".into());
         }
@@ -243,17 +155,14 @@ impl TestRunner for RemoteTestRunner {
         let script_manager = TestScriptManager::new(distro, package);
         let mut all_tests_passed = true;
         let mut test_results = Vec::new();
-
         let pkgver_tmpfile = format!("{}/pkgver", REMOTE_TMP_DIR);
         for script in script_manager?.get_test_scripts() {
             let result = self.run_command(
                 &sess,
                 &format!("source {} && echo -n $PACKAGE_VERSION > {}", script, pkgver_tmpfile),
             );
-
             let test_passed = result.is_ok();
             all_tests_passed &= test_passed;
-
             test_results.push(TestResult {
                 test_name: script.to_string(),
                 output: result.unwrap().output,
@@ -261,15 +170,13 @@ impl TestRunner for RemoteTestRunner {
             });
         }
 
-        // get system version and package version
+        // 获取系统版本和包版本
         let os_version = self.run_command(&sess, "cat /proc/version")?;
         let package_version = self.run_command(
             &sess,
             &format!("cat {} && rm {}", pkgver_tmpfile, pkgver_tmpfile),
         )?;
-
         let kernel_version = self.run_command(&sess, "uname -r")?;
-
         if all_tests_passed {
             self.print_ssh_msg(&format!("Test successful for {}/{}", distro, package));
         } else {
@@ -278,16 +185,15 @@ impl TestRunner for RemoteTestRunner {
                 distro, package
             ));
         }
-
         let report: Report = Report {
             distro: distro.to_string(),
             os_version: os_version.output,
-            kernel_version: kernel_version.output, // deprecated
+            kernel_version: kernel_version.output,
             package_name: package.to_string(),
-            package_type: String::from("package"), // temporarily deprecated
+            package_type: String::from("package"),
             package_version: package_version.output,
             test_results,
-            all_tests_passed: all_tests_passed,
+            all_tests_passed,
         };
 
         // 压缩远程测试目录
@@ -296,7 +202,6 @@ impl TestRunner for RemoteTestRunner {
             "Compressing remote directory {} into {}",
             remote_dir, remote_tar_file
         ));
-
         if let Ok(CommandOutput {
             exit_status: 0,
             output: _,
@@ -343,25 +248,20 @@ impl TestRunner for RemoteTestRunner {
         // 下载测试报告
         let report_path = format!("{}/report.json", local_dir);
         generate_report(report_path.clone(), report)?;
-
         let report_file_path = Path::new(&report_path);
         if report_file_path.exists() {
             let mut file = File::open(&report_path)?;
             let mut contents = String::new();
             file.read_to_string(&mut contents)?;
             self.print_ssh_msg(&format!("Downloaded test report: {}", report_path));
-
-            // 解析并打印报告
             let report: Report = serde_json::from_str(&contents)?;
             println!("{}-{} report:\n {:?}", distro, package, report);
-
             if !report.all_tests_passed {
                 return Err(format!("Not all tests passed {}/{}", distro, package).into());
             }
         } else {
             self.print_ssh_msg("Test report not found.");
         }
-
         Ok(())
     }
 }
