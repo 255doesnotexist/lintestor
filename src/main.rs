@@ -7,6 +7,7 @@ mod testscript_manager;
 mod utils;
 
 use crate::test_runner::{local::LocalTestRunner, remote::RemoteTestRunner, TestRunner};
+use crate::config::{config::Config, distro_config::DistroConfig};
 use clap::{Arg, ArgMatches, Command};
 use std::fs::remove_file;
 use std::path::Path;
@@ -28,7 +29,7 @@ fn main() {
         .get_one::<String>("config")
         .map(|s| s.as_str())
         .unwrap_or("config.toml");
-    let base_config = match config::Config::from_file(config_file) {
+    let base_config = match Config::from_file(config_file) {
         Ok(base_config) => base_config,
         Err(e) => {
             eprintln!("Failed to load config from {}: {}", config_file, e);
@@ -112,7 +113,7 @@ fn run_tests(distros: &[&str], packages: &[&str], cleanup: bool, verbose: bool) 
             continue;
         }
         let distro_config_path = format!("{}/config.toml", distro);
-        let distro_config = match config::DistroConfig::from_file(&distro_config_path) {
+        let distro_config = match DistroConfig::from_file(&distro_config_path) {
             Ok(config) => config,
             Err(e) => {
                 eprintln!("Failed to load config for {}: {}", distro, e);

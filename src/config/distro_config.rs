@@ -1,11 +1,6 @@
 use serde::Deserialize;
 use std::fs;
-
-#[derive(Debug, Deserialize)]
-pub struct Config {
-    pub distros: Vec<String>,
-    pub packages: Vec<String>,
-}
+use crate::config::connection_config::ConnectionConfig;
 
 #[derive(Debug, Deserialize)]
 pub struct DistroConfig {
@@ -26,23 +21,6 @@ pub struct DistroConfig {
 impl DistroConfig {
     fn is_not_qemu_based_remote(&self) -> bool {
         self.testing_type != "qemu-based-remote"
-    }
-}
-
-#[derive(Clone, Debug, Deserialize)]
-pub struct ConnectionConfig {
-    pub method: String,
-    pub ip: Option<String>,
-    pub port: Option<u16>,
-    pub username: Option<String>,
-    pub password: Option<String>,
-}
-
-impl Config {
-    pub fn from_file(path: &str) -> Result<Self, Box<dyn std::error::Error>> {
-        let content = fs::read_to_string(path)?;
-        let config: Config = toml::from_str(&content)?;
-        Ok(config)
     }
 }
 
