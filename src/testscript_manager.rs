@@ -46,9 +46,7 @@ impl TestScriptManager {
                 test_scripts.push(path.to_str().unwrap_or_default().to_string());
             }
         }
-        Ok(TestScriptManager {
-            test_scripts,
-        })
+        Ok(TestScriptManager { test_scripts })
     }
 
     /// Returns a slice containing the paths of all discovered test scripts.

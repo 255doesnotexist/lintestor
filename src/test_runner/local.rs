@@ -1,7 +1,7 @@
+use crate::aggregator::generate_report;
 use crate::test_runner::TestRunner;
 use crate::testscript_manager::TestScriptManager;
 use crate::utils::{Report, TestResult, REMOTE_TMP_DIR};
-use crate::aggregator::generate_report;
 use std::fs::read_to_string;
 use std::process::{Command, Stdio};
 
@@ -35,11 +35,7 @@ impl TestRunner for LocalTestRunner {
     /// * Reading the package version from the temporary file fails.
     /// * Generating the report fails.
     /// * Not all tests passed for the given distribution and package.
-    fn run_test(
-        &self,
-        distro: &str,
-        package: &str,
-    ) -> Result<(), Box<dyn std::error::Error>> {
+    fn run_test(&self, distro: &str, package: &str) -> Result<(), Box<dyn std::error::Error>> {
         let script_manager = TestScriptManager::new(distro, package);
 
         let os_version = read_to_string("/proc/version")?;
@@ -53,7 +49,10 @@ impl TestRunner for LocalTestRunner {
         for script in script_manager?.get_test_scripts() {
             let output = Command::new("bash")
                 .arg("-c")
-                .arg(&format!("source {} && echo -n $PACKAGE_VERSION > {}", script, pkgver_tmpfile))
+                .arg(&format!(
+                    "source {} && echo -n $PACKAGE_VERSION > {}",
+                    script, pkgver_tmpfile
+                ))
                 .stdout(if self.verbose {
                     Stdio::inherit()
                 } else {

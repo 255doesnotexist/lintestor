@@ -1,3 +1,4 @@
+use crate::config::connection_config::ConnectionConfig;
 /// Represents the configuration for each distro.
 ///
 /// This struct is used to deserialize the configuration from a file using the `from_file` method.
@@ -8,17 +9,15 @@
 /// - `connection`: An instance of `ConnectionConfig` struct representing the connection configuration.
 /// - `skip_packages`: An optional vector of strings representing the packages to be skipped.
 ///
-
 use serde::Deserialize;
 use std::fs;
-use crate::config::connection_config::ConnectionConfig;
 
 #[derive(Debug, Deserialize)]
 pub struct DistroConfig {
     pub testing_type: String, // 'locally' or 'remote' or 'qemu-based-remote'
     #[serde(rename = "startup_script")]
     #[serde(default, skip_serializing_if = "is_not_qemu_based_remote")]
-    pub startup_script: String, 
+    pub startup_script: String,
 
     #[serde(rename = "stop_script")]
     #[serde(default, skip_serializing_if = "is_not_qemu_based_remote")]

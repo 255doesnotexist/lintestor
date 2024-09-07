@@ -6,8 +6,8 @@ mod testenv_manager;
 mod testscript_manager;
 mod utils;
 
+use crate::config::{distro_config::DistroConfig, root_config::Config};
 use crate::test_runner::{local::LocalTestRunner, remote::RemoteTestRunner, TestRunner};
-use crate::config::{root_config::Config, distro_config::DistroConfig};
 use clap::{Arg, ArgMatches, Command};
 use std::fs::remove_file;
 use std::path::Path;
@@ -166,7 +166,12 @@ fn run_tests(distros: &[&str], packages: &[&str], cleanup: bool, verbose: bool) 
                 continue;
             }
 
-            println!("Running test for {}/{}, {}.", distro, package, if run_locally {"locally"} else {"with QEMU"});
+            println!(
+                "Running test for {}/{}, {}.",
+                distro,
+                package,
+                if run_locally { "locally" } else { "with QEMU" }
+            );
 
             let test_runner: Box<dyn TestRunner> = if run_locally {
                 Box::new(LocalTestRunner::new(distro, package, verbose))
@@ -190,7 +195,7 @@ fn run_tests(distros: &[&str], packages: &[&str], cleanup: bool, verbose: bool) 
                     ip.to_string(),
                     port,
                     username.to_string(),
-                    password.map(|p| p.to_string(),),
+                    password.map(|p| p.to_string()),
                     verbose,
                 ))
             };

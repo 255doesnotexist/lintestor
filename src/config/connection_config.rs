@@ -1,4 +1,3 @@
-
 /// Represents the configuration for a connection.
 ///
 /// This struct is used to store the connection details such as the method, IP address, port, username, and password.
@@ -12,7 +11,6 @@
 /// - `username`: An optional string representing the username.
 /// - `password`: An optional string representing the password.
 ///
-
 use serde::Deserialize;
 
 #[derive(Clone, Debug, Deserialize)]

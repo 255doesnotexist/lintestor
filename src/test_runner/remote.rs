@@ -1,6 +1,6 @@
+use crate::aggregator::generate_report;
 use crate::test_runner::TestRunner;
 use crate::testscript_manager::TestScriptManager;
-use crate::aggregator::generate_report;
 use crate::utils::{CommandOutput, Report, TempFile, TestResult, REMOTE_TMP_DIR};
 use ssh2::Session;
 use std::fs::File;
@@ -18,7 +18,13 @@ pub struct RemoteTestRunner {
 }
 
 impl RemoteTestRunner {
-    pub fn new(remote_ip: String, port: u16, username: String, password: Option<String>, verbose: bool) -> Self {
+    pub fn new(
+        remote_ip: String,
+        port: u16,
+        username: String,
+        password: Option<String>,
+        verbose: bool,
+    ) -> Self {
         RemoteTestRunner {
             remote_ip,
             port,
@@ -55,7 +61,6 @@ impl RemoteTestRunner {
     }
 }
 
-
 /// Implements the `TestRunner` trait for the `RemoteTestRunner` struct.
 ///
 /// This struct allows running tests on a remote server using SSH.
@@ -70,11 +75,7 @@ impl TestRunner for RemoteTestRunner {
     /// # Errors
     ///
     /// Returns an error if the test fails or encounters any issues.
-    fn run_test(
-        &self,
-        distro: &str,
-        package: &str,
-    ) -> Result<(), Box<dyn std::error::Error>> {
+    fn run_test(&self, distro: &str, package: &str) -> Result<(), Box<dyn std::error::Error>> {
         // 创建 SSH 会话
         let tcp = TcpStream::connect((self.remote_ip.as_str(), self.port))?;
         let mut sess = Session::new()?;
@@ -130,12 +131,20 @@ impl TestRunner for RemoteTestRunner {
         // 上传 prerequisite.sh 到远程服务器
         let prerequisite_path = format!("{}/prerequisite.sh", distro);
         let remote_prerequisite_path = "/tmp/prerequisite.sh".to_string();
-        let mut remote_file = sess.scp_send(Path::new(&remote_prerequisite_path), 0o644, std::fs::metadata(&prerequisite_path)?.len(), None)?;
+        let mut remote_file = sess.scp_send(
+            Path::new(&remote_prerequisite_path),
+            0o644,
+            std::fs::metadata(&prerequisite_path)?.len(),
+            None,
+        )?;
         let mut local_file = File::open(&prerequisite_path)?;
         let mut buffer = Vec::new();
         local_file.read_to_end(&mut buffer)?;
         remote_file.write_all(&buffer)?;
-        self.print_ssh_msg(&format!("File {} uploaded to remote server", prerequisite_path));
+        self.print_ssh_msg(&format!(
+            "File {} uploaded to remote server",
+            prerequisite_path
+        ));
 
         // 确保远程文件在继续之前关闭
         drop(remote_file);
@@ -173,7 +182,10 @@ impl TestRunner for RemoteTestRunner {
         for script in script_manager?.get_test_scripts() {
             let result = self.run_command(
                 &sess,
-                &format!("source {} && echo -n $PACKAGE_VERSION > {}", script, pkgver_tmpfile),
+                &format!(
+                    "source {} && echo -n $PACKAGE_VERSION > {}",
+                    script, pkgver_tmpfile
+                ),
             );
             let test_passed = result.is_ok();
             all_tests_passed &= test_passed;
@@ -194,10 +206,7 @@ impl TestRunner for RemoteTestRunner {
         if all_tests_passed {
             self.print_ssh_msg(&format!("Test successful for {}/{}", distro, package));
         } else {
-            self.print_ssh_msg(&format!(
-                "Test failed for {}/{}",
-                distro, package
-            ));
+            self.print_ssh_msg(&format!("Test failed for {}/{}", distro, package));
         }
         let report: Report = Report {
             distro: distro.to_string(),
