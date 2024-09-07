@@ -1,5 +1,4 @@
 use crate::utils::Report;
-use serde_json;
 use std::fs::File;
 use std::io::{prelude::*, BufWriter};
 

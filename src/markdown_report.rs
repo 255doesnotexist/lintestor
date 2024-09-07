@@ -1,5 +1,4 @@
 use crate::utils::Report;
-use serde_json;
 use std::fs::File;
 use std::io::prelude::*;
 
@@ -34,7 +33,7 @@ pub fn generate_markdown_report(
         markdown.push_str(":-------| ");
     }
     markdown.pop();
-    markdown.push_str("\n");
+    markdown.push('\n');
 
     for (pkg_idx, &package) in packages.iter().enumerate() {
         let package_type = reports

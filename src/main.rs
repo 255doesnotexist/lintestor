@@ -7,7 +7,7 @@ mod testscript_manager;
 mod utils;
 
 use crate::test_runner::{local::LocalTestRunner, remote::RemoteTestRunner, TestRunner};
-use crate::config::{config::Config, distro_config::DistroConfig};
+use crate::config::{root_config::Config, distro_config::DistroConfig};
 use clap::{Arg, ArgMatches, Command};
 use std::fs::remove_file;
 use std::path::Path;
@@ -122,9 +122,14 @@ fn run_tests(distros: &[&str], packages: &[&str], cleanup: bool, verbose: bool) 
         };
 
         let run_locally = distro_config.testing_type == "locally";
+        let purely_remote = distro_config.is_not_qemu_based_remote();
         let testenv_manager = crate::testenv_manager::TestEnvManager::new(&distro_config);
 
-        if !run_locally {
+        println!("Connection method: {}", distro_config.connection.method);
+
+        let qemu_needed = !run_locally && !purely_remote;
+
+        if qemu_needed {
             if let Err(e) = testenv_manager.start() {
                 eprintln!(
                     "Failed to initialize test environment for {}: {}",
@@ -190,7 +195,7 @@ fn run_tests(distros: &[&str], packages: &[&str], cleanup: bool, verbose: bool) 
                 ))
             };
 
-            match test_runner.run_test(&distro, &package) {
+            match test_runner.run_test(distro, package) {
                 Ok(_) => println!("Test passed for {}/{}", distro, package),
                 Err(e) => println!("Test failed for {}/{}: {}", distro, package, e),
             }

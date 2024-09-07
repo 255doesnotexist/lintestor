@@ -115,7 +115,7 @@ impl TestRunner for RemoteTestRunner {
 
         // 上传 prerequisite.sh 到远程服务器
         let prerequisite_path = format!("{}/prerequisite.sh", distro);
-        let remote_prerequisite_path = format!("/tmp/prerequisite.sh");
+        let remote_prerequisite_path = "/tmp/prerequisite.sh".to_string();
         let mut remote_file = sess.scp_send(Path::new(&remote_prerequisite_path), 0o644, std::fs::metadata(&prerequisite_path)?.len(), None)?;
         let mut local_file = File::open(&prerequisite_path)?;
         let mut buffer = Vec::new();

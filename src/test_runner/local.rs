@@ -22,6 +22,7 @@ impl TestRunner for LocalTestRunner {
         package: &str,
     ) -> Result<(), Box<dyn std::error::Error>> {
         let script_manager = TestScriptManager::new(distro, package);
+
         let os_version = read_to_string("/proc/version")?;
         let kernelver_output = Command::new("uname").arg("-r").output()?;
         let kernel_version = String::from_utf8_lossy(&kernelver_output.stdout).to_string();
@@ -48,8 +49,8 @@ impl TestRunner for LocalTestRunner {
                 test_name: script.to_string(),
                 output: format!(
                     "{}{}",
-                    String::from_utf8_lossy(&output.stdout).to_string(),
-                    String::from_utf8_lossy(&output.stderr).to_string()
+                    String::from_utf8_lossy(&output.stdout),
+                    String::from_utf8_lossy(&output.stderr)
                 ),
                 passed: test_passed,
             });
@@ -63,7 +64,7 @@ impl TestRunner for LocalTestRunner {
             kernel_version,
             package_name: package.to_string(),
             package_type: String::from("package"),
-            package_version: package_version, // partially removed
+            package_version, // partially removed
             // TODO: add a metadata.sh script for every package
             // which generate a metadata.json file containing package version
             // and other metadata (different distros / packages have really different

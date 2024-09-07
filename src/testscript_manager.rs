@@ -1,6 +1,4 @@
 pub struct TestScriptManager {
-    distro: String,
-    package: String,
     test_scripts: Vec<String>,
 }
 
@@ -16,8 +14,6 @@ impl TestScriptManager {
             }
         }
         Ok(TestScriptManager {
-            distro: distro.to_string(),
-            package: package.to_string(),
             test_scripts,
         })
     }
