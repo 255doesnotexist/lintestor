@@ -49,7 +49,7 @@ impl TestRunner for LocalTestRunner {
         for script in script_manager?.get_test_scripts() {
             let output = Command::new("bash")
                 .arg("-c")
-                .arg(&format!(
+                .arg(format!(
                     "source {} && echo -n $PACKAGE_VERSION > {}",
                     script, pkgver_tmpfile
                 ))
