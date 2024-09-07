@@ -3,7 +3,7 @@ use crate::testscript_manager::TestScriptManager;
 use crate::aggregator::generate_report;
 use crate::utils::{CommandOutput, Report, TempFile, TestResult, REMOTE_TMP_DIR};
 use ssh2::Session;
-use std::fs::{File, read_to_string};
+use std::fs::File;
 use std::io::{Read, Write};
 use std::net::TcpStream;
 use std::path::Path;

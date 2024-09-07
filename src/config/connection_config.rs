@@ -1,5 +1,4 @@
 use serde::Deserialize;
-use std::fs;
 
 #[derive(Clone, Debug, Deserialize)]
 pub struct ConnectionConfig {
