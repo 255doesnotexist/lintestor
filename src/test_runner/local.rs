@@ -65,8 +65,8 @@ impl TestRunner for LocalTestRunner {
                 test_name: script.to_string(),
                 output: format!(
                     "stdout:'{}', stderr:'{}'",
-                    String::from_utf8_lossy(&output.stdout).to_string(),
-                    String::from_utf8_lossy(&output.stderr).to_string()
+                    String::from_utf8_lossy(&output.stdout),
+                    String::from_utf8_lossy(&output.stderr)
                 ),
                 passed: test_passed,
             });

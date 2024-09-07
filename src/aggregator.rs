@@ -1,6 +1,5 @@
 use crate::utils::Report;
 use log::{error, info};
-use serde_json;
 use std::fs::File;
 use std::io::{prelude::*, BufWriter};
 

@@ -194,7 +194,7 @@ fn run_tests(distros: &[&str], packages: &[&str], cleanup: bool) {
                 ))
             };
 
-            match test_runner.run_test(&distro, &package) {
+            match test_runner.run_test(distro, package) {
                 Ok(_) => info!("Test passed for {}/{}", distro, package),
                 Err(e) => error!("Test failed for {}/{}: {}", distro, package, e), // error or warn?
             }
