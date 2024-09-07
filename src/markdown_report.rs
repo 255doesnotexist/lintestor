@@ -2,6 +2,21 @@ use crate::utils::Report;
 use std::fs::File;
 use std::io::prelude::*;
 
+/// Generates a markdown report summarizing the test results for various packages across different distributions.
+/// Warning: hard coded for specific report markdown file XD
+///
+/// # Parameters
+///
+/// - `distros`: Array of distribution names.
+/// - `packages`: Array of package names.
+///
+/// # Returns
+///
+/// Returns `Ok(())` if successful, otherwise returns an error.
+///
+/// # Errors
+///
+/// Returns an error if file opening, reading, or writing fails.
 pub fn generate_markdown_report(
     distros: &[&str],
     packages: &[&str],

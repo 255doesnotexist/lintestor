@@ -2,6 +2,20 @@ use crate::utils::Report;
 use std::fs::File;
 use std::io::{prelude::*, BufWriter};
 
+/// Generates a report and writes it to the specified file path.
+///
+/// # Parameters
+///
+/// - `file_path`: The path to the report file.
+/// - `report`: The report to be generated.
+///
+/// # Returns
+///
+/// Returns `Ok(())` if successful, otherwise returns an error.
+///
+/// # Errors
+///
+/// Returns an error if file creation or writing fails.
 pub fn generate_report(
     file_path: String,
     report: Report,
@@ -12,6 +26,21 @@ pub fn generate_report(
     writer.flush()?;
     Ok(())
 }
+
+/// Aggregates reports from multiple distributions and packages, and generates a consolidated report file.
+///
+/// # Parameters
+///
+/// - `distros`: Array of distribution names.
+/// - `packages`: Array of package names.
+///
+/// # Returns
+///
+/// Returns `Ok(())` if successful, otherwise returns an error.
+///
+/// # Errors
+///
+/// Returns an error if file opening or reading fails.
 pub fn aggregate_reports(
     distros: &[&str],
     packages: &[&str],

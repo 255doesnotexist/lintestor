@@ -16,6 +16,25 @@ impl LocalTestRunner {
 }
 
 impl TestRunner for LocalTestRunner {
+    /// Runs a test for a specific distribution and package.
+    ///
+    /// # Arguments
+    ///
+    /// * `distro` - The name of the distribution.
+    /// * `package` - The name of the package.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if any of the following occurs:
+    ///
+    /// * The test script manager fails to initialize.
+    /// * Reading the OS version from `/proc/version` fails.
+    /// * Running the `uname -r` command to get the kernel version fails.
+    /// * Writing the package version to the temporary file fails.
+    /// * Running the test script fails.
+    /// * Reading the package version from the temporary file fails.
+    /// * Generating the report fails.
+    /// * Not all tests passed for the given distribution and package.
     fn run_test(
         &self,
         distro: &str,

@@ -55,7 +55,21 @@ impl RemoteTestRunner {
     }
 }
 
+
+/// Implements the `TestRunner` trait for the `RemoteTestRunner` struct.
+///
+/// This struct allows running tests on a remote server using SSH.
 impl TestRunner for RemoteTestRunner {
+    /// Runs a test on a remote server.
+    ///
+    /// # Arguments
+    ///
+    /// * `distro` - The name of the distribution.
+    /// * `package` - The name of the package.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the test fails or encounters any issues.
     fn run_test(
         &self,
         distro: &str,

@@ -2,6 +2,10 @@ use crate::config::{connection_config::ConnectionConfig, distro_config::DistroCo
 use std::io::Error;
 use std::process::Command;
 
+/// Manages the test environment for a distribution.
+///
+/// This struct is responsible for starting and stopping the test environment
+/// using provided scripts and connection configuration.
 pub struct TestEnvManager {
     startup_script: String,
     stop_script: String,
@@ -9,6 +13,15 @@ pub struct TestEnvManager {
 }
 
 impl TestEnvManager {
+    /// Creates a new `TestEnvManager` instance.
+    ///
+    /// # Arguments
+    ///
+    /// * `config` - A reference to a `DistroConfig` containing the necessary configuration.
+    ///
+    /// # Returns
+    ///
+    /// A new `TestEnvManager` instance initialized with the provided configuration.
     pub fn new(config: &DistroConfig) -> Self {
         TestEnvManager {
             startup_script: config.startup_script.clone(),
@@ -17,6 +30,19 @@ impl TestEnvManager {
         }
     }
 
+    /// Runs a bash script with environment variables set from the connection configuration.
+    ///
+    /// # Arguments
+    ///
+    /// * `script` - The path to the bash script to be executed.
+    ///
+    /// # Returns
+    ///
+    /// A `Result` which is `Ok(())` if the script runs successfully, or an `Error` if it fails.
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if the script fails to execute or returns a non-zero exit status.
     fn run_script(&self, script: &String) -> Result<(), Error> {
         Command::new("bash")
             .arg(script)
@@ -42,10 +68,28 @@ impl TestEnvManager {
         Ok(())
     }
 
+    /// Starts the test environment by running the startup script.
+    ///
+    /// # Returns
+    ///
+    /// A `Result` which is `Ok(())` if the startup script runs successfully, or an `Error` if it fails.
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if the startup script fails to execute or returns a non-zero exit status.
     pub fn start(&self) -> Result<(), Error> {
         self.run_script(&self.startup_script)
     }
 
+    /// Stops the test environment by running the stop script.
+    ///
+    /// # Returns
+    ///
+    /// A `Result` which is `Ok(())` if the stop script runs successfully, or an `Error` if it fails.
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if the stop script fails to execute or returns a non-zero exit status.
     pub fn stop(&self) -> Result<(), Error> {
         self.run_script(&self.stop_script)
     }
