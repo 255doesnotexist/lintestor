@@ -1,5 +1,7 @@
 # Lintestor
 
+[Docs](https://255doesnotexist.github.io/lintestor/) | [Release](about:blank) | [Summary](https://github.com/255doesnotexist/lintestor/blob/main/summary.md)
+
 Lintestor 是一个基于 Rust 的自动化测试系统，支持多发行版（只是设计上）和多个软件包的自动化测试。
 
 ## 功能
