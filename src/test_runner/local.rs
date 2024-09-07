@@ -49,7 +49,7 @@ impl TestRunner for LocalTestRunner {
         for script in script_manager?.get_test_scripts() {
             let output = Command::new("bash")
                 .arg("-c")
-                .arg(&format!(
+                .arg(format!(
                     "mkdir -p {} {} && source {} && echo -n $PACKAGE_VERSION > {}",
                     REMOTE_TMP_DIR,
                     if Path::new(&prerequisite_path).exists() {
