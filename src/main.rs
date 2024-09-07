@@ -9,6 +9,7 @@ mod utils;
 use crate::config::{distro_config::DistroConfig, root_config::Config};
 use crate::test_runner::{local::LocalTestRunner, remote::RemoteTestRunner, TestRunner};
 use clap::{Arg, ArgMatches, Command};
+use log::{debug, error, info, warn};
 use std::fs::remove_file;
 use std::path::Path;
 
@@ -18,13 +19,13 @@ const AUTHORS: &str = env!("CARGO_PKG_AUTHORS");
 const DESCRIPTION: &str = env!("CARGO_PKG_DESCRIPTION");
 
 fn main() {
+    env_logger::init();
     let matches = parse_args();
 
     let test = matches.get_flag("test");
     let aggr = matches.get_flag("aggr");
     let summ = matches.get_flag("summ");
     let cleanup = matches.get_flag("cleanup");
-    let verbose = matches.get_flag("verbose");
     let config_file = matches
         .get_one::<String>("config")
         .map(|s| s.as_str())
@@ -32,32 +33,32 @@ fn main() {
     let base_config = match Config::from_file(config_file) {
         Ok(base_config) => base_config,
         Err(e) => {
-            eprintln!("Failed to load config from {}: {}", config_file, e);
+            error!("Failed to load config from {}: {}", config_file, e);
             return;
         }
     };
 
     let distros: Vec<&str> = base_config.distros.iter().map(|s| &**s).collect();
-    println!("Distros: {:?}", distros);
+    debug!("Distros: {:?}", distros);
     let packages: Vec<&str> = base_config.packages.iter().map(|s| &**s).collect();
-    println!("Packages: {:?}", packages);
+    debug!("Packages: {:?}", packages);
 
     if test {
-        println!("Running tests");
-        run_tests(&distros, &packages, cleanup, verbose);
+        info!("Running tests");
+        run_tests(&distros, &packages, cleanup);
     }
 
     if aggr {
-        println!("Aggregating reports");
+        info!("Aggregating reports");
         if let Err(e) = aggregator::aggregate_reports(&distros, &packages) {
-            eprintln!("Failed to aggregate reports: {}", e);
+            error!("Failed to aggregate reports: {}", e);
         }
     }
 
     if summ {
-        println!("Generating summary report");
+        info!("Generating summary report");
         if let Err(e) = markdown_report::generate_markdown_report(&distros, &packages) {
-            eprintln!("Failed to generate markdown report: {}", e);
+            error!("Failed to generate markdown report: {}", e);
         }
     }
 }
@@ -97,26 +98,20 @@ fn parse_args() -> ArgMatches {
                 .action(clap::ArgAction::SetTrue)
                 .help("Clean up report.json files left by previous runs"),
         )
-        .arg(
-            Arg::new("verbose")
-                .long("verbose")
-                .action(clap::ArgAction::SetTrue)
-                .help("Show all runtime output of test scripts in stdout"),
-        )
         .get_matches()
 }
 
-fn run_tests(distros: &[&str], packages: &[&str], cleanup: bool, verbose: bool) {
+fn run_tests(distros: &[&str], packages: &[&str], cleanup: bool) {
     for distro in distros {
         if !Path::new(distro).exists() {
-            eprintln!("Distro directory '{}' not found, skipping", distro);
+            warn!("Distro directory '{}' not found, skipping", distro);
             continue;
         }
         let distro_config_path = format!("{}/config.toml", distro);
         let distro_config = match DistroConfig::from_file(&distro_config_path) {
             Ok(config) => config,
             Err(e) => {
-                eprintln!("Failed to load config for {}: {}", distro, e);
+                error!("Failed to load config for {}: {}", distro, e);
                 continue;
             }
         };
@@ -131,7 +126,7 @@ fn run_tests(distros: &[&str], packages: &[&str], cleanup: bool, verbose: bool) 
 
         if qemu_needed {
             if let Err(e) = testenv_manager.start() {
-                eprintln!(
+                error!(
                     "Failed to initialize test environment for {}: {}",
                     distro, e
                 );
@@ -145,28 +140,28 @@ fn run_tests(distros: &[&str], packages: &[&str], cleanup: bool, verbose: bool) 
                 let report_file_path = Path::new(&report_path);
                 if report_file_path.exists() {
                     if let Err(e) = remove_file(report_file_path) {
-                        eprintln!(
+                        error!(
                             "Failed to remove previous report file {}: {}",
                             report_path, e
                         );
                     } else {
-                        println!("Removed previous report file {}", report_path);
+                        info!("Removed previous report file {}", report_path);
                     }
                 }
             }
 
             if let Some(skip_packages) = &distro_config.skip_packages {
                 if skip_packages.contains(&package.to_string()) {
-                    println!("Skipping test for {}/{}", distro, package);
+                    info!("Skipping test for {}/{}", distro, package);
                     continue;
                 }
             }
             if !Path::new(distro).exists() {
-                eprintln!("Package directory '{}' not found, skipping", package);
+                warn!("Package directory '{}' not found, skipping", package);
                 continue;
             }
 
-            println!(
+            info!(
                 "Running test for {}/{}, {}.",
                 distro,
                 package,
@@ -174,7 +169,7 @@ fn run_tests(distros: &[&str], packages: &[&str], cleanup: bool, verbose: bool) 
             );
 
             let test_runner: Box<dyn TestRunner> = if run_locally {
-                Box::new(LocalTestRunner::new(distro, package, verbose))
+                Box::new(LocalTestRunner::new(distro, package))
             } else {
                 // assert!(distro_config.connection.method == "ssh");
 
@@ -190,25 +185,24 @@ fn run_tests(distros: &[&str], packages: &[&str], cleanup: bool, verbose: bool) 
                     .as_deref()
                     .unwrap_or("root");
                 let password = distro_config.connection.password.as_deref();
-                println!("Connecting to environment with credentials: IP={}, Port={}, Username={}, Password={}",ip,port,username,password.unwrap_or("None"));
+                debug!("Connecting to environment with credentials: IP={}, Port={}, Username={}, Password={}",ip,port,username,password.unwrap_or("None"));
                 Box::new(RemoteTestRunner::new(
                     ip.to_string(),
                     port,
                     username.to_string(),
                     password.map(|p| p.to_string()),
-                    verbose,
                 ))
             };
 
-            match test_runner.run_test(distro, package) {
-                Ok(_) => println!("Test passed for {}/{}", distro, package),
-                Err(e) => println!("Test failed for {}/{}: {}", distro, package, e),
+            match test_runner.run_test(&distro, &package) {
+                Ok(_) => info!("Test passed for {}/{}", distro, package),
+                Err(e) => error!("Test failed for {}/{}: {}", distro, package, e), // error or warn?
             }
         }
 
         if !run_locally {
             if let Err(e) = testenv_manager.stop() {
-                eprintln!("Failed to stop environment for {}: {}", distro, e);
+                error!("Failed to stop environment for {}: {}", distro, e);
             }
         }
     }

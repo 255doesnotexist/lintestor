@@ -1,4 +1,6 @@
 use crate::utils::Report;
+use log::{error, info};
+use serde_json;
 use std::fs::File;
 use std::io::{prelude::*, BufWriter};
 
@@ -51,16 +53,20 @@ pub fn aggregate_reports(
         for &package in packages {
             let report_path = format!("{}/{}/report.json", distro, package);
             if let Ok(file) = File::open(&report_path) {
-                println!("Aggregating {}", report_path);
+                info!("Aggregating {}", report_path);
                 let mut report: Report = serde_json::from_reader(file)?;
                 report.distro = distro.to_string();
                 consolidated_report.push(report);
+            } else {
+                error!("Failed to open file {} for aggregation", report_path)
             }
         }
     }
 
     let consolidated_json = serde_json::to_string_pretty(&consolidated_report)?;
-    let mut file = File::create("reports.json")?;
+    let file_path = "reports.json";
+    let mut file = File::create(file_path)?;
     file.write_all(consolidated_json.as_bytes())?;
+    info!("Aggregated report generated at {}", file_path);
     Ok(())
 }

@@ -1,4 +1,6 @@
 use crate::utils::Report;
+use log::info;
+use serde_json;
 use std::fs::File;
 use std::io::prelude::*;
 
@@ -79,8 +81,9 @@ pub fn generate_markdown_report(
         }
         markdown.push_str("|\n");
     }
-
-    let mut file = File::create("summary.md")?;
+    let file_path = "summary.md";
+    let mut file = File::create(file_path)?;
     file.write_all(markdown.as_bytes())?;
+    info!("Markdown report generated at {}", file_path);
     Ok(())
 }

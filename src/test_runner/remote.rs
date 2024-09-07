@@ -2,41 +2,34 @@ use crate::aggregator::generate_report;
 use crate::test_runner::TestRunner;
 use crate::testscript_manager::TestScriptManager;
 use crate::utils::{CommandOutput, Report, TempFile, TestResult, REMOTE_TMP_DIR};
+use log::{debug, log_enabled, Level};
 use ssh2::Session;
 use std::fs::File;
 use std::io::{Read, Write};
 use std::net::TcpStream;
 use std::path::Path;
 use std::process::Command;
-
 pub struct RemoteTestRunner {
     remote_ip: String,
     port: u16,
     username: String,
     password: Option<String>,
-    verbose: bool,
 }
 
 impl RemoteTestRunner {
-    pub fn new(
-        remote_ip: String,
-        port: u16,
-        username: String,
-        password: Option<String>,
-        verbose: bool,
-    ) -> Self {
+    pub fn new(remote_ip: String, port: u16, username: String, password: Option<String>) -> Self {
         RemoteTestRunner {
             remote_ip,
             port,
             username,
             password,
-            verbose,
         }
     }
 
     fn print_ssh_msg(&self, msg: &str) {
-        if std::env::var("PRINT_SSH_MSG").is_ok() || self.verbose {
-            println!("{}", msg);
+        // PRINT_SSH_MSG is deprecated, use RUST_LOG=debug
+        if std::env::var("PRINT_SSH_MSG").is_ok() || log_enabled!(Level::Debug) {
+            debug!("{}", msg);
         }
     }
 
@@ -278,7 +271,7 @@ impl TestRunner for RemoteTestRunner {
             file.read_to_string(&mut contents)?;
             self.print_ssh_msg(&format!("Downloaded test report: {}", report_path));
             let report: Report = serde_json::from_str(&contents)?;
-            println!("{}-{} report:\n {:?}", distro, package, report);
+            debug!("{}-{} report:\n {:?}", distro, package, report);
             if !report.all_tests_passed {
                 return Err(format!("Not all tests passed {}/{}", distro, package).into());
             }

@@ -2,16 +2,14 @@ use crate::aggregator::generate_report;
 use crate::test_runner::TestRunner;
 use crate::testscript_manager::TestScriptManager;
 use crate::utils::{Report, TestResult, REMOTE_TMP_DIR};
+use log::{log_enabled, Level};
 use std::fs::read_to_string;
 use std::process::{Command, Stdio};
-
-pub struct LocalTestRunner {
-    verbose: bool,
-}
+pub struct LocalTestRunner {}
 
 impl LocalTestRunner {
-    pub fn new(_distro: &str, _package: &str, _verbose: bool) -> Self {
-        LocalTestRunner { verbose: _verbose }
+    pub fn new(_distro: &str, _package: &str) -> Self {
+        LocalTestRunner {}
     }
 }
 
@@ -49,11 +47,11 @@ impl TestRunner for LocalTestRunner {
         for script in script_manager?.get_test_scripts() {
             let output = Command::new("bash")
                 .arg("-c")
-                .arg(format!(
-                    "source {} && echo -n $PACKAGE_VERSION > {}",
-                    script, pkgver_tmpfile
+                .arg(&format!(
+                    "mkdir -p {} && source {} && echo -n $PACKAGE_VERSION > {}",
+                    REMOTE_TMP_DIR, script, pkgver_tmpfile
                 ))
-                .stdout(if self.verbose {
+                .stdout(if log_enabled!(Level::Debug) {
                     Stdio::inherit()
                 } else {
                     Stdio::null()
@@ -66,9 +64,9 @@ impl TestRunner for LocalTestRunner {
             test_results.push(TestResult {
                 test_name: script.to_string(),
                 output: format!(
-                    "{}{}",
-                    String::from_utf8_lossy(&output.stdout),
-                    String::from_utf8_lossy(&output.stderr)
+                    "stdout:'{}', stderr:'{}'",
+                    String::from_utf8_lossy(&output.stdout).to_string(),
+                    String::from_utf8_lossy(&output.stderr).to_string()
                 ),
                 passed: test_passed,
             });
