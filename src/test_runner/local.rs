@@ -4,6 +4,7 @@ use crate::testscript_manager::TestScriptManager;
 use crate::utils::{Report, TestResult, REMOTE_TMP_DIR};
 use log::{log_enabled, Level};
 use std::fs::read_to_string;
+use std::path::Path;
 use std::process::{Command, Stdio};
 pub struct LocalTestRunner {}
 
@@ -43,13 +44,21 @@ impl TestRunner for LocalTestRunner {
         let mut test_results = Vec::new();
 
         let pkgver_tmpfile = format!("{}/pkgver", REMOTE_TMP_DIR);
+        let prerequisite_path = format!("{}/prerequisite.sh", distro);
 
         for script in script_manager?.get_test_scripts() {
             let output = Command::new("bash")
                 .arg("-c")
                 .arg(&format!(
-                    "mkdir -p {} && source {} && echo -n $PACKAGE_VERSION > {}",
-                    REMOTE_TMP_DIR, script, pkgver_tmpfile
+                    "mkdir -p {} {} && source {} && echo -n $PACKAGE_VERSION > {}",
+                    REMOTE_TMP_DIR,
+                    if Path::new(&prerequisite_path).exists() {
+                        format!("&& source {}", prerequisite_path)
+                    } else {
+                        String::from("")
+                    },
+                    script,
+                    pkgver_tmpfile
                 ))
                 .stdout(if log_enabled!(Level::Debug) {
                     Stdio::inherit()

@@ -121,24 +121,25 @@ impl TestRunner for RemoteTestRunner {
         remote_file.write_all(&buffer)?;
         self.print_ssh_msg(&format!("File {} uploaded to remote server", tar_file));
 
-        // 上传 prerequisite.sh 到远程服务器
+        // 上传 prerequisite.sh (optional) 到远程服务器
         let prerequisite_path = format!("{}/prerequisite.sh", distro);
-        let remote_prerequisite_path = "/tmp/prerequisite.sh".to_string();
-        let mut remote_file = sess.scp_send(
-            Path::new(&remote_prerequisite_path),
-            0o644,
-            std::fs::metadata(&prerequisite_path)?.len(),
-            None,
-        )?;
-        let mut local_file = File::open(&prerequisite_path)?;
-        let mut buffer = Vec::new();
-        local_file.read_to_end(&mut buffer)?;
-        remote_file.write_all(&buffer)?;
-        self.print_ssh_msg(&format!(
-            "File {} uploaded to remote server",
-            prerequisite_path
-        ));
-
+        if Path::new(&prerequisite_path).exists() {
+            let remote_prerequisite_path = "/tmp/prerequisite.sh".to_string();
+            let mut remote_file = sess.scp_send(
+                Path::new(&remote_prerequisite_path),
+                0o644,
+                std::fs::metadata(&prerequisite_path)?.len(),
+                None,
+            )?;
+            let mut local_file = File::open(&prerequisite_path)?;
+            let mut buffer = Vec::new();
+            local_file.read_to_end(&mut buffer)?;
+            remote_file.write_all(&buffer)?;
+            self.print_ssh_msg(&format!(
+                "File {} uploaded to remote server",
+                prerequisite_path
+            ));
+        }
         // 确保远程文件在继续之前关闭
         drop(remote_file);
 
@@ -176,8 +177,14 @@ impl TestRunner for RemoteTestRunner {
             let result = self.run_command(
                 &sess,
                 &format!(
-                    "source {} && echo -n $PACKAGE_VERSION > {}",
-                    script, pkgver_tmpfile
+                    "{} source {} && echo -n $PACKAGE_VERSION > {}",
+                    if Path::new(&prerequisite_path).exists() {
+                        format!("source {} &&", prerequisite_path)
+                    } else {
+                        String::from("")
+                    },
+                    script,
+                    pkgver_tmpfile
                 ),
             );
             let test_passed = result.is_ok();

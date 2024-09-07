@@ -120,7 +120,14 @@ fn run_tests(distros: &[&str], packages: &[&str], cleanup: bool) {
         let purely_remote = distro_config.is_not_qemu_based_remote();
         let testenv_manager = crate::testenv_manager::TestEnvManager::new(&distro_config);
 
-        println!("Connection method: {}", distro_config.connection.method);
+        println!(
+            "Connection method: {}",
+            if run_locally {
+                "local"
+            } else {
+                &distro_config.connection.method
+            }
+        );
 
         let qemu_needed = !run_locally && !purely_remote;
 
