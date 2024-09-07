@@ -64,6 +64,10 @@ username = "root"
 password = "root"
 ```
 
+如果有需要在测试脚本前全局执行的命令（如 Debian 下为避免交互式安装造成的干扰需添加 `export DEBIAN_FRONTEND=noninteractive` 环境变量），可在测试文件夹中的`prerequisite.sh`中指定。
+
+可使用 RUST_LOG=(debug, warn, info, error) 环境变量指定日志输出等级（包括ssh连接日志），默认为 `info`。
+
 执行下面的命令，可查看全部命令行参数。
 
 ```sh
