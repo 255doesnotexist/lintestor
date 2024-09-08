@@ -1,6 +1,6 @@
 # Usage Guide
 ## Setup Tests
-To start, define the distribution name and packages of interest in the main config file `.config.toml`, eg.:
+To start, define the distribution name and packages of interest in the main config file `./config.toml`, eg.:
 
 ```toml
 distros = ["debian"]
