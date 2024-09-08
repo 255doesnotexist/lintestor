@@ -47,7 +47,7 @@ password = "root"
 cargo run -- --test --aggr --summ
 ```
 
-将在发行版目录下的每个软件包子目录中各生成一个 report.json 作为该软件包的测试结果，并在当前目录生成聚合后的总报告 report.json 和 summary.md。
+将在发行版目录下的每个软件包子目录中各生成一个 report.json 作为该软件包的测试结果，并在当前目录生成聚合后的总报告 reports.json 和 summary.md。
 
 ## 全部命令行参数
 
