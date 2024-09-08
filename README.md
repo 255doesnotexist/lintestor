@@ -14,4 +14,5 @@ Lintestor 是一个基于 Rust 的软件包可用性自动化测试系统，支�
 ## 使用
 
 参见 [USAGE.md](USAGE.md).
+
 See [USAGE_en.md](USAGE_en.md) for English usage.

@@ -23,7 +23,7 @@ port = 2222
 username = "root"
 password = "root"
 ```
-Each subdirectory corresponding to a package should contain at least one test script (multiple scripts would be treated as multiple test cases). For writing the respective test scripts, Refer to existing ones under the `debian` folder to get you started.
+Each subdirectory corresponding to a package should contain at least one test script (multiple scripts would be treated as multiple test cases). For writing the respective test scripts, refer to existing ones under the `debian` folder to get you started.
 
 If certain commands need to be run globally prior each test script (eg. `export DEBIAN_FRONTEND=noninteractive` may be used on Debian-based systems to prevent apt interactive prompts), put them in `prerequisite.sh` under the distro directory. 
 
@@ -37,7 +37,7 @@ cargo run -- --test --aggr --summ
 
 A `report.json` report would be generated for each package under their respective subfolders. Now that the tests are done, check out the aggregated `reports.json` and the Markdown result matrix `summary.md` in the current directory.
 
-To toggle logging levels, set the `RUST_LOGS` environment variable to one of the following: debug, warn, info, error. `info` is the default logging level.
+To toggle logging levels, set the `RUST_LOG` environment variable to one of the following: debug, warn, info, error. `info` is the default logging level.
 ## Full CLI parameters
 
 ```sh
