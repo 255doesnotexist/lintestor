@@ -10,8 +10,7 @@ use crate::config::{distro_config::DistroConfig, root_config::Config};
 use crate::test_runner::{local::LocalTestRunner, remote::RemoteTestRunner, TestRunner};
 use clap::{Arg, ArgMatches, Command};
 use log::{debug, error, info, warn};
-use std::fs::remove_file;
-use std::path::Path;
+use std::{env, fs::remove_file, path::Path};
 
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 const NAME: &str = env!("CARGO_PKG_NAME");
@@ -19,6 +18,9 @@ const AUTHORS: &str = env!("CARGO_PKG_AUTHORS");
 const DESCRIPTION: &str = env!("CARGO_PKG_DESCRIPTION");
 
 fn main() {
+    if env::var("RUST_LOG").is_err() {
+        env::set_var("RUST_LOG", "info")
+    }
     env_logger::init();
     let matches = parse_args();
 
@@ -120,7 +122,7 @@ fn run_tests(distros: &[&str], packages: &[&str], cleanup: bool) {
         let purely_remote = distro_config.is_not_qemu_based_remote();
         let testenv_manager = crate::testenv_manager::TestEnvManager::new(&distro_config);
 
-        println!(
+        debug!(
             "Connection method: {}",
             if run_locally {
                 "local"
