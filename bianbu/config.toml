@@ -3,7 +3,7 @@ skip_packages = []
 
 [connection]
 method = "ssh"
-ip = "<某个神秘的 zerotier 内网 ip>"
-port = 22
-username = "root"
-password = "bianbu"
+ip = "{BIANBU_IP}"
+port = "{BIANBU_PORT}"
+username = "{BIANBU_USERNAME}"
+password = "{BIANBU_PASSWORD}"
