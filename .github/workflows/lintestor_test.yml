@@ -46,6 +46,18 @@ jobs:
         ls -l # 展示文件结构
         cd ../lintestor  # 回到项目目录
         ls -l # 再次展示文件结构
+
+    - name: Setup Bianbu remote credentials with ACTIONS SECRETs
+      env:
+        BIANBU_IP: ${{ secrets.BIANBU_IP }}
+        BIANBU_PORT: ${{ secrets.BIANBU_PORT }}
+        BIANBU_USERNAME: ${{ secrets.BIANBU_USERNAME }}
+        BIANBU_PASSWORD: ${{ secrets.BIANBU_PASSWORD }}
+      run: |
+        sed -i "s/{BIANBU_IP}/${BIANBU_IP}/" ./bianbu/config.toml
+        sed -i "s/{BIANBU_PORT}/${BIANBU_PORT}/" ./bianbu/config.toml
+        sed -i "s/{BIANBU_USERNAME}/${BIANBU_USERNAME}/" ./bianbu/config.toml
+        sed -i "s/{BIANBU_PASSWORD}/${BIANBU_PASSWORD}/" ./bianbu/config.toml
     
     - name: Run Lintestor
       run: |
