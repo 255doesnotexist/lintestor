@@ -194,7 +194,7 @@ impl TestRunner for RemoteTestRunner {
             info!("remote stdout: {}", &output);
             test_results.push(TestResult {
                 test_name: script.to_string(),
-                output: output,
+                output,
                 passed: test_passed,
             });
         }
