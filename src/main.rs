@@ -177,7 +177,7 @@ fn run_tests(distros: &[&str], packages: &[&str], cleanup: bool) {
                 if run_locally { "locally" } else { "with QEMU" }
             );
 
-            if !Path::new(format!("{}/{}", distro, package)).exists() {
+            if !Path::new(format!("{}/{}", distro, package).as_str()).exists() {
                 error!("Package testing directory '{}/{}' does not exist, skipping", distro, package);
                 continue;
             }
