@@ -178,7 +178,10 @@ fn run_tests(distros: &[&str], packages: &[&str], cleanup: bool) {
             );
 
             if !Path::new(format!("{}/{}", distro, package).as_str()).exists() {
-                error!("Package testing directory '{}/{}' does not exist, skipping", distro, package);
+                error!(
+                    "Package testing directory '{}/{}' does not exist, skipping",
+                    distro, package
+                );
                 continue;
             }
 
