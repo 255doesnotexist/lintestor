@@ -4,6 +4,6 @@ skip_packages = []
 [connection]
 method = "ssh"
 ip = "{BIANBU_IP}"
-port = "{BIANBU_PORT}"
+port = {BIANBU_PORT}
 username = "{BIANBU_USERNAME}"
 password = "{BIANBU_PASSWORD}"
