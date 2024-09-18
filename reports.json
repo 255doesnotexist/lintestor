@@ -5,11 +5,11 @@
     "kernel_version": "6.10.6-riscv64\n",
     "package_name": "apache",
     "package_type": "package",
-    "package_version": "",
+    "package_version": "2.4.62-1",
     "test_results": [
       {
-        "test_name": "./debian/apache/test.sh",
-        "output": "",
+        "test_name": "test.sh",
+        "output": "Reading package lists...\nBuilding dependency tree...\nReading state information...\nsudo is already the newest version (1.9.15p5-3+b1).\ncurl is already the newest version (8.9.1-2).\napt-transport-https is already the newest version (2.9.8).\nca-certificates is already the newest version (20240203).\ngnupg is already the newest version (2.2.43-8).\nlsb-release is already the newest version (12.1-1).\nnetcat-openbsd is already the newest version (1.226-1.1).\n0 upgraded, 0 newly installed, 0 to remove and 67 not upgraded.\nPackage apache2 is installed.\nApache service is running.\nApache service state has been restored.\n",
         "passed": true
       }
     ],
@@ -21,11 +21,11 @@
     "kernel_version": "6.10.6-riscv64\n",
     "package_name": "clang",
     "package_type": "package",
-    "package_version": "",
+    "package_version": "16.0.6 (27+b1)",
     "test_results": [
       {
-        "test_name": "./debian/clang/test.sh",
-        "output": "",
+        "test_name": "test.sh",
+        "output": "Reading package lists...\nBuilding dependency tree...\nReading state information...\nsudo is already the newest version (1.9.15p5-3+b1).\ncurl is already the newest version (8.9.1-2).\napt-transport-https is already the newest version (2.9.8).\nca-certificates is already the newest version (20240203).\ngnupg is already the newest version (2.2.43-8).\nlsb-release is already the newest version (12.1-1).\nnetcat-openbsd is already the newest version (1.226-1.1).\n0 upgraded, 0 newly installed, 0 to remove and 67 not upgraded.\nHello, World!\n",
         "passed": true
       }
     ],
@@ -37,11 +37,11 @@
     "kernel_version": "6.10.6-riscv64\n",
     "package_name": "cmake",
     "package_type": "package",
-    "package_version": "",
+    "package_version": "3.30.2",
     "test_results": [
       {
-        "test_name": "./debian/cmake/test.sh",
-        "output": "",
+        "test_name": "test.sh",
+        "output": "Reading package lists...\nBuilding dependency tree...\nReading state information...\nsudo is already the newest version (1.9.15p5-3+b1).\ncurl is already the newest version (8.9.1-2).\napt-transport-https is already the newest version (2.9.8).\nca-certificates is already the newest version (20240203).\ngnupg is already the newest version (2.2.43-8).\nlsb-release is already the newest version (12.1-1).\nnetcat-openbsd is already the newest version (1.226-1.1).\n0 upgraded, 0 newly installed, 0 to remove and 67 not upgraded.\n-- The C compiler identification is GNU 14.2.0\n-- The CXX compiler identification is GNU 14.2.0\n-- Detecting C compiler ABI info\n-- Detecting C compiler ABI info - done\n-- Check for working C compiler: /usr/bin/cc - skipped\n-- Detecting C compile features\n-- Detecting C compile features - done\n-- Detecting CXX compiler ABI info\n-- Detecting CXX compiler ABI info - done\n-- Check for working CXX compiler: /usr/bin/c++ - skipped\n-- Detecting CXX compile features\n-- Detecting CXX compile features - done\n-- Configuring done (17.0s)\n-- Generating done (0.1s)\n-- Build files have been written to: /tmp/cmake_test_dir\n[ 50%] Building CXX object CMakeFiles/test_app.dir/main.cpp.o\n[100%] Linking CXX executable test_app\n[100%] Built target test_app\n",
         "passed": true
       }
     ],
@@ -69,11 +69,11 @@
     "kernel_version": "6.10.6-riscv64\n",
     "package_name": "erlang",
     "package_type": "package",
-    "package_version": "",
+    "package_version": "1:25.3.2.12+dfsg-1",
     "test_results": [
       {
-        "test_name": "./debian/erlang/test.sh",
-        "output": "",
+        "test_name": "test.sh",
+        "output": "Reading package lists...\nBuilding dependency tree...\nReading state information...\nsudo is already the newest version (1.9.15p5-3+b1).\ncurl is already the newest version (8.9.1-2).\napt-transport-https is already the newest version (2.9.8).\nca-certificates is already the newest version (20240203).\ngnupg is already the newest version (2.2.43-8).\nlsb-release is already the newest version (12.1-1).\nnetcat-openbsd is already the newest version (1.226-1.1).\n0 upgraded, 0 newly installed, 0 to remove and 67 not upgraded.\nPackage erlang is installed.\nErlang is functioning correctly.\n",
         "passed": true
       }
     ],
@@ -85,20 +85,20 @@
     "kernel_version": "6.10.6-riscv64\n",
     "package_name": "gcc",
     "package_type": "package",
-    "package_version": "",
+    "package_version": "14.2.0",
     "test_results": [
       {
-        "test_name": "./debian/gcc/run_tests.sh",
-        "output": "",
-        "passed": true
+        "test_name": "run_tests.sh",
+        "output": "Reading package lists...\nBuilding dependency tree...\nReading state information...\nsudo is already the newest version (1.9.15p5-3+b1).\ncurl is already the newest version (8.9.1-2).\napt-transport-https is already the newest version (2.9.8).\nca-certificates is already the newest version (20240203).\ngnupg is already the newest version (2.2.43-8).\nlsb-release is already the newest version (12.1-1).\nnetcat-openbsd is already the newest version (1.226-1.1).\n0 upgraded, 0 newly installed, 0 to remove and 67 not upgraded.\n",
+        "passed": false
       },
       {
-        "test_name": "./debian/gcc/test.sh",
-        "output": "",
+        "test_name": "test.sh",
+        "output": "Reading package lists...\nBuilding dependency tree...\nReading state information...\nsudo is already the newest version (1.9.15p5-3+b1).\ncurl is already the newest version (8.9.1-2).\napt-transport-https is already the newest version (2.9.8).\nca-certificates is already the newest version (20240203).\ngnupg is already the newest version (2.2.43-8).\nlsb-release is already the newest version (12.1-1).\nnetcat-openbsd is already the newest version (1.226-1.1).\n0 upgraded, 0 newly installed, 0 to remove and 67 not upgraded.\nChecking for GCC and dependencies...\nGCC is installed.\nVerifying GCC...\nGCC verification passed.\n",
         "passed": true
       }
     ],
-    "all_tests_passed": true
+    "all_tests_passed": false
   },
   {
     "distro": "debian",
@@ -106,11 +106,11 @@
     "kernel_version": "6.10.6-riscv64\n",
     "package_name": "gdb",
     "package_type": "package",
-    "package_version": "",
+    "package_version": "GNU gdb (Debian 15.1-1) 15.1",
     "test_results": [
       {
-        "test_name": "./debian/gdb/test.sh",
-        "output": "",
+        "test_name": "test.sh",
+        "output": "Reading package lists...\nBuilding dependency tree...\nReading state information...\nsudo is already the newest version (1.9.15p5-3+b1).\ncurl is already the newest version (8.9.1-2).\napt-transport-https is already the newest version (2.9.8).\nca-certificates is already the newest version (20240203).\ngnupg is already the newest version (2.2.43-8).\nlsb-release is already the newest version (12.1-1).\nnetcat-openbsd is already the newest version (1.226-1.1).\n0 upgraded, 0 newly installed, 0 to remove and 67 not upgraded.\nPackage gdb is installed.\nGNU gdb (Debian 15.1-1) 15.1\nGDB is functioning correctly.\n",
         "passed": true
       }
     ],
@@ -122,11 +122,11 @@
     "kernel_version": "6.10.6-riscv64\n",
     "package_name": "golang",
     "package_type": "package",
-    "package_version": "",
+    "package_version": "2:1.22~3",
     "test_results": [
       {
-        "test_name": "./debian/golang/test.sh",
-        "output": "",
+        "test_name": "test.sh",
+        "output": "Reading package lists...\nBuilding dependency tree...\nReading state information...\nsudo is already the newest version (1.9.15p5-3+b1).\ncurl is already the newest version (8.9.1-2).\napt-transport-https is already the newest version (2.9.8).\nca-certificates is already the newest version (20240203).\ngnupg is already the newest version (2.2.43-8).\nlsb-release is already the newest version (12.1-1).\nnetcat-openbsd is already the newest version (1.226-1.1).\n0 upgraded, 0 newly installed, 0 to remove and 67 not upgraded.\nPackage golang-go is installed.\nGo program compiled and ran successfully.\nGo is functioning correctly.\n",
         "passed": true
       }
     ],
@@ -138,11 +138,11 @@
     "kernel_version": "6.10.6-riscv64\n",
     "package_name": "haproxy",
     "package_type": "package",
-    "package_version": "",
+    "package_version": "2.9.9-1",
     "test_results": [
       {
-        "test_name": "./debian/haproxy/test.sh",
-        "output": "",
+        "test_name": "test.sh",
+        "output": "Reading package lists...\nBuilding dependency tree...\nReading state information...\nsudo is already the newest version (1.9.15p5-3+b1).\ncurl is already the newest version (8.9.1-2).\napt-transport-https is already the newest version (2.9.8).\nca-certificates is already the newest version (20240203).\ngnupg is already the newest version (2.2.43-8).\nlsb-release is already the newest version (12.1-1).\nnetcat-openbsd is already the newest version (1.226-1.1).\n0 upgraded, 0 newly installed, 0 to remove and 67 not upgraded.\nPackage haproxy is installed.\nHAProxy service is active.\n",
         "passed": true
       }
     ],
@@ -154,11 +154,11 @@
     "kernel_version": "6.10.6-riscv64\n",
     "package_name": "libmemcached",
     "package_type": "package",
-    "package_version": "",
+    "package_version": "1.1.4-1.1+b1",
     "test_results": [
       {
-        "test_name": "./debian/libmemcached/test.sh",
-        "output": "",
+        "test_name": "test.sh",
+        "output": "Reading package lists...\nBuilding dependency tree...\nReading state information...\nsudo is already the newest version (1.9.15p5-3+b1).\ncurl is already the newest version (8.9.1-2).\napt-transport-https is already the newest version (2.9.8).\nca-certificates is already the newest version (20240203).\ngnupg is already the newest version (2.2.43-8).\nlsb-release is already the newest version (12.1-1).\nnetcat-openbsd is already the newest version (1.226-1.1).\n0 upgraded, 0 newly installed, 0 to remove and 67 not upgraded.\nPackage libmemcached11t64 is installed.\nmemcached service started successfully.\nRetrieved value: value\nlibmemcached is functioning correctly.\n",
         "passed": true
       }
     ],
@@ -170,11 +170,11 @@
     "kernel_version": "6.10.6-riscv64\n",
     "package_name": "lighttpd",
     "package_type": "package",
-    "package_version": "",
+    "package_version": "1.4.76-1",
     "test_results": [
       {
-        "test_name": "./debian/lighttpd/test.sh",
-        "output": "",
+        "test_name": "test.sh",
+        "output": "Reading package lists...\nBuilding dependency tree...\nReading state information...\nsudo is already the newest version (1.9.15p5-3+b1).\ncurl is already the newest version (8.9.1-2).\napt-transport-https is already the newest version (2.9.8).\nca-certificates is already the newest version (20240203).\ngnupg is already the newest version (2.2.43-8).\nlsb-release is already the newest version (12.1-1).\nnetcat-openbsd is already the newest version (1.226-1.1).\n0 upgraded, 0 newly installed, 0 to remove and 67 not upgraded.\nPackage lighttpd is installed.\nLighttpd service is active and responding.\n",
         "passed": true
       }
     ],
@@ -186,11 +186,11 @@
     "kernel_version": "6.10.6-riscv64\n",
     "package_name": "llvm",
     "package_type": "package",
-    "package_version": "",
+    "package_version": "1:16.0.6-27+b1",
     "test_results": [
       {
-        "test_name": "./debian/llvm/test.sh",
-        "output": "",
+        "test_name": "test.sh",
+        "output": "Reading package lists...\nBuilding dependency tree...\nReading state information...\nsudo is already the newest version (1.9.15p5-3+b1).\ncurl is already the newest version (8.9.1-2).\napt-transport-https is already the newest version (2.9.8).\nca-certificates is already the newest version (20240203).\ngnupg is already the newest version (2.2.43-8).\nlsb-release is already the newest version (12.1-1).\nnetcat-openbsd is already the newest version (1.226-1.1).\n0 upgraded, 0 newly installed, 0 to remove and 67 not upgraded.\nPackage llvm is installed.\nLLVM is functioning correctly.\nLLVM is functioning correctly.\n",
         "passed": true
       }
     ],
@@ -202,11 +202,11 @@
     "kernel_version": "6.10.6-riscv64\n",
     "package_name": "mariadb",
     "package_type": "package",
-    "package_version": "",
+    "package_version": "1:11.4.3-1",
     "test_results": [
       {
-        "test_name": "./debian/mariadb/test.sh",
-        "output": "",
+        "test_name": "test.sh",
+        "output": "Reading package lists...\nBuilding dependency tree...\nReading state information...\nsudo is already the newest version (1.9.15p5-3+b1).\ncurl is already the newest version (8.9.1-2).\napt-transport-https is already the newest version (2.9.8).\nca-certificates is already the newest version (20240203).\ngnupg is already the newest version (2.2.43-8).\nlsb-release is already the newest version (12.1-1).\nnetcat-openbsd is already the newest version (1.226-1.1).\n0 upgraded, 0 newly installed, 0 to remove and 67 not upgraded.\nPackage mariadb-server is installed.\nMariaDB service is active and responding.\n",
         "passed": true
       }
     ],
@@ -218,11 +218,11 @@
     "kernel_version": "6.10.6-riscv64\n",
     "package_name": "nginx",
     "package_type": "package",
-    "package_version": "",
+    "package_version": "1.26.0-2",
     "test_results": [
       {
-        "test_name": "./debian/nginx/test.sh",
-        "output": "",
+        "test_name": "test.sh",
+        "output": "Reading package lists...\nBuilding dependency tree...\nReading state information...\nsudo is already the newest version (1.9.15p5-3+b1).\ncurl is already the newest version (8.9.1-2).\napt-transport-https is already the newest version (2.9.8).\nca-certificates is already the newest version (20240203).\ngnupg is already the newest version (2.2.43-8).\nlsb-release is already the newest version (12.1-1).\nnetcat-openbsd is already the newest version (1.226-1.1).\n0 upgraded, 0 newly installed, 0 to remove and 67 not upgraded.\nPackage nginx is installed.\nNginx service is active and responding.\n",
         "passed": true
       }
     ],
@@ -234,11 +234,11 @@
     "kernel_version": "6.10.6-riscv64\n",
     "package_name": "nodejs",
     "package_type": "package",
-    "package_version": "",
+    "package_version": "20.16.0+dfsg-1",
     "test_results": [
       {
-        "test_name": "./debian/nodejs/test.sh",
-        "output": "",
+        "test_name": "test.sh",
+        "output": "Reading package lists...\nBuilding dependency tree...\nReading state information...\nsudo is already the newest version (1.9.15p5-3+b1).\ncurl is already the newest version (8.9.1-2).\napt-transport-https is already the newest version (2.9.8).\nca-certificates is already the newest version (20240203).\ngnupg is already the newest version (2.2.43-8).\nlsb-release is already the newest version (12.1-1).\nnetcat-openbsd is already the newest version (1.226-1.1).\n0 upgraded, 0 newly installed, 0 to remove and 67 not upgraded.\nPackage nodejs is installed.\nTemp dir: /tmp/tmp.lYKNCN36FD\nNode.js is functioning correctly.\nNode.js is functioning correctly.\n",
         "passed": true
       }
     ],
@@ -253,8 +253,8 @@
     "package_version": "",
     "test_results": [
       {
-        "test_name": "./debian/numpy/test.sh",
-        "output": "",
+        "test_name": "test.sh",
+        "output": "Reading package lists...\nBuilding dependency tree...\nReading state information...\nsudo is already the newest version (1.9.15p5-3+b1).\ncurl is already the newest version (8.9.1-2).\napt-transport-https is already the newest version (2.9.8).\nca-certificates is already the newest version (20240203).\ngnupg is already the newest version (2.2.43-8).\nlsb-release is already the newest version (12.1-1).\nnetcat-openbsd is already the newest version (1.226-1.1).\n0 upgraded, 0 newly installed, 0 to remove and 67 not upgraded.\nPython 3 is installed.\nNumPy is installed.\nPython and NumPy versions: Python 3.12.5 (1.26.4)\nNumpy is functioning correctly.\nNumpy is functioning correctly.\n",
         "passed": true
       }
     ],
@@ -266,11 +266,11 @@
     "kernel_version": "6.10.6-riscv64\n",
     "package_name": "ocaml",
     "package_type": "package",
-    "package_version": "",
+    "package_version": "5.0.1-3+b3",
     "test_results": [
       {
-        "test_name": "./debian/ocaml/test.sh",
-        "output": "",
+        "test_name": "test.sh",
+        "output": "Reading package lists...\nBuilding dependency tree...\nReading state information...\nsudo is already the newest version (1.9.15p5-3+b1).\ncurl is already the newest version (8.9.1-2).\napt-transport-https is already the newest version (2.9.8).\nca-certificates is already the newest version (20240203).\ngnupg is already the newest version (2.2.43-8).\nlsb-release is already the newest version (12.1-1).\nnetcat-openbsd is already the newest version (1.226-1.1).\n0 upgraded, 0 newly installed, 0 to remove and 67 not upgraded.\nPackage ocaml is installed.\nOCaml is functioning correctly.\n",
         "passed": true
       }
     ],
@@ -282,11 +282,11 @@
     "kernel_version": "6.10.6-riscv64\n",
     "package_name": "openjdk",
     "package_type": "package",
-    "package_version": "",
+    "package_version": "11.0.24",
     "test_results": [
       {
-        "test_name": "./debian/openjdk/test.sh",
-        "output": "",
+        "test_name": "test.sh",
+        "output": "Reading package lists...\nBuilding dependency tree...\nReading state information...\nsudo is already the newest version (1.9.15p5-3+b1).\ncurl is already the newest version (8.9.1-2).\napt-transport-https is already the newest version (2.9.8).\nca-certificates is already the newest version (20240203).\ngnupg is already the newest version (2.2.43-8).\nlsb-release is already the newest version (12.1-1).\nnetcat-openbsd is already the newest version (1.226-1.1).\n0 upgraded, 0 newly installed, 0 to remove and 67 not upgraded.\nOpenJDK is installed.\nOpenJDK is functioning correctly.\nOpenJDK is functioning correctly.\n",
         "passed": true
       }
     ],
@@ -298,11 +298,11 @@
     "kernel_version": "6.10.6-riscv64\n",
     "package_name": "perl",
     "package_type": "package",
-    "package_version": "",
+    "package_version": "5.38.2",
     "test_results": [
       {
-        "test_name": "./debian/perl/test.sh",
-        "output": "",
+        "test_name": "test.sh",
+        "output": "Reading package lists...\nBuilding dependency tree...\nReading state information...\nsudo is already the newest version (1.9.15p5-3+b1).\ncurl is already the newest version (8.9.1-2).\napt-transport-https is already the newest version (2.9.8).\nca-certificates is already the newest version (20240203).\ngnupg is already the newest version (2.2.43-8).\nlsb-release is already the newest version (12.1-1).\nnetcat-openbsd is already the newest version (1.226-1.1).\n0 upgraded, 0 newly installed, 0 to remove and 67 not upgraded.\nPerl is installed.\nPerl is functioning correctly.\nPerl is functioning correctly.\n",
         "passed": true
       }
     ],
@@ -314,11 +314,11 @@
     "kernel_version": "6.10.6-riscv64\n",
     "package_name": "python",
     "package_type": "package",
-    "package_version": "",
+    "package_version": "3.12.5",
     "test_results": [
       {
-        "test_name": "./debian/python/test.sh",
-        "output": "",
+        "test_name": "test.sh",
+        "output": "Reading package lists...\nBuilding dependency tree...\nReading state information...\nsudo is already the newest version (1.9.15p5-3+b1).\ncurl is already the newest version (8.9.1-2).\napt-transport-https is already the newest version (2.9.8).\nca-certificates is already the newest version (20240203).\ngnupg is already the newest version (2.2.43-8).\nlsb-release is already the newest version (12.1-1).\nnetcat-openbsd is already the newest version (1.226-1.1).\n0 upgraded, 0 newly installed, 0 to remove and 67 not upgraded.\nPython is installed.\nPython is functioning correctly.\nPython is functioning correctly.\n",
         "passed": true
       }
     ],
@@ -330,11 +330,11 @@
     "kernel_version": "6.10.6-riscv64\n",
     "package_name": "ruby",
     "package_type": "package",
-    "package_version": "",
+    "package_version": "3.1.2p20",
     "test_results": [
       {
-        "test_name": "./debian/ruby/test.sh",
-        "output": "",
+        "test_name": "test.sh",
+        "output": "Reading package lists...\nBuilding dependency tree...\nReading state information...\nsudo is already the newest version (1.9.15p5-3+b1).\ncurl is already the newest version (8.9.1-2).\napt-transport-https is already the newest version (2.9.8).\nca-certificates is already the newest version (20240203).\ngnupg is already the newest version (2.2.43-8).\nlsb-release is already the newest version (12.1-1).\nnetcat-openbsd is already the newest version (1.226-1.1).\n0 upgraded, 0 newly installed, 0 to remove and 67 not upgraded.\nRuby is installed.\nRuby is functioning correctly.\nRuby is functioning correctly.\n",
         "passed": true
       }
     ],
@@ -346,11 +346,11 @@
     "kernel_version": "6.10.6-riscv64\n",
     "package_name": "rust",
     "package_type": "package",
-    "package_version": "",
+    "package_version": "1.80.1 (1.80.1)",
     "test_results": [
       {
-        "test_name": "./debian/rust/test.sh",
-        "output": "",
+        "test_name": "test.sh",
+        "output": "Reading package lists...\nBuilding dependency tree...\nReading state information...\nsudo is already the newest version (1.9.15p5-3+b1).\ncurl is already the newest version (8.9.1-2).\napt-transport-https is already the newest version (2.9.8).\nca-certificates is already the newest version (20240203).\ngnupg is already the newest version (2.2.43-8).\nlsb-release is already the newest version (12.1-1).\nnetcat-openbsd is already the newest version (1.226-1.1).\n0 upgraded, 0 newly installed, 0 to remove and 67 not upgraded.\n[2024-09-18 14:44:21] Current directory: /tmp/lintestor/debian/rust\n[2024-09-18 14:44:21] Created temporary directory: /tmp/tmp.OUMyDiZbFf\n[2024-09-18 14:44:21] Starting Rust test script...\n[2024-09-18 14:44:22] Checking system prerequisites...\n[2024-09-18 14:44:22] System prerequisites check passed.\n[2024-09-18 14:44:22] Rust is installed.\n[2024-09-18 14:44:26] Created temporary directory: /tmp/tmp.1o7lv6HGzI\n[2024-09-18 14:44:26] Creating a new Rust project...\n[2024-09-18 14:44:30] Building the Rust project...\n[2024-09-18 14:44:46] Running the Rust project...\n[2024-09-18 14:44:48] Project output:     Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.60s\n     Running `target/debug/hello_world`\nHello, world!\n[2024-09-18 14:44:49] Cleaned up temporary directory.\n[2024-09-18 14:44:49] Cleaned up temporary directory.\n[2024-09-18 14:44:49] Changed back to original directory: /tmp/lintestor/debian/rust\n[2024-09-18 14:44:49] Rust test passed successfully.\n[2024-09-18 14:44:49] Rust is functioning correctly.\n",
         "passed": true
       }
     ],
@@ -362,11 +362,11 @@
     "kernel_version": "6.10.6-riscv64\n",
     "package_name": "sqlite",
     "package_type": "package",
-    "package_version": "",
+    "package_version": "3.46.1",
     "test_results": [
       {
-        "test_name": "./debian/sqlite/test.sh",
-        "output": "",
+        "test_name": "test.sh",
+        "output": "Reading package lists...\nBuilding dependency tree...\nReading state information...\nsudo is already the newest version (1.9.15p5-3+b1).\ncurl is already the newest version (8.9.1-2).\napt-transport-https is already the newest version (2.9.8).\nca-certificates is already the newest version (20240203).\ngnupg is already the newest version (2.2.43-8).\nlsb-release is already the newest version (12.1-1).\nnetcat-openbsd is already the newest version (1.226-1.1).\n0 upgraded, 0 newly installed, 0 to remove and 67 not upgraded.\n[2024-09-18 14:45:01] Current directory: /tmp/lintestor/debian/sqlite\n[2024-09-18 14:45:01] Created temporary directory: /tmp/tmp.qAGKllaAV8\n[2024-09-18 14:45:01] Starting SQLite test script...\n[2024-09-18 14:45:01] Checking system prerequisites...\n[2024-09-18 14:45:01] System prerequisites check passed.\n[2024-09-18 14:45:01] SQLite is installed.\n[2024-09-18 14:45:01] Cleaned up temporary directory.\n[2024-09-18 14:45:01] Creating test database...\n1|Alice\n2|Bob\n[2024-09-18 14:45:02] Querying test database...\n[2024-09-18 14:45:02] Database output:\n[2024-09-18 14:45:02] 1|Alice\n2|Bob\n[2024-09-18 14:45:02] SQLite test passed successfully.\n[2024-09-18 14:45:02] SQLite is functioning correctly.\n",
         "passed": true
       }
     ],
@@ -378,11 +378,11 @@
     "kernel_version": "6.10.6-riscv64\n",
     "package_name": "varnish",
     "package_type": "package",
-    "package_version": "",
+    "package_version": "7.5.0",
     "test_results": [
       {
-        "test_name": "./debian/varnish/test.sh",
-        "output": "",
+        "test_name": "test.sh",
+        "output": "Reading package lists...\nBuilding dependency tree...\nReading state information...\nsudo is already the newest version (1.9.15p5-3+b1).\ncurl is already the newest version (8.9.1-2).\napt-transport-https is already the newest version (2.9.8).\nca-certificates is already the newest version (20240203).\ngnupg is already the newest version (2.2.43-8).\nlsb-release is already the newest version (12.1-1).\nnetcat-openbsd is already the newest version (1.226-1.1).\n0 upgraded, 0 newly installed, 0 to remove and 67 not upgraded.\n[2024-09-18 14:45:13] Current directory: /tmp/lintestor/debian/varnish\n[2024-09-18 14:45:13] Created temporary directory: /tmp/tmp.hTSziUUSKJ\n[2024-09-18 14:45:13] Starting Varnish test script...\n[2024-09-18 14:45:13] Checking system prerequisites...\n[2024-09-18 14:45:13] System prerequisites check passed.\n[2024-09-18 14:45:13] Varnish is installed. Path: /usr/sbin/varnishd\n[2024-09-18 14:45:13] Verifying Varnish installation again...\n[2024-09-18 14:45:14] Varnish is installed. Path: /usr/sbin/varnishd\n[2024-09-18 14:45:14] Starting Varnish service...\n[2024-09-18 14:45:14] Checking Varnish service status...\n[2024-09-18 14:45:14] Testing Varnish configuration...\n[2024-09-18 14:45:27] Checking Varnish stats...\nMGT.uptime                 470         1.00 Management process uptime\nMGT.child_start              1         0.00 Child process started\nMGT.child_exit               0         0.00 Child process normal exit\nMGT.child_stop               0         0.00 Child process unexpected exit\nMGT.child_died               0         0.00 Child process died (signal)\nMGT.child_dump               0         0.00 Child process core dumped\nMGT.child_panic              0         0.00 Child process panic\nMAIN.summs                   0         0.00 stat summ operations\nMAIN.uptime                471         1.00 Child process uptime\nMAIN.sess_conn               0         0.00 Sessions accepted\nMAIN.sess_fail               0         0.00 Session accept failures\nMAIN.sess_fail_econnaborted            0         0.00 Session accept failures: connection aborted\nMAIN.sess_fail_eintr                   0         0.00 Session accept failures: interrupted system call\nMAIN.sess_fail_emfile                  0         0.00 Session accept failures: too many open files\nMAIN.sess_fail_ebadf                   0         0.00 Session accept failures: bad file descriptor\nMAIN.sess_fail_enomem                  0         0.00 Session accept failures: not enough memory\nMAIN.sess_fail_other                   0         0.00 Session accept failures: other\nMAIN.client_req_400                    0         0.00 Client requests received, subject to 400 errors\nMAIN.client_req_417                    0         0.00 Client requests received, subject to 417 errors\nMAIN.client_req                        0         0.00 Good client requests received\nMAIN.esi_req                           0         0.00 ESI subrequests\nMAIN.cache_hit                         0         0.00 Cache hits\nMAIN.cache_hit_grace                   0         0.00 Cache grace hits\nMAIN.cache_hitpass                     0         0.00 Cache hits for pass.\nMAIN.cache_hitmiss                     0         0.00 Cache hits for miss.\nMAIN.cache_miss                        0         0.00 Cache misses\nMAIN.beresp_uncacheable                0         0.00 Uncacheable backend responses\nMAIN.beresp_shortlived                 0         0.00 Shortlived objects\nMAIN.backend_conn                      0         0.00 Backend conn. success\nMAIN.backend_unhealthy                 0         0.00 Backend conn. not attempted\nMAIN.backend_busy                      0         0.00 Backend conn. too many\nMAIN.backend_fail                      0         0.00 Backend conn. failures\nMAIN.backend_reuse                     0         0.00 Backend conn. reuses\nMAIN.backend_recycle                   0         0.00 Backend conn. recycles\nMAIN.backend_retry                     0         0.00 Backend conn. retry\nMAIN.fetch_head                        0         0.00 Fetch no body (HEAD)\nMAIN.fetch_length                      0         0.00 Fetch with Length\nMAIN.fetch_chunked                     0         0.00 Fetch chunked\nMAIN.fetch_eof                         0         0.00 Fetch EOF\nMAIN.fetch_bad                         0         0.00 Fetch bad T-E\nMAIN.fetch_none                        0         0.00 Fetch no body\nMAIN.fetch_1xx                         0         0.00 Fetch no body (1xx)\nMAIN.fetch_204                         0         0.00 Fetch no body (204)\nMAIN.fetch_304                         0         0.00 Fetch no body (304)\nMAIN.fetch_failed                      0         0.00 Fetch failed (all causes)\nMAIN.bgfetch_no_thread                 0         0.00 Background fetch failed (no thread)\nMAIN.pools                             2          .   Number of thread pools\nMAIN.threads                         200          .   Total number of threads\nMAIN.threads_limited                   0         0.00 Threads hit max\nMAIN.threads_created                 200         0.42 Threads created\nMAIN.threads_destroyed                 0         0.00 Threads destroyed\nMAIN.threads_failed                    0         0.00 Thread creation failed\nMAIN.thread_queue_len                  0          .   Length of session queue\nMAIN.busy_sleep                        0         0.00 Number of requests sent to sleep on busy objhdr\nMAIN.busy_wakeup                       0         0.00 Number of requests woken after sleep on busy objhdr\nMAIN.busy_killed                       0         0.00 Number of requests killed after sleep on busy objhdr\nMAIN.sess_queued                       0         0.00 Sessions queued for thread\nMAIN.sess_dropped                      0         0.00 Sessions dropped for thread\nMAIN.req_dropped                       0         0.00 Requests dropped\nMAIN.req_reset                         0         0.00 Requests reset\nMAIN.n_object                          0          .   object structs made\nMAIN.n_vampireobject                   0          .   unresurrected objects\nMAIN.n_objectcore                      0          .   objectcore structs made\nMAIN.n_objecthead                      0          .   objecthead structs made\nMAIN.n_backend                         1          .   Number of backends\nMAIN.n_expired                         0         0.00 Number of expired objects\nMAIN.n_superseded                      0         0.00 Number of superseded objects\nMAIN.n_lru_nuked                       0         0.00 Number of LRU nuked objects\nMAIN.n_lru_moved                       0         0.00 Number of LRU moved objects\nMAIN.n_lru_limited                     0         0.00 Reached nuke_limit\nMAIN.losthdr                           0         0.00 HTTP header overflows\nMAIN.s_sess                            0         0.00 Total sessions seen\nMAIN.n_pipe                            0          .   Number of ongoing pipe sessions\nMAIN.pipe_limited                      0         0.00 Pipes hit pipe_sess_max\nMAIN.s_pipe                            0         0.00 Total pipe sessions seen\nMAIN.s_pass                            0         0.00 Total pass-ed requests seen\nMAIN.s_fetch                           0         0.00 Total backend fetches initiated\nMAIN.s_bgfetch                         0         0.00 Total backend background fetches initiated\nMAIN.s_synth                           0         0.00 Total synthetic responses made\nMAIN.s_req_hdrbytes                    0         0.00 Request header bytes\nMAIN.s_req_bodybytes                   0         0.00 Request body bytes\nMAIN.s_resp_hdrbytes                   0         0.00 Response header bytes\nMAIN.s_resp_bodybytes                  0         0.00 Response body bytes\nMAIN.s_pipe_hdrbytes                   0         0.00 Pipe request header bytes\nMAIN.s_pipe_in                         0         0.00 Piped bytes from client\nMAIN.s_pipe_out                        0         0.00 Piped bytes to client\nMAIN.sess_closed                       0         0.00 Session Closed\nMAIN.sess_closed_err                   0         0.00 Session Closed with error\nMAIN.sess_readahead                    0         0.00 Session Read Ahead\nMAIN.sess_herd                         0         0.00 Session herd\nMAIN.sc_rem_close                      0         0.00 Session OK  REM_CLOSE\nMAIN.sc_req_close                      0         0.00 Session OK  REQ_CLOSE\nMAIN.sc_req_http10                     0         0.00 Session Err REQ_HTTP10\nMAIN.sc_rx_bad                         0         0.00 Session Err RX_BAD\nMAIN.sc_rx_body                        0         0.00 Session Err RX_BODY\nMAIN.sc_rx_junk                        0         0.00 Session Err RX_JUNK\nMAIN.sc_rx_overflow                    0         0.00 Session Err RX_OVERFLOW\nMAIN.sc_rx_timeout                     0         0.00 Session Err RX_TIMEOUT\nMAIN.sc_rx_close_idle                  0         0.00 Session Err RX_CLOSE_IDLE\nMAIN.sc_tx_pipe                        0         0.00 Session OK  TX_PIPE\nMAIN.sc_tx_error                       0         0.00 Session Err TX_ERROR\nMAIN.sc_tx_eof                         0         0.00 Session OK  TX_EOF\nMAIN.sc_resp_close                     0         0.00 Session OK  RESP_CLOSE\nMAIN.sc_overload                       0         0.00 Session Err OVERLOAD\nMAIN.sc_pipe_overflow                  0         0.00 Session Err PIPE_OVERFLOW\nMAIN.sc_range_short                    0         0.00 Session Err RANGE_SHORT\nMAIN.sc_req_http20                     0         0.00 Session Err REQ_HTTP20\nMAIN.sc_vcl_failure                    0         0.00 Session Err VCL_FAILURE\nMAIN.sc_rapid_reset                    0         0.00 Session Err RAPID_RESET\nMAIN.sc_bankrupt                       0         0.00 Session Err BANKRUPT\nMAIN.client_resp_500                   0         0.00 Delivery failed due to insufficient workspace.\nMAIN.ws_backend_overflow               0         0.00 workspace_backend overflows\nMAIN.ws_client_overflow                0         0.00 workspace_client overflows\nMAIN.ws_thread_overflow                0         0.00 workspace_thread overflows\nMAIN.ws_session_overflow               0         0.00 workspace_session overflows\nMAIN.shm_records                     320         0.68 SHM records\nMAIN.shm_writes                      320         0.68 SHM writes\nMAIN.shm_flushes                       0         0.00 SHM flushes due to overflow\nMAIN.shm_cont                          0         0.00 SHM lock contention\nMAIN.shm_cycles                        0         0.00 SHM cycles through VSL space\nMAIN.shm_bytes                     10300        21.87 SHM bytes\nMAIN.backend_req                       0         0.00 Backend requests made\nMAIN.n_vcl                             1          .   Number of loaded VCLs in total\nMAIN.n_vcl_avail                       1          .   Number of VCLs available\nMAIN.n_vcl_discard                     0          .   Number of discarded VCLs\nMAIN.vcl_fail                          0         0.00 VCL failures\nMAIN.bans                              1          .   Count of bans\nMAIN.bans_completed                    1          .   Number of bans marked 'completed'\nMAIN.bans_obj                          0          .   Number of bans using obj.*\nMAIN.bans_req                          0          .   Number of bans using req.*\nMAIN.bans_added                        1         0.00 Bans added\nMAIN.bans_deleted                      0         0.00 Bans deleted\nMAIN.bans_tested                       0         0.00 Bans tested against objects (lookup)\nMAIN.bans_obj_killed                   0         0.00 Objects killed by bans (lookup)\nMAIN.bans_lurker_tested                0         0.00 Bans tested against objects (lurker)\nMAIN.bans_tests_tested                 0         0.00 Ban tests tested against objects (lookup)\nMAIN.bans_lurker_tests_tested            0         0.00 Ban tests tested against objects (lurker)\nMAIN.bans_lurker_obj_killed              0         0.00 Objects killed by bans (lurker)\nMAIN.bans_lurker_obj_killed_cutoff            0         0.00 Objects killed by bans for cutoff (lurker)\nMAIN.bans_dups                                0         0.00 Bans superseded by other bans\nMAIN.bans_lurker_contention                   0         0.00 Lurker gave way for lookup\nMAIN.bans_persisted_bytes                    16          .   Bytes used by the persisted ban lists\nMAIN.bans_persisted_fragmentation             0          .   Extra bytes in persisted ban lists due to fragmentation\nMAIN.n_purges                                 0         0.00 Number of purge operations executed\nMAIN.n_obj_purged                             0         0.00 Number of purged objects\nMAIN.exp_mailed                               0         0.00 Number of objects mailed to expiry thread\nMAIN.exp_received                             0         0.00 Number of objects received by expiry thread\nMAIN.hcb_nolock                               0         0.00 HCB Lookups without lock\nMAIN.hcb_lock                                 0         0.00 HCB Lookups with lock\nMAIN.hcb_insert                               0         0.00 HCB Inserts\nMAIN.esi_errors                               0         0.00 ESI parse errors (unlock)\nMAIN.esi_warnings                             0         0.00 ESI parse warnings (unlock)\nMAIN.vmods                                    0          .   Loaded VMODs\nMAIN.n_gzip                                   0         0.00 Gzip operations\nMAIN.n_gunzip                                 0         0.00 Gunzip operations\nMAIN.n_test_gunzip                            0         0.00 Test gunzip operations\nMAIN.http1_iovs_flush                         0         0.00 Premature iovec flushes\nLCK.ban.creat                                 1         0.00 Created locks\nLCK.ban.destroy                               0         0.00 Destroyed locks\nLCK.ban.locks                                26         0.06 Lock Operations\nLCK.ban.dbg_busy                              0         0.00 Contended lock operations\nLCK.ban.dbg_try_fail                          0         0.00 Contended trylock operations\nLCK.busyobj.creat                             0         0.00 Created locks\nLCK.busyobj.destroy                           0         0.00 Destroyed locks\nLCK.busyobj.locks                             0         0.00 Lock Operations\nLCK.busyobj.dbg_busy                          0         0.00 Contended lock operations\nLCK.busyobj.dbg_try_fail                      0         0.00 Contended trylock operations\nLCK.cli.creat                                 1         0.00 Created locks\nLCK.cli.destroy                               0         0.00 Destroyed locks\nLCK.cli.locks                               170         0.36 Lock Operations\nLCK.cli.dbg_busy                              0         0.00 Contended lock operations\nLCK.cli.dbg_try_fail                          0         0.00 Contended trylock operations\nLCK.director.creat                            1         0.00 Created locks\nLCK.director.destroy                          0         0.00 Destroyed locks\nLCK.director.locks                            0         0.00 Lock Operations\nLCK.director.dbg_busy                         0         0.00 Contended lock operations\nLCK.director.dbg_try_fail                     0         0.00 Contended trylock operations\nLCK.exp.creat                                 1         0.00 Created locks\nLCK.exp.destroy                               0         0.00 Destroyed locks\nLCK.exp.locks                               152         0.32 Lock Operations\nLCK.exp.dbg_busy                              0         0.00 Contended lock operations\nLCK.exp.dbg_try_fail                          0         0.00 Contended trylock operations\nLCK.hcb.creat                                 1         0.00 Created locks\nLCK.hcb.destroy                               0         0.00 Destroyed locks\nLCK.hcb.locks                                 3         0.01 Lock Operations\nLCK.hcb.dbg_busy                              0         0.00 Contended lock operations\nLCK.hcb.dbg_try_fail                          0         0.00 Contended trylock operations\nLCK.lru.creat                                 2         0.00 Created locks\nLCK.lru.destroy                               0         0.00 Destroyed locks\nLCK.lru.locks                                 0         0.00 Lock Operations\nLCK.lru.dbg_busy                              0         0.00 Contended lock operations\nLCK.lru.dbg_try_fail                          0         0.00 Contended trylock operations\nLCK.mempool.creat                             5         0.01 Created locks\nLCK.mempool.destroy                           0         0.00 Destroyed locks\nLCK.mempool.locks                          2121         4.50 Lock Operations\nLCK.mempool.dbg_busy                          0         0.00 Contended lock operations\nLCK.mempool.dbg_try_fail                      0         0.00 Contended trylock operations\nLCK.objhdr.creat                              1         0.00 Created locks\nLCK.objhdr.destroy                            0         0.00 Destroyed locks\nLCK.objhdr.locks                              0         0.00 Lock Operations\nLCK.objhdr.dbg_busy                           0         0.00 Contended lock operations\nLCK.objhdr.dbg_try_fail                       0         0.00 Contended trylock operations\nLCK.perpool.creat                             2         0.00 Created locks\nLCK.perpool.destroy                           0         0.00 Destroyed locks\nLCK.perpool.locks                           208         0.44 Lock Operations\nLCK.perpool.dbg_busy                          0         0.00 Contended lock operations\nLCK.perpool.dbg_try_fail                      0         0.00 Contended trylock operations\nLCK.pipestat.creat                            1         0.00 Created locks\nLCK.pipestat.destroy                          0         0.00 Destroyed locks\nLCK.pipestat.locks                            0         0.00 Lock Operations\nLCK.pipestat.dbg_busy                         0         0.00 Contended lock operations\nLCK.pipestat.dbg_try_fail                     0         0.00 Contended trylock operations\nLCK.probe.creat                               1         0.00 Created locks\nLCK.probe.destroy                             0         0.00 Destroyed locks\nLCK.probe.locks                               1         0.00 Lock Operations\nLCK.probe.dbg_busy                            0         0.00 Contended lock operations\nLCK.probe.dbg_try_fail                        0         0.00 Contended trylock operations\nLCK.sess.creat                                0         0.00 Created locks\nLCK.sess.destroy                              0         0.00 Destroyed locks\nLCK.sess.locks                                0         0.00 Lock Operations\nLCK.sess.dbg_busy                             0         0.00 Contended lock operations\nLCK.sess.dbg_try_fail                         0         0.00 Contended trylock operations\nLCK.conn_pool.creat                           2         0.00 Created locks\nLCK.conn_pool.destroy                         0         0.00 Destroyed locks\nLCK.conn_pool.locks                           1         0.00 Lock Operations\nLCK.conn_pool.dbg_busy                        0         0.00 Contended lock operations\nLCK.conn_pool.dbg_try_fail                    0         0.00 Contended trylock operations\nLCK.vbe.creat                                 1         0.00 Created locks\nLCK.vbe.destroy                               0         0.00 Destroyed locks\nLCK.vbe.locks                                 1         0.00 Lock Operations\nLCK.vbe.dbg_busy                              0         0.00 Contended lock operations\nLCK.vbe.dbg_try_fail                          0         0.00 Contended trylock operations\nLCK.vcapace.creat                             1         0.00 Created locks\nLCK.vcapace.destroy                           0         0.00 Destroyed locks\nLCK.vcapace.locks                             0         0.00 Lock Operations\nLCK.vcapace.dbg_busy                          0         0.00 Contended lock operations\nLCK.vcapace.dbg_try_fail                      0         0.00 Contended trylock operations\nLCK.vcl.creat                                 1         0.00 Created locks\nLCK.vcl.destroy                               0         0.00 Destroyed locks\nLCK.vcl.locks                                 3         0.01 Lock Operations\nLCK.vcl.dbg_busy                              0         0.00 Contended lock operations\nLCK.vcl.dbg_try_fail                          0         0.00 Contended trylock operations\nLCK.vxid.creat                                1         0.00 Created locks\nLCK.vxid.destroy                              0         0.00 Destroyed locks\nLCK.vxid.locks                                0         0.00 Lock Operations\nLCK.vxid.dbg_busy                             0         0.00 Contended lock operations\nLCK.vxid.dbg_try_fail                         0         0.00 Contended trylock operations\nLCK.waiter.creat                              2         0.00 Created locks\nLCK.waiter.destroy                            0         0.00 Destroyed locks\nLCK.waiter.locks                             10         0.02 Lock Operations\nLCK.waiter.dbg_busy                           0         0.00 Contended lock operations\nLCK.waiter.dbg_try_fail                       0         0.00 Contended trylock operations\nLCK.wq.creat                                  1         0.00 Created locks\nLCK.wq.destroy                                0         0.00 Destroyed locks\nLCK.wq.locks                                673         1.43 Lock Operations\nLCK.wq.dbg_busy                               0         0.00 Contended lock operations\nLCK.wq.dbg_try_fail                           0         0.00 Contended trylock operations\nLCK.wstat.creat                               1         0.00 Created locks\nLCK.wstat.destroy                             0         0.00 Destroyed locks\nLCK.wstat.locks                             164         0.35 Lock Operations\nLCK.wstat.dbg_busy                            0         0.00 Contended lock operations\nLCK.wstat.dbg_try_fail                        0         0.00 Contended trylock operations\nMEMPOOL.busyobj.live                          0          .   In use\nMEMPOOL.busyobj.pool                         10          .   In Pool\nMEMPOOL.busyobj.sz_wanted                 98304          .   Size requested\nMEMPOOL.busyobj.sz_actual                 98272          .   Size allocated\nMEMPOOL.busyobj.allocs                        0         0.00 Allocations\nMEMPOOL.busyobj.frees                         0         0.00 Frees\nMEMPOOL.busyobj.recycle                       0         0.00 Recycled from pool\nMEMPOOL.busyobj.timeout                       0         0.00 Timed out from pool\nMEMPOOL.busyobj.toosmall                      0         0.00 Too small to recycle\nMEMPOOL.busyobj.surplus                       0         0.00 Too many for pool\nMEMPOOL.busyobj.randry                        0         0.00 Pool ran dry\nMEMPOOL.req0.live                             0          .   In use\nMEMPOOL.req0.pool                            10          .   In Pool\nMEMPOOL.req0.sz_wanted                    98304          .   Size requested\nMEMPOOL.req0.sz_actual                    98272          .   Size allocated\nMEMPOOL.req0.allocs                           0         0.00 Allocations\nMEMPOOL.req0.frees                            0         0.00 Frees\nMEMPOOL.req0.recycle                          0         0.00 Recycled from pool\nMEMPOOL.req0.timeout                          0         0.00 Timed out from pool\nMEMPOOL.req0.toosmall                         0         0.00 Too small to recycle\nMEMPOOL.req0.surplus                          0         0.00 Too many for pool\nMEMPOOL.req0.randry                           0         0.00 Pool ran dry\nMEMPOOL.sess0.live                            0          .   In use\nMEMPOOL.sess0.pool                           10          .   In Pool\nMEMPOOL.sess0.sz_wanted                     768          .   Size requested\nMEMPOOL.sess0.sz_actual                     736          .   Size allocated\nMEMPOOL.sess0.allocs                          0         0.00 Allocations\nMEMPOOL.sess0.frees                           0         0.00 Frees\nMEMPOOL.sess0.recycle                         0         0.00 Recycled from pool\nMEMPOOL.sess0.timeout                         0         0.00 Timed out from pool\nMEMPOOL.sess0.toosmall                        0         0.00 Too small to recycle\nMEMPOOL.sess0.surplus                         0         0.00 Too many for pool\nMEMPOOL.sess0.randry                          0         0.00 Pool ran dry\nLCK.sma.creat                                 2         0.00 Created locks\nLCK.sma.destroy                               0         0.00 Destroyed locks\nLCK.sma.locks                                 0         0.00 Lock Operations\nLCK.sma.dbg_busy                              0         0.00 Contended lock operations\nLCK.sma.dbg_try_fail                          0         0.00 Contended trylock operations\nSMA.s0.c_req                                  0         0.00 Allocator requests\nSMA.s0.c_fail                                 0         0.00 Allocator failures\nSMA.s0.c_bytes                                0         0.00 Bytes allocated\nSMA.s0.c_freed                                0         0.00 Bytes freed\nSMA.s0.g_alloc                                0          .   Allocations outstanding\nSMA.s0.g_bytes                                0          .   Bytes outstanding\nSMA.s0.g_space                        268435456          .   Bytes available\nMEMPOOL.req1.live                             0          .   In use\nMEMPOOL.req1.pool                            10          .   In Pool\nMEMPOOL.req1.sz_wanted                    98304          .   Size requested\nMEMPOOL.req1.sz_actual                    98272          .   Size allocated\nMEMPOOL.req1.allocs                           0         0.00 Allocations\nMEMPOOL.req1.frees                            0         0.00 Frees\nMEMPOOL.req1.recycle                          0         0.00 Recycled from pool\nMEMPOOL.req1.timeout                          0         0.00 Timed out from pool\nMEMPOOL.req1.toosmall                         0         0.00 Too small to recycle\nMEMPOOL.req1.surplus                          0         0.00 Too many for pool\nMEMPOOL.req1.randry                           0         0.00 Pool ran dry\nSMA.Transient.c_req                           0         0.00 Allocator requests\nSMA.Transient.c_fail                          0         0.00 Allocator failures\nSMA.Transient.c_bytes                         0         0.00 Bytes allocated\nSMA.Transient.c_freed                         0         0.00 Bytes freed\nSMA.Transient.g_alloc                         0          .   Allocations outstanding\nSMA.Transient.g_bytes                         0          .   Bytes outstanding\nSMA.Transient.g_space                         0          .   Bytes available\nMEMPOOL.sess1.live                            0          .   In use\nMEMPOOL.sess1.pool                           10          .   In Pool\nMEMPOOL.sess1.sz_wanted                     768          .   Size requested\nMEMPOOL.sess1.sz_actual                     736          .   Size allocated\nMEMPOOL.sess1.allocs                          0         0.00 Allocations\nMEMPOOL.sess1.frees                           0         0.00 Frees\nMEMPOOL.sess1.recycle                         0         0.00 Recycled from pool\nMEMPOOL.sess1.timeout                         0         0.00 Timed out from pool\nMEMPOOL.sess1.toosmall                        0         0.00 Too small to recycle\nMEMPOOL.sess1.surplus                         0         0.00 Too many for pool\nMEMPOOL.sess1.randry                          0         0.00 Pool ran dry\nVBE.boot.default.happy                        0          .   Happy health probes\nVBE.boot.default.bereq_hdrbytes               0         0.00 Request header bytes\nVBE.boot.default.bereq_bodybytes              0         0.00 Request body bytes\nVBE.boot.default.beresp_hdrbytes              0         0.00 Response header bytes\nVBE.boot.default.beresp_bodybytes             0         0.00 Response body bytes\nVBE.boot.default.pipe_hdrbytes                0         0.00 Pipe request header bytes\nVBE.boot.default.pipe_out                     0         0.00 Piped bytes to backend\nVBE.boot.default.pipe_in                      0         0.00 Piped bytes from backend\nVBE.boot.default.conn                         0          .   Concurrent connections used\nVBE.boot.default.req                          0         0.00 Backend requests sent\nVBE.boot.default.unhealthy                    0         0.00 Fetches not attempted due to backend being unhealthy\nVBE.boot.default.busy                         0         0.00 Fetches not attempted due to backend being busy\nVBE.boot.default.fail                         0         0.00 Connections failed\nVBE.boot.default.fail_eacces                  0         0.00 Connections failed with EACCES or EPERM\nVBE.boot.default.fail_eaddrnotavail            0         0.00 Connections failed with EADDRNOTAVAIL\nVBE.boot.default.fail_econnrefused             0         0.00 Connections failed with ECONNREFUSED\nVBE.boot.default.fail_enetunreach              0         0.00 Connections failed with ENETUNREACH\nVBE.boot.default.fail_etimedout                0         0.00 Connections failed ETIMEDOUT\nVBE.boot.default.fail_other                    0         0.00 Connections failed for other reason\nVBE.boot.default.helddown                      0         0.00 Connection opens not attempted\n[2024-09-18 14:45:28] Stopping Varnish service...\n[2024-09-18 14:45:29] Varnish functionality test passed successfully.\n[2024-09-18 14:45:29] Varnish is functioning correctly.\n[2024-09-18 14:45:29] Cleaned up temporary directory.\n[2024-09-18 14:45:29] Varnish test script completed.\n",
         "passed": true
       }
     ],
@@ -394,11 +394,11 @@
     "kernel_version": "6.10.6-riscv64\n",
     "package_name": "openssl",
     "package_type": "package",
-    "package_version": "",
+    "package_version": "3.3.1",
     "test_results": [
       {
-        "test_name": "./debian/openssl/test.sh",
-        "output": "",
+        "test_name": "test.sh",
+        "output": "Reading package lists...\nBuilding dependency tree...\nReading state information...\nsudo is already the newest version (1.9.15p5-3+b1).\ncurl is already the newest version (8.9.1-2).\napt-transport-https is already the newest version (2.9.8).\nca-certificates is already the newest version (20240203).\ngnupg is already the newest version (2.2.43-8).\nlsb-release is already the newest version (12.1-1).\nnetcat-openbsd is already the newest version (1.226-1.1).\n0 upgraded, 0 newly installed, 0 to remove and 67 not upgraded.\nOpenSSL is installed.\nOpenSSL encryption and decryption test passed.\nOpenSSL is functioning correctly.\n",
         "passed": true
       }
     ],
@@ -410,11 +410,11 @@
     "kernel_version": "6.10.6-riscv64\n",
     "package_name": "postgresql",
     "package_type": "package",
-    "package_version": "",
+    "package_version": "16.4",
     "test_results": [
       {
-        "test_name": "./debian/postgresql/test.sh",
-        "output": "",
+        "test_name": "test.sh",
+        "output": "Reading package lists...\nBuilding dependency tree...\nReading state information...\nsudo is already the newest version (1.9.15p5-3+b1).\ncurl is already the newest version (8.9.1-2).\napt-transport-https is already the newest version (2.9.8).\nca-certificates is already the newest version (20240203).\ngnupg is already the newest version (2.2.43-8).\nlsb-release is already the newest version (12.1-1).\nnetcat-openbsd is already the newest version (1.226-1.1).\n0 upgraded, 0 newly installed, 0 to remove and 67 not upgraded.\nPostgreSQL is installed.\nCREATE ROLE\nDROP ROLE\nPostgreSQL is functioning correctly.\nPostgreSQL is functioning correctly.\n",
         "passed": true
       }
     ],
@@ -426,11 +426,11 @@
     "kernel_version": "6.10.6-riscv64\n",
     "package_name": "redis",
     "package_type": "package",
-    "package_version": "",
+    "package_version": "7.0.15",
     "test_results": [
       {
-        "test_name": "./debian/redis/test.sh",
-        "output": "",
+        "test_name": "test.sh",
+        "output": "Reading package lists...\nBuilding dependency tree...\nReading state information...\nsudo is already the newest version (1.9.15p5-3+b1).\ncurl is already the newest version (8.9.1-2).\napt-transport-https is already the newest version (2.9.8).\nca-certificates is already the newest version (20240203).\ngnupg is already the newest version (2.2.43-8).\nlsb-release is already the newest version (12.1-1).\nnetcat-openbsd is already the newest version (1.226-1.1).\n0 upgraded, 0 newly installed, 0 to remove and 67 not upgraded.\nRedis is installed.\nRedis is functioning correctly.\nRedis is functioning correctly.\n",
         "passed": true
       }
     ],
@@ -445,12 +445,12 @@
     "package_version": "",
     "test_results": [
       {
-        "test_name": "./debian/runc/test.sh",
-        "output": "",
-        "passed": true
+        "test_name": "test.sh",
+        "output": "Reading package lists...\nBuilding dependency tree...\nReading state information...\nsudo is already the newest version (1.9.15p5-3+b1).\ncurl is already the newest version (8.9.1-2).\napt-transport-https is already the newest version (2.9.8).\nca-certificates is already the newest version (20240203).\ngnupg is already the newest version (2.2.43-8).\nlsb-release is already the newest version (12.1-1).\nnetcat-openbsd is already the newest version (1.226-1.1).\n0 upgraded, 0 newly installed, 0 to remove and 67 not upgraded.\n[2024-09-18 14:46:26] Starting runC test script...\n[2024-09-18 14:46:26] Checking system prerequisites...\n[2024-09-18 14:46:26] Kernel version: 6.10.6-riscv64\n[2024-09-18 14:46:27] System prerequisites check completed.\n[2024-09-18 14:46:27] runC is installed.\n[2024-09-18 14:46:28] Created temporary directory: /tmp/tmp.8a3O2Jr7KX\n[2024-09-18 14:46:28] Created config.json in /tmp/tmp.8a3O2Jr7KX/bundle\n[2024-09-18 14:46:28] Attempting to run runc container...\n[2024-09-18 14:46:29] Failed to run runc container. Output:\n[2024-09-18 14:46:29] time=\"2024-09-18T14:46:29Z\" level=error msg=\"runc run failed: unable to start container process: error during container init: error reopening /dev/null inside container: open /dev/null: permission denied\"\n[2024-09-18 14:46:29] runC is not functioning correctly.\n",
+        "passed": false
       }
     ],
-    "all_tests_passed": true
+    "all_tests_passed": false
   },
   {
     "distro": "debian",
@@ -458,11 +458,11 @@
     "kernel_version": "6.10.6-riscv64\n",
     "package_name": "scipy",
     "package_type": "package",
-    "package_version": "",
+    "package_version": "1.13.1 (python 3.12.5)",
     "test_results": [
       {
-        "test_name": "./debian/scipy/test.sh",
-        "output": "",
+        "test_name": "test.sh",
+        "output": "Reading package lists...\nBuilding dependency tree...\nReading state information...\nsudo is already the newest version (1.9.15p5-3+b1).\ncurl is already the newest version (8.9.1-2).\napt-transport-https is already the newest version (2.9.8).\nca-certificates is already the newest version (20240203).\ngnupg is already the newest version (2.2.43-8).\nlsb-release is already the newest version (12.1-1).\nnetcat-openbsd is already the newest version (1.226-1.1).\n0 upgraded, 0 newly installed, 0 to remove and 67 not upgraded.\n[2024-09-18 14:46:40] Current directory: /tmp/lintestor/debian/scipy\n[2024-09-18 14:46:41] Created temporary directory: /tmp/tmp.Ss48AvFEyk\n[2024-09-18 14:46:41] Starting SciPy test script...\n[2024-09-18 14:46:41] Checking system prerequisites...\n[2024-09-18 14:46:41] System prerequisites check passed.\n[2024-09-18 14:46:45] SciPy is installed.\n[2024-09-18 14:46:49] Created temporary directory: /tmp/tmp.a8NaBPLGtf\n[2024-09-18 14:46:49] Running the SciPy test script...\n[2024-09-18 14:47:03] Script output:\n[2024-09-18 14:47:03] Mean: 0.0545\nStandard Deviation: 1.0348\nT-statistic: 1.6642\nP-value: 0.0964\n[2024-09-18 14:47:03] Cleaned up temporary directory.\n[2024-09-18 14:47:03] Changed back to original directory: /tmp/lintestor/debian/scipy\n[2024-09-18 14:47:04] SciPy test passed successfully.\n[2024-09-18 14:47:04] SciPy is functioning correctly.\n",
         "passed": true
       }
     ],
@@ -474,11 +474,11 @@
     "kernel_version": "6.10.6-riscv64\n",
     "package_name": "squid",
     "package_type": "package",
-    "package_version": "",
+    "package_version": "6.10",
     "test_results": [
       {
-        "test_name": "./debian/squid/test.sh",
-        "output": "",
+        "test_name": "test.sh",
+        "output": "Reading package lists...\nBuilding dependency tree...\nReading state information...\nsudo is already the newest version (1.9.15p5-3+b1).\ncurl is already the newest version (8.9.1-2).\napt-transport-https is already the newest version (2.9.8).\nca-certificates is already the newest version (20240203).\ngnupg is already the newest version (2.2.43-8).\nlsb-release is already the newest version (12.1-1).\nnetcat-openbsd is already the newest version (1.226-1.1).\n0 upgraded, 0 newly installed, 0 to remove and 67 not upgraded.\n[2024-09-18 14:47:14] Current directory: /tmp/lintestor/debian/squid\n[2024-09-18 14:47:14] Created temporary directory: /tmp/tmp.5CRo2cVivR\n[2024-09-18 14:47:15] Starting Squid test script...\n[2024-09-18 14:47:15] Checking system prerequisites...\n[2024-09-18 14:47:15] System prerequisites check passed.\n[2024-09-18 14:47:15] Squid is installed. Path: /usr/sbin/squid\n[2024-09-18 14:47:15] Verifying Squid installation again...\n[2024-09-18 14:47:15] Squid is installed. Path: /usr/sbin/squid\n[2024-09-18 14:47:15] Starting Squid service...\n[2024-09-18 14:47:16] Checking Squid service status...\n[2024-09-18 14:47:17] Testing Squid configuration...\n[2024-09-18 14:47:18] Stopping Squid service...\n[2024-09-18 14:47:50] Squid functionality test passed successfully.\n[2024-09-18 14:47:50] Squid is functioning correctly.\n[2024-09-18 14:47:50] Cleaned up temporary directory.\n[2024-09-18 14:47:50] Squid test script completed.\n",
         "passed": true
       }
     ],
@@ -493,12 +493,12 @@
     "package_version": "",
     "test_results": [
       {
-        "test_name": "./debian/zookeeper/test.sh",
-        "output": "",
-        "passed": true
+        "test_name": "test.sh",
+        "output": "Reading package lists...\nBuilding dependency tree...\nReading state information...\nsudo is already the newest version (1.9.15p5-3+b1).\ncurl is already the newest version (8.9.1-2).\napt-transport-https is already the newest version (2.9.8).\nca-certificates is already the newest version (20240203).\ngnupg is already the newest version (2.2.43-8).\nlsb-release is already the newest version (12.1-1).\nnetcat-openbsd is already the newest version (1.226-1.1).\n0 upgraded, 0 newly installed, 0 to remove and 67 not upgraded.\n[2024-09-18 14:48:01] Current directory: /tmp/lintestor/debian/zookeeper\n[2024-09-18 14:48:01] Created temporary directory: /tmp/tmp.6KGRhbp5bu\n[2024-09-18 14:48:01] Starting ZooKeeper test script...\n[2024-09-18 14:48:01] Checking system prerequisites...\n[2024-09-18 14:48:01] System prerequisites check passed.\n[2024-09-18 14:48:01] ZooKeeper is installed. Path: /opt/zookeeper\n[2024-09-18 14:48:02] Verifying ZooKeeper installation again...\n[2024-09-18 14:48:02] ZooKeeper is installed. Path: /opt/zookeeper\n[2024-09-18 14:48:06] Starting ZooKeeper server...\n/usr/bin/java\nStarting zookeeper ... STARTED\n[2024-09-18 14:48:14] Checking ZooKeeper server status...\n/usr/bin/java\nClient port found: 2181. Client address: localhost. Client SSL: false.\nError contacting service. It is probably not running.\n[2024-09-18 14:48:33] ZooKeeper server is not running properly.\n[2024-09-18 14:48:33] ZooKeeper is not functioning correctly.\n[2024-09-18 14:48:33] Cleaned up temporary directory.\n[2024-09-18 14:48:33] ZooKeeper test script completed.\n",
+        "passed": false
       }
     ],
-    "all_tests_passed": true
+    "all_tests_passed": false
   },
   {
     "distro": "bianbu",
@@ -506,11 +506,11 @@
     "kernel_version": "6.1.15\n",
     "package_name": "apache",
     "package_type": "package",
-    "package_version": "",
+    "package_version": "2.4.57-2ubuntu2.1",
     "test_results": [
       {
-        "test_name": "./bianbu/apache/test.sh",
-        "output": "",
+        "test_name": "test.sh",
+        "output": "Package apache2 is installed.\nApache service is running.\nApache service state has been restored.\n",
         "passed": true
       }
     ],
@@ -522,11 +522,11 @@
     "kernel_version": "6.1.15\n",
     "package_name": "clang",
     "package_type": "package",
-    "package_version": "",
+    "package_version": "16.0.6 (15)",
     "test_results": [
       {
-        "test_name": "./bianbu/clang/test.sh",
-        "output": "",
+        "test_name": "test.sh",
+        "output": "Hello, World!\n",
         "passed": true
       }
     ],
@@ -538,11 +538,11 @@
     "kernel_version": "6.1.15\n",
     "package_name": "cmake",
     "package_type": "package",
-    "package_version": "",
+    "package_version": "3.27.4",
     "test_results": [
       {
-        "test_name": "./bianbu/cmake/test.sh",
-        "output": "",
+        "test_name": "test.sh",
+        "output": "-- Configuring done (0.1s)\n-- Generating done (0.0s)\n-- Build files have been written to: /tmp/cmake_test_dir\n[ 50%] Building CXX object CMakeFiles/test_app.dir/main.cpp.o\n[100%] Linking CXX executable test_app\n[100%] Built target test_app\n",
         "passed": true
       }
     ],
@@ -557,8 +557,8 @@
     "package_version": "",
     "test_results": [
       {
-        "test_name": "./bianbu/docker/test.sh",
-        "output": "",
+        "test_name": "test.sh",
+        "output": "Skip docker test\n",
         "passed": true
       }
     ],
@@ -570,11 +570,11 @@
     "kernel_version": "6.1.15\n",
     "package_name": "erlang",
     "package_type": "package",
-    "package_version": "",
+    "package_version": "1:25.2.3+dfsg-1",
     "test_results": [
       {
-        "test_name": "./bianbu/erlang/test.sh",
-        "output": "",
+        "test_name": "test.sh",
+        "output": "Package erlang is installed.\nErlang is functioning correctly.\n",
         "passed": true
       }
     ],
@@ -586,20 +586,20 @@
     "kernel_version": "6.1.15\n",
     "package_name": "gcc",
     "package_type": "package",
-    "package_version": "",
+    "package_version": "13.2.0",
     "test_results": [
       {
-        "test_name": "./bianbu/gcc/test.sh",
-        "output": "",
+        "test_name": "test.sh",
+        "output": "Checking for GCC and dependencies...\nGCC is installed.\nVerifying GCC...\nGCC verification passed.\n",
         "passed": true
       },
       {
-        "test_name": "./bianbu/gcc/run_tests.sh",
+        "test_name": "run_tests.sh",
         "output": "",
-        "passed": true
+        "passed": false
       }
     ],
-    "all_tests_passed": true
+    "all_tests_passed": false
   },
   {
     "distro": "bianbu",
@@ -607,11 +607,11 @@
     "kernel_version": "6.1.15\n",
     "package_name": "gdb",
     "package_type": "package",
-    "package_version": "",
+    "package_version": "GNU gdb (Ubuntu 14.0.50.20230907-0ubuntu1-bb1) 14.0.50.20230907-git",
     "test_results": [
       {
-        "test_name": "./bianbu/gdb/test.sh",
-        "output": "",
+        "test_name": "test.sh",
+        "output": "Package gdb is installed.\nGNU gdb (Ubuntu 14.0.50.20230907-0ubuntu1-bb1) 14.0.50.20230907-git\nGDB is functioning correctly.\n",
         "passed": true
       }
     ],
@@ -623,11 +623,11 @@
     "kernel_version": "6.1.15\n",
     "package_name": "golang",
     "package_type": "package",
-    "package_version": "",
+    "package_version": "2:1.21~2",
     "test_results": [
       {
-        "test_name": "./bianbu/golang/test.sh",
-        "output": "",
+        "test_name": "test.sh",
+        "output": "Package golang-go is installed.\nGo program compiled and ran successfully.\nGo is functioning correctly.\n",
         "passed": true
       }
     ],
@@ -639,11 +639,11 @@
     "kernel_version": "6.1.15\n",
     "package_name": "haproxy",
     "package_type": "package",
-    "package_version": "",
+    "package_version": "2.6.15-1ubuntu2",
     "test_results": [
       {
-        "test_name": "./bianbu/haproxy/test.sh",
-        "output": "",
+        "test_name": "test.sh",
+        "output": "Package haproxy is installed.\nHAProxy service is active.\n",
         "passed": true
       }
     ],
@@ -658,12 +658,12 @@
     "package_version": "",
     "test_results": [
       {
-        "test_name": "./bianbu/libmemcached/test.sh",
-        "output": "",
-        "passed": true
+        "test_name": "test.sh",
+        "output": "Package libmemcached11t64 is not installed. Attempting to install...\n命中:1 http://archive.spacemit.com/bianbu-ports mantic/snapshots/v1.0 InRelease\n命中:2 http://archive.spacemit.com/bianbu-ports mantic-security/snapshots/v1.0 InRelease\n命中:3 http://archive.spacemit.com/bianbu-ports mantic-spacemit/snapshots/v1.0 InRelease\n命中:4 http://archive.spacemit.com/bianbu-ports mantic-porting/snapshots/v1.0 InRelease\n命中:5 http://archive.spacemit.com/bianbu-ports mantic-customization/snapshots/v1.0 InRelease\n正在读取软件包列表...\n正在读取软件包列表...\n正在分析软件包的依赖关系树...\n正在读取状态信息...\nFailed to install package libmemcached11t64.\n",
+        "passed": false
       }
     ],
-    "all_tests_passed": true
+    "all_tests_passed": false
   },
   {
     "distro": "bianbu",
@@ -671,11 +671,11 @@
     "kernel_version": "6.1.15\n",
     "package_name": "lighttpd",
     "package_type": "package",
-    "package_version": "",
+    "package_version": "1.4.69-1ubuntu1",
     "test_results": [
       {
-        "test_name": "./bianbu/lighttpd/test.sh",
-        "output": "",
+        "test_name": "test.sh",
+        "output": "Package lighttpd is not installed. Attempting to install...\n命中:1 http://archive.spacemit.com/bianbu-ports mantic/snapshots/v1.0 InRelease\n命中:2 http://archive.spacemit.com/bianbu-ports mantic-security/snapshots/v1.0 InRelease\n命中:3 http://archive.spacemit.com/bianbu-ports mantic-spacemit/snapshots/v1.0 InRelease\n命中:4 http://archive.spacemit.com/bianbu-ports mantic-porting/snapshots/v1.0 InRelease\n命中:5 http://archive.spacemit.com/bianbu-ports mantic-customization/snapshots/v1.0 InRelease\n正在读取软件包列表...\n正在读取软件包列表...\n正在分析软件包的依赖关系树...\n正在读取状态信息...\n将会同时安装下列软件：\n  lighttpd-mod-deflate lighttpd-mod-openssl spawn-fcgi\n建议安装：\n  php-cgi php-fpm lighttpd-doc lighttpd-mod-webdav lighttpd-modules-dbi\n  lighttpd-modules-lua ufw\n下列【新】软件包将被安装：\n  lighttpd lighttpd-mod-deflate lighttpd-mod-openssl spawn-fcgi\n升级了 0 个软件包，新安装了 4 个软件包，要卸载 0 个软件包，有 0 个软件包未被升级。\n需要下载 424 kB 的归档。\n解压缩后会消耗 1,018 kB 的额外空间。\n获取:1 http://archive.spacemit.com/bianbu-ports mantic/snapshots/v1.0/universe riscv64 lighttpd riscv64 1.4.69-1ubuntu1 [377 kB]\n获取:2 http://archive.spacemit.com/bianbu-ports mantic/snapshots/v1.0/universe riscv64 lighttpd-mod-deflate riscv64 1.4.69-1ubuntu1 [12.5 kB]\n获取:3 http://archive.spacemit.com/bianbu-ports mantic/snapshots/v1.0/universe riscv64 lighttpd-mod-openssl riscv64 1.4.69-1ubuntu1 [20.1 kB]\n获取:4 http://archive.spacemit.com/bianbu-ports mantic/snapshots/v1.0/universe riscv64 spawn-fcgi riscv64 1.6.4-2 [14.9 kB]\n已下载 424 kB，耗时 0秒 (1,090 kB/s)\n正在选中未选择的软件包 lighttpd。\r\n(正在读取数据库 ... \r(正在读取数据库 ... 5%\r(正在读取数据库 ... 10%\r(正在读取数据库 ... 15%\r(正在读取数据库 ... 20%\r(正在读取数据库 ... 25%\r(正在读取数据库 ... 30%\r(正在读取数据库 ... 35%\r(正在读取数据库 ... 40%\r(正在读取数据库 ... 45%\r(正在读取数据库 ... 50%\r(正在读取数据库 ... 55%\r(正在读取数据库 ... 60%\r(正在读取数据库 ... 65%\r(正在读取数据库 ... 70%\r(正在读取数据库 ... 75%\r(正在读取数据库 ... 80%\r(正在读取数据库 ... 85%\r(正在读取数据库 ... 90%\r(正在读取数据库 ... 95%\r(正在读取数据库 ... 100%\r(正在读取数据库 ... 系统当前共安装有 251876 个文件和目录。)\r\n准备解压 .../lighttpd_1.4.69-1ubuntu1_riscv64.deb  ...\r\n正在解压 lighttpd (1.4.69-1ubuntu1) ...\r\n正在选中未选择的软件包 lighttpd-mod-deflate。\r\n准备解压 .../lighttpd-mod-deflate_1.4.69-1ubuntu1_riscv64.deb  ...\r\n正在解压 lighttpd-mod-deflate (1.4.69-1ubuntu1) ...\r\n正在选中未选择的软件包 lighttpd-mod-openssl。\r\n准备解压 .../lighttpd-mod-openssl_1.4.69-1ubuntu1_riscv64.deb  ...\r\n正在解压 lighttpd-mod-openssl (1.4.69-1ubuntu1) ...\r\n正在选中未选择的软件包 spawn-fcgi。\r\n准备解压 .../spawn-fcgi_1.6.4-2_riscv64.deb  ...\r\n正在解压 spawn-fcgi (1.6.4-2) ...\r\n正在设置 lighttpd (1.4.69-1ubuntu1) ...\r\nCreated symlink /etc/systemd/system/multi-user.target.wants/lighttpd.service → /lib/systemd/system/lighttpd.service.\r\n正在设置 lighttpd-mod-openssl (1.4.69-1ubuntu1) ...\r\n正在设置 spawn-fcgi (1.6.4-2) ...\r\n正在设置 lighttpd-mod-deflate (1.4.69-1ubuntu1) ...\r\n正在处理用于 man-db (2.11.2-3) 的触发器 ...\r\nPackage lighttpd installed successfully.\nLighttpd service is active and responding.\n",
         "passed": true
       }
     ],
@@ -687,11 +687,11 @@
     "kernel_version": "6.1.15\n",
     "package_name": "llvm",
     "package_type": "package",
-    "package_version": "",
+    "package_version": "1:15.0.7-10",
     "test_results": [
       {
-        "test_name": "./bianbu/llvm/test.sh",
-        "output": "",
+        "test_name": "test.sh",
+        "output": "Package llvm is installed.\nLLVM is functioning correctly.\nLLVM is functioning correctly.\n",
         "passed": true
       }
     ],
@@ -706,12 +706,12 @@
     "package_version": "",
     "test_results": [
       {
-        "test_name": "./bianbu/mariadb/test.sh",
-        "output": "",
-        "passed": true
+        "test_name": "test.sh",
+        "output": "Package mariadb-server is not installed. Attempting to install...\n命中:1 http://archive.spacemit.com/bianbu-ports mantic/snapshots/v1.0 InRelease\n命中:2 http://archive.spacemit.com/bianbu-ports mantic-security/snapshots/v1.0 InRelease\n命中:3 http://archive.spacemit.com/bianbu-ports mantic-spacemit/snapshots/v1.0 InRelease\n命中:4 http://archive.spacemit.com/bianbu-ports mantic-porting/snapshots/v1.0 InRelease\n命中:5 http://archive.spacemit.com/bianbu-ports mantic-customization/snapshots/v1.0 InRelease\n正在读取软件包列表...\n正在读取软件包列表...\n正在分析软件包的依赖关系树...\n正在读取状态信息...\n将会同时安装下列软件：\n  galera-4 gawk libconfig-inifiles-perl libdaxctl1 libdbd-mariadb-perl\n  libdbi-perl libhtml-template-perl libmariadb3 libndctl6 libpmem1 libsigsegv2\n  liburing2 mariadb-client mariadb-client-core mariadb-common\n  mariadb-plugin-provider-bzip2 mariadb-plugin-provider-lz4\n  mariadb-plugin-provider-lzma mariadb-plugin-provider-lzo\n  mariadb-plugin-provider-snappy mariadb-server-core pv socat\n建议安装：\n  gawk-doc libnet-daemon-perl libsql-statement-perl libipc-sharedcache-perl\n  mailx mariadb-test doc-base\n下列【新】软件包将被安装：\n  galera-4 gawk libconfig-inifiles-perl libdaxctl1 libdbd-mariadb-perl\n  libdbi-perl libhtml-template-perl libmariadb3 libndctl6 libpmem1 libsigsegv2\n  liburing2 mariadb-client mariadb-client-core mariadb-common\n  mariadb-plugin-provider-bzip2 mariadb-plugin-provider-lz4\n  mariadb-plugin-provider-lzma mariadb-plugin-provider-lzo\n  mariadb-plugin-provider-snappy mariadb-server mariadb-server-core pv socat\n升级了 0 个软件包，新安装了 24 个软件包，要卸载 0 个软件包，有 0 个软件包未被升级。\n需要下载 18.8 MB 的归档。\n解压缩后会消耗 190 MB 的额外空间。\n获取:1 http://archive.spacemit.com/bianbu-ports mantic/snapshots/v1.0/main riscv64 libsigsegv2 riscv64 2.14-1ubuntu1 [18.6 kB]\n获取:2 http://archive.spacemit.com/bianbu-ports mantic/snapshots/v1.0/main riscv64 gawk riscv64 1:5.2.1-2 [714 kB]\n获取:3 http://archive.spacemit.com/bianbu-ports mantic/snapshots/v1.0/universe riscv64 mariadb-common all 1:10.11.4-1 [24.7 kB]\n获取:4 http://archive.spacemit.com/bianbu-ports mantic/snapshots/v1.0/universe riscv64 galera-4 riscv64 26.4.13-1 [911 kB]\n获取:5 http://archive.spacemit.com/bianbu-ports mantic/snapshots/v1.0/main riscv64 libdbi-perl riscv64 1.643-4 [739 kB]\n获取:6 http://archive.spacemit.com/bianbu-ports mantic/snapshots/v1.0/main riscv64 libconfig-inifiles-perl all 3.000003-2 [39.4 kB]\n获取:7 http://archive.spacemit.com/bianbu-ports mantic/snapshots/v1.0/universe riscv64 libmariadb3 riscv64 1:10.11.4-1 [192 kB]\n获取:8 http://archive.spacemit.com/bianbu-ports mantic/snapshots/v1.0/universe riscv64 mariadb-client-core riscv64 1:10.11.4-1 [1,047 kB]\n获取:9 http://archive.spacemit.com/bianbu-ports mantic/snapshots/v1.0/universe riscv64 mariadb-client riscv64 1:10.11.4-1 [2,480 kB]\n获取:10 http://archive.spacemit.com/bianbu-ports mantic/snapshots/v1.0/main riscv64 libdaxctl1 riscv64 76-1ubuntu1 [22.8 kB]\n获取:11 http://archive.spacemit.com/bianbu-ports mantic/snapshots/v1.0/main riscv64 libndctl6 riscv64 76-1ubuntu1 [67.5 kB]\n获取:12 http://archive.spacemit.com/bianbu-ports mantic/snapshots/v1.0/main riscv64 libpmem1 riscv64 1.13.1-1.1 [33.4 kB]\n获取:13 http://archive.spacemit.com/bianbu-ports mantic/snapshots/v1.0/main riscv64 liburing2 riscv64 2.4-1 [21.3 kB]\n获取:14 http://archive.spacemit.com/bianbu-ports mantic/snapshots/v1.0/universe riscv64 mariadb-server-core riscv64 1:10.11.4-1 [8,232 kB]\n获取:15 http://archive.spacemit.com/bianbu-ports mantic/snapshots/v1.0/main riscv64 socat riscv64 1.7.4.4-2 [359 kB]\n获取:16 http://archive.spacemit.com/bianbu-ports mantic/snapshots/v1.0/universe riscv64 mariadb-server riscv64 1:10.11.4-1 [3,524 kB]\n获取:17 http://archive.spacemit.com/bianbu-ports mantic/snapshots/v1.0/universe riscv64 libdbd-mariadb-perl riscv64 1.22-1build1 [93.0 kB]\n获取:18 http://archive.spacemit.com/bianbu-ports mantic/snapshots/v1.0/main riscv64 libhtml-template-perl all 2.97-2 [59.1 kB]\n获取:19 http://archive.spacemit.com/bianbu-ports mantic/snapshots/v1.0/universe riscv64 mariadb-plugin-provider-bzip2 riscv64 1:10.11.4-1 [24.8 kB]\n获取:20 http://archive.spacemit.com/bianbu-ports mantic/snapshots/v1.0/universe riscv64 mariadb-plugin-provider-lz4 riscv64 1:10.11.4-1 [24.7 kB]\n获取:21 http://archive.spacemit.com/bianbu-ports mantic/snapshots/v1.0/universe riscv64 mariadb-plugin-provider-lzma riscv64 1:10.11.4-1 [24.7 kB]\n获取:22 http://archive.spacemit.com/bianbu-ports mantic/snapshots/v1.0/universe riscv64 mariadb-plugin-provider-lzo riscv64 1:10.11.4-1 [24.7 kB]\n获取:23 http://archive.spacemit.com/bianbu-ports mantic/snapshots/v1.0/universe riscv64 mariadb-plugin-provider-snappy riscv64 1:10.11.4-1 [24.7 kB]\n获取:24 http://archive.spacemit.com/bianbu-ports mantic/snapshots/v1.0/main riscv64 pv riscv64 1.7.24-1 [66.5 kB]\n正在预设定软件包 ...\n已下载 18.8 MB，耗时 1秒 (12.6 MB/s)\n正在选中未选择的软件包 libsigsegv2:riscv64。\r\n(正在读取数据库 ... \r(正在读取数据库 ... 5%\r(正在读取数据库 ... 10%\r(正在读取数据库 ... 15%\r(正在读取数据库 ... 20%\r(正在读取数据库 ... 25%\r(正在读取数据库 ... 30%\r(正在读取数据库 ... 35%\r(正在读取数据库 ... 40%\r(正在读取数据库 ... 45%\r(正在读取数据库 ... 50%\r(正在读取数据库 ... 55%\r(正在读取数据库 ... 60%\r(正在读取数据库 ... 65%\r(正在读取数据库 ... 70%\r(正在读取数据库 ... 75%\r(正在读取数据库 ... 80%\r(正在读取数据库 ... 85%\r(正在读取数据库 ... 90%\r(正在读取数据库 ... 95%\r(正在读取数据库 ... 100%\r(正在读取数据库 ... 系统当前共安装有 251970 个文件和目录。)\r\n准备解压 .../libsigsegv2_2.14-1ubuntu1_riscv64.deb  ...\r\n正在解压 libsigsegv2:riscv64 (2.14-1ubuntu1) ...\r\n正在设置 libsigsegv2:riscv64 (2.14-1ubuntu1) ...\r\n正在选中未选择的软件包 gawk。\r\n(正在读取数据库 ... \r(正在读取数据库 ... 5%\r(正在读取数据库 ... 10%\r(正在读取数据库 ... 15%\r(正在读取数据库 ... 20%\r(正在读取数据库 ... 25%\r(正在读取数据库 ... 30%\r(正在读取数据库 ... 35%\r(正在读取数据库 ... 40%\r(正在读取数据库 ... 45%\r(正在读取数据库 ... 50%\r(正在读取数据库 ... 55%\r(正在读取数据库 ... 60%\r(正在读取数据库 ... 65%\r(正在读取数据库 ... 70%\r(正在读取数据库 ... 75%\r(正在读取数据库 ... 80%\r(正在读取数据库 ... 85%\r(正在读取数据库 ... 90%\r(正在读取数据库 ... 95%\r(正在读取数据库 ... 100%\r(正在读取数据库 ... 系统当前共安装有 251978 个文件和目录。)\r\n准备解压 .../00-gawk_1%3a5.2.1-2_riscv64.deb  ...\r\n正在解压 gawk (1:5.2.1-2) ...\r\n正在选中未选择的软件包 mariadb-common。\r\n准备解压 .../01-mariadb-common_1%3a10.11.4-1_all.deb  ...\r\n正在解压 mariadb-common (1:10.11.4-1) ...\r\n正在选中未选择的软件包 galera-4。\r\n准备解压 .../02-galera-4_26.4.13-1_riscv64.deb  ...\r\n正在解压 galera-4 (26.4.13-1) ...\r\n正在选中未选择的软件包 libdbi-perl:riscv64。\r\n准备解压 .../03-libdbi-perl_1.643-4_riscv64.deb  ...\r\n正在解压 libdbi-perl:riscv64 (1.643-4) ...\r\n正在选中未选择的软件包 libconfig-inifiles-perl。\r\n准备解压 .../04-libconfig-inifiles-perl_3.000003-2_all.deb  ...\r\n正在解压 libconfig-inifiles-perl (3.000003-2) ...\r\n正在选中未选择的软件包 libmariadb3:riscv64。\r\n准备解压 .../05-libmariadb3_1%3a10.11.4-1_riscv64.deb  ...\r\n正在解压 libmariadb3:riscv64 (1:10.11.4-1) ...\r\n正在选中未选择的软件包 mariadb-client-core。\r\n准备解压 .../06-mariadb-client-core_1%3a10.11.4-1_riscv64.deb  ...\r\n正在解压 mariadb-client-core (1:10.11.4-1) ...\r\n正在选中未选择的软件包 mariadb-client。\r\n准备解压 .../07-mariadb-client_1%3a10.11.4-1_riscv64.deb  ...\r\n正在解压 mariadb-client (1:10.11.4-1) ...\r\n正在选中未选择的软件包 libdaxctl1:riscv64。\r\n准备解压 .../08-libdaxctl1_76-1ubuntu1_riscv64.deb  ...\r\n正在解压 libdaxctl1:riscv64 (76-1ubuntu1) ...\r\n正在选中未选择的软件包 libndctl6:riscv64。\r\n准备解压 .../09-libndctl6_76-1ubuntu1_riscv64.deb  ...\r\n正在解压 libndctl6:riscv64 (76-1ubuntu1) ...\r\n正在选中未选择的软件包 libpmem1:riscv64。\r\n准备解压 .../10-libpmem1_1.13.1-1.1_riscv64.deb  ...\r\n正在解压 libpmem1:riscv64 (1.13.1-1.1) ...\r\n正在选中未选择的软件包 liburing2:riscv64。\r\n准备解压 .../11-liburing2_2.4-1_riscv64.deb  ...\r\n正在解压 liburing2:riscv64 (2.4-1) ...\r\n正在选中未选择的软件包 mariadb-server-core。\r\n准备解压 .../12-mariadb-server-core_1%3a10.11.4-1_riscv64.deb  ...\r\n正在解压 mariadb-server-core (1:10.11.4-1) ...\r\n正在选中未选择的软件包 socat。\r\n准备解压 .../13-socat_1.7.4.4-2_riscv64.deb  ...\r\n正在解压 socat (1.7.4.4-2) ...\r\n正在设置 mariadb-common (1:10.11.4-1) ...\r\nupdate-alternatives: 使用 /etc/mysql/mariadb.cnf 来在自动模式中提供 /etc/mysql/my.cnf (my.cnf)\r\n正在选中未选择的软件包 mariadb-server。\r\n(正在读取数据库 ... \r(正在读取数据库 ... 5%\r(正在读取数据库 ... 10%\r(正在读取数据库 ... 15%\r(正在读取数据库 ... 20%\r(正在读取数据库 ... 25%\r(正在读取数据库 ... 30%\r(正在读取数据库 ... 35%\r(正在读取数据库 ... 40%\r(正在读取数据库 ... 45%\r(正在读取数据库 ... 50%\r(正在读取数据库 ... 55%\r(正在读取数据库 ... 60%\r(正在读取数据库 ... 65%\r(正在读取数据库 ... 70%\r(正在读取数据库 ... 75%\r(正在读取数据库 ... 80%\r(正在读取数据库 ... 85%\r(正在读取数据库 ... 90%\r(正在读取数据库 ... 95%\r(正在读取数据库 ... 100%\r(正在读取数据库 ... 系统当前共安装有 252640 个文件和目录。)\r\n准备解压 .../0-mariadb-server_1%3a10.11.4-1_riscv64.deb  ...\r\nERROR: There's not enough space in /var/lib/mysql/\r\ndpkg: 处理归档 /tmp/apt-dpkg-install-Eh5Hbn/0-mariadb-server_1%3a10.11.4-1_riscv64.deb (--unpack)时出错：\r\n 新的 mariadb-server 软件包 pre-installation 脚本 子进程返回错误状态 1\r\n正在选中未选择的软件包 libdbd-mariadb-perl。\r\n准备解压 .../1-libdbd-mariadb-perl_1.22-1build1_riscv64.deb  ...\r\n正在解压 libdbd-mariadb-perl (1.22-1build1) ...\r\n正在选中未选择的软件包 libhtml-template-perl。\r\n准备解压 .../2-libhtml-template-perl_2.97-2_all.deb  ...\r\n正在解压 libhtml-template-perl (2.97-2) ...\r\n正在选中未选择的软件包 mariadb-plugin-provider-bzip2。\r\n准备解压 .../3-mariadb-plugin-provider-bzip2_1%3a10.11.4-1_riscv64.deb  ...\r\n正在解压 mariadb-plugin-provider-bzip2 (1:10.11.4-1) ...\r\n正在选中未选择的软件包 mariadb-plugin-provider-lz4。\r\n准备解压 .../4-mariadb-plugin-provider-lz4_1%3a10.11.4-1_riscv64.deb  ...\r\n正在解压 mariadb-plugin-provider-lz4 (1:10.11.4-1) ...\r\n正在选中未选择的软件包 mariadb-plugin-provider-lzma。\r\n准备解压 .../5-mariadb-plugin-provider-lzma_1%3a10.11.4-1_riscv64.deb  ...\r\n正在解压 mariadb-plugin-provider-lzma (1:10.11.4-1) ...\r\n正在选中未选择的软件包 mariadb-plugin-provider-lzo。\r\n准备解压 .../6-mariadb-plugin-provider-lzo_1%3a10.11.4-1_riscv64.deb  ...\r\n正在解压 mariadb-plugin-provider-lzo (1:10.11.4-1) ...\r\n正在选中未选择的软件包 mariadb-plugin-provider-snappy。\r\n准备解压 .../7-mariadb-plugin-provider-snappy_1%3a10.11.4-1_riscv64.deb  ...\r\n正在解压 mariadb-plugin-provider-snappy (1:10.11.4-1) ...\r\n正在选中未选择的软件包 pv。\r\n准备解压 .../8-pv_1.7.24-1_riscv64.deb  ...\r\n正在解压 pv (1.7.24-1) ...\r\n在处理时有错误发生：\r\n /tmp/apt-dpkg-install-Eh5Hbn/0-mariadb-server_1%3a10.11.4-1_riscv64.deb\r\nFailed to install package mariadb-server.\n",
+        "passed": false
       }
     ],
-    "all_tests_passed": true
+    "all_tests_passed": false
   },
   {
     "distro": "bianbu",
@@ -722,12 +722,12 @@
     "package_version": "",
     "test_results": [
       {
-        "test_name": "./bianbu/nginx/test.sh",
-        "output": "",
-        "passed": true
+        "test_name": "test.sh",
+        "output": "Package nginx is not installed. Attempting to install...\n命中:1 http://archive.spacemit.com/bianbu-ports mantic/snapshots/v1.0 InRelease\n命中:2 http://archive.spacemit.com/bianbu-ports mantic-security/snapshots/v1.0 InRelease\n命中:3 http://archive.spacemit.com/bianbu-ports mantic-spacemit/snapshots/v1.0 InRelease\n命中:4 http://archive.spacemit.com/bianbu-ports mantic-porting/snapshots/v1.0 InRelease\n命中:5 http://archive.spacemit.com/bianbu-ports mantic-customization/snapshots/v1.0 InRelease\n正在读取软件包列表...\n正在读取软件包列表...\n正在分析软件包的依赖关系树...\n正在读取状态信息...\n您也许需要运行“apt --fix-broken install”来修正上面的错误。\n下列软件包有未满足的依赖关系：\n mariadb-plugin-provider-bzip2 : 依赖: mariadb-server (>= 1:10.11.1-1) 但是它将不会被安装\n mariadb-plugin-provider-lz4 : 依赖: mariadb-server (>= 1:10.11.1-1) 但是它将不会被安装\n mariadb-plugin-provider-lzma : 依赖: mariadb-server (>= 1:10.11.1-1) 但是它将不会被安装\n mariadb-plugin-provider-lzo : 依赖: mariadb-server (>= 1:10.11.1-1) 但是它将不会被安装\n mariadb-plugin-provider-snappy : 依赖: mariadb-server (>= 1:10.11.1-1) 但是它将不会被安装\n nginx : 依赖: nginx-common (< 1.24.0-1ubuntu1.1~) 但是它将不会被安装\n         依赖: nginx-common (>= 1.24.0-1ubuntu1) 但是它将不会被安装\nFailed to install package nginx.\n",
+        "passed": false
       }
     ],
-    "all_tests_passed": true
+    "all_tests_passed": false
   },
   {
     "distro": "bianbu",
@@ -738,12 +738,12 @@
     "package_version": "",
     "test_results": [
       {
-        "test_name": "./bianbu/nodejs/test.sh",
-        "output": "",
-        "passed": true
+        "test_name": "test.sh",
+        "output": "Package nodejs is not installed. Attempting to install...\n命中:1 http://archive.spacemit.com/bianbu-ports mantic/snapshots/v1.0 InRelease\n命中:2 http://archive.spacemit.com/bianbu-ports mantic-security/snapshots/v1.0 InRelease\n命中:3 http://archive.spacemit.com/bianbu-ports mantic-spacemit/snapshots/v1.0 InRelease\n命中:4 http://archive.spacemit.com/bianbu-ports mantic-porting/snapshots/v1.0 InRelease\n命中:5 http://archive.spacemit.com/bianbu-ports mantic-customization/snapshots/v1.0 InRelease\n正在读取软件包列表...\n正在读取软件包列表...\n正在分析软件包的依赖关系树...\n正在读取状态信息...\n您也许需要运行“apt --fix-broken install”来修正上面的错误。\n下列软件包有未满足的依赖关系：\n mariadb-plugin-provider-bzip2 : 依赖: mariadb-server (>= 1:10.11.1-1) 但是它将不会被安装\n mariadb-plugin-provider-lz4 : 依赖: mariadb-server (>= 1:10.11.1-1) 但是它将不会被安装\n mariadb-plugin-provider-lzma : 依赖: mariadb-server (>= 1:10.11.1-1) 但是它将不会被安装\n mariadb-plugin-provider-lzo : 依赖: mariadb-server (>= 1:10.11.1-1) 但是它将不会被安装\n mariadb-plugin-provider-snappy : 依赖: mariadb-server (>= 1:10.11.1-1) 但是它将不会被安装\n nodejs : 依赖: libnode108 (= 18.13.0+dfsg1-1ubuntu2) 但是它将不会被安装\n          推荐: nodejs-doc 但是它将不会被安装\nFailed to install package nodejs.\n",
+        "passed": false
       }
     ],
-    "all_tests_passed": true
+    "all_tests_passed": false
   },
   {
     "distro": "bianbu",
@@ -754,12 +754,12 @@
     "package_version": "",
     "test_results": [
       {
-        "test_name": "./bianbu/numpy/test.sh",
-        "output": "",
-        "passed": true
+        "test_name": "test.sh",
+        "output": "Python 3 is not installed. Attempting to install...\n命中:1 http://archive.spacemit.com/bianbu-ports mantic/snapshots/v1.0 InRelease\n命中:2 http://archive.spacemit.com/bianbu-ports mantic-security/snapshots/v1.0 InRelease\n命中:3 http://archive.spacemit.com/bianbu-ports mantic-spacemit/snapshots/v1.0 InRelease\n命中:4 http://archive.spacemit.com/bianbu-ports mantic-porting/snapshots/v1.0 InRelease\n命中:5 http://archive.spacemit.com/bianbu-ports mantic-customization/snapshots/v1.0 InRelease\n正在读取软件包列表...\n正在读取软件包列表...\n正在分析软件包的依赖关系树...\n正在读取状态信息...\n您也许需要运行“apt --fix-broken install”来修正上面的错误。\n下列软件包有未满足的依赖关系：\n mariadb-plugin-provider-bzip2 : 依赖: mariadb-server (>= 1:10.11.1-1) 但是它将不会被安装\n mariadb-plugin-provider-lz4 : 依赖: mariadb-server (>= 1:10.11.1-1) 但是它将不会被安装\n mariadb-plugin-provider-lzma : 依赖: mariadb-server (>= 1:10.11.1-1) 但是它将不会被安装\n mariadb-plugin-provider-lzo : 依赖: mariadb-server (>= 1:10.11.1-1) 但是它将不会被安装\n mariadb-plugin-provider-snappy : 依赖: mariadb-server (>= 1:10.11.1-1) 但是它将不会被安装\n python3-full : 依赖: python3.11-full (>= 3.11.4-1~) 但是它将不会被安装\n                依赖: python3-venv (= 3.11.4-5) 但是它将不会被安装\n                依赖: 2to3 但是它将不会被安装\n                依赖: idle 但是它将不会被安装\n                依赖: python3-gdbm 但是它将不会被安装\n                依赖: python3-tk 但是它将不会被安装\n                推荐: python3-doc 但是它将不会被安装\n正在读取软件包列表...\n正在分析软件包的依赖关系树...\n正在读取状态信息...\npython3-pip 已经是最新版 (23.2+dfsg-1ubuntu0.1)。\npython3-pip 已设置为手动安装。\n您也许需要运行“apt --fix-broken install”来修正上面的错误。\n下列软件包有未满足的依赖关系：\n mariadb-plugin-provider-bzip2 : 依赖: mariadb-server (>= 1:10.11.1-1) 但是它将不会被安装\n mariadb-plugin-provider-lz4 : 依赖: mariadb-server (>= 1:10.11.1-1) 但是它将不会被安装\n mariadb-plugin-provider-lzma : 依赖: mariadb-server (>= 1:10.11.1-1) 但是它将不会被安装\n mariadb-plugin-provider-lzo : 依赖: mariadb-server (>= 1:10.11.1-1) 但是它将不会被安装\n mariadb-plugin-provider-snappy : 依赖: mariadb-server (>= 1:10.11.1-1) 但是它将不会被安装\nFailed to install Python 3.\n",
+        "passed": false
       }
     ],
-    "all_tests_passed": true
+    "all_tests_passed": false
   },
   {
     "distro": "bianbu",
@@ -767,11 +767,11 @@
     "kernel_version": "6.1.15\n",
     "package_name": "ocaml",
     "package_type": "package",
-    "package_version": "",
+    "package_version": "4.13.1-6ubuntu1",
     "test_results": [
       {
-        "test_name": "./bianbu/ocaml/test.sh",
-        "output": "",
+        "test_name": "test.sh",
+        "output": "Package ocaml is installed.\nOCaml is functioning correctly.\n",
         "passed": true
       }
     ],
@@ -786,12 +786,12 @@
     "package_version": "",
     "test_results": [
       {
-        "test_name": "./bianbu/openjdk/test.sh",
-        "output": "",
-        "passed": true
+        "test_name": "test.sh",
+        "output": "OpenJDK is not installed. Attempting to install...\n命中:1 http://archive.spacemit.com/bianbu-ports mantic/snapshots/v1.0 InRelease\n命中:2 http://archive.spacemit.com/bianbu-ports mantic-security/snapshots/v1.0 InRelease\n命中:3 http://archive.spacemit.com/bianbu-ports mantic-spacemit/snapshots/v1.0 InRelease\n命中:4 http://archive.spacemit.com/bianbu-ports mantic-porting/snapshots/v1.0 InRelease\n命中:5 http://archive.spacemit.com/bianbu-ports mantic-customization/snapshots/v1.0 InRelease\n正在读取软件包列表...\n正在读取软件包列表...\n正在分析软件包的依赖关系树...\n正在读取状态信息...\n您也许需要运行“apt --fix-broken install”来修正上面的错误。\n下列软件包有未满足的依赖关系：\n mariadb-plugin-provider-bzip2 : 依赖: mariadb-server (>= 1:10.11.1-1) 但是它将不会被安装\n mariadb-plugin-provider-lz4 : 依赖: mariadb-server (>= 1:10.11.1-1) 但是它将不会被安装\n mariadb-plugin-provider-lzma : 依赖: mariadb-server (>= 1:10.11.1-1) 但是它将不会被安装\n mariadb-plugin-provider-lzo : 依赖: mariadb-server (>= 1:10.11.1-1) 但是它将不会被安装\n mariadb-plugin-provider-snappy : 依赖: mariadb-server (>= 1:10.11.1-1) 但是它将不会被安装\n openjdk-11-jdk : 依赖: openjdk-11-jre (= 11.0.21+9-0ubuntu1~23.10) 但是它将不会被安装\n                  依赖: openjdk-11-jdk-headless (= 11.0.21+9-0ubuntu1~23.10) 但是它将不会被安装\n                  推荐: libxt-dev 但是它将不会被安装\nFailed to install OpenJDK.\n",
+        "passed": false
       }
     ],
-    "all_tests_passed": true
+    "all_tests_passed": false
   },
   {
     "distro": "bianbu",
@@ -799,11 +799,11 @@
     "kernel_version": "6.1.15\n",
     "package_name": "perl",
     "package_type": "package",
-    "package_version": "",
+    "package_version": "5.36.0",
     "test_results": [
       {
-        "test_name": "./bianbu/perl/test.sh",
-        "output": "",
+        "test_name": "test.sh",
+        "output": "Perl is installed.\nPerl is functioning correctly.\nPerl is functioning correctly.\n",
         "passed": true
       }
     ],
@@ -815,11 +815,11 @@
     "kernel_version": "6.1.15\n",
     "package_name": "python",
     "package_type": "package",
-    "package_version": "",
+    "package_version": "3.11.6",
     "test_results": [
       {
-        "test_name": "./bianbu/python/test.sh",
-        "output": "",
+        "test_name": "test.sh",
+        "output": "Python is installed.\nPython is functioning correctly.\nPython is functioning correctly.\n",
         "passed": true
       }
     ],
@@ -834,12 +834,12 @@
     "package_version": "",
     "test_results": [
       {
-        "test_name": "./bianbu/ruby/test.sh",
-        "output": "",
-        "passed": true
+        "test_name": "test.sh",
+        "output": "Ruby is not installed. Attempting to install...\n命中:1 http://archive.spacemit.com/bianbu-ports mantic/snapshots/v1.0 InRelease\n命中:2 http://archive.spacemit.com/bianbu-ports mantic-security/snapshots/v1.0 InRelease\n命中:3 http://archive.spacemit.com/bianbu-ports mantic-spacemit/snapshots/v1.0 InRelease\n命中:4 http://archive.spacemit.com/bianbu-ports mantic-porting/snapshots/v1.0 InRelease\n命中:5 http://archive.spacemit.com/bianbu-ports mantic-customization/snapshots/v1.0 InRelease\n正在读取软件包列表...\nFailed to install Ruby.\n",
+        "passed": false
       }
     ],
-    "all_tests_passed": true
+    "all_tests_passed": false
   },
   {
     "distro": "bianbu",
@@ -847,11 +847,11 @@
     "kernel_version": "6.1.15\n",
     "package_name": "rust",
     "package_type": "package",
-    "package_version": "",
+    "package_version": "1.71.1 (1.71.1)",
     "test_results": [
       {
-        "test_name": "./bianbu/rust/test.sh",
-        "output": "",
+        "test_name": "test.sh",
+        "output": "[2024-09-18 22:54:41] Current directory: /tmp/lintestor/bianbu/rust\n[2024-09-18 22:54:41] Created temporary directory: /tmp/tmp.dat78nn4pX\n[2024-09-18 22:54:41] Starting Rust test script...\n[2024-09-18 22:54:41] Checking system prerequisites...\n[2024-09-18 22:54:41] System prerequisites check passed.\n[2024-09-18 22:54:41] Rust is installed.\n[2024-09-18 22:54:41] Created temporary directory: /tmp/tmp.tCCxkZ0H8g\n[2024-09-18 22:54:41] Creating a new Rust project...\n[2024-09-18 22:54:42] Building the Rust project...\n[2024-09-18 22:54:46] Running the Rust project...\n[2024-09-18 22:54:46] Project output:     Finished dev [unoptimized + debuginfo] target(s) in 0.23s\n     Running `target/debug/hello_world`\nHello, world!\n[2024-09-18 22:54:46] Cleaned up temporary directory.\n[2024-09-18 22:54:46] Cleaned up temporary directory.\n[2024-09-18 22:54:46] Changed back to original directory: /tmp/lintestor/bianbu/rust\n[2024-09-18 22:54:46] Rust test passed successfully.\n[2024-09-18 22:54:46] Rust is functioning correctly.\n",
         "passed": true
       }
     ],
@@ -866,12 +866,12 @@
     "package_version": "",
     "test_results": [
       {
-        "test_name": "./bianbu/sqlite/test.sh",
-        "output": "",
-        "passed": true
+        "test_name": "test.sh",
+        "output": "[2024-09-18 22:54:49] Current directory: /tmp/lintestor/bianbu/sqlite\n[2024-09-18 22:54:49] Created temporary directory: /tmp/tmp.osAl0Ma7ZJ\n[2024-09-18 22:54:49] Starting SQLite test script...\n[2024-09-18 22:54:49] Checking system prerequisites...\n[2024-09-18 22:54:49] System prerequisites check passed.\n[2024-09-18 22:54:49] SQLite is not installed.\n[2024-09-18 22:54:49] Attempting to install SQLite...\n命中:1 http://archive.spacemit.com/bianbu-ports mantic/snapshots/v1.0 InRelease\n命中:2 http://archive.spacemit.com/bianbu-ports mantic-security/snapshots/v1.0 InRelease\n错误:1 http://archive.spacemit.com/bianbu-ports mantic/snapshots/v1.0 InRelease\n  Splitting up /var/lib/apt/lists/archive.spacemit.com_bianbu-ports_dists_mantic_snapshots_v1.0_InRelease into data and signature failed\n错误:2 http://archive.spacemit.com/bianbu-ports mantic-security/snapshots/v1.0 InRelease\n  Splitting up /var/lib/apt/lists/archive.spacemit.com_bianbu-ports_dists_mantic-security_snapshots_v1.0_InRelease into data and signature failed\n命中:3 http://archive.spacemit.com/bianbu-ports mantic-spacemit/snapshots/v1.0 InRelease\n错误:3 http://archive.spacemit.com/bianbu-ports mantic-spacemit/snapshots/v1.0 InRelease\n  Splitting up /var/lib/apt/lists/archive.spacemit.com_bianbu-ports_dists_mantic-spacemit_snapshots_v1.0_InRelease into data and signature failed\n命中:4 http://archive.spacemit.com/bianbu-ports mantic-porting/snapshots/v1.0 InRelease\n错误:4 http://archive.spacemit.com/bianbu-ports mantic-porting/snapshots/v1.0 InRelease\n  Splitting up /var/lib/apt/lists/archive.spacemit.com_bianbu-ports_dists_mantic-porting_snapshots_v1.0_InRelease into data and signature failed\n命中:5 http://archive.spacemit.com/bianbu-ports mantic-customization/snapshots/v1.0 InRelease\n错误:5 http://archive.spacemit.com/bianbu-ports mantic-customization/snapshots/v1.0 InRelease\n  Splitting up /var/lib/apt/lists/archive.spacemit.com_bianbu-ports_dists_mantic-customization_snapshots_v1.0_InRelease into data and signature failed\n正在读取软件包列表...\n正在读取软件包列表...\n正在分析软件包的依赖关系树...\n正在读取状态信息...\n您也许需要运行“apt --fix-broken install”来修正上面的错误。\n下列软件包有未满足的依赖关系：\n mariadb-plugin-provider-bzip2 : 依赖: mariadb-server (>= 1:10.11.1-1) 但是它将不会被安装\n mariadb-plugin-provider-lz4 : 依赖: mariadb-server (>= 1:10.11.1-1) 但是它将不会被安装\n mariadb-plugin-provider-lzma : 依赖: mariadb-server (>= 1:10.11.1-1) 但是它将不会被安装\n mariadb-plugin-provider-lzo : 依赖: mariadb-server (>= 1:10.11.1-1) 但是它将不会被安装\n mariadb-plugin-provider-snappy : 依赖: mariadb-server (>= 1:10.11.1-1) 但是它将不会被安装\n[2024-09-18 22:54:59] SQLite is not installed.\nSQLite installation failed. The 'sqlite3' command is still not available.\n",
+        "passed": false
       }
     ],
-    "all_tests_passed": true
+    "all_tests_passed": false
   },
   {
     "distro": "bianbu",
@@ -882,12 +882,12 @@
     "package_version": "",
     "test_results": [
       {
-        "test_name": "./bianbu/varnish/test.sh",
-        "output": "",
-        "passed": true
+        "test_name": "test.sh",
+        "output": "[2024-09-18 22:55:02] Current directory: /tmp/lintestor/bianbu/varnish\n[2024-09-18 22:55:02] Created temporary directory: /tmp/tmp.I3FcJfzRav\n[2024-09-18 22:55:02] Starting Varnish test script...\n[2024-09-18 22:55:02] Checking system prerequisites...\n[2024-09-18 22:55:02] System prerequisites check passed.\n[2024-09-18 22:55:02] Varnish is not installed.\n[2024-09-18 22:55:02] Attempting to install Varnish...\n命中:1 http://archive.spacemit.com/bianbu-ports mantic/snapshots/v1.0 InRelease\n命中:2 http://archive.spacemit.com/bianbu-ports mantic-security/snapshots/v1.0 InRelease\n命中:3 http://archive.spacemit.com/bianbu-ports mantic-spacemit/snapshots/v1.0 InRelease\n命中:4 http://archive.spacemit.com/bianbu-ports mantic-porting/snapshots/v1.0 InRelease\n命中:5 http://archive.spacemit.com/bianbu-ports mantic-customization/snapshots/v1.0 InRelease\n正在读取软件包列表...\n正在读取软件包列表...\n正在分析软件包的依赖关系树...\n正在读取状态信息...\n您也许需要运行“apt --fix-broken install”来修正上面的错误。\n下列软件包有未满足的依赖关系：\n mariadb-plugin-provider-bzip2 : 依赖: mariadb-server (>= 1:10.11.1-1) 但是它将不会被安装\n mariadb-plugin-provider-lz4 : 依赖: mariadb-server (>= 1:10.11.1-1) 但是它将不会被安装\n mariadb-plugin-provider-lzma : 依赖: mariadb-server (>= 1:10.11.1-1) 但是它将不会被安装\n mariadb-plugin-provider-lzo : 依赖: mariadb-server (>= 1:10.11.1-1) 但是它将不会被安装\n mariadb-plugin-provider-snappy : 依赖: mariadb-server (>= 1:10.11.1-1) 但是它将不会被安装\n varnish : 依赖: libjemalloc2 (>= 2.1.1) 但是它将不会被安装\n           依赖: libvarnishapi3 (>= 7.1.0) 但是它将不会被安装\nFailed to install Varnish.\n",
+        "passed": false
       }
     ],
-    "all_tests_passed": true
+    "all_tests_passed": false
   },
   {
     "distro": "bianbu",
@@ -895,11 +895,11 @@
     "kernel_version": "6.1.15\n",
     "package_name": "openssl",
     "package_type": "package",
-    "package_version": "",
+    "package_version": "3.0.10",
     "test_results": [
       {
-        "test_name": "./bianbu/openssl/test.sh",
-        "output": "",
+        "test_name": "test.sh",
+        "output": "OpenSSL is installed.\nOpenSSL encryption and decryption test passed.\nOpenSSL is functioning correctly.\n",
         "passed": true
       }
     ],
@@ -914,12 +914,12 @@
     "package_version": "",
     "test_results": [
       {
-        "test_name": "./bianbu/postgresql/test.sh",
-        "output": "",
-        "passed": true
+        "test_name": "test.sh",
+        "output": "PostgreSQL is not installed. Attempting to install...\n命中:1 http://archive.spacemit.com/bianbu-ports mantic/snapshots/v1.0 InRelease\n命中:2 http://archive.spacemit.com/bianbu-ports mantic-security/snapshots/v1.0 InRelease\n命中:3 http://archive.spacemit.com/bianbu-ports mantic-spacemit/snapshots/v1.0 InRelease\n命中:4 http://archive.spacemit.com/bianbu-ports mantic-porting/snapshots/v1.0 InRelease\n命中:5 http://archive.spacemit.com/bianbu-ports mantic-customization/snapshots/v1.0 InRelease\n正在读取软件包列表...\n正在读取软件包列表...\n正在分析软件包的依赖关系树...\n正在读取状态信息...\n您也许需要运行“apt --fix-broken install”来修正上面的错误。\n下列软件包有未满足的依赖关系：\n mariadb-plugin-provider-bzip2 : 依赖: mariadb-server (>= 1:10.11.1-1) 但是它将不会被安装\n mariadb-plugin-provider-lz4 : 依赖: mariadb-server (>= 1:10.11.1-1) 但是它将不会被安装\n mariadb-plugin-provider-lzma : 依赖: mariadb-server (>= 1:10.11.1-1) 但是它将不会被安装\n mariadb-plugin-provider-lzo : 依赖: mariadb-server (>= 1:10.11.1-1) 但是它将不会被安装\n mariadb-plugin-provider-snappy : 依赖: mariadb-server (>= 1:10.11.1-1) 但是它将不会被安装\n postgresql : 依赖: postgresql-15 但是它将不会被安装\n postgresql-contrib : 依赖: postgresql-contrib-15\nFailed to install PostgreSQL.\n",
+        "passed": false
       }
     ],
-    "all_tests_passed": true
+    "all_tests_passed": false
   },
   {
     "distro": "bianbu",
@@ -930,12 +930,12 @@
     "package_version": "",
     "test_results": [
       {
-        "test_name": "./bianbu/redis/test.sh",
-        "output": "",
-        "passed": true
+        "test_name": "test.sh",
+        "output": "Redis is not installed. Attempting to install...\n命中:1 http://archive.spacemit.com/bianbu-ports mantic/snapshots/v1.0 InRelease\n命中:2 http://archive.spacemit.com/bianbu-ports mantic-security/snapshots/v1.0 InRelease\n命中:3 http://archive.spacemit.com/bianbu-ports mantic-spacemit/snapshots/v1.0 InRelease\n命中:4 http://archive.spacemit.com/bianbu-ports mantic-porting/snapshots/v1.0 InRelease\n命中:5 http://archive.spacemit.com/bianbu-ports mantic-customization/snapshots/v1.0 InRelease\n正在读取软件包列表...\n正在读取软件包列表...\n正在分析软件包的依赖关系树...\n正在读取状态信息...\n您也许需要运行“apt --fix-broken install”来修正上面的错误。\n下列软件包有未满足的依赖关系：\n mariadb-plugin-provider-bzip2 : 依赖: mariadb-server (>= 1:10.11.1-1) 但是它将不会被安装\n mariadb-plugin-provider-lz4 : 依赖: mariadb-server (>= 1:10.11.1-1) 但是它将不会被安装\n mariadb-plugin-provider-lzma : 依赖: mariadb-server (>= 1:10.11.1-1) 但是它将不会被安装\n mariadb-plugin-provider-lzo : 依赖: mariadb-server (>= 1:10.11.1-1) 但是它将不会被安装\n mariadb-plugin-provider-snappy : 依赖: mariadb-server (>= 1:10.11.1-1) 但是它将不会被安装\n redis-server : 依赖: redis-tools (= 5:7.0.12-1) 但是它将不会被安装\nFailed to install Redis.\n",
+        "passed": false
       }
     ],
-    "all_tests_passed": true
+    "all_tests_passed": false
   },
   {
     "distro": "bianbu",
@@ -946,12 +946,12 @@
     "package_version": "",
     "test_results": [
       {
-        "test_name": "./bianbu/runc/test.sh",
-        "output": "",
-        "passed": true
+        "test_name": "test.sh",
+        "output": "[2024-09-18 22:55:57] Starting runC test script...\n[2024-09-18 22:55:57] Checking system prerequisites...\n[2024-09-18 22:55:57] Kernel version: 6.1.15\n[2024-09-18 22:55:58] System prerequisites check completed.\n[2024-09-18 22:55:58] runC is not installed.\n[2024-09-18 22:55:58] Attempting to install runC...\n命中:1 http://archive.spacemit.com/bianbu-ports mantic/snapshots/v1.0 InRelease\n命中:2 http://archive.spacemit.com/bianbu-ports mantic-security/snapshots/v1.0 InRelease\n命中:3 http://archive.spacemit.com/bianbu-ports mantic-spacemit/snapshots/v1.0 InRelease\n命中:4 http://archive.spacemit.com/bianbu-ports mantic-porting/snapshots/v1.0 InRelease\n命中:5 http://archive.spacemit.com/bianbu-ports mantic-customization/snapshots/v1.0 InRelease\n正在读取软件包列表...\n正在读取软件包列表...\n正在分析软件包的依赖关系树...\n正在读取状态信息...\n您也许需要运行“apt --fix-broken install”来修正上面的错误。\n下列软件包有未满足的依赖关系：\n mariadb-plugin-provider-bzip2 : 依赖: mariadb-server (>= 1:10.11.1-1) 但是它将不会被安装\n mariadb-plugin-provider-lz4 : 依赖: mariadb-server (>= 1:10.11.1-1) 但是它将不会被安装\n mariadb-plugin-provider-lzma : 依赖: mariadb-server (>= 1:10.11.1-1) 但是它将不会被安装\n mariadb-plugin-provider-lzo : 依赖: mariadb-server (>= 1:10.11.1-1) 但是它将不会被安装\n mariadb-plugin-provider-snappy : 依赖: mariadb-server (>= 1:10.11.1-1) 但是它将不会被安装\nFailed to install runC.\n",
+        "passed": false
       }
     ],
-    "all_tests_passed": true
+    "all_tests_passed": false
   },
   {
     "distro": "bianbu",
@@ -962,12 +962,12 @@
     "package_version": "",
     "test_results": [
       {
-        "test_name": "./bianbu/scipy/test.sh",
-        "output": "",
-        "passed": true
+        "test_name": "test.sh",
+        "output": "[2024-09-18 22:56:15] Current directory: /tmp/lintestor/bianbu/scipy\n[2024-09-18 22:56:15] Created temporary directory: /tmp/tmp.4Jbwciukox\n[2024-09-18 22:56:15] Starting SciPy test script...\n[2024-09-18 22:56:15] Checking system prerequisites...\n[2024-09-18 22:56:15] System prerequisites check passed.\n[2024-09-18 22:56:16] SciPy is not installed.\n[2024-09-18 22:56:16] Attempting to install SciPy...\n命中:1 http://archive.spacemit.com/bianbu-ports mantic/snapshots/v1.0 InRelease\n命中:2 http://archive.spacemit.com/bianbu-ports mantic-security/snapshots/v1.0 InRelease\n命中:3 http://archive.spacemit.com/bianbu-ports mantic-spacemit/snapshots/v1.0 InRelease\n命中:4 http://archive.spacemit.com/bianbu-ports mantic-porting/snapshots/v1.0 InRelease\n命中:5 http://archive.spacemit.com/bianbu-ports mantic-customization/snapshots/v1.0 InRelease\n正在读取软件包列表...\n正在读取软件包列表...\n正在分析软件包的依赖关系树...\n正在读取状态信息...\n您也许需要运行“apt --fix-broken install”来修正上面的错误。\n下列软件包有未满足的依赖关系：\n mariadb-plugin-provider-bzip2 : 依赖: mariadb-server (>= 1:10.11.1-1) 但是它将不会被安装\n mariadb-plugin-provider-lz4 : 依赖: mariadb-server (>= 1:10.11.1-1) 但是它将不会被安装\n mariadb-plugin-provider-lzma : 依赖: mariadb-server (>= 1:10.11.1-1) 但是它将不会被安装\n mariadb-plugin-provider-lzo : 依赖: mariadb-server (>= 1:10.11.1-1) 但是它将不会被安装\n mariadb-plugin-provider-snappy : 依赖: mariadb-server (>= 1:10.11.1-1) 但是它将不会被安装\n python3-scipy : 依赖: python3-decorator 但是它将不会被安装\n                 依赖: python3-numpy (>= 1:1.22.0) 但是它将不会被安装\n                 依赖: python3-pythran 但是它将不会被安装\n                 依赖: python3-numpy-abi9\n                 依赖: liblbfgsb0 (>= 3.0+dfsg.4) 但是它将不会被安装\nFailed to install SciPy.\n",
+        "passed": false
       }
     ],
-    "all_tests_passed": true
+    "all_tests_passed": false
   },
   {
     "distro": "bianbu",
@@ -978,12 +978,12 @@
     "package_version": "",
     "test_results": [
       {
-        "test_name": "./bianbu/squid/test.sh",
-        "output": "",
-        "passed": true
+        "test_name": "test.sh",
+        "output": "[2024-09-18 22:56:33] Current directory: /tmp/lintestor/bianbu/squid\n[2024-09-18 22:56:33] Created temporary directory: /tmp/tmp.qAFabZHY7F\n[2024-09-18 22:56:33] Starting Squid test script...\n[2024-09-18 22:56:33] Checking system prerequisites...\n[2024-09-18 22:56:33] System prerequisites check passed.\n[2024-09-18 22:56:33] Squid is not installed.\n[2024-09-18 22:56:33] Attempting to install Squid...\n命中:1 http://archive.spacemit.com/bianbu-ports mantic/snapshots/v1.0 InRelease\n命中:2 http://archive.spacemit.com/bianbu-ports mantic-security/snapshots/v1.0 InRelease\n命中:3 http://archive.spacemit.com/bianbu-ports mantic-spacemit/snapshots/v1.0 InRelease\n命中:4 http://archive.spacemit.com/bianbu-ports mantic-porting/snapshots/v1.0 InRelease\n命中:5 http://archive.spacemit.com/bianbu-ports mantic-customization/snapshots/v1.0 InRelease\n正在读取软件包列表...\n正在读取软件包列表...\n正在分析软件包的依赖关系树...\n正在读取状态信息...\n您也许需要运行“apt --fix-broken install”来修正上面的错误。\n下列软件包有未满足的依赖关系：\n mariadb-plugin-provider-bzip2 : 依赖: mariadb-server (>= 1:10.11.1-1) 但是它将不会被安装\n mariadb-plugin-provider-lz4 : 依赖: mariadb-server (>= 1:10.11.1-1) 但是它将不会被安装\n mariadb-plugin-provider-lzma : 依赖: mariadb-server (>= 1:10.11.1-1) 但是它将不会被安装\n mariadb-plugin-provider-lzo : 依赖: mariadb-server (>= 1:10.11.1-1) 但是它将不会被安装\n mariadb-plugin-provider-snappy : 依赖: mariadb-server (>= 1:10.11.1-1) 但是它将不会被安装\n squid : 依赖: libecap3 (>= 1.0.1) 但是它将不会被安装\n         依赖: squid-common (>= 6.1-2ubuntu1.1) 但是它将不会被安装\nFailed to install Squid.\n[2024-09-18 22:56:47] Cleaned up temporary directory.\n[2024-09-18 22:56:47] Squid test script completed.\n",
+        "passed": false
       }
     ],
-    "all_tests_passed": true
+    "all_tests_passed": false
   },
   {
     "distro": "bianbu",
@@ -991,11 +991,11 @@
     "kernel_version": "6.1.15\n",
     "package_name": "zookeeper",
     "package_type": "package",
-    "package_version": "",
+    "package_version": "3.9.2",
     "test_results": [
       {
-        "test_name": "./bianbu/zookeeper/test.sh",
-        "output": "",
+        "test_name": "test.sh",
+        "output": "[2024-09-18 22:56:50] Current directory: /tmp/lintestor/bianbu/zookeeper\n[2024-09-18 22:56:50] Created temporary directory: /tmp/tmp.fsYDZnmV2g\n[2024-09-18 22:56:50] Starting ZooKeeper test script...\n[2024-09-18 22:56:50] Checking system prerequisites...\n[2024-09-18 22:56:50] System prerequisites check passed.\n[2024-09-18 22:56:50] ZooKeeper is not installed.\n[2024-09-18 22:56:50] Attempting to install ZooKeeper...\n[2024-09-18 22:56:56] ZooKeeper installation completed. Verifying installation...\n[2024-09-18 22:56:56] ZooKeeper is installed. Path: /opt/zookeeper\n[2024-09-18 22:56:56] ZooKeeper installed successfully.\n[2024-09-18 22:56:56] Verifying ZooKeeper installation again...\n[2024-09-18 22:56:56] ZooKeeper is installed. Path: /opt/zookeeper\n[2024-09-18 22:56:56] Starting ZooKeeper server...\n/usr/bin/java\nStarting zookeeper ... STARTED\n[2024-09-18 22:57:03] Checking ZooKeeper server status...\n/usr/bin/java\nClient port found: 2181. Client address: localhost. Client SSL: false.\nMode: standalone\n[2024-09-18 22:57:06] Testing ZooKeeper client connection...\n[2024-09-18 22:57:06] Stopping ZooKeeper server...\n/usr/bin/java\nStopping zookeeper ... STOPPED\n[2024-09-18 22:57:07] ZooKeeper functionality test passed successfully.\n[2024-09-18 22:57:07] ZooKeeper is functioning correctly.\n[2024-09-18 22:57:07] Cleaned up temporary directory.\n[2024-09-18 22:57:07] ZooKeeper test script completed.\n",
         "passed": true
       }
     ],
