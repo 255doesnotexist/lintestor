@@ -9,7 +9,7 @@ use serde::{Deserialize, Serialize};
 pub static REMOTE_TMP_DIR: &str = "/tmp/lintestor";
 
 /// Represents a complete test report for a package on a specific distribution.
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Report {
     /// The name of the distribution being tested.
     pub distro: String,
@@ -30,7 +30,7 @@ pub struct Report {
 }
 
 /// Represents the result of an individual test.
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct TestResult {
     /// The name of the test.
     pub test_name: String,
@@ -75,6 +75,8 @@ impl Drop for TempFile {
 
 #[derive(Debug, Clone)]
 pub struct CommandOutput {
+    /// The command executed.
+    pub command: String,
     /// The exit status of the command.
     pub exit_status: i32,
     /// The output (stdout and stderr) of the command.
