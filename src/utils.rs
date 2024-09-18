@@ -72,7 +72,8 @@ impl Drop for TempFile {
 }
 
 /// Represents the output of a command execution.
-#[derive(Debug)]
+
+#[derive(Debug, Clone)]
 pub struct CommandOutput {
     /// The exit status of the command.
     pub exit_status: i32,

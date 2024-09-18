@@ -187,14 +187,16 @@ impl TestRunner for RemoteTestRunner {
                     pkgver_tmpfile
                 ),
             );
-            let test_passed = result.is_ok();
+
+            let unwrapped_result = result?;
+            let test_passed = unwrapped_result.exit_status == 0;
             all_tests_passed &= test_passed;
 
-            let output = result.unwrap().output;
+            let output = &unwrapped_result.output;
             info!("remote stdout: {}", &output);
             test_results.push(TestResult {
                 test_name: script.to_string(),
-                output,
+                output: output.to_string(),
                 passed: test_passed,
             });
         }
