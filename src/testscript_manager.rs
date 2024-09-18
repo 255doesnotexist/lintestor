@@ -69,4 +69,11 @@ impl TestScriptManager {
     pub fn get_test_scripts(&self) -> &[String] {
         &self.test_scripts
     }
+
+    pub fn get_test_script_names(&self) -> Vec<String> {
+        self.test_scripts
+            .iter()
+            .map(|path| path.rsplit('/').next().unwrap().to_string())
+            .collect()
+    }
 }
