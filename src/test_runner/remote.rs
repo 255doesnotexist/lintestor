@@ -2,7 +2,7 @@ use crate::aggregator::generate_report;
 use crate::test_runner::TestRunner;
 use crate::testscript_manager::TestScriptManager;
 use crate::utils::{CommandOutput, Report, TempFile, TestResult, REMOTE_TMP_DIR};
-use log::{debug, log_enabled, info, Level};
+use log::{debug, log_enabled, Level};
 use ssh2::Session;
 use std::fs::File;
 use std::io::{Read, Write};
@@ -198,6 +198,7 @@ impl TestRunner for RemoteTestRunner {
             all_tests_passed &= test_passed;
 
             let output = &unwrapped_result.output;
+            debug!("Command: {}", unwrapped_result.command);
             debug!("{:?}", &unwrapped_result);
             test_results.push(TestResult {
                 test_name: script.to_string(),
