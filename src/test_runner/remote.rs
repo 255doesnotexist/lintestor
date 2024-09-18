@@ -46,6 +46,7 @@ impl RemoteTestRunner {
         channel.send_eof()?;
         channel.wait_close()?;
         let command_output = CommandOutput {
+            command: command.to_string(),
             exit_status: channel.exit_status()?,
             output: s,
         };
@@ -69,14 +70,14 @@ impl TestRunner for RemoteTestRunner {
     ///
     /// Returns an error if the test fails or encounters any issues.
     fn run_test(&self, distro: &str, package: &str) -> Result<(), Box<dyn std::error::Error>> {
-        // 创建 SSH 会话
+        // Create SSH session
         let tcp = TcpStream::connect((self.remote_ip.as_str(), self.port))?;
         let mut sess = Session::new()?;
         sess.set_tcp_stream(tcp);
         sess.handshake()?;
         self.print_ssh_msg("SSH handshake completed");
 
-        // 认证
+        // Authentication
         if let Some(password) = &self.password {
             sess.userauth_password(&self.username, password)?;
             self.print_ssh_msg("SSH password authentication completed");
@@ -88,7 +89,7 @@ impl TestRunner for RemoteTestRunner {
             return Err("Authentication failed".into());
         }
 
-        // 压缩本地测试目录
+        // Compress local test directory
         let local_dir = format!("{}/{}", distro, package);
         let tar_file = format!("{}.tar.gz", package);
         let _temp_tar = TempFile::new(tar_file.clone());
@@ -104,10 +105,10 @@ impl TestRunner for RemoteTestRunner {
             local_dir, tar_file
         ));
 
-        // make preparations on the remote server
+        // Make preparations on the remote server
         self.run_command(&sess, &format!("mkdir -p {}", REMOTE_TMP_DIR))?;
 
-        // 上传压缩文件到远程服务器
+        // Upload compressed file to remote server
         let remote_tar_path = format!("{}/{}", REMOTE_TMP_DIR, tar_file);
         let mut remote_file = sess.scp_send(
             Path::new(&remote_tar_path),
@@ -121,7 +122,7 @@ impl TestRunner for RemoteTestRunner {
         remote_file.write_all(&buffer)?;
         self.print_ssh_msg(&format!("File {} uploaded to remote server", tar_file));
 
-        // 上传 prerequisite.sh (optional) 到远程服务器
+        // Upload prerequisite.sh (optional) to remote server
         let prerequisite_path = format!("{}/prerequisite.sh", distro);
         if Path::new(&prerequisite_path).exists() {
             let remote_prerequisite_path = "/tmp/prerequisite.sh".to_string();
@@ -140,11 +141,11 @@ impl TestRunner for RemoteTestRunner {
                 prerequisite_path
             ));
         }
-        // 确保远程文件在继续之前关闭
+        // Ensure remote file is closed before proceeding
         drop(remote_file);
 
-        // 清理远程目录，解压文件并在远程服务器上运行测试
-        let remote_dir = format!("{}/{}", REMOTE_TMP_DIR, package);
+        // Clean up remote directory, extract files, and run tests on remote server
+        let remote_dir = format!("{}/{}/{}", REMOTE_TMP_DIR, distro, package);
         self.print_ssh_msg(&format!(
             "Extracting file {} on remote server at {}",
             tar_file, remote_dir
@@ -152,6 +153,7 @@ impl TestRunner for RemoteTestRunner {
         if let Ok(CommandOutput {
             exit_status: 0,
             output: _,
+            ..
         }) = self.run_command(
             &sess,
             &format!(
@@ -167,19 +169,22 @@ impl TestRunner for RemoteTestRunner {
             return Err("Failed to extract test files on remote server".into());
         }
 
-        // 运行测试命令
+        // Run test commands
         self.print_ssh_msg(&format!("Running tests in directory {}", remote_dir));
+
         let script_manager = TestScriptManager::new(distro, package);
         let mut all_tests_passed = true;
         let mut test_results = Vec::new();
         let pkgver_tmpfile = format!("{}/pkgver", REMOTE_TMP_DIR);
-        for script in script_manager?.get_test_scripts() {
+        for script in script_manager?.get_test_script_names() {
+            let remote_prerequisite_path = "/tmp/prerequisite.sh";
             let result = self.run_command(
                 &sess,
                 &format!(
-                    "{} source {} && echo -n $PACKAGE_VERSION > {}",
+                    "cd {}; {} source {} && echo -n $PACKAGE_VERSION > {}",
+                    remote_dir,
                     if Path::new(&prerequisite_path).exists() {
-                        format!("source {} &&", prerequisite_path)
+                        format!("source {} &&", remote_prerequisite_path)
                     } else {
                         String::from("")
                     },
@@ -193,7 +198,7 @@ impl TestRunner for RemoteTestRunner {
             all_tests_passed &= test_passed;
 
             let output = &unwrapped_result.output;
-            info!("remote stdout: {}", &output);
+            debug!("{:?}", &unwrapped_result);
             test_results.push(TestResult {
                 test_name: script.to_string(),
                 output: output.to_string(),
@@ -201,7 +206,7 @@ impl TestRunner for RemoteTestRunner {
             });
         }
 
-        // 获取系统版本和包版本
+        // Get OS version and package version
         let os_version = self.run_command(&sess, "cat /proc/version")?;
         let package_version = self.run_command(
             &sess,
@@ -224,8 +229,8 @@ impl TestRunner for RemoteTestRunner {
             all_tests_passed,
         };
 
-        // 压缩远程测试目录
-        let remote_tar_file = format!("{}/{}_result.tar.gz", REMOTE_TMP_DIR, package);
+        // Compress remote test directory
+        let remote_tar_file = format!("{}/../{}_result.tar.gz", remote_dir, package);
         self.print_ssh_msg(&format!(
             "Compressing remote directory {} into {}",
             remote_dir, remote_tar_file
@@ -233,11 +238,12 @@ impl TestRunner for RemoteTestRunner {
         if let Ok(CommandOutput {
             exit_status: 0,
             output: _,
+            ..
         }) = self.run_command(
             &sess,
             &format!(
-                "cd {} && tar czf {} -C {} . --overwrite",
-                REMOTE_TMP_DIR, remote_tar_file, package
+                "cd {}/.. && tar czf {} -C {} . --overwrite",
+                remote_dir, remote_tar_file, package
             ),
         ) {
             self.print_ssh_msg(&format!(
@@ -248,7 +254,7 @@ impl TestRunner for RemoteTestRunner {
             return Err("Failed to compress test results on remote server".into());
         }
 
-        // 下载压缩的测试目录
+        // Download compressed test directory
         let local_result_tar_file = format!("{}/{}_result.tar.gz", local_dir, package);
         let _temp_result_tar = TempFile::new(local_result_tar_file.clone());
         let (mut remote_file, _) = sess.scp_recv(Path::new(&remote_tar_file))?;
@@ -261,7 +267,7 @@ impl TestRunner for RemoteTestRunner {
             local_result_tar_file
         ));
 
-        // 解压下载的测试结果
+        // Extract downloaded test results
         Command::new("tar")
             .arg("xzf")
             .arg(&local_result_tar_file)
@@ -273,22 +279,13 @@ impl TestRunner for RemoteTestRunner {
             local_dir
         ));
 
-        // 下载测试报告
+        // Generate report locally
         let report_path = format!("{}/report.json", local_dir);
-        generate_report(report_path.clone(), report)?;
-        let report_file_path = Path::new(&report_path);
-        if report_file_path.exists() {
-            let mut file = File::open(&report_path)?;
-            let mut contents = String::new();
-            file.read_to_string(&mut contents)?;
-            self.print_ssh_msg(&format!("Downloaded test report: {}", report_path));
-            let report: Report = serde_json::from_str(&contents)?;
-            debug!("{}-{} report:\n {:?}", distro, package, report);
-            if !report.all_tests_passed {
-                return Err(format!("Not all tests passed {}/{}", distro, package).into());
-            }
-        } else {
-            self.print_ssh_msg("Test report not found.");
+        generate_report(report_path, report.clone())?;
+        debug!("{}-{} report:\n {:?}", distro, package, report);
+
+        if !all_tests_passed {
+            return Err(format!("Not all tests passed {}/{}", distro, package).into());
         }
         Ok(())
     }
