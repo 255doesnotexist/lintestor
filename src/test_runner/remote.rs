@@ -214,8 +214,8 @@ impl TestRunner for RemoteTestRunner {
         let os_version = self.run_command(&sess, "cat /proc/version")?;
         let kernel_version = self.run_command(&sess, "uname -r")?;
 
-        let package_metadata = if let Some(metadata_script) = script_manager.get_metadata_script() {
-            let metadata_command = format!("source {} && echo $PACKAGE_VERSION && echo $PACKAGE_PRETTY_NAME && echo $PACKAGE_TYPE && echo $PACKAGE_DESCRIPTION", metadata_script);
+        let package_metadata = if let Some(metadata_script_name) = script_manager.get_metadata_script_name() {
+            let metadata_command = format!("source {}/{} && echo $PACKAGE_VERSION && echo $PACKAGE_PRETTY_NAME && echo $PACKAGE_TYPE && echo $PACKAGE_DESCRIPTION", remote_dir, metadata_script_name);
             let metadata_output = self.run_command(&sess, &metadata_command)?;
             let metadata_vec: Vec<String> = metadata_output
                 .output
