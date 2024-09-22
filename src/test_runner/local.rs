@@ -80,7 +80,10 @@ impl TestRunner for LocalTestRunner {
         }
 
         let package_metadata = if let Some(metadata_script) = script_manager.get_metadata_script() {
-            let metadata_command = format!("source {} && echo $PACKAGE_VERSION && echo $PACKAGE_PRETTY_NAME && echo $PACKAGE_TYPE && echo $PACKAGE_DESCRIPTION", metadata_script);
+            let metadata_command = format!(
+                "source {} && echo $PACKAGE_VERSION && echo $PACKAGE_PRETTY_NAME && echo $PACKAGE_TYPE && echo $PACKAGE_DESCRIPTION",
+                metadata_script
+            );
             let metadata_output = Command::new("bash")
                 .arg("-c")
                 .arg(metadata_command)
@@ -89,18 +92,24 @@ impl TestRunner for LocalTestRunner {
                 .lines()
                 .map(|line| line.to_string())
                 .collect();
-            PackageMetadata {
-                package_version: metadata_vec.get(0).unwrap().to_owned(),
-                package_pretty_name: metadata_vec.get(1).unwrap().to_owned(),
-                package_type: metadata_vec.get(2).unwrap().to_owned(),
-                package_description: metadata_vec.get(3).unwrap().to_owned(),
+        
+            if let [version, pretty_name, package_type, description] = &metadata_vec[..] {
+                PackageMetadata {
+                    package_version: version.to_owned(),
+                    package_pretty_name: pretty_name.to_owned(),
+                    package_type: package_type.to_owned(),
+                    package_description: description.to_owned(),
+                }
+            } else {
+                // 处理错误情况，向量长度不足
+                panic!("Unexpected metadata format: not enough elements in metadata_vec");
             }
         } else {
             PackageMetadata {
                 package_pretty_name: package.to_string(),
                 ..Default::default()
             }
-        };
+        };        
 
         let report = Report {
             distro: distro.to_string(),
