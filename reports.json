@@ -4,8 +4,12 @@
     "os_version": "Linux version 6.10.6-riscv64 (debian-kernel@lists.debian.org) (riscv64-linux-gnu-gcc-13 (Debian 13.3.0-5) 13.3.0, GNU ld (GNU Binutils for Debian) 2.43.1) #1 SMP Debian 6.10.6-1 (2024-08-19)\n",
     "kernel_version": "6.10.6-riscv64\n",
     "package_name": "apache",
-    "package_type": "package",
-    "package_version": "2.4.62-1",
+    "package_metadata": {
+      "package_version": "2.4.62-1",
+      "package_pretty_name": "Apache HTTP Server",
+      "package_type": "Web Server",
+      "package_description": "Apache HTTP Server"
+    },
     "test_results": [
       {
         "test_name": "test.sh",
@@ -20,8 +24,12 @@
     "os_version": "Linux version 6.10.6-riscv64 (debian-kernel@lists.debian.org) (riscv64-linux-gnu-gcc-13 (Debian 13.3.0-5) 13.3.0, GNU ld (GNU Binutils for Debian) 2.43.1) #1 SMP Debian 6.10.6-1 (2024-08-19)\n",
     "kernel_version": "6.10.6-riscv64\n",
     "package_name": "clang",
-    "package_type": "package",
-    "package_version": "16.0.6 (27+b1)",
+    "package_metadata": {
+      "package_version": "16.0.6 (27+b1)",
+      "package_pretty_name": "Clang C/C++ Compiler",
+      "package_type": "Compiler Toolchain",
+      "package_description": "Clang C/C++ compiler, based on LLVM"
+    },
     "test_results": [
       {
         "test_name": "test.sh",
@@ -36,12 +44,16 @@
     "os_version": "Linux version 6.10.6-riscv64 (debian-kernel@lists.debian.org) (riscv64-linux-gnu-gcc-13 (Debian 13.3.0-5) 13.3.0, GNU ld (GNU Binutils for Debian) 2.43.1) #1 SMP Debian 6.10.6-1 (2024-08-19)\n",
     "kernel_version": "6.10.6-riscv64\n",
     "package_name": "cmake",
-    "package_type": "package",
-    "package_version": "3.30.2",
+    "package_metadata": {
+      "package_version": "3.30.2",
+      "package_pretty_name": "CMake",
+      "package_type": "Build System",
+      "package_description": "Cross-platform make"
+    },
     "test_results": [
       {
         "test_name": "test.sh",
-        "output": "Reading package lists...\nBuilding dependency tree...\nReading state information...\nsudo is already the newest version (1.9.15p5-3+b1).\ncurl is already the newest version (8.9.1-2).\napt-transport-https is already the newest version (2.9.8).\nca-certificates is already the newest version (20240203).\ngnupg is already the newest version (2.2.43-8).\nlsb-release is already the newest version (12.1-1).\nnetcat-openbsd is already the newest version (1.226-1.1).\n0 upgraded, 0 newly installed, 0 to remove and 67 not upgraded.\n-- The C compiler identification is GNU 14.2.0\n-- The CXX compiler identification is GNU 14.2.0\n-- Detecting C compiler ABI info\n-- Detecting C compiler ABI info - done\n-- Check for working C compiler: /usr/bin/cc - skipped\n-- Detecting C compile features\n-- Detecting C compile features - done\n-- Detecting CXX compiler ABI info\n-- Detecting CXX compiler ABI info - done\n-- Check for working CXX compiler: /usr/bin/c++ - skipped\n-- Detecting CXX compile features\n-- Detecting CXX compile features - done\n-- Configuring done (16.5s)\n-- Generating done (0.1s)\n-- Build files have been written to: /tmp/cmake_test_dir\n[ 50%] Building CXX object CMakeFiles/test_app.dir/main.cpp.o\n[100%] Linking CXX executable test_app\n[100%] Built target test_app\n",
+        "output": "Reading package lists...\nBuilding dependency tree...\nReading state information...\nsudo is already the newest version (1.9.15p5-3+b1).\ncurl is already the newest version (8.9.1-2).\napt-transport-https is already the newest version (2.9.8).\nca-certificates is already the newest version (20240203).\ngnupg is already the newest version (2.2.43-8).\nlsb-release is already the newest version (12.1-1).\nnetcat-openbsd is already the newest version (1.226-1.1).\n0 upgraded, 0 newly installed, 0 to remove and 67 not upgraded.\n-- The C compiler identification is GNU 14.2.0\n-- The CXX compiler identification is GNU 14.2.0\n-- Detecting C compiler ABI info\n-- Detecting C compiler ABI info - done\n-- Check for working C compiler: /usr/bin/cc - skipped\n-- Detecting C compile features\n-- Detecting C compile features - done\n-- Detecting CXX compiler ABI info\n-- Detecting CXX compiler ABI info - done\n-- Check for working CXX compiler: /usr/bin/c++ - skipped\n-- Detecting CXX compile features\n-- Detecting CXX compile features - done\n-- Configuring done (18.3s)\n-- Generating done (0.2s)\n-- Build files have been written to: /tmp/cmake_test_dir\n[ 50%] Building CXX object CMakeFiles/test_app.dir/main.cpp.o\n[100%] Linking CXX executable test_app\n[100%] Built target test_app\n",
         "passed": true
       }
     ],
@@ -49,11 +61,15 @@
   },
   {
     "distro": "debian",
-    "os_version": "Linux version 6.10.6-riscv64 (debian-kernel@lists.debian.org) (riscv64-linux-gnu-gcc-13 (Debian 13.3.0-5) 13.3.0, GNU ld (GNU Binutils for Debian) 2.43.1) #1 SMP Debian 6.10.6-1 (2024-08-19)\n",
-    "kernel_version": "6.10.6-riscv64\n",
+    "os_version": "Linux version 6.10.6-riscv64 (debian-kernel@lists.debian.org) (riscv64-linux-gnu-gcc-13 (Debian 13.3.0-5) 13.3.0, GNU ld (GNU Binutils for Debian) 2.43.1) #1 SMP Debian 6.10.6-1 (2024-08-19)",
+    "kernel_version": "6.10.6-riscv64",
     "package_name": "docker",
-    "package_type": "package",
-    "package_version": "5:27.1.1-1~debian.12~bookworm",
+    "package_metadata": {
+      "package_version": "5:27.1.1-1~debian.12~bookworm",
+      "package_pretty_name": "Docker",
+      "package_type": "Containerization Platform",
+      "package_description": "Docker is a platform to develop, ship, and run applications in containers."
+    },
     "test_results": [
       {
         "test_name": "test.sh",
@@ -68,8 +84,12 @@
     "os_version": "Linux version 6.10.6-riscv64 (debian-kernel@lists.debian.org) (riscv64-linux-gnu-gcc-13 (Debian 13.3.0-5) 13.3.0, GNU ld (GNU Binutils for Debian) 2.43.1) #1 SMP Debian 6.10.6-1 (2024-08-19)\n",
     "kernel_version": "6.10.6-riscv64\n",
     "package_name": "erlang",
-    "package_type": "package",
-    "package_version": "1:25.3.2.12+dfsg-1",
+    "package_metadata": {
+      "package_version": "1:25.3.2.12+dfsg-1",
+      "package_pretty_name": "Erlang Programming Language",
+      "package_type": "Programming Language",
+      "package_description": "A programming language used to build massively scalable soft real-time systems with requirements on high availability"
+    },
     "test_results": [
       {
         "test_name": "test.sh",
@@ -84,8 +104,12 @@
     "os_version": "Linux version 6.10.6-riscv64 (debian-kernel@lists.debian.org) (riscv64-linux-gnu-gcc-13 (Debian 13.3.0-5) 13.3.0, GNU ld (GNU Binutils for Debian) 2.43.1) #1 SMP Debian 6.10.6-1 (2024-08-19)\n",
     "kernel_version": "6.10.6-riscv64\n",
     "package_name": "gcc",
-    "package_type": "package",
-    "package_version": "14.2.0",
+    "package_metadata": {
+      "package_version": "14.2.0",
+      "package_pretty_name": "GNU Compiler Collection",
+      "package_type": "Compiler Toolchain",
+      "package_description": "The GNU Compiler Collection"
+    },
     "test_results": [
       {
         "test_name": "run_tests.sh",
@@ -94,7 +118,7 @@
       },
       {
         "test_name": "test.sh",
-        "output": "Reading package lists...\nBuilding dependency tree...\nReading state information...\nsudo is already the newest version (1.9.15p5-3+b1).\ncurl is already the newest version (8.9.1-2).\napt-transport-https is already the newest version (2.9.8).\nca-certificates is already the newest version (20240203).\ngnupg is already the newest version (2.2.43-8).\nlsb-release is already the newest version (12.1-1).\nnetcat-openbsd is already the newest version (1.226-1.1).\n0 upgraded, 0 newly installed, 0 to remove and 67 not upgraded.\nChecking for GCC and dependencies...\nGCC is installed.\nVerifying GCC...\nGCC verification passed.\nsource @./run_tests.sh ./temp/test\n",
+        "output": "Reading package lists...\nBuilding dependency tree...\nReading state information...\nsudo is already the newest version (1.9.15p5-3+b1).\ncurl is already the newest version (8.9.1-2).\napt-transport-https is already the newest version (2.9.8).\nca-certificates is already the newest version (20240203).\ngnupg is already the newest version (2.2.43-8).\nlsb-release is already the newest version (12.1-1).\nnetcat-openbsd is already the newest version (1.226-1.1).\n0 upgraded, 0 newly installed, 0 to remove and 67 not upgraded.\nChecking for GCC and dependencies...\nGCC is installed.\nVerifying GCC...\nGCC verification passed.\n",
         "passed": true
       }
     ],
@@ -105,8 +129,12 @@
     "os_version": "Linux version 6.10.6-riscv64 (debian-kernel@lists.debian.org) (riscv64-linux-gnu-gcc-13 (Debian 13.3.0-5) 13.3.0, GNU ld (GNU Binutils for Debian) 2.43.1) #1 SMP Debian 6.10.6-1 (2024-08-19)\n",
     "kernel_version": "6.10.6-riscv64\n",
     "package_name": "gdb",
-    "package_type": "package",
-    "package_version": "GNU gdb (Debian 15.1-1) 15.1",
+    "package_metadata": {
+      "package_version": "GNU gdb (Debian 15.1-1) 15.1",
+      "package_pretty_name": "GNU Debugger",
+      "package_type": "Debugging Tool",
+      "package_description": "The GNU Debugger"
+    },
     "test_results": [
       {
         "test_name": "test.sh",
@@ -121,8 +149,12 @@
     "os_version": "Linux version 6.10.6-riscv64 (debian-kernel@lists.debian.org) (riscv64-linux-gnu-gcc-13 (Debian 13.3.0-5) 13.3.0, GNU ld (GNU Binutils for Debian) 2.43.1) #1 SMP Debian 6.10.6-1 (2024-08-19)\n",
     "kernel_version": "6.10.6-riscv64\n",
     "package_name": "golang",
-    "package_type": "package",
-    "package_version": "2:1.22~3",
+    "package_metadata": {
+      "package_version": "2:1.22~3",
+      "package_pretty_name": "Go Programming Language",
+      "package_type": "Programming Language",
+      "package_description": "Go programming language compiler, linker, and libraries"
+    },
     "test_results": [
       {
         "test_name": "test.sh",
@@ -137,8 +169,12 @@
     "os_version": "Linux version 6.10.6-riscv64 (debian-kernel@lists.debian.org) (riscv64-linux-gnu-gcc-13 (Debian 13.3.0-5) 13.3.0, GNU ld (GNU Binutils for Debian) 2.43.1) #1 SMP Debian 6.10.6-1 (2024-08-19)\n",
     "kernel_version": "6.10.6-riscv64\n",
     "package_name": "haproxy",
-    "package_type": "package",
-    "package_version": "2.9.9-1",
+    "package_metadata": {
+      "package_version": "2.9.9-1",
+      "package_pretty_name": "HAProxy",
+      "package_type": "Load Balancer",
+      "package_description": "Reliable, high performance TCP/HTTP load balancer"
+    },
     "test_results": [
       {
         "test_name": "test.sh",
@@ -153,8 +189,12 @@
     "os_version": "Linux version 6.10.6-riscv64 (debian-kernel@lists.debian.org) (riscv64-linux-gnu-gcc-13 (Debian 13.3.0-5) 13.3.0, GNU ld (GNU Binutils for Debian) 2.43.1) #1 SMP Debian 6.10.6-1 (2024-08-19)\n",
     "kernel_version": "6.10.6-riscv64\n",
     "package_name": "libmemcached",
-    "package_type": "package",
-    "package_version": "1.1.4-1.1+b1",
+    "package_metadata": {
+      "package_version": "1.1.4-1.1+b1",
+      "package_pretty_name": "libmemcached",
+      "package_type": "Caching Library",
+      "package_description": "Client library to memcached servers (transitional package)"
+    },
     "test_results": [
       {
         "test_name": "test.sh",
@@ -169,8 +209,12 @@
     "os_version": "Linux version 6.10.6-riscv64 (debian-kernel@lists.debian.org) (riscv64-linux-gnu-gcc-13 (Debian 13.3.0-5) 13.3.0, GNU ld (GNU Binutils for Debian) 2.43.1) #1 SMP Debian 6.10.6-1 (2024-08-19)\n",
     "kernel_version": "6.10.6-riscv64\n",
     "package_name": "lighttpd",
-    "package_type": "package",
-    "package_version": "1.4.76-1",
+    "package_metadata": {
+      "package_version": "1.4.76-1",
+      "package_pretty_name": "Lighttpd",
+      "package_type": "Web Server",
+      "package_description": "Lighttpd - a secure, fast, compliant and very flexible web server"
+    },
     "test_results": [
       {
         "test_name": "test.sh",
@@ -185,8 +229,12 @@
     "os_version": "Linux version 6.10.6-riscv64 (debian-kernel@lists.debian.org) (riscv64-linux-gnu-gcc-13 (Debian 13.3.0-5) 13.3.0, GNU ld (GNU Binutils for Debian) 2.43.1) #1 SMP Debian 6.10.6-1 (2024-08-19)\n",
     "kernel_version": "6.10.6-riscv64\n",
     "package_name": "llvm",
-    "package_type": "package",
-    "package_version": "1:16.0.6-27+b1",
+    "package_metadata": {
+      "package_version": "1:16.0.6-27+b1",
+      "package_pretty_name": "LLVM Compiler Infrastructure",
+      "package_type": "Compiler Toolchain",
+      "package_description": "The LLVM Compiler Infrastructure"
+    },
     "test_results": [
       {
         "test_name": "test.sh",
@@ -201,8 +249,12 @@
     "os_version": "Linux version 6.10.6-riscv64 (debian-kernel@lists.debian.org) (riscv64-linux-gnu-gcc-13 (Debian 13.3.0-5) 13.3.0, GNU ld (GNU Binutils for Debian) 2.43.1) #1 SMP Debian 6.10.6-1 (2024-08-19)\n",
     "kernel_version": "6.10.6-riscv64\n",
     "package_name": "mariadb",
-    "package_type": "package",
-    "package_version": "1:11.4.3-1",
+    "package_metadata": {
+      "package_version": "1:11.4.3-1",
+      "package_pretty_name": "MariaDB database server",
+      "package_type": "Database",
+      "package_description": "MariaDB database server binaries"
+    },
     "test_results": [
       {
         "test_name": "test.sh",
@@ -217,8 +269,12 @@
     "os_version": "Linux version 6.10.6-riscv64 (debian-kernel@lists.debian.org) (riscv64-linux-gnu-gcc-13 (Debian 13.3.0-5) 13.3.0, GNU ld (GNU Binutils for Debian) 2.43.1) #1 SMP Debian 6.10.6-1 (2024-08-19)\n",
     "kernel_version": "6.10.6-riscv64\n",
     "package_name": "nginx",
-    "package_type": "package",
-    "package_version": "1.26.0-2",
+    "package_metadata": {
+      "package_version": "1.26.0-2",
+      "package_pretty_name": "Nginx",
+      "package_type": "Web Server",
+      "package_description": "high-performance web server and a reverse proxy server"
+    },
     "test_results": [
       {
         "test_name": "test.sh",
@@ -233,12 +289,16 @@
     "os_version": "Linux version 6.10.6-riscv64 (debian-kernel@lists.debian.org) (riscv64-linux-gnu-gcc-13 (Debian 13.3.0-5) 13.3.0, GNU ld (GNU Binutils for Debian) 2.43.1) #1 SMP Debian 6.10.6-1 (2024-08-19)\n",
     "kernel_version": "6.10.6-riscv64\n",
     "package_name": "nodejs",
-    "package_type": "package",
-    "package_version": "20.16.0+dfsg-1",
+    "package_metadata": {
+      "package_version": "20.16.0+dfsg-1",
+      "package_pretty_name": "Node.js",
+      "package_type": "Javascript Runtime",
+      "package_description": "Evented I/O for V8 JavaScript - runtime executable"
+    },
     "test_results": [
       {
         "test_name": "test.sh",
-        "output": "Reading package lists...\nBuilding dependency tree...\nReading state information...\nsudo is already the newest version (1.9.15p5-3+b1).\ncurl is already the newest version (8.9.1-2).\napt-transport-https is already the newest version (2.9.8).\nca-certificates is already the newest version (20240203).\ngnupg is already the newest version (2.2.43-8).\nlsb-release is already the newest version (12.1-1).\nnetcat-openbsd is already the newest version (1.226-1.1).\n0 upgraded, 0 newly installed, 0 to remove and 67 not upgraded.\nPackage nodejs is installed.\nTemp dir: /tmp/tmp.ynq6RnVVIY\nNode.js is functioning correctly.\nNode.js is functioning correctly.\n",
+        "output": "Reading package lists...\nBuilding dependency tree...\nReading state information...\nsudo is already the newest version (1.9.15p5-3+b1).\ncurl is already the newest version (8.9.1-2).\napt-transport-https is already the newest version (2.9.8).\nca-certificates is already the newest version (20240203).\ngnupg is already the newest version (2.2.43-8).\nlsb-release is already the newest version (12.1-1).\nnetcat-openbsd is already the newest version (1.226-1.1).\n0 upgraded, 0 newly installed, 0 to remove and 67 not upgraded.\nPackage nodejs is installed.\nTemp dir: /tmp/tmp.mErdfK5Ibb\nNode.js is functioning correctly.\nNode.js is functioning correctly.\n",
         "passed": true
       }
     ],
@@ -249,8 +309,12 @@
     "os_version": "Linux version 6.10.6-riscv64 (debian-kernel@lists.debian.org) (riscv64-linux-gnu-gcc-13 (Debian 13.3.0-5) 13.3.0, GNU ld (GNU Binutils for Debian) 2.43.1) #1 SMP Debian 6.10.6-1 (2024-08-19)\n",
     "kernel_version": "6.10.6-riscv64\n",
     "package_name": "numpy",
-    "package_type": "package",
-    "package_version": "",
+    "package_metadata": {
+      "package_version": "Python 3.12.5 (1.26.4)",
+      "package_pretty_name": "NumPy",
+      "package_type": "Python Library",
+      "package_description": "Numerical Python adds a fast array facility to the Python language"
+    },
     "test_results": [
       {
         "test_name": "test.sh",
@@ -265,8 +329,12 @@
     "os_version": "Linux version 6.10.6-riscv64 (debian-kernel@lists.debian.org) (riscv64-linux-gnu-gcc-13 (Debian 13.3.0-5) 13.3.0, GNU ld (GNU Binutils for Debian) 2.43.1) #1 SMP Debian 6.10.6-1 (2024-08-19)\n",
     "kernel_version": "6.10.6-riscv64\n",
     "package_name": "ocaml",
-    "package_type": "package",
-    "package_version": "5.0.1-3+b3",
+    "package_metadata": {
+      "package_version": "5.0.1-3+b3",
+      "package_pretty_name": "Objective Caml",
+      "package_type": "Programming Language",
+      "package_description": "The Objective Caml compiler"
+    },
     "test_results": [
       {
         "test_name": "test.sh",
@@ -281,8 +349,12 @@
     "os_version": "Linux version 6.10.6-riscv64 (debian-kernel@lists.debian.org) (riscv64-linux-gnu-gcc-13 (Debian 13.3.0-5) 13.3.0, GNU ld (GNU Binutils for Debian) 2.43.1) #1 SMP Debian 6.10.6-1 (2024-08-19)\n",
     "kernel_version": "6.10.6-riscv64\n",
     "package_name": "openjdk",
-    "package_type": "package",
-    "package_version": "11.0.24",
+    "package_metadata": {
+      "package_version": "11.0.24",
+      "package_pretty_name": "OpenJDK Development Kit (JDK)",
+      "package_type": "Java Development Kit",
+      "package_description": "OpenJDK Development Kit (JDK)"
+    },
     "test_results": [
       {
         "test_name": "test.sh",
@@ -297,8 +369,12 @@
     "os_version": "Linux version 6.10.6-riscv64 (debian-kernel@lists.debian.org) (riscv64-linux-gnu-gcc-13 (Debian 13.3.0-5) 13.3.0, GNU ld (GNU Binutils for Debian) 2.43.1) #1 SMP Debian 6.10.6-1 (2024-08-19)\n",
     "kernel_version": "6.10.6-riscv64\n",
     "package_name": "perl",
-    "package_type": "package",
-    "package_version": "5.38.2",
+    "package_metadata": {
+      "package_version": "5.38.2",
+      "package_pretty_name": "Perl",
+      "package_type": "Programming Language",
+      "package_description": "Larry Wall's Practical Extraction and Report Language"
+    },
     "test_results": [
       {
         "test_name": "test.sh",
@@ -313,8 +389,12 @@
     "os_version": "Linux version 6.10.6-riscv64 (debian-kernel@lists.debian.org) (riscv64-linux-gnu-gcc-13 (Debian 13.3.0-5) 13.3.0, GNU ld (GNU Binutils for Debian) 2.43.1) #1 SMP Debian 6.10.6-1 (2024-08-19)\n",
     "kernel_version": "6.10.6-riscv64\n",
     "package_name": "python",
-    "package_type": "package",
-    "package_version": "3.12.5",
+    "package_metadata": {
+      "package_version": "3.12.5",
+      "package_pretty_name": "Python 3",
+      "package_type": "Programming Language",
+      "package_description": "Interactive high-level object-oriented language (default python3 version)"
+    },
     "test_results": [
       {
         "test_name": "test.sh",
@@ -329,8 +409,12 @@
     "os_version": "Linux version 6.10.6-riscv64 (debian-kernel@lists.debian.org) (riscv64-linux-gnu-gcc-13 (Debian 13.3.0-5) 13.3.0, GNU ld (GNU Binutils for Debian) 2.43.1) #1 SMP Debian 6.10.6-1 (2024-08-19)\n",
     "kernel_version": "6.10.6-riscv64\n",
     "package_name": "ruby",
-    "package_type": "package",
-    "package_version": "3.1.2p20",
+    "package_metadata": {
+      "package_version": "3.1.2p20",
+      "package_pretty_name": "Ruby",
+      "package_type": "Programming Language",
+      "package_description": "Interpreter of object-oriented scripting language Ruby"
+    },
     "test_results": [
       {
         "test_name": "test.sh",
@@ -345,12 +429,16 @@
     "os_version": "Linux version 6.10.6-riscv64 (debian-kernel@lists.debian.org) (riscv64-linux-gnu-gcc-13 (Debian 13.3.0-5) 13.3.0, GNU ld (GNU Binutils for Debian) 2.43.1) #1 SMP Debian 6.10.6-1 (2024-08-19)\n",
     "kernel_version": "6.10.6-riscv64\n",
     "package_name": "rust",
-    "package_type": "package",
-    "package_version": "1.80.1 (1.80.1)",
+    "package_metadata": {
+      "package_version": "1.80.1",
+      "package_pretty_name": "Rust",
+      "package_type": "Programming Language",
+      "package_description": "Rust compiler"
+    },
     "test_results": [
       {
         "test_name": "test.sh",
-        "output": "Reading package lists...\nBuilding dependency tree...\nReading state information...\nsudo is already the newest version (1.9.15p5-3+b1).\ncurl is already the newest version (8.9.1-2).\napt-transport-https is already the newest version (2.9.8).\nca-certificates is already the newest version (20240203).\ngnupg is already the newest version (2.2.43-8).\nlsb-release is already the newest version (12.1-1).\nnetcat-openbsd is already the newest version (1.226-1.1).\n0 upgraded, 0 newly installed, 0 to remove and 67 not upgraded.\n[2024-09-19 16:57:09] Current directory: /tmp/lintestor/debian/rust\n[2024-09-19 16:57:09] Created temporary directory: /tmp/tmp.fg3aMuycDW\n[2024-09-19 16:57:09] Starting Rust test script...\n[2024-09-19 16:57:10] Checking system prerequisites...\n[2024-09-19 16:57:10] System prerequisites check passed.\n[2024-09-19 16:57:10] Rust is installed.\n[2024-09-19 16:57:14] Created temporary directory: /tmp/tmp.ODvVMqMtKa\n[2024-09-19 16:57:14] Creating a new Rust project...\n[2024-09-19 16:57:18] Building the Rust project...\n[2024-09-19 16:57:34] Running the Rust project...\n[2024-09-19 16:57:36] Project output:     Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.61s\n     Running `target/debug/hello_world`\nHello, world!\n[2024-09-19 16:57:36] Cleaned up temporary directory.\n[2024-09-19 16:57:36] Cleaned up temporary directory.\n[2024-09-19 16:57:37] Changed back to original directory: /tmp/lintestor/debian/rust\n[2024-09-19 16:57:37] Rust test passed successfully.\n[2024-09-19 16:57:37] Rust is functioning correctly.\n",
+        "output": "Reading package lists...\nBuilding dependency tree...\nReading state information...\nsudo is already the newest version (1.9.15p5-3+b1).\ncurl is already the newest version (8.9.1-2).\napt-transport-https is already the newest version (2.9.8).\nca-certificates is already the newest version (20240203).\ngnupg is already the newest version (2.2.43-8).\nlsb-release is already the newest version (12.1-1).\nnetcat-openbsd is already the newest version (1.226-1.1).\n0 upgraded, 0 newly installed, 0 to remove and 67 not upgraded.\n[2024-09-22 21:35:35] Current directory: /tmp/lintestor/debian/rust\n[2024-09-22 21:35:36] Created temporary directory: /tmp/tmp.j6yYXb4y64\n[2024-09-22 21:35:36] Starting Rust test script...\n[2024-09-22 21:35:36] Checking system prerequisites...\n[2024-09-22 21:35:36] System prerequisites check passed.\n[2024-09-22 21:35:36] Rust is installed.\n[2024-09-22 21:35:41] Created temporary directory: /tmp/tmp.lI46Qd3gUm\n[2024-09-22 21:35:41] Creating a new Rust project...\n[2024-09-22 21:35:45] Building the Rust project...\n[2024-09-22 21:36:01] Running the Rust project...\n[2024-09-22 21:36:03] Project output:     Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.60s\n     Running `target/debug/hello_world`\nHello, world!\n[2024-09-22 21:36:03] Cleaned up temporary directory.\n[2024-09-22 21:36:03] Cleaned up temporary directory.\n[2024-09-22 21:36:03] Changed back to original directory: /tmp/lintestor/debian/rust\n[2024-09-22 21:36:03] Rust test passed successfully.\n[2024-09-22 21:36:03] Rust is functioning correctly.\n",
         "passed": true
       }
     ],
@@ -361,12 +449,16 @@
     "os_version": "Linux version 6.10.6-riscv64 (debian-kernel@lists.debian.org) (riscv64-linux-gnu-gcc-13 (Debian 13.3.0-5) 13.3.0, GNU ld (GNU Binutils for Debian) 2.43.1) #1 SMP Debian 6.10.6-1 (2024-08-19)\n",
     "kernel_version": "6.10.6-riscv64\n",
     "package_name": "sqlite",
-    "package_type": "package",
-    "package_version": "3.46.1",
+    "package_metadata": {
+      "package_version": "3.46.1",
+      "package_pretty_name": "SQLite 3",
+      "package_type": "Database",
+      "package_description": "Command-line interface for SQLite 3"
+    },
     "test_results": [
       {
         "test_name": "test.sh",
-        "output": "Reading package lists...\nBuilding dependency tree...\nReading state information...\nsudo is already the newest version (1.9.15p5-3+b1).\ncurl is already the newest version (8.9.1-2).\napt-transport-https is already the newest version (2.9.8).\nca-certificates is already the newest version (20240203).\ngnupg is already the newest version (2.2.43-8).\nlsb-release is already the newest version (12.1-1).\nnetcat-openbsd is already the newest version (1.226-1.1).\n0 upgraded, 0 newly installed, 0 to remove and 67 not upgraded.\n[2024-09-19 16:57:50] Current directory: /tmp/lintestor/debian/sqlite\n[2024-09-19 16:57:50] Created temporary directory: /tmp/tmp.buKQL3UhRn\n[2024-09-19 16:57:50] Starting SQLite test script...\n[2024-09-19 16:57:50] Checking system prerequisites...\n[2024-09-19 16:57:50] System prerequisites check passed.\n[2024-09-19 16:57:50] SQLite is installed.\n[2024-09-19 16:57:50] Cleaned up temporary directory.\n[2024-09-19 16:57:50] Creating test database...\n1|Alice\n2|Bob\n[2024-09-19 16:57:51] Querying test database...\n[2024-09-19 16:57:51] Database output:\n[2024-09-19 16:57:51] 1|Alice\n2|Bob\n[2024-09-19 16:57:51] SQLite test passed successfully.\n[2024-09-19 16:57:51] SQLite is functioning correctly.\n",
+        "output": "Reading package lists...\nBuilding dependency tree...\nReading state information...\nsudo is already the newest version (1.9.15p5-3+b1).\ncurl is already the newest version (8.9.1-2).\napt-transport-https is already the newest version (2.9.8).\nca-certificates is already the newest version (20240203).\ngnupg is already the newest version (2.2.43-8).\nlsb-release is already the newest version (12.1-1).\nnetcat-openbsd is already the newest version (1.226-1.1).\n0 upgraded, 0 newly installed, 0 to remove and 67 not upgraded.\n[2024-09-22 21:36:19] Current directory: /tmp/lintestor/debian/sqlite\n[2024-09-22 21:36:19] Created temporary directory: /tmp/tmp.IVxHXY09Qg\n[2024-09-22 21:36:19] Starting SQLite test script...\n[2024-09-22 21:36:19] Checking system prerequisites...\n[2024-09-22 21:36:19] System prerequisites check passed.\n[2024-09-22 21:36:19] SQLite is installed.\n[2024-09-22 21:36:20] Cleaned up temporary directory.\n[2024-09-22 21:36:20] Creating test database...\n1|Alice\n2|Bob\n[2024-09-22 21:36:20] Querying test database...\n[2024-09-22 21:36:20] Database output:\n[2024-09-22 21:36:20] 1|Alice\n2|Bob\n[2024-09-22 21:36:20] SQLite test passed successfully.\n[2024-09-22 21:36:20] SQLite is functioning correctly.\n",
         "passed": true
       }
     ],
@@ -377,12 +469,16 @@
     "os_version": "Linux version 6.10.6-riscv64 (debian-kernel@lists.debian.org) (riscv64-linux-gnu-gcc-13 (Debian 13.3.0-5) 13.3.0, GNU ld (GNU Binutils for Debian) 2.43.1) #1 SMP Debian 6.10.6-1 (2024-08-19)\n",
     "kernel_version": "6.10.6-riscv64\n",
     "package_name": "varnish",
-    "package_type": "package",
-    "package_version": "7.5.0",
+    "package_metadata": {
+      "package_version": "7.5.0",
+      "package_pretty_name": "Varnish Cache",
+      "package_type": "Caching Server",
+      "package_description": "High-performance HTTP accelerator"
+    },
     "test_results": [
       {
         "test_name": "test.sh",
-        "output": "Reading package lists...\nBuilding dependency tree...\nReading state information...\nsudo is already the newest version (1.9.15p5-3+b1).\ncurl is already the newest version (8.9.1-2).\napt-transport-https is already the newest version (2.9.8).\nca-certificates is already the newest version (20240203).\ngnupg is already the newest version (2.2.43-8).\nlsb-release is already the newest version (12.1-1).\nnetcat-openbsd is already the newest version (1.226-1.1).\n0 upgraded, 0 newly installed, 0 to remove and 67 not upgraded.\n[2024-09-19 16:58:04] Current directory: /tmp/lintestor/debian/varnish\n[2024-09-19 16:58:04] Created temporary directory: /tmp/tmp.NjANguuWb5\n[2024-09-19 16:58:04] Starting Varnish test script...\n[2024-09-19 16:58:04] Checking system prerequisites...\n[2024-09-19 16:58:04] System prerequisites check passed.\n[2024-09-19 16:58:04] Varnish is installed. Path: /usr/sbin/varnishd\n[2024-09-19 16:58:04] Verifying Varnish installation again...\n[2024-09-19 16:58:04] Varnish is installed. Path: /usr/sbin/varnishd\n[2024-09-19 16:58:05] Starting Varnish service...\n[2024-09-19 16:58:05] Checking Varnish service status...\n[2024-09-19 16:58:05] Testing Varnish configuration...\n[2024-09-19 16:58:17] Checking Varnish stats...\nMGT.uptime                 477         1.00 Management process uptime\nMGT.child_start              1         0.00 Child process started\nMGT.child_exit               0         0.00 Child process normal exit\nMGT.child_stop               0         0.00 Child process unexpected exit\nMGT.child_died               0         0.00 Child process died (signal)\nMGT.child_dump               0         0.00 Child process core dumped\nMGT.child_panic              0         0.00 Child process panic\nMAIN.summs                   0         0.00 stat summ operations\nMAIN.uptime                478         1.00 Child process uptime\nMAIN.sess_conn               0         0.00 Sessions accepted\nMAIN.sess_fail               0         0.00 Session accept failures\nMAIN.sess_fail_econnaborted            0         0.00 Session accept failures: connection aborted\nMAIN.sess_fail_eintr                   0         0.00 Session accept failures: interrupted system call\nMAIN.sess_fail_emfile                  0         0.00 Session accept failures: too many open files\nMAIN.sess_fail_ebadf                   0         0.00 Session accept failures: bad file descriptor\nMAIN.sess_fail_enomem                  0         0.00 Session accept failures: not enough memory\nMAIN.sess_fail_other                   0         0.00 Session accept failures: other\nMAIN.client_req_400                    0         0.00 Client requests received, subject to 400 errors\nMAIN.client_req_417                    0         0.00 Client requests received, subject to 417 errors\nMAIN.client_req                        0         0.00 Good client requests received\nMAIN.esi_req                           0         0.00 ESI subrequests\nMAIN.cache_hit                         0         0.00 Cache hits\nMAIN.cache_hit_grace                   0         0.00 Cache grace hits\nMAIN.cache_hitpass                     0         0.00 Cache hits for pass.\nMAIN.cache_hitmiss                     0         0.00 Cache hits for miss.\nMAIN.cache_miss                        0         0.00 Cache misses\nMAIN.beresp_uncacheable                0         0.00 Uncacheable backend responses\nMAIN.beresp_shortlived                 0         0.00 Shortlived objects\nMAIN.backend_conn                      0         0.00 Backend conn. success\nMAIN.backend_unhealthy                 0         0.00 Backend conn. not attempted\nMAIN.backend_busy                      0         0.00 Backend conn. too many\nMAIN.backend_fail                      0         0.00 Backend conn. failures\nMAIN.backend_reuse                     0         0.00 Backend conn. reuses\nMAIN.backend_recycle                   0         0.00 Backend conn. recycles\nMAIN.backend_retry                     0         0.00 Backend conn. retry\nMAIN.fetch_head                        0         0.00 Fetch no body (HEAD)\nMAIN.fetch_length                      0         0.00 Fetch with Length\nMAIN.fetch_chunked                     0         0.00 Fetch chunked\nMAIN.fetch_eof                         0         0.00 Fetch EOF\nMAIN.fetch_bad                         0         0.00 Fetch bad T-E\nMAIN.fetch_none                        0         0.00 Fetch no body\nMAIN.fetch_1xx                         0         0.00 Fetch no body (1xx)\nMAIN.fetch_204                         0         0.00 Fetch no body (204)\nMAIN.fetch_304                         0         0.00 Fetch no body (304)\nMAIN.fetch_failed                      0         0.00 Fetch failed (all causes)\nMAIN.bgfetch_no_thread                 0         0.00 Background fetch failed (no thread)\nMAIN.pools                             2          .   Number of thread pools\nMAIN.threads                         200          .   Total number of threads\nMAIN.threads_limited                   0         0.00 Threads hit max\nMAIN.threads_created                 200         0.42 Threads created\nMAIN.threads_destroyed                 0         0.00 Threads destroyed\nMAIN.threads_failed                    0         0.00 Thread creation failed\nMAIN.thread_queue_len                  0          .   Length of session queue\nMAIN.busy_sleep                        0         0.00 Number of requests sent to sleep on busy objhdr\nMAIN.busy_wakeup                       0         0.00 Number of requests woken after sleep on busy objhdr\nMAIN.busy_killed                       0         0.00 Number of requests killed after sleep on busy objhdr\nMAIN.sess_queued                       0         0.00 Sessions queued for thread\nMAIN.sess_dropped                      0         0.00 Sessions dropped for thread\nMAIN.req_dropped                       0         0.00 Requests dropped\nMAIN.req_reset                         0         0.00 Requests reset\nMAIN.n_object                          0          .   object structs made\nMAIN.n_vampireobject                   0          .   unresurrected objects\nMAIN.n_objectcore                      0          .   objectcore structs made\nMAIN.n_objecthead                      0          .   objecthead structs made\nMAIN.n_backend                         1          .   Number of backends\nMAIN.n_expired                         0         0.00 Number of expired objects\nMAIN.n_superseded                      0         0.00 Number of superseded objects\nMAIN.n_lru_nuked                       0         0.00 Number of LRU nuked objects\nMAIN.n_lru_moved                       0         0.00 Number of LRU moved objects\nMAIN.n_lru_limited                     0         0.00 Reached nuke_limit\nMAIN.losthdr                           0         0.00 HTTP header overflows\nMAIN.s_sess                            0         0.00 Total sessions seen\nMAIN.n_pipe                            0          .   Number of ongoing pipe sessions\nMAIN.pipe_limited                      0         0.00 Pipes hit pipe_sess_max\nMAIN.s_pipe                            0         0.00 Total pipe sessions seen\nMAIN.s_pass                            0         0.00 Total pass-ed requests seen\nMAIN.s_fetch                           0         0.00 Total backend fetches initiated\nMAIN.s_bgfetch                         0         0.00 Total backend background fetches initiated\nMAIN.s_synth                           0         0.00 Total synthetic responses made\nMAIN.s_req_hdrbytes                    0         0.00 Request header bytes\nMAIN.s_req_bodybytes                   0         0.00 Request body bytes\nMAIN.s_resp_hdrbytes                   0         0.00 Response header bytes\nMAIN.s_resp_bodybytes                  0         0.00 Response body bytes\nMAIN.s_pipe_hdrbytes                   0         0.00 Pipe request header bytes\nMAIN.s_pipe_in                         0         0.00 Piped bytes from client\nMAIN.s_pipe_out                        0         0.00 Piped bytes to client\nMAIN.sess_closed                       0         0.00 Session Closed\nMAIN.sess_closed_err                   0         0.00 Session Closed with error\nMAIN.sess_readahead                    0         0.00 Session Read Ahead\nMAIN.sess_herd                         0         0.00 Session herd\nMAIN.sc_rem_close                      0         0.00 Session OK  REM_CLOSE\nMAIN.sc_req_close                      0         0.00 Session OK  REQ_CLOSE\nMAIN.sc_req_http10                     0         0.00 Session Err REQ_HTTP10\nMAIN.sc_rx_bad                         0         0.00 Session Err RX_BAD\nMAIN.sc_rx_body                        0         0.00 Session Err RX_BODY\nMAIN.sc_rx_junk                        0         0.00 Session Err RX_JUNK\nMAIN.sc_rx_overflow                    0         0.00 Session Err RX_OVERFLOW\nMAIN.sc_rx_timeout                     0         0.00 Session Err RX_TIMEOUT\nMAIN.sc_rx_close_idle                  0         0.00 Session Err RX_CLOSE_IDLE\nMAIN.sc_tx_pipe                        0         0.00 Session OK  TX_PIPE\nMAIN.sc_tx_error                       0         0.00 Session Err TX_ERROR\nMAIN.sc_tx_eof                         0         0.00 Session OK  TX_EOF\nMAIN.sc_resp_close                     0         0.00 Session OK  RESP_CLOSE\nMAIN.sc_overload                       0         0.00 Session Err OVERLOAD\nMAIN.sc_pipe_overflow                  0         0.00 Session Err PIPE_OVERFLOW\nMAIN.sc_range_short                    0         0.00 Session Err RANGE_SHORT\nMAIN.sc_req_http20                     0         0.00 Session Err REQ_HTTP20\nMAIN.sc_vcl_failure                    0         0.00 Session Err VCL_FAILURE\nMAIN.sc_rapid_reset                    0         0.00 Session Err RAPID_RESET\nMAIN.sc_bankrupt                       0         0.00 Session Err BANKRUPT\nMAIN.client_resp_500                   0         0.00 Delivery failed due to insufficient workspace.\nMAIN.ws_backend_overflow               0         0.00 workspace_backend overflows\nMAIN.ws_client_overflow                0         0.00 workspace_client overflows\nMAIN.ws_thread_overflow                0         0.00 workspace_thread overflows\nMAIN.ws_session_overflow               0         0.00 workspace_session overflows\nMAIN.shm_records                     324         0.68 SHM records\nMAIN.shm_writes                      324         0.68 SHM writes\nMAIN.shm_flushes                       0         0.00 SHM flushes due to overflow\nMAIN.shm_cont                          0         0.00 SHM lock contention\nMAIN.shm_cycles                        0         0.00 SHM cycles through VSL space\nMAIN.shm_bytes                     10428        21.82 SHM bytes\nMAIN.backend_req                       0         0.00 Backend requests made\nMAIN.n_vcl                             1          .   Number of loaded VCLs in total\nMAIN.n_vcl_avail                       1          .   Number of VCLs available\nMAIN.n_vcl_discard                     0          .   Number of discarded VCLs\nMAIN.vcl_fail                          0         0.00 VCL failures\nMAIN.bans                              1          .   Count of bans\nMAIN.bans_completed                    1          .   Number of bans marked 'completed'\nMAIN.bans_obj                          0          .   Number of bans using obj.*\nMAIN.bans_req                          0          .   Number of bans using req.*\nMAIN.bans_added                        1         0.00 Bans added\nMAIN.bans_deleted                      0         0.00 Bans deleted\nMAIN.bans_tested                       0         0.00 Bans tested against objects (lookup)\nMAIN.bans_obj_killed                   0         0.00 Objects killed by bans (lookup)\nMAIN.bans_lurker_tested                0         0.00 Bans tested against objects (lurker)\nMAIN.bans_tests_tested                 0         0.00 Ban tests tested against objects (lookup)\nMAIN.bans_lurker_tests_tested            0         0.00 Ban tests tested against objects (lurker)\nMAIN.bans_lurker_obj_killed              0         0.00 Objects killed by bans (lurker)\nMAIN.bans_lurker_obj_killed_cutoff            0         0.00 Objects killed by bans for cutoff (lurker)\nMAIN.bans_dups                                0         0.00 Bans superseded by other bans\nMAIN.bans_lurker_contention                   0         0.00 Lurker gave way for lookup\nMAIN.bans_persisted_bytes                    16          .   Bytes used by the persisted ban lists\nMAIN.bans_persisted_fragmentation             0          .   Extra bytes in persisted ban lists due to fragmentation\nMAIN.n_purges                                 0         0.00 Number of purge operations executed\nMAIN.n_obj_purged                             0         0.00 Number of purged objects\nMAIN.exp_mailed                               0         0.00 Number of objects mailed to expiry thread\nMAIN.exp_received                             0         0.00 Number of objects received by expiry thread\nMAIN.hcb_nolock                               0         0.00 HCB Lookups without lock\nMAIN.hcb_lock                                 0         0.00 HCB Lookups with lock\nMAIN.hcb_insert                               0         0.00 HCB Inserts\nMAIN.esi_errors                               0         0.00 ESI parse errors (unlock)\nMAIN.esi_warnings                             0         0.00 ESI parse warnings (unlock)\nMAIN.vmods                                    0          .   Loaded VMODs\nMAIN.n_gzip                                   0         0.00 Gzip operations\nMAIN.n_gunzip                                 0         0.00 Gunzip operations\nMAIN.n_test_gunzip                            0         0.00 Test gunzip operations\nMAIN.http1_iovs_flush                         0         0.00 Premature iovec flushes\nLCK.ban.creat                                 1         0.00 Created locks\nLCK.ban.destroy                               0         0.00 Destroyed locks\nLCK.ban.locks                                26         0.05 Lock Operations\nLCK.ban.dbg_busy                              0         0.00 Contended lock operations\nLCK.ban.dbg_try_fail                          0         0.00 Contended trylock operations\nLCK.busyobj.creat                             0         0.00 Created locks\nLCK.busyobj.destroy                           0         0.00 Destroyed locks\nLCK.busyobj.locks                             0         0.00 Lock Operations\nLCK.busyobj.dbg_busy                          0         0.00 Contended lock operations\nLCK.busyobj.dbg_try_fail                      0         0.00 Contended trylock operations\nLCK.cli.creat                                 1         0.00 Created locks\nLCK.cli.destroy                               0         0.00 Destroyed locks\nLCK.cli.locks                               172         0.36 Lock Operations\nLCK.cli.dbg_busy                              0         0.00 Contended lock operations\nLCK.cli.dbg_try_fail                          0         0.00 Contended trylock operations\nLCK.director.creat                            1         0.00 Created locks\nLCK.director.destroy                          0         0.00 Destroyed locks\nLCK.director.locks                            0         0.00 Lock Operations\nLCK.director.dbg_busy                         0         0.00 Contended lock operations\nLCK.director.dbg_try_fail                     0         0.00 Contended trylock operations\nLCK.exp.creat                                 1         0.00 Created locks\nLCK.exp.destroy                               0         0.00 Destroyed locks\nLCK.exp.locks                               154         0.32 Lock Operations\nLCK.exp.dbg_busy                              0         0.00 Contended lock operations\nLCK.exp.dbg_try_fail                          0         0.00 Contended trylock operations\nLCK.hcb.creat                                 1         0.00 Created locks\nLCK.hcb.destroy                               0         0.00 Destroyed locks\nLCK.hcb.locks                                 3         0.01 Lock Operations\nLCK.hcb.dbg_busy                              0         0.00 Contended lock operations\nLCK.hcb.dbg_try_fail                          0         0.00 Contended trylock operations\nLCK.lru.creat                                 2         0.00 Created locks\nLCK.lru.destroy                               0         0.00 Destroyed locks\nLCK.lru.locks                                 0         0.00 Lock Operations\nLCK.lru.dbg_busy                              0         0.00 Contended lock operations\nLCK.lru.dbg_try_fail                          0         0.00 Contended trylock operations\nLCK.mempool.creat                             5         0.01 Created locks\nLCK.mempool.destroy                           0         0.00 Destroyed locks\nLCK.mempool.locks                          2166         4.53 Lock Operations\nLCK.mempool.dbg_busy                          0         0.00 Contended lock operations\nLCK.mempool.dbg_try_fail                      0         0.00 Contended trylock operations\nLCK.objhdr.creat                              1         0.00 Created locks\nLCK.objhdr.destroy                            0         0.00 Destroyed locks\nLCK.objhdr.locks                              0         0.00 Lock Operations\nLCK.objhdr.dbg_busy                           0         0.00 Contended lock operations\nLCK.objhdr.dbg_try_fail                       0         0.00 Contended trylock operations\nLCK.perpool.creat                             2         0.00 Created locks\nLCK.perpool.destroy                           0         0.00 Destroyed locks\nLCK.perpool.locks                           208         0.44 Lock Operations\nLCK.perpool.dbg_busy                          0         0.00 Contended lock operations\nLCK.perpool.dbg_try_fail                      0         0.00 Contended trylock operations\nLCK.pipestat.creat                            1         0.00 Created locks\nLCK.pipestat.destroy                          0         0.00 Destroyed locks\nLCK.pipestat.locks                            0         0.00 Lock Operations\nLCK.pipestat.dbg_busy                         0         0.00 Contended lock operations\nLCK.pipestat.dbg_try_fail                     0         0.00 Contended trylock operations\nLCK.probe.creat                               1         0.00 Created locks\nLCK.probe.destroy                             0         0.00 Destroyed locks\nLCK.probe.locks                               1         0.00 Lock Operations\nLCK.probe.dbg_busy                            0         0.00 Contended lock operations\nLCK.probe.dbg_try_fail                        0         0.00 Contended trylock operations\nLCK.sess.creat                                0         0.00 Created locks\nLCK.sess.destroy                              0         0.00 Destroyed locks\nLCK.sess.locks                                0         0.00 Lock Operations\nLCK.sess.dbg_busy                             0         0.00 Contended lock operations\nLCK.sess.dbg_try_fail                         0         0.00 Contended trylock operations\nLCK.conn_pool.creat                           2         0.00 Created locks\nLCK.conn_pool.destroy                         0         0.00 Destroyed locks\nLCK.conn_pool.locks                           1         0.00 Lock Operations\nLCK.conn_pool.dbg_busy                        0         0.00 Contended lock operations\nLCK.conn_pool.dbg_try_fail                    0         0.00 Contended trylock operations\nLCK.vbe.creat                                 1         0.00 Created locks\nLCK.vbe.destroy                               0         0.00 Destroyed locks\nLCK.vbe.locks                                 1         0.00 Lock Operations\nLCK.vbe.dbg_busy                              0         0.00 Contended lock operations\nLCK.vbe.dbg_try_fail                          0         0.00 Contended trylock operations\nLCK.vcapace.creat                             1         0.00 Created locks\nLCK.vcapace.destroy                           0         0.00 Destroyed locks\nLCK.vcapace.locks                             0         0.00 Lock Operations\nLCK.vcapace.dbg_busy                          0         0.00 Contended lock operations\nLCK.vcapace.dbg_try_fail                      0         0.00 Contended trylock operations\nLCK.vcl.creat                                 1         0.00 Created locks\nLCK.vcl.destroy                               0         0.00 Destroyed locks\nLCK.vcl.locks                                 3         0.01 Lock Operations\nLCK.vcl.dbg_busy                              0         0.00 Contended lock operations\nLCK.vcl.dbg_try_fail                          0         0.00 Contended trylock operations\nLCK.vxid.creat                                1         0.00 Created locks\nLCK.vxid.destroy                              0         0.00 Destroyed locks\nLCK.vxid.locks                                0         0.00 Lock Operations\nLCK.vxid.dbg_busy                             0         0.00 Contended lock operations\nLCK.vxid.dbg_try_fail                         0         0.00 Contended trylock operations\nLCK.waiter.creat                              2         0.00 Created locks\nLCK.waiter.destroy                            0         0.00 Destroyed locks\nLCK.waiter.locks                             10         0.02 Lock Operations\nLCK.waiter.dbg_busy                           0         0.00 Contended lock operations\nLCK.waiter.dbg_try_fail                       0         0.00 Contended trylock operations\nLCK.wq.creat                                  1         0.00 Created locks\nLCK.wq.destroy                                0         0.00 Destroyed locks\nLCK.wq.locks                                680         1.42 Lock Operations\nLCK.wq.dbg_busy                               0         0.00 Contended lock operations\nLCK.wq.dbg_try_fail                           0         0.00 Contended trylock operations\nLCK.wstat.creat                               1         0.00 Created locks\nLCK.wstat.destroy                             0         0.00 Destroyed locks\nLCK.wstat.locks                             166         0.35 Lock Operations\nLCK.wstat.dbg_busy                            0         0.00 Contended lock operations\nLCK.wstat.dbg_try_fail                        0         0.00 Contended trylock operations\nMEMPOOL.busyobj.live                          0          .   In use\nMEMPOOL.busyobj.pool                         10          .   In Pool\nMEMPOOL.busyobj.sz_wanted                 98304          .   Size requested\nMEMPOOL.busyobj.sz_actual                 98272          .   Size allocated\nMEMPOOL.busyobj.allocs                        0         0.00 Allocations\nMEMPOOL.busyobj.frees                         0         0.00 Frees\nMEMPOOL.busyobj.recycle                       0         0.00 Recycled from pool\nMEMPOOL.busyobj.timeout                       0         0.00 Timed out from pool\nMEMPOOL.busyobj.toosmall                      0         0.00 Too small to recycle\nMEMPOOL.busyobj.surplus                       0         0.00 Too many for pool\nMEMPOOL.busyobj.randry                        0         0.00 Pool ran dry\nMEMPOOL.req0.live                             0          .   In use\nMEMPOOL.req0.pool                            10          .   In Pool\nMEMPOOL.req0.sz_wanted                    98304          .   Size requested\nMEMPOOL.req0.sz_actual                    98272          .   Size allocated\nMEMPOOL.req0.allocs                           0         0.00 Allocations\nMEMPOOL.req0.frees                            0         0.00 Frees\nMEMPOOL.req0.recycle                          0         0.00 Recycled from pool\nMEMPOOL.req0.timeout                          0         0.00 Timed out from pool\nMEMPOOL.req0.toosmall                         0         0.00 Too small to recycle\nMEMPOOL.req0.surplus                          0         0.00 Too many for pool\nMEMPOOL.req0.randry                           0         0.00 Pool ran dry\nMEMPOOL.sess0.live                            0          .   In use\nMEMPOOL.sess0.pool                           10          .   In Pool\nMEMPOOL.sess0.sz_wanted                     768          .   Size requested\nMEMPOOL.sess0.sz_actual                     736          .   Size allocated\nMEMPOOL.sess0.allocs                          0         0.00 Allocations\nMEMPOOL.sess0.frees                           0         0.00 Frees\nMEMPOOL.sess0.recycle                         0         0.00 Recycled from pool\nMEMPOOL.sess0.timeout                         0         0.00 Timed out from pool\nMEMPOOL.sess0.toosmall                        0         0.00 Too small to recycle\nMEMPOOL.sess0.surplus                         0         0.00 Too many for pool\nMEMPOOL.sess0.randry                          0         0.00 Pool ran dry\nLCK.sma.creat                                 2         0.00 Created locks\nLCK.sma.destroy                               0         0.00 Destroyed locks\nLCK.sma.locks                                 0         0.00 Lock Operations\nLCK.sma.dbg_busy                              0         0.00 Contended lock operations\nLCK.sma.dbg_try_fail                          0         0.00 Contended trylock operations\nSMA.s0.c_req                                  0         0.00 Allocator requests\nSMA.s0.c_fail                                 0         0.00 Allocator failures\nSMA.s0.c_bytes                                0         0.00 Bytes allocated\nSMA.s0.c_freed                                0         0.00 Bytes freed\nSMA.s0.g_alloc                                0          .   Allocations outstanding\nSMA.s0.g_bytes                                0          .   Bytes outstanding\nSMA.s0.g_space                        268435456          .   Bytes available\nSMA.Transient.c_req                           0         0.00 Allocator requests\nSMA.Transient.c_fail                          0         0.00 Allocator failures\nSMA.Transient.c_bytes                         0         0.00 Bytes allocated\nSMA.Transient.c_freed                         0         0.00 Bytes freed\nSMA.Transient.g_alloc                         0          .   Allocations outstanding\nSMA.Transient.g_bytes                         0          .   Bytes outstanding\nSMA.Transient.g_space                         0          .   Bytes available\nMEMPOOL.req1.live                             0          .   In use\nMEMPOOL.req1.pool                            10          .   In Pool\nMEMPOOL.req1.sz_wanted                    98304          .   Size requested\nMEMPOOL.req1.sz_actual                    98272          .   Size allocated\nMEMPOOL.req1.allocs                           0         0.00 Allocations\nMEMPOOL.req1.frees                            0         0.00 Frees\nMEMPOOL.req1.recycle                          0         0.00 Recycled from pool\nMEMPOOL.req1.timeout                          0         0.00 Timed out from pool\nMEMPOOL.req1.toosmall                         0         0.00 Too small to recycle\nMEMPOOL.req1.surplus                          0         0.00 Too many for pool\nMEMPOOL.req1.randry                           0         0.00 Pool ran dry\nMEMPOOL.sess1.live                            0          .   In use\nMEMPOOL.sess1.pool                           10          .   In Pool\nMEMPOOL.sess1.sz_wanted                     768          .   Size requested\nMEMPOOL.sess1.sz_actual                     736          .   Size allocated\nMEMPOOL.sess1.allocs                          0         0.00 Allocations\nMEMPOOL.sess1.frees                           0         0.00 Frees\nMEMPOOL.sess1.recycle                         0         0.00 Recycled from pool\nMEMPOOL.sess1.timeout                         0         0.00 Timed out from pool\nMEMPOOL.sess1.toosmall                        0         0.00 Too small to recycle\nMEMPOOL.sess1.surplus                         0         0.00 Too many for pool\nMEMPOOL.sess1.randry                          0         0.00 Pool ran dry\nVBE.boot.default.happy                        0          .   Happy health probes\nVBE.boot.default.bereq_hdrbytes               0         0.00 Request header bytes\nVBE.boot.default.bereq_bodybytes              0         0.00 Request body bytes\nVBE.boot.default.beresp_hdrbytes              0         0.00 Response header bytes\nVBE.boot.default.beresp_bodybytes             0         0.00 Response body bytes\nVBE.boot.default.pipe_hdrbytes                0         0.00 Pipe request header bytes\nVBE.boot.default.pipe_out                     0         0.00 Piped bytes to backend\nVBE.boot.default.pipe_in                      0         0.00 Piped bytes from backend\nVBE.boot.default.conn                         0          .   Concurrent connections used\nVBE.boot.default.req                          0         0.00 Backend requests sent\nVBE.boot.default.unhealthy                    0         0.00 Fetches not attempted due to backend being unhealthy\nVBE.boot.default.busy                         0         0.00 Fetches not attempted due to backend being busy\nVBE.boot.default.fail                         0         0.00 Connections failed\nVBE.boot.default.fail_eacces                  0         0.00 Connections failed with EACCES or EPERM\nVBE.boot.default.fail_eaddrnotavail            0         0.00 Connections failed with EADDRNOTAVAIL\nVBE.boot.default.fail_econnrefused             0         0.00 Connections failed with ECONNREFUSED\nVBE.boot.default.fail_enetunreach              0         0.00 Connections failed with ENETUNREACH\nVBE.boot.default.fail_etimedout                0         0.00 Connections failed ETIMEDOUT\nVBE.boot.default.fail_other                    0         0.00 Connections failed for other reason\nVBE.boot.default.helddown                      0         0.00 Connection opens not attempted\n[2024-09-19 16:58:18] Stopping Varnish service...\n[2024-09-19 16:58:19] Varnish functionality test passed successfully.\n[2024-09-19 16:58:19] Varnish is functioning correctly.\n[2024-09-19 16:58:19] Cleaned up temporary directory.\n[2024-09-19 16:58:19] Varnish test script completed.\n",
+        "output": "Reading package lists...\nBuilding dependency tree...\nReading state information...\nsudo is already the newest version (1.9.15p5-3+b1).\ncurl is already the newest version (8.9.1-2).\napt-transport-https is already the newest version (2.9.8).\nca-certificates is already the newest version (20240203).\ngnupg is already the newest version (2.2.43-8).\nlsb-release is already the newest version (12.1-1).\nnetcat-openbsd is already the newest version (1.226-1.1).\n0 upgraded, 0 newly installed, 0 to remove and 67 not upgraded.\n[2024-09-22 21:36:32] Current directory: /tmp/lintestor/debian/varnish\n[2024-09-22 21:36:32] Created temporary directory: /tmp/tmp.FgYud2z4hj\n[2024-09-22 21:36:32] Starting Varnish test script...\n[2024-09-22 21:36:32] Checking system prerequisites...\n[2024-09-22 21:36:32] System prerequisites check passed.\n[2024-09-22 21:36:32] Varnish is installed. Path: /usr/sbin/varnishd\n[2024-09-22 21:36:32] Verifying Varnish installation again...\n[2024-09-22 21:36:32] Varnish is installed. Path: /usr/sbin/varnishd\n[2024-09-22 21:36:33] Starting Varnish service...\n[2024-09-22 21:36:33] Checking Varnish service status...\n[2024-09-22 21:36:33] Testing Varnish configuration...\n[2024-09-22 21:36:46] Checking Varnish stats...\nMGT.uptime                 484         1.00 Management process uptime\nMGT.child_start              1         0.00 Child process started\nMGT.child_exit               0         0.00 Child process normal exit\nMGT.child_stop               0         0.00 Child process unexpected exit\nMGT.child_died               0         0.00 Child process died (signal)\nMGT.child_dump               0         0.00 Child process core dumped\nMGT.child_panic              0         0.00 Child process panic\nMAIN.summs                   0         0.00 stat summ operations\nMAIN.uptime                486         1.00 Child process uptime\nMAIN.sess_conn               0         0.00 Sessions accepted\nMAIN.sess_fail               0         0.00 Session accept failures\nMAIN.sess_fail_econnaborted            0         0.00 Session accept failures: connection aborted\nMAIN.sess_fail_eintr                   0         0.00 Session accept failures: interrupted system call\nMAIN.sess_fail_emfile                  0         0.00 Session accept failures: too many open files\nMAIN.sess_fail_ebadf                   0         0.00 Session accept failures: bad file descriptor\nMAIN.sess_fail_enomem                  0         0.00 Session accept failures: not enough memory\nMAIN.sess_fail_other                   0         0.00 Session accept failures: other\nMAIN.client_req_400                    0         0.00 Client requests received, subject to 400 errors\nMAIN.client_req_417                    0         0.00 Client requests received, subject to 417 errors\nMAIN.client_req                        0         0.00 Good client requests received\nMAIN.esi_req                           0         0.00 ESI subrequests\nMAIN.cache_hit                         0         0.00 Cache hits\nMAIN.cache_hit_grace                   0         0.00 Cache grace hits\nMAIN.cache_hitpass                     0         0.00 Cache hits for pass.\nMAIN.cache_hitmiss                     0         0.00 Cache hits for miss.\nMAIN.cache_miss                        0         0.00 Cache misses\nMAIN.beresp_uncacheable                0         0.00 Uncacheable backend responses\nMAIN.beresp_shortlived                 0         0.00 Shortlived objects\nMAIN.backend_conn                      0         0.00 Backend conn. success\nMAIN.backend_unhealthy                 0         0.00 Backend conn. not attempted\nMAIN.backend_busy                      0         0.00 Backend conn. too many\nMAIN.backend_fail                      0         0.00 Backend conn. failures\nMAIN.backend_reuse                     0         0.00 Backend conn. reuses\nMAIN.backend_recycle                   0         0.00 Backend conn. recycles\nMAIN.backend_retry                     0         0.00 Backend conn. retry\nMAIN.fetch_head                        0         0.00 Fetch no body (HEAD)\nMAIN.fetch_length                      0         0.00 Fetch with Length\nMAIN.fetch_chunked                     0         0.00 Fetch chunked\nMAIN.fetch_eof                         0         0.00 Fetch EOF\nMAIN.fetch_bad                         0         0.00 Fetch bad T-E\nMAIN.fetch_none                        0         0.00 Fetch no body\nMAIN.fetch_1xx                         0         0.00 Fetch no body (1xx)\nMAIN.fetch_204                         0         0.00 Fetch no body (204)\nMAIN.fetch_304                         0         0.00 Fetch no body (304)\nMAIN.fetch_failed                      0         0.00 Fetch failed (all causes)\nMAIN.bgfetch_no_thread                 0         0.00 Background fetch failed (no thread)\nMAIN.pools                             2          .   Number of thread pools\nMAIN.threads                         200          .   Total number of threads\nMAIN.threads_limited                   0         0.00 Threads hit max\nMAIN.threads_created                 200         0.41 Threads created\nMAIN.threads_destroyed                 0         0.00 Threads destroyed\nMAIN.threads_failed                    0         0.00 Thread creation failed\nMAIN.thread_queue_len                  0          .   Length of session queue\nMAIN.busy_sleep                        0         0.00 Number of requests sent to sleep on busy objhdr\nMAIN.busy_wakeup                       0         0.00 Number of requests woken after sleep on busy objhdr\nMAIN.busy_killed                       0         0.00 Number of requests killed after sleep on busy objhdr\nMAIN.sess_queued                       0         0.00 Sessions queued for thread\nMAIN.sess_dropped                      0         0.00 Sessions dropped for thread\nMAIN.req_dropped                       0         0.00 Requests dropped\nMAIN.req_reset                         0         0.00 Requests reset\nMAIN.n_object                          0          .   object structs made\nMAIN.n_vampireobject                   0          .   unresurrected objects\nMAIN.n_objectcore                      0          .   objectcore structs made\nMAIN.n_objecthead                      0          .   objecthead structs made\nMAIN.n_backend                         1          .   Number of backends\nMAIN.n_expired                         0         0.00 Number of expired objects\nMAIN.n_superseded                      0         0.00 Number of superseded objects\nMAIN.n_lru_nuked                       0         0.00 Number of LRU nuked objects\nMAIN.n_lru_moved                       0         0.00 Number of LRU moved objects\nMAIN.n_lru_limited                     0         0.00 Reached nuke_limit\nMAIN.losthdr                           0         0.00 HTTP header overflows\nMAIN.s_sess                            0         0.00 Total sessions seen\nMAIN.n_pipe                            0          .   Number of ongoing pipe sessions\nMAIN.pipe_limited                      0         0.00 Pipes hit pipe_sess_max\nMAIN.s_pipe                            0         0.00 Total pipe sessions seen\nMAIN.s_pass                            0         0.00 Total pass-ed requests seen\nMAIN.s_fetch                           0         0.00 Total backend fetches initiated\nMAIN.s_bgfetch                         0         0.00 Total backend background fetches initiated\nMAIN.s_synth                           0         0.00 Total synthetic responses made\nMAIN.s_req_hdrbytes                    0         0.00 Request header bytes\nMAIN.s_req_bodybytes                   0         0.00 Request body bytes\nMAIN.s_resp_hdrbytes                   0         0.00 Response header bytes\nMAIN.s_resp_bodybytes                  0         0.00 Response body bytes\nMAIN.s_pipe_hdrbytes                   0         0.00 Pipe request header bytes\nMAIN.s_pipe_in                         0         0.00 Piped bytes from client\nMAIN.s_pipe_out                        0         0.00 Piped bytes to client\nMAIN.sess_closed                       0         0.00 Session Closed\nMAIN.sess_closed_err                   0         0.00 Session Closed with error\nMAIN.sess_readahead                    0         0.00 Session Read Ahead\nMAIN.sess_herd                         0         0.00 Session herd\nMAIN.sc_rem_close                      0         0.00 Session OK  REM_CLOSE\nMAIN.sc_req_close                      0         0.00 Session OK  REQ_CLOSE\nMAIN.sc_req_http10                     0         0.00 Session Err REQ_HTTP10\nMAIN.sc_rx_bad                         0         0.00 Session Err RX_BAD\nMAIN.sc_rx_body                        0         0.00 Session Err RX_BODY\nMAIN.sc_rx_junk                        0         0.00 Session Err RX_JUNK\nMAIN.sc_rx_overflow                    0         0.00 Session Err RX_OVERFLOW\nMAIN.sc_rx_timeout                     0         0.00 Session Err RX_TIMEOUT\nMAIN.sc_rx_close_idle                  0         0.00 Session Err RX_CLOSE_IDLE\nMAIN.sc_tx_pipe                        0         0.00 Session OK  TX_PIPE\nMAIN.sc_tx_error                       0         0.00 Session Err TX_ERROR\nMAIN.sc_tx_eof                         0         0.00 Session OK  TX_EOF\nMAIN.sc_resp_close                     0         0.00 Session OK  RESP_CLOSE\nMAIN.sc_overload                       0         0.00 Session Err OVERLOAD\nMAIN.sc_pipe_overflow                  0         0.00 Session Err PIPE_OVERFLOW\nMAIN.sc_range_short                    0         0.00 Session Err RANGE_SHORT\nMAIN.sc_req_http20                     0         0.00 Session Err REQ_HTTP20\nMAIN.sc_vcl_failure                    0         0.00 Session Err VCL_FAILURE\nMAIN.sc_rapid_reset                    0         0.00 Session Err RAPID_RESET\nMAIN.sc_bankrupt                       0         0.00 Session Err BANKRUPT\nMAIN.client_resp_500                   0         0.00 Delivery failed due to insufficient workspace.\nMAIN.ws_backend_overflow               0         0.00 workspace_backend overflows\nMAIN.ws_client_overflow                0         0.00 workspace_client overflows\nMAIN.ws_thread_overflow                0         0.00 workspace_thread overflows\nMAIN.ws_session_overflow               0         0.00 workspace_session overflows\nMAIN.shm_records                     330         0.68 SHM records\nMAIN.shm_writes                      330         0.68 SHM writes\nMAIN.shm_flushes                       0         0.00 SHM flushes due to overflow\nMAIN.shm_cont                          0         0.00 SHM lock contention\nMAIN.shm_cycles                        0         0.00 SHM cycles through VSL space\nMAIN.shm_bytes                     10620        21.85 SHM bytes\nMAIN.backend_req                       0         0.00 Backend requests made\nMAIN.n_vcl                             1          .   Number of loaded VCLs in total\nMAIN.n_vcl_avail                       1          .   Number of VCLs available\nMAIN.n_vcl_discard                     0          .   Number of discarded VCLs\nMAIN.vcl_fail                          0         0.00 VCL failures\nMAIN.bans                              1          .   Count of bans\nMAIN.bans_completed                    1          .   Number of bans marked 'completed'\nMAIN.bans_obj                          0          .   Number of bans using obj.*\nMAIN.bans_req                          0          .   Number of bans using req.*\nMAIN.bans_added                        1         0.00 Bans added\nMAIN.bans_deleted                      0         0.00 Bans deleted\nMAIN.bans_tested                       0         0.00 Bans tested against objects (lookup)\nMAIN.bans_obj_killed                   0         0.00 Objects killed by bans (lookup)\nMAIN.bans_lurker_tested                0         0.00 Bans tested against objects (lurker)\nMAIN.bans_tests_tested                 0         0.00 Ban tests tested against objects (lookup)\nMAIN.bans_lurker_tests_tested            0         0.00 Ban tests tested against objects (lurker)\nMAIN.bans_lurker_obj_killed              0         0.00 Objects killed by bans (lurker)\nMAIN.bans_lurker_obj_killed_cutoff            0         0.00 Objects killed by bans for cutoff (lurker)\nMAIN.bans_dups                                0         0.00 Bans superseded by other bans\nMAIN.bans_lurker_contention                   0         0.00 Lurker gave way for lookup\nMAIN.bans_persisted_bytes                    16          .   Bytes used by the persisted ban lists\nMAIN.bans_persisted_fragmentation             0          .   Extra bytes in persisted ban lists due to fragmentation\nMAIN.n_purges                                 0         0.00 Number of purge operations executed\nMAIN.n_obj_purged                             0         0.00 Number of purged objects\nMAIN.exp_mailed                               0         0.00 Number of objects mailed to expiry thread\nMAIN.exp_received                             0         0.00 Number of objects received by expiry thread\nMAIN.hcb_nolock                               0         0.00 HCB Lookups without lock\nMAIN.hcb_lock                                 0         0.00 HCB Lookups with lock\nMAIN.hcb_insert                               0         0.00 HCB Inserts\nMAIN.esi_errors                               0         0.00 ESI parse errors (unlock)\nMAIN.esi_warnings                             0         0.00 ESI parse warnings (unlock)\nMAIN.vmods                                    0          .   Loaded VMODs\nMAIN.n_gzip                                   0         0.00 Gzip operations\nMAIN.n_gunzip                                 0         0.00 Gunzip operations\nMAIN.n_test_gunzip                            0         0.00 Test gunzip operations\nMAIN.http1_iovs_flush                         0         0.00 Premature iovec flushes\nLCK.ban.creat                                 1         0.00 Created locks\nLCK.ban.destroy                               0         0.00 Destroyed locks\nLCK.ban.locks                                26         0.05 Lock Operations\nLCK.ban.dbg_busy                              0         0.00 Contended lock operations\nLCK.ban.dbg_try_fail                          0         0.00 Contended trylock operations\nLCK.busyobj.creat                             0         0.00 Created locks\nLCK.busyobj.destroy                           0         0.00 Destroyed locks\nLCK.busyobj.locks                             0         0.00 Lock Operations\nLCK.busyobj.dbg_busy                          0         0.00 Contended lock operations\nLCK.busyobj.dbg_try_fail                      0         0.00 Contended trylock operations\nLCK.cli.creat                                 1         0.00 Created locks\nLCK.cli.destroy                               0         0.00 Destroyed locks\nLCK.cli.locks                               175         0.36 Lock Operations\nLCK.cli.dbg_busy                              0         0.00 Contended lock operations\nLCK.cli.dbg_try_fail                          0         0.00 Contended trylock operations\nLCK.director.creat                            1         0.00 Created locks\nLCK.director.destroy                          0         0.00 Destroyed locks\nLCK.director.locks                            0         0.00 Lock Operations\nLCK.director.dbg_busy                         0         0.00 Contended lock operations\nLCK.director.dbg_try_fail                     0         0.00 Contended trylock operations\nLCK.exp.creat                                 1         0.00 Created locks\nLCK.exp.destroy                               0         0.00 Destroyed locks\nLCK.exp.locks                               156         0.32 Lock Operations\nLCK.exp.dbg_busy                              0         0.00 Contended lock operations\nLCK.exp.dbg_try_fail                          0         0.00 Contended trylock operations\nLCK.hcb.creat                                 1         0.00 Created locks\nLCK.hcb.destroy                               0         0.00 Destroyed locks\nLCK.hcb.locks                                 3         0.01 Lock Operations\nLCK.hcb.dbg_busy                              0         0.00 Contended lock operations\nLCK.hcb.dbg_try_fail                          0         0.00 Contended trylock operations\nLCK.lru.creat                                 2         0.00 Created locks\nLCK.lru.destroy                               0         0.00 Destroyed locks\nLCK.lru.locks                                 0         0.00 Lock Operations\nLCK.lru.dbg_busy                              0         0.00 Contended lock operations\nLCK.lru.dbg_try_fail                          0         0.00 Contended trylock operations\nLCK.mempool.creat                             5         0.01 Created locks\nLCK.mempool.destroy                           0         0.00 Destroyed locks\nLCK.mempool.locks                          2197         4.52 Lock Operations\nLCK.mempool.dbg_busy                          0         0.00 Contended lock operations\nLCK.mempool.dbg_try_fail                      0         0.00 Contended trylock operations\nLCK.objhdr.creat                              1         0.00 Created locks\nLCK.objhdr.destroy                            0         0.00 Destroyed locks\nLCK.objhdr.locks                              0         0.00 Lock Operations\nLCK.objhdr.dbg_busy                           0         0.00 Contended lock operations\nLCK.objhdr.dbg_try_fail                       0         0.00 Contended trylock operations\nLCK.perpool.creat                             2         0.00 Created locks\nLCK.perpool.destroy                           0         0.00 Destroyed locks\nLCK.perpool.locks                           208         0.43 Lock Operations\nLCK.perpool.dbg_busy                          0         0.00 Contended lock operations\nLCK.perpool.dbg_try_fail                      0         0.00 Contended trylock operations\nLCK.pipestat.creat                            1         0.00 Created locks\nLCK.pipestat.destroy                          0         0.00 Destroyed locks\nLCK.pipestat.locks                            0         0.00 Lock Operations\nLCK.pipestat.dbg_busy                         0         0.00 Contended lock operations\nLCK.pipestat.dbg_try_fail                     0         0.00 Contended trylock operations\nLCK.probe.creat                               1         0.00 Created locks\nLCK.probe.destroy                             0         0.00 Destroyed locks\nLCK.probe.locks                               1         0.00 Lock Operations\nLCK.probe.dbg_busy                            0         0.00 Contended lock operations\nLCK.probe.dbg_try_fail                        0         0.00 Contended trylock operations\nLCK.sess.creat                                0         0.00 Created locks\nLCK.sess.destroy                              0         0.00 Destroyed locks\nLCK.sess.locks                                0         0.00 Lock Operations\nLCK.sess.dbg_busy                             0         0.00 Contended lock operations\nLCK.sess.dbg_try_fail                         0         0.00 Contended trylock operations\nLCK.conn_pool.creat                           2         0.00 Created locks\nLCK.conn_pool.destroy                         0         0.00 Destroyed locks\nLCK.conn_pool.locks                           1         0.00 Lock Operations\nLCK.conn_pool.dbg_busy                        0         0.00 Contended lock operations\nLCK.conn_pool.dbg_try_fail                    0         0.00 Contended trylock operations\nLCK.vbe.creat                                 1         0.00 Created locks\nLCK.vbe.destroy                               0         0.00 Destroyed locks\nLCK.vbe.locks                                 1         0.00 Lock Operations\nLCK.vbe.dbg_busy                              0         0.00 Contended lock operations\nLCK.vbe.dbg_try_fail                          0         0.00 Contended trylock operations\nLCK.vcapace.creat                             1         0.00 Created locks\nLCK.vcapace.destroy                           0         0.00 Destroyed locks\nLCK.vcapace.locks                             0         0.00 Lock Operations\nLCK.vcapace.dbg_busy                          0         0.00 Contended lock operations\nLCK.vcapace.dbg_try_fail                      0         0.00 Contended trylock operations\nLCK.vcl.creat                                 1         0.00 Created locks\nLCK.vcl.destroy                               0         0.00 Destroyed locks\nLCK.vcl.locks                                 3         0.01 Lock Operations\nLCK.vcl.dbg_busy                              0         0.00 Contended lock operations\nLCK.vcl.dbg_try_fail                          0         0.00 Contended trylock operations\nLCK.vxid.creat                                1         0.00 Created locks\nLCK.vxid.destroy                              0         0.00 Destroyed locks\nLCK.vxid.locks                                0         0.00 Lock Operations\nLCK.vxid.dbg_busy                             0         0.00 Contended lock operations\nLCK.vxid.dbg_try_fail                         0         0.00 Contended trylock operations\nLCK.waiter.creat                              2         0.00 Created locks\nLCK.waiter.destroy                            0         0.00 Destroyed locks\nLCK.waiter.locks                             10         0.02 Lock Operations\nLCK.waiter.dbg_busy                           0         0.00 Contended lock operations\nLCK.waiter.dbg_try_fail                       0         0.00 Contended trylock operations\nLCK.wq.creat                                  1         0.00 Created locks\nLCK.wq.destroy                                0         0.00 Destroyed locks\nLCK.wq.locks                                687         1.41 Lock Operations\nLCK.wq.dbg_busy                               0         0.00 Contended lock operations\nLCK.wq.dbg_try_fail                           0         0.00 Contended trylock operations\nLCK.wstat.creat                               1         0.00 Created locks\nLCK.wstat.destroy                             0         0.00 Destroyed locks\nLCK.wstat.locks                             168         0.35 Lock Operations\nLCK.wstat.dbg_busy                            0         0.00 Contended lock operations\nLCK.wstat.dbg_try_fail                        0         0.00 Contended trylock operations\nMEMPOOL.busyobj.live                          0          .   In use\nMEMPOOL.busyobj.pool                         10          .   In Pool\nMEMPOOL.busyobj.sz_wanted                 98304          .   Size requested\nMEMPOOL.busyobj.sz_actual                 98272          .   Size allocated\nMEMPOOL.busyobj.allocs                        0         0.00 Allocations\nMEMPOOL.busyobj.frees                         0         0.00 Frees\nMEMPOOL.busyobj.recycle                       0         0.00 Recycled from pool\nMEMPOOL.busyobj.timeout                       0         0.00 Timed out from pool\nMEMPOOL.busyobj.toosmall                      0         0.00 Too small to recycle\nMEMPOOL.busyobj.surplus                       0         0.00 Too many for pool\nMEMPOOL.busyobj.randry                        0         0.00 Pool ran dry\nMEMPOOL.req0.live                             0          .   In use\nMEMPOOL.req0.pool                            10          .   In Pool\nMEMPOOL.req0.sz_wanted                    98304          .   Size requested\nMEMPOOL.req0.sz_actual                    98272          .   Size allocated\nMEMPOOL.req0.allocs                           0         0.00 Allocations\nMEMPOOL.req0.frees                            0         0.00 Frees\nMEMPOOL.req0.recycle                          0         0.00 Recycled from pool\nMEMPOOL.req0.timeout                          0         0.00 Timed out from pool\nMEMPOOL.req0.toosmall                         0         0.00 Too small to recycle\nMEMPOOL.req0.surplus                          0         0.00 Too many for pool\nMEMPOOL.req0.randry                           0         0.00 Pool ran dry\nMEMPOOL.sess0.live                            0          .   In use\nMEMPOOL.sess0.pool                           10          .   In Pool\nMEMPOOL.sess0.sz_wanted                     768          .   Size requested\nMEMPOOL.sess0.sz_actual                     736          .   Size allocated\nMEMPOOL.sess0.allocs                          0         0.00 Allocations\nMEMPOOL.sess0.frees                           0         0.00 Frees\nMEMPOOL.sess0.recycle                         0         0.00 Recycled from pool\nMEMPOOL.sess0.timeout                         0         0.00 Timed out from pool\nMEMPOOL.sess0.toosmall                        0         0.00 Too small to recycle\nMEMPOOL.sess0.surplus                         0         0.00 Too many for pool\nMEMPOOL.sess0.randry                          0         0.00 Pool ran dry\nLCK.sma.creat                                 2         0.00 Created locks\nLCK.sma.destroy                               0         0.00 Destroyed locks\nLCK.sma.locks                                 0         0.00 Lock Operations\nLCK.sma.dbg_busy                              0         0.00 Contended lock operations\nLCK.sma.dbg_try_fail                          0         0.00 Contended trylock operations\nSMA.s0.c_req                                  0         0.00 Allocator requests\nSMA.s0.c_fail                                 0         0.00 Allocator failures\nSMA.s0.c_bytes                                0         0.00 Bytes allocated\nSMA.s0.c_freed                                0         0.00 Bytes freed\nSMA.s0.g_alloc                                0          .   Allocations outstanding\nSMA.s0.g_bytes                                0          .   Bytes outstanding\nSMA.s0.g_space                        268435456          .   Bytes available\nSMA.Transient.c_req                           0         0.00 Allocator requests\nSMA.Transient.c_fail                          0         0.00 Allocator failures\nSMA.Transient.c_bytes                         0         0.00 Bytes allocated\nSMA.Transient.c_freed                         0         0.00 Bytes freed\nSMA.Transient.g_alloc                         0          .   Allocations outstanding\nSMA.Transient.g_bytes                         0          .   Bytes outstanding\nSMA.Transient.g_space                         0          .   Bytes available\nMEMPOOL.req1.live                             0          .   In use\nMEMPOOL.req1.pool                            10          .   In Pool\nMEMPOOL.req1.sz_wanted                    98304          .   Size requested\nMEMPOOL.req1.sz_actual                    98272          .   Size allocated\nMEMPOOL.req1.allocs                           0         0.00 Allocations\nMEMPOOL.req1.frees                            0         0.00 Frees\nMEMPOOL.req1.recycle                          0         0.00 Recycled from pool\nMEMPOOL.req1.timeout                          0         0.00 Timed out from pool\nMEMPOOL.req1.toosmall                         0         0.00 Too small to recycle\nMEMPOOL.req1.surplus                          0         0.00 Too many for pool\nMEMPOOL.req1.randry                           0         0.00 Pool ran dry\nMEMPOOL.sess1.live                            0          .   In use\nMEMPOOL.sess1.pool                           10          .   In Pool\nMEMPOOL.sess1.sz_wanted                     768          .   Size requested\nMEMPOOL.sess1.sz_actual                     736          .   Size allocated\nMEMPOOL.sess1.allocs                          0         0.00 Allocations\nMEMPOOL.sess1.frees                           0         0.00 Frees\nMEMPOOL.sess1.recycle                         0         0.00 Recycled from pool\nMEMPOOL.sess1.timeout                         0         0.00 Timed out from pool\nMEMPOOL.sess1.toosmall                        0         0.00 Too small to recycle\nMEMPOOL.sess1.surplus                         0         0.00 Too many for pool\nMEMPOOL.sess1.randry                          0         0.00 Pool ran dry\nVBE.boot.default.happy                        0          .   Happy health probes\nVBE.boot.default.bereq_hdrbytes               0         0.00 Request header bytes\nVBE.boot.default.bereq_bodybytes              0         0.00 Request body bytes\nVBE.boot.default.beresp_hdrbytes              0         0.00 Response header bytes\nVBE.boot.default.beresp_bodybytes             0         0.00 Response body bytes\nVBE.boot.default.pipe_hdrbytes                0         0.00 Pipe request header bytes\nVBE.boot.default.pipe_out                     0         0.00 Piped bytes to backend\nVBE.boot.default.pipe_in                      0         0.00 Piped bytes from backend\nVBE.boot.default.conn                         0          .   Concurrent connections used\nVBE.boot.default.req                          0         0.00 Backend requests sent\nVBE.boot.default.unhealthy                    0         0.00 Fetches not attempted due to backend being unhealthy\nVBE.boot.default.busy                         0         0.00 Fetches not attempted due to backend being busy\nVBE.boot.default.fail                         0         0.00 Connections failed\nVBE.boot.default.fail_eacces                  0         0.00 Connections failed with EACCES or EPERM\nVBE.boot.default.fail_eaddrnotavail            0         0.00 Connections failed with EADDRNOTAVAIL\nVBE.boot.default.fail_econnrefused             0         0.00 Connections failed with ECONNREFUSED\nVBE.boot.default.fail_enetunreach              0         0.00 Connections failed with ENETUNREACH\nVBE.boot.default.fail_etimedout                0         0.00 Connections failed ETIMEDOUT\nVBE.boot.default.fail_other                    0         0.00 Connections failed for other reason\nVBE.boot.default.helddown                      0         0.00 Connection opens not attempted\n[2024-09-22 21:36:46] Stopping Varnish service...\n[2024-09-22 21:36:47] Varnish functionality test passed successfully.\n[2024-09-22 21:36:47] Varnish is functioning correctly.\n[2024-09-22 21:36:47] Cleaned up temporary directory.\n[2024-09-22 21:36:47] Varnish test script completed.\n",
         "passed": true
       }
     ],
@@ -393,8 +489,12 @@
     "os_version": "Linux version 6.10.6-riscv64 (debian-kernel@lists.debian.org) (riscv64-linux-gnu-gcc-13 (Debian 13.3.0-5) 13.3.0, GNU ld (GNU Binutils for Debian) 2.43.1) #1 SMP Debian 6.10.6-1 (2024-08-19)\n",
     "kernel_version": "6.10.6-riscv64\n",
     "package_name": "openssl",
-    "package_type": "package",
-    "package_version": "3.3.1",
+    "package_metadata": {
+      "package_version": "3.3.1",
+      "package_pretty_name": "OpenSSL",
+      "package_type": "Cryptography Library",
+      "package_description": "Secure Sockets Layer toolkit - cryptographic utility"
+    },
     "test_results": [
       {
         "test_name": "test.sh",
@@ -409,8 +509,12 @@
     "os_version": "Linux version 6.10.6-riscv64 (debian-kernel@lists.debian.org) (riscv64-linux-gnu-gcc-13 (Debian 13.3.0-5) 13.3.0, GNU ld (GNU Binutils for Debian) 2.43.1) #1 SMP Debian 6.10.6-1 (2024-08-19)\n",
     "kernel_version": "6.10.6-riscv64\n",
     "package_name": "postgresql",
-    "package_type": "package",
-    "package_version": "16.4",
+    "package_metadata": {
+      "package_version": "16.4",
+      "package_pretty_name": "PostgreSQL",
+      "package_type": "Database",
+      "package_description": "Object-relational SQL database, version 16 server"
+    },
     "test_results": [
       {
         "test_name": "test.sh",
@@ -425,8 +529,12 @@
     "os_version": "Linux version 6.10.6-riscv64 (debian-kernel@lists.debian.org) (riscv64-linux-gnu-gcc-13 (Debian 13.3.0-5) 13.3.0, GNU ld (GNU Binutils for Debian) 2.43.1) #1 SMP Debian 6.10.6-1 (2024-08-19)\n",
     "kernel_version": "6.10.6-riscv64\n",
     "package_name": "redis",
-    "package_type": "package",
-    "package_version": "7.0.15",
+    "package_metadata": {
+      "package_version": "7.0.15",
+      "package_pretty_name": "Redis",
+      "package_type": "Database",
+      "package_description": "Persistent key-value database, server side"
+    },
     "test_results": [
       {
         "test_name": "test.sh",
@@ -441,12 +549,16 @@
     "os_version": "Linux version 6.10.6-riscv64 (debian-kernel@lists.debian.org) (riscv64-linux-gnu-gcc-13 (Debian 13.3.0-5) 13.3.0, GNU ld (GNU Binutils for Debian) 2.43.1) #1 SMP Debian 6.10.6-1 (2024-08-19)\n",
     "kernel_version": "6.10.6-riscv64\n",
     "package_name": "runc",
-    "package_type": "package",
-    "package_version": "",
+    "package_metadata": {
+      "package_version": "1.1.12+ds1",
+      "package_pretty_name": "runc",
+      "package_type": "Container Runtime",
+      "package_description": "CLI tool for spawning and running containers according to the OCI specification"
+    },
     "test_results": [
       {
         "test_name": "test.sh",
-        "output": "Reading package lists...\nBuilding dependency tree...\nReading state information...\nsudo is already the newest version (1.9.15p5-3+b1).\ncurl is already the newest version (8.9.1-2).\napt-transport-https is already the newest version (2.9.8).\nca-certificates is already the newest version (20240203).\ngnupg is already the newest version (2.2.43-8).\nlsb-release is already the newest version (12.1-1).\nnetcat-openbsd is already the newest version (1.226-1.1).\n0 upgraded, 0 newly installed, 0 to remove and 67 not upgraded.\n[2024-09-19 02:43:55] Starting runC test script...\n[2024-09-19 02:43:55] Checking system prerequisites...\n[2024-09-19 02:43:55] Kernel version: 6.10.6-riscv64\n[2024-09-19 02:43:57] System prerequisites check completed.\n[2024-09-19 02:43:57] runC is installed.\n[2024-09-19 02:43:57] Created temporary directory: /tmp/tmp.EAOZ0WVINj\n[2024-09-19 02:43:58] Created config.json in /tmp/tmp.EAOZ0WVINj/bundle\n[2024-09-19 02:43:58] Attempting to run runc container...\n[2024-09-19 02:43:59] Failed to run runc container. Output:\n[2024-09-19 02:43:59] time=\"2024-09-19T02:43:58Z\" level=error msg=\"runc run failed: unable to start container process: error during container init: error reopening /dev/null inside container: open /dev/null: permission denied\"\n[2024-09-19 02:43:59] runC is not functioning correctly.\n",
+        "output": "Reading package lists...\nBuilding dependency tree...\nReading state information...\nsudo is already the newest version (1.9.15p5-3+b1).\ncurl is already the newest version (8.9.1-2).\napt-transport-https is already the newest version (2.9.8).\nca-certificates is already the newest version (20240203).\ngnupg is already the newest version (2.2.43-8).\nlsb-release is already the newest version (12.1-1).\nnetcat-openbsd is already the newest version (1.226-1.1).\n0 upgraded, 0 newly installed, 0 to remove and 67 not upgraded.\n[2024-09-22 21:37:46] Starting runC test script...\n[2024-09-22 21:37:46] Checking system prerequisites...\n[2024-09-22 21:37:47] Kernel version: 6.10.6-riscv64\n[2024-09-22 21:37:48] System prerequisites check completed.\n[2024-09-22 21:37:48] runC is installed.\n[2024-09-22 21:37:49] Created temporary directory: /tmp/tmp.bNLjaohyRy\n[2024-09-22 21:37:49] Created config.json in /tmp/tmp.bNLjaohyRy/bundle\n[2024-09-22 21:37:49] Attempting to run runc container...\n[2024-09-22 21:37:50] Failed to run runc container. Output:\n[2024-09-22 21:37:50] time=\"2024-09-22T21:37:50Z\" level=error msg=\"runc run failed: unable to start container process: error during container init: error reopening /dev/null inside container: open /dev/null: permission denied\"\n[2024-09-22 21:37:50] runC is not functioning correctly.\n",
         "passed": false
       }
     ],
@@ -457,12 +569,16 @@
     "os_version": "Linux version 6.10.6-riscv64 (debian-kernel@lists.debian.org) (riscv64-linux-gnu-gcc-13 (Debian 13.3.0-5) 13.3.0, GNU ld (GNU Binutils for Debian) 2.43.1) #1 SMP Debian 6.10.6-1 (2024-08-19)\n",
     "kernel_version": "6.10.6-riscv64\n",
     "package_name": "scipy",
-    "package_type": "package",
-    "package_version": "1.13.1 (python 3.12.5)",
+    "package_metadata": {
+      "package_version": "1.13.1 (python 3.12.5)",
+      "package_pretty_name": "SciPy",
+      "package_type": "Python Library",
+      "package_description": "Scientific Tools for Python"
+    },
     "test_results": [
       {
         "test_name": "test.sh",
-        "output": "Reading package lists...\nBuilding dependency tree...\nReading state information...\nsudo is already the newest version (1.9.15p5-3+b1).\ncurl is already the newest version (8.9.1-2).\napt-transport-https is already the newest version (2.9.8).\nca-certificates is already the newest version (20240203).\ngnupg is already the newest version (2.2.43-8).\nlsb-release is already the newest version (12.1-1).\nnetcat-openbsd is already the newest version (1.226-1.1).\n0 upgraded, 0 newly installed, 0 to remove and 67 not upgraded.\n[2024-09-19 02:44:09] Current directory: /tmp/lintestor/debian/scipy\n[2024-09-19 02:44:09] Created temporary directory: /tmp/tmp.SwzVnIDL9M\n[2024-09-19 02:44:09] Starting SciPy test script...\n[2024-09-19 02:44:09] Checking system prerequisites...\n[2024-09-19 02:44:10] System prerequisites check passed.\n[2024-09-19 02:44:14] SciPy is installed.\n[2024-09-19 02:44:18] Created temporary directory: /tmp/tmp.tKjxOJOmI5\n[2024-09-19 02:44:18] Running the SciPy test script...\n[2024-09-19 02:44:31] Script output:\n[2024-09-19 02:44:31] Mean: 0.0325\nStandard Deviation: 1.0025\nT-statistic: 1.0241\nP-value: 0.3060\n[2024-09-19 02:44:31] Cleaned up temporary directory.\n[2024-09-19 02:44:31] Changed back to original directory: /tmp/lintestor/debian/scipy\n[2024-09-19 02:44:31] SciPy test passed successfully.\n[2024-09-19 02:44:31] SciPy is functioning correctly.\n",
+        "output": "Reading package lists...\nBuilding dependency tree...\nReading state information...\nsudo is already the newest version (1.9.15p5-3+b1).\ncurl is already the newest version (8.9.1-2).\napt-transport-https is already the newest version (2.9.8).\nca-certificates is already the newest version (20240203).\ngnupg is already the newest version (2.2.43-8).\nlsb-release is already the newest version (12.1-1).\nnetcat-openbsd is already the newest version (1.226-1.1).\n0 upgraded, 0 newly installed, 0 to remove and 67 not upgraded.\n[2024-09-22 21:37:59] Current directory: /tmp/lintestor/debian/scipy\n[2024-09-22 21:37:59] Created temporary directory: /tmp/tmp.blk5YRh5xG\n[2024-09-22 21:37:59] Starting SciPy test script...\n[2024-09-22 21:38:00] Checking system prerequisites...\n[2024-09-22 21:38:00] System prerequisites check passed.\n[2024-09-22 21:38:04] SciPy is installed.\n[2024-09-22 21:38:08] Created temporary directory: /tmp/tmp.ev601dY9iF\n[2024-09-22 21:38:08] Running the SciPy test script...\n[2024-09-22 21:38:22] Script output:\n[2024-09-22 21:38:22] Mean: -0.0101\nStandard Deviation: 0.9463\nT-statistic: -0.3381\nP-value: 0.7354\n[2024-09-22 21:38:22] Cleaned up temporary directory.\n[2024-09-22 21:38:22] Changed back to original directory: /tmp/lintestor/debian/scipy\n[2024-09-22 21:38:22] SciPy test passed successfully.\n[2024-09-22 21:38:22] SciPy is functioning correctly.\n",
         "passed": true
       }
     ],
@@ -473,12 +589,16 @@
     "os_version": "Linux version 6.10.6-riscv64 (debian-kernel@lists.debian.org) (riscv64-linux-gnu-gcc-13 (Debian 13.3.0-5) 13.3.0, GNU ld (GNU Binutils for Debian) 2.43.1) #1 SMP Debian 6.10.6-1 (2024-08-19)\n",
     "kernel_version": "6.10.6-riscv64\n",
     "package_name": "squid",
-    "package_type": "package",
-    "package_version": "6.10",
+    "package_metadata": {
+      "package_version": "6.10",
+      "package_pretty_name": "Squid",
+      "package_type": "Proxy Server",
+      "package_description": "Caching Proxy for the Web"
+    },
     "test_results": [
       {
         "test_name": "test.sh",
-        "output": "Reading package lists...\nBuilding dependency tree...\nReading state information...\nsudo is already the newest version (1.9.15p5-3+b1).\ncurl is already the newest version (8.9.1-2).\napt-transport-https is already the newest version (2.9.8).\nca-certificates is already the newest version (20240203).\ngnupg is already the newest version (2.2.43-8).\nlsb-release is already the newest version (12.1-1).\nnetcat-openbsd is already the newest version (1.226-1.1).\n0 upgraded, 0 newly installed, 0 to remove and 67 not upgraded.\n[2024-09-19 02:44:42] Current directory: /tmp/lintestor/debian/squid\n[2024-09-19 02:44:43] Created temporary directory: /tmp/tmp.od5ARBthPU\n[2024-09-19 02:44:43] Starting Squid test script...\n[2024-09-19 02:44:43] Checking system prerequisites...\n[2024-09-19 02:44:43] System prerequisites check passed.\n[2024-09-19 02:44:43] Squid is installed. Path: /usr/sbin/squid\n[2024-09-19 02:44:43] Verifying Squid installation again...\n[2024-09-19 02:44:43] Squid is installed. Path: /usr/sbin/squid\n[2024-09-19 02:44:43] Starting Squid service...\n[2024-09-19 02:44:44] Checking Squid service status...\n[2024-09-19 02:44:45] Testing Squid configuration...\n[2024-09-19 02:44:46] Stopping Squid service...\n[2024-09-19 02:45:19] Squid functionality test passed successfully.\n[2024-09-19 02:45:19] Squid is functioning correctly.\n[2024-09-19 02:45:19] Cleaned up temporary directory.\n[2024-09-19 02:45:19] Squid test script completed.\n",
+        "output": "Reading package lists...\nBuilding dependency tree...\nReading state information...\nsudo is already the newest version (1.9.15p5-3+b1).\ncurl is already the newest version (8.9.1-2).\napt-transport-https is already the newest version (2.9.8).\nca-certificates is already the newest version (20240203).\ngnupg is already the newest version (2.2.43-8).\nlsb-release is already the newest version (12.1-1).\nnetcat-openbsd is already the newest version (1.226-1.1).\n0 upgraded, 0 newly installed, 0 to remove and 67 not upgraded.\n[2024-09-22 21:38:37] Current directory: /tmp/lintestor/debian/squid\n[2024-09-22 21:38:38] Created temporary directory: /tmp/tmp.8Pjo6Zu8tO\n[2024-09-22 21:38:38] Starting Squid test script...\n[2024-09-22 21:38:38] Checking system prerequisites...\n[2024-09-22 21:38:38] System prerequisites check passed.\n[2024-09-22 21:38:38] Squid is installed. Path: /usr/sbin/squid\n[2024-09-22 21:38:38] Verifying Squid installation again...\n[2024-09-22 21:38:38] Squid is installed. Path: /usr/sbin/squid\n[2024-09-22 21:38:39] Starting Squid service...\n[2024-09-22 21:38:39] Checking Squid service status...\n[2024-09-22 21:38:40] Testing Squid configuration...\n[2024-09-22 21:38:41] Stopping Squid service...\n[2024-09-22 21:39:14] Squid functionality test passed successfully.\n[2024-09-22 21:39:14] Squid is functioning correctly.\n[2024-09-22 21:39:14] Cleaned up temporary directory.\n[2024-09-22 21:39:14] Squid test script completed.\n",
         "passed": true
       }
     ],
@@ -489,15 +609,644 @@
     "os_version": "Linux version 6.10.6-riscv64 (debian-kernel@lists.debian.org) (riscv64-linux-gnu-gcc-13 (Debian 13.3.0-5) 13.3.0, GNU ld (GNU Binutils for Debian) 2.43.1) #1 SMP Debian 6.10.6-1 (2024-08-19)\n",
     "kernel_version": "6.10.6-riscv64\n",
     "package_name": "zookeeper",
-    "package_type": "package",
-    "package_version": "",
+    "package_metadata": {
+      "package_version": "3.9.2",
+      "package_pretty_name": "ZooKeeper",
+      "package_type": "Distributed Coordination Service",
+      "package_description": "A high-performance coordination service for distributed applications"
+    },
     "test_results": [
       {
         "test_name": "test.sh",
-        "output": "Reading package lists...\nBuilding dependency tree...\nReading state information...\nsudo is already the newest version (1.9.15p5-3+b1).\ncurl is already the newest version (8.9.1-2).\napt-transport-https is already the newest version (2.9.8).\nca-certificates is already the newest version (20240203).\ngnupg is already the newest version (2.2.43-8).\nlsb-release is already the newest version (12.1-1).\nnetcat-openbsd is already the newest version (1.226-1.1).\n0 upgraded, 0 newly installed, 0 to remove and 67 not upgraded.\n[2024-09-19 02:45:31] Current directory: /tmp/lintestor/debian/zookeeper\n[2024-09-19 02:45:31] Created temporary directory: /tmp/tmp.fc50sKK4Dp\n[2024-09-19 02:45:31] Starting ZooKeeper test script...\n[2024-09-19 02:45:31] Checking system prerequisites...\n[2024-09-19 02:45:31] System prerequisites check passed.\n[2024-09-19 02:45:31] ZooKeeper is installed. Path: /opt/zookeeper\n[2024-09-19 02:45:31] Verifying ZooKeeper installation again...\n[2024-09-19 02:45:31] ZooKeeper is installed. Path: /opt/zookeeper\n[2024-09-19 02:45:36] Starting ZooKeeper server...\n/usr/bin/java\nStarting zookeeper ... STARTED\n[2024-09-19 02:45:44] Checking ZooKeeper server status...\n/usr/bin/java\nClient port found: 2181. Client address: localhost. Client SSL: false.\nError contacting service. It is probably not running.\n[2024-09-19 02:46:03] ZooKeeper server is not running properly.\n[2024-09-19 02:46:03] ZooKeeper is not functioning correctly.\n[2024-09-19 02:46:03] Cleaned up temporary directory.\n[2024-09-19 02:46:03] ZooKeeper test script completed.\n",
+        "output": "Reading package lists...\nBuilding dependency tree...\nReading state information...\nsudo is already the newest version (1.9.15p5-3+b1).\ncurl is already the newest version (8.9.1-2).\napt-transport-https is already the newest version (2.9.8).\nca-certificates is already the newest version (20240203).\ngnupg is already the newest version (2.2.43-8).\nlsb-release is already the newest version (12.1-1).\nnetcat-openbsd is already the newest version (1.226-1.1).\n0 upgraded, 0 newly installed, 0 to remove and 67 not upgraded.\n[2024-09-22 21:39:26] Current directory: /tmp/lintestor/debian/zookeeper\n[2024-09-22 21:39:26] Created temporary directory: /tmp/tmp.g806gnlQ8Z\n[2024-09-22 21:39:26] Starting ZooKeeper test script...\n[2024-09-22 21:39:26] Checking system prerequisites...\n[2024-09-22 21:39:26] System prerequisites check passed.\n[2024-09-22 21:39:26] ZooKeeper is installed. Path: /opt/zookeeper\n[2024-09-22 21:39:26] Verifying ZooKeeper installation again...\n[2024-09-22 21:39:26] ZooKeeper is installed. Path: /opt/zookeeper\n[2024-09-22 21:39:31] Starting ZooKeeper server...\n/usr/bin/java\nStarting zookeeper ... STARTED\n[2024-09-22 21:39:38] Checking ZooKeeper server status...\n/usr/bin/java\nClient port found: 2181. Client address: localhost. Client SSL: false.\nError contacting service. It is probably not running.\n[2024-09-22 21:39:57] ZooKeeper server is not running properly.\n[2024-09-22 21:39:57] ZooKeeper is not functioning correctly.\n[2024-09-22 21:39:58] Cleaned up temporary directory.\n[2024-09-22 21:39:58] ZooKeeper test script completed.\n",
         "passed": false
       }
     ],
     "all_tests_passed": false
+  },
+  {
+    "distro": "bianbu",
+    "os_version": "Linux version 6.1.15 (root@bianbu-build-deb-37zn1-v692p) (gcc (Ubuntu 13.2.0-4ubuntu3-bb2) 13.2.0, GNU ld (GNU Binutils for Ubuntu) 2.41) #1.0 SMP PREEMPT Thu May 30 13:16:13 UTC 2024\n",
+    "kernel_version": "6.1.15\n",
+    "package_name": "apache",
+    "package_metadata": {
+      "package_version": "2.4.57-2ubuntu2.1",
+      "package_pretty_name": "Apache HTTP Server",
+      "package_type": "Web Server",
+      "package_description": "Apache HTTP Server"
+    },
+    "test_results": [
+      {
+        "test_name": "test.sh",
+        "output": "Package apache2 is installed.\nApache service is running.\nApache service state has been restored.\n",
+        "passed": true
+      }
+    ],
+    "all_tests_passed": true
+  },
+  {
+    "distro": "bianbu",
+    "os_version": "Linux version 6.1.15 (root@bianbu-build-deb-37zn1-v692p) (gcc (Ubuntu 13.2.0-4ubuntu3-bb2) 13.2.0, GNU ld (GNU Binutils for Ubuntu) 2.41) #1.0 SMP PREEMPT Thu May 30 13:16:13 UTC 2024\n",
+    "kernel_version": "6.1.15\n",
+    "package_name": "clang",
+    "package_metadata": {
+      "package_version": "16.0.6 (15)",
+      "package_pretty_name": "Clang C/C++ Compiler",
+      "package_type": "Compiler Toolchain",
+      "package_description": "Clang C/C++ compiler, based on LLVM"
+    },
+    "test_results": [
+      {
+        "test_name": "test.sh",
+        "output": "Hello, World!\n",
+        "passed": true
+      }
+    ],
+    "all_tests_passed": true
+  },
+  {
+    "distro": "bianbu",
+    "os_version": "Linux version 6.1.15 (root@bianbu-build-deb-37zn1-v692p) (gcc (Ubuntu 13.2.0-4ubuntu3-bb2) 13.2.0, GNU ld (GNU Binutils for Ubuntu) 2.41) #1.0 SMP PREEMPT Thu May 30 13:16:13 UTC 2024\n",
+    "kernel_version": "6.1.15\n",
+    "package_name": "cmake",
+    "package_metadata": {
+      "package_version": "3.27.4",
+      "package_pretty_name": "CMake",
+      "package_type": "Build System",
+      "package_description": "Cross-platform make"
+    },
+    "test_results": [
+      {
+        "test_name": "test.sh",
+        "output": "-- Configuring done (0.1s)\n-- Generating done (0.0s)\n-- Build files have been written to: /tmp/cmake_test_dir\n[ 50%] Building CXX object CMakeFiles/test_app.dir/main.cpp.o\n[100%] Linking CXX executable test_app\n[100%] Built target test_app\n",
+        "passed": true
+      }
+    ],
+    "all_tests_passed": true
+  },
+  {
+    "distro": "bianbu",
+    "os_version": "Linux version 6.1.15 (root@bianbu-build-deb-37zn1-v692p) (gcc (Ubuntu 13.2.0-4ubuntu3-bb2) 13.2.0, GNU ld (GNU Binutils for Ubuntu) 2.41) #1.0 SMP PREEMPT Thu May 30 13:16:13 UTC 2024\n",
+    "kernel_version": "6.1.15\n",
+    "package_name": "docker",
+    "package_metadata": {
+      "package_version": "",
+      "package_pretty_name": "Docker Engine - Community Edition",
+      "package_type": "Container Platform",
+      "package_description": "Docker Engine - Community Edition"
+    },
+    "test_results": [
+      {
+        "test_name": "test.sh",
+        "output": "Skip docker test\n",
+        "passed": true
+      }
+    ],
+    "all_tests_passed": true
+  },
+  {
+    "distro": "bianbu",
+    "os_version": "Linux version 6.1.15 (root@bianbu-build-deb-37zn1-v692p) (gcc (Ubuntu 13.2.0-4ubuntu3-bb2) 13.2.0, GNU ld (GNU Binutils for Ubuntu) 2.41) #1.0 SMP PREEMPT Thu May 30 13:16:13 UTC 2024\n",
+    "kernel_version": "6.1.15\n",
+    "package_name": "erlang",
+    "package_metadata": {
+      "package_version": "1:25.2.3+dfsg-1",
+      "package_pretty_name": "Erlang Programming Language",
+      "package_type": "Programming Language",
+      "package_description": "A programming language used to build massively scalable soft real-time systems with requirements on high availability"
+    },
+    "test_results": [
+      {
+        "test_name": "test.sh",
+        "output": "Package erlang is installed.\nErlang is functioning correctly.\n",
+        "passed": true
+      }
+    ],
+    "all_tests_passed": true
+  },
+  {
+    "distro": "bianbu",
+    "os_version": "Linux version 6.1.15 (root@bianbu-build-deb-37zn1-v692p) (gcc (Ubuntu 13.2.0-4ubuntu3-bb2) 13.2.0, GNU ld (GNU Binutils for Ubuntu) 2.41) #1.0 SMP PREEMPT Thu May 30 13:16:13 UTC 2024\n",
+    "kernel_version": "6.1.15\n",
+    "package_name": "gcc",
+    "package_metadata": {
+      "package_version": "13.2.0",
+      "package_pretty_name": "GNU Compiler Collection",
+      "package_type": "Compiler Toolchain",
+      "package_description": "The GNU Compiler Collection"
+    },
+    "test_results": [
+      {
+        "test_name": "test.sh",
+        "output": "Checking for GCC and dependencies...\nGCC is installed.\nVerifying GCC...\nGCC verification passed.\n",
+        "passed": true
+      },
+      {
+        "test_name": "run_tests.sh",
+        "output": "",
+        "passed": false
+      }
+    ],
+    "all_tests_passed": false
+  },
+  {
+    "distro": "bianbu",
+    "os_version": "Linux version 6.1.15 (root@bianbu-build-deb-37zn1-v692p) (gcc (Ubuntu 13.2.0-4ubuntu3-bb2) 13.2.0, GNU ld (GNU Binutils for Ubuntu) 2.41) #1.0 SMP PREEMPT Thu May 30 13:16:13 UTC 2024\n",
+    "kernel_version": "6.1.15\n",
+    "package_name": "gdb",
+    "package_metadata": {
+      "package_version": "GNU gdb (Ubuntu 14.0.50.20230907-0ubuntu1-bb1) 14.0.50.20230907-git",
+      "package_pretty_name": "GNU Debugger",
+      "package_type": "Debugging Tool",
+      "package_description": "The GNU Debugger"
+    },
+    "test_results": [
+      {
+        "test_name": "test.sh",
+        "output": "Package gdb is installed.\nGNU gdb (Ubuntu 14.0.50.20230907-0ubuntu1-bb1) 14.0.50.20230907-git\nGDB is functioning correctly.\n",
+        "passed": true
+      }
+    ],
+    "all_tests_passed": true
+  },
+  {
+    "distro": "bianbu",
+    "os_version": "Linux version 6.1.15 (root@bianbu-build-deb-37zn1-v692p) (gcc (Ubuntu 13.2.0-4ubuntu3-bb2) 13.2.0, GNU ld (GNU Binutils for Ubuntu) 2.41) #1.0 SMP PREEMPT Thu May 30 13:16:13 UTC 2024\n",
+    "kernel_version": "6.1.15\n",
+    "package_name": "golang",
+    "package_metadata": {
+      "package_version": "2:1.21~2",
+      "package_pretty_name": "Go Programming Language",
+      "package_type": "Programming Language",
+      "package_description": "Go programming language compiler, linker, and libraries"
+    },
+    "test_results": [
+      {
+        "test_name": "test.sh",
+        "output": "Package golang-go is installed.\nGo program compiled and ran successfully.\nGo is functioning correctly.\n",
+        "passed": true
+      }
+    ],
+    "all_tests_passed": true
+  },
+  {
+    "distro": "bianbu",
+    "os_version": "Linux version 6.1.15 (root@bianbu-build-deb-37zn1-v692p) (gcc (Ubuntu 13.2.0-4ubuntu3-bb2) 13.2.0, GNU ld (GNU Binutils for Ubuntu) 2.41) #1.0 SMP PREEMPT Thu May 30 13:16:13 UTC 2024\n",
+    "kernel_version": "6.1.15\n",
+    "package_name": "haproxy",
+    "package_metadata": {
+      "package_version": "2.6.15-1ubuntu2",
+      "package_pretty_name": "HAProxy",
+      "package_type": "Load Balancer",
+      "package_description": "Reliable, high performance TCP/HTTP load balancer"
+    },
+    "test_results": [
+      {
+        "test_name": "test.sh",
+        "output": "Package haproxy is installed.\nHAProxy service is active.\n",
+        "passed": true
+      }
+    ],
+    "all_tests_passed": true
+  },
+  {
+    "distro": "bianbu",
+    "os_version": "Linux version 6.1.15 (root@bianbu-build-deb-37zn1-v692p) (gcc (Ubuntu 13.2.0-4ubuntu3-bb2) 13.2.0, GNU ld (GNU Binutils for Ubuntu) 2.41) #1.0 SMP PREEMPT Thu May 30 13:16:13 UTC 2024\n",
+    "kernel_version": "6.1.15\n",
+    "package_name": "libmemcached",
+    "package_metadata": {
+      "package_version": "",
+      "package_pretty_name": "libmemcached",
+      "package_type": "Caching Library",
+      "package_description": "Client library to memcached servers (transitional package)"
+    },
+    "test_results": [
+      {
+        "test_name": "test.sh",
+        "output": "Package libmemcached11t64 is not installed. Attempting to install...\n命中:1 http://archive.spacemit.com/bianbu-ports mantic/snapshots/v1.0 InRelease\n命中:2 http://archive.spacemit.com/bianbu-ports mantic-security/snapshots/v1.0 InRelease\n命中:3 http://archive.spacemit.com/bianbu-ports mantic-spacemit/snapshots/v1.0 InRelease\n命中:4 http://archive.spacemit.com/bianbu-ports mantic-porting/snapshots/v1.0 InRelease\n命中:5 http://archive.spacemit.com/bianbu-ports mantic-customization/snapshots/v1.0 InRelease\n正在读取软件包列表...\n正在读取软件包列表...\n正在分析软件包的依赖关系树...\n正在读取状态信息...\nFailed to install package libmemcached11t64.\n",
+        "passed": false
+      }
+    ],
+    "all_tests_passed": false
+  },
+  {
+    "distro": "bianbu",
+    "os_version": "Linux version 6.1.15 (root@bianbu-build-deb-37zn1-v692p) (gcc (Ubuntu 13.2.0-4ubuntu3-bb2) 13.2.0, GNU ld (GNU Binutils for Ubuntu) 2.41) #1.0 SMP PREEMPT Thu May 30 13:16:13 UTC 2024\n",
+    "kernel_version": "6.1.15\n",
+    "package_name": "lighttpd",
+    "package_metadata": {
+      "package_version": "1.4.69-1ubuntu1",
+      "package_pretty_name": "Lighttpd",
+      "package_type": "Web Server",
+      "package_description": "Lighttpd - a secure, fast, compliant and very flexible web server"
+    },
+    "test_results": [
+      {
+        "test_name": "test.sh",
+        "output": "Package lighttpd is installed.\nLighttpd service is active and responding.\n",
+        "passed": true
+      }
+    ],
+    "all_tests_passed": true
+  },
+  {
+    "distro": "bianbu",
+    "os_version": "Linux version 6.1.15 (root@bianbu-build-deb-37zn1-v692p) (gcc (Ubuntu 13.2.0-4ubuntu3-bb2) 13.2.0, GNU ld (GNU Binutils for Ubuntu) 2.41) #1.0 SMP PREEMPT Thu May 30 13:16:13 UTC 2024\n",
+    "kernel_version": "6.1.15\n",
+    "package_name": "llvm",
+    "package_metadata": {
+      "package_version": "1:15.0.7-10",
+      "package_pretty_name": "LLVM Compiler Infrastructure",
+      "package_type": "Compiler Toolchain",
+      "package_description": "The LLVM Compiler Infrastructure"
+    },
+    "test_results": [
+      {
+        "test_name": "test.sh",
+        "output": "Package llvm is installed.\nLLVM is functioning correctly.\nLLVM is functioning correctly.\n",
+        "passed": true
+      }
+    ],
+    "all_tests_passed": true
+  },
+  {
+    "distro": "bianbu",
+    "os_version": "Linux version 6.1.15 (root@bianbu-build-deb-37zn1-v692p) (gcc (Ubuntu 13.2.0-4ubuntu3-bb2) 13.2.0, GNU ld (GNU Binutils for Ubuntu) 2.41) #1.0 SMP PREEMPT Thu May 30 13:16:13 UTC 2024\n",
+    "kernel_version": "6.1.15\n",
+    "package_name": "mariadb",
+    "package_metadata": {
+      "package_version": "1:10.11.4-1",
+      "package_pretty_name": "MariaDB database server",
+      "package_type": "Database",
+      "package_description": "MariaDB database server binaries"
+    },
+    "test_results": [
+      {
+        "test_name": "test.sh",
+        "output": "Package mariadb-server is installed.\nMariaDB service is active and responding.\n",
+        "passed": true
+      }
+    ],
+    "all_tests_passed": true
+  },
+  {
+    "distro": "bianbu",
+    "os_version": "Linux version 6.1.15 (root@bianbu-build-deb-37zn1-v692p) (gcc (Ubuntu 13.2.0-4ubuntu3-bb2) 13.2.0, GNU ld (GNU Binutils for Ubuntu) 2.41) #1.0 SMP PREEMPT Thu May 30 13:16:13 UTC 2024\n",
+    "kernel_version": "6.1.15\n",
+    "package_name": "nginx",
+    "package_metadata": {
+      "package_version": "1.24.0-1ubuntu1",
+      "package_pretty_name": "Nginx",
+      "package_type": "Web Server",
+      "package_description": "high-performance web server and a reverse proxy server"
+    },
+    "test_results": [
+      {
+        "test_name": "test.sh",
+        "output": "Package nginx is installed.\nNginx service is active and responding.\n",
+        "passed": true
+      }
+    ],
+    "all_tests_passed": true
+  },
+  {
+    "distro": "bianbu",
+    "os_version": "Linux version 6.1.15 (root@bianbu-build-deb-37zn1-v692p) (gcc (Ubuntu 13.2.0-4ubuntu3-bb2) 13.2.0, GNU ld (GNU Binutils for Ubuntu) 2.41) #1.0 SMP PREEMPT Thu May 30 13:16:13 UTC 2024\n",
+    "kernel_version": "6.1.15\n",
+    "package_name": "nodejs",
+    "package_metadata": {
+      "package_version": "18.13.0+dfsg1-1ubuntu2",
+      "package_pretty_name": "Node.js",
+      "package_type": "Javascript Runtime",
+      "package_description": "Evented I/O for V8 JavaScript - runtime executable"
+    },
+    "test_results": [
+      {
+        "test_name": "test.sh",
+        "output": "Package nodejs is installed.\nTemp dir: /tmp/tmp.cp23lxbeKL\nNode.js is functioning correctly.\nNode.js is functioning correctly.\n",
+        "passed": true
+      }
+    ],
+    "all_tests_passed": true
+  },
+  {
+    "distro": "bianbu",
+    "os_version": "Linux version 6.1.15 (root@bianbu-build-deb-37zn1-v692p) (gcc (Ubuntu 13.2.0-4ubuntu3-bb2) 13.2.0, GNU ld (GNU Binutils for Ubuntu) 2.41) #1.0 SMP PREEMPT Thu May 30 13:16:13 UTC 2024\n",
+    "kernel_version": "6.1.15\n",
+    "package_name": "numpy",
+    "package_metadata": {
+      "package_version": "Python 3.11.6 (1.24.2)",
+      "package_pretty_name": "NumPy",
+      "package_type": "Python Library",
+      "package_description": "Numerical Python adds a fast array facility to the Python language"
+    },
+    "test_results": [
+      {
+        "test_name": "test.sh",
+        "output": "Python 3 is installed.\nNumPy is installed.\nPython and NumPy versions: Python 3.11.6 (1.24.2)\nNumpy is functioning correctly.\nNumpy is functioning correctly.\n",
+        "passed": true
+      }
+    ],
+    "all_tests_passed": true
+  },
+  {
+    "distro": "bianbu",
+    "os_version": "Linux version 6.1.15 (root@bianbu-build-deb-37zn1-v692p) (gcc (Ubuntu 13.2.0-4ubuntu3-bb2) 13.2.0, GNU ld (GNU Binutils for Ubuntu) 2.41) #1.0 SMP PREEMPT Thu May 30 13:16:13 UTC 2024\n",
+    "kernel_version": "6.1.15\n",
+    "package_name": "ocaml",
+    "package_metadata": {
+      "package_version": "4.13.1-6ubuntu1",
+      "package_pretty_name": "Objective Caml",
+      "package_type": "Programming Language",
+      "package_description": "The Objective Caml compiler"
+    },
+    "test_results": [
+      {
+        "test_name": "test.sh",
+        "output": "Package ocaml is installed.\nOCaml is functioning correctly.\n",
+        "passed": true
+      }
+    ],
+    "all_tests_passed": true
+  },
+  {
+    "distro": "bianbu",
+    "os_version": "Linux version 6.1.15 (root@bianbu-build-deb-37zn1-v692p) (gcc (Ubuntu 13.2.0-4ubuntu3-bb2) 13.2.0, GNU ld (GNU Binutils for Ubuntu) 2.41) #1.0 SMP PREEMPT Thu May 30 13:16:13 UTC 2024\n",
+    "kernel_version": "6.1.15\n",
+    "package_name": "openjdk",
+    "package_metadata": {
+      "package_version": "17.0.9",
+      "package_pretty_name": "OpenJDK Development Kit (JDK)",
+      "package_type": "Java Development Kit",
+      "package_description": "OpenJDK Development Kit (JDK)"
+    },
+    "test_results": [
+      {
+        "test_name": "test.sh",
+        "output": "OpenJDK is installed.\nOpenJDK is functioning correctly.\nOpenJDK is functioning correctly.\n",
+        "passed": true
+      }
+    ],
+    "all_tests_passed": true
+  },
+  {
+    "distro": "bianbu",
+    "os_version": "Linux version 6.1.15 (root@bianbu-build-deb-37zn1-v692p) (gcc (Ubuntu 13.2.0-4ubuntu3-bb2) 13.2.0, GNU ld (GNU Binutils for Ubuntu) 2.41) #1.0 SMP PREEMPT Thu May 30 13:16:13 UTC 2024\n",
+    "kernel_version": "6.1.15\n",
+    "package_name": "perl",
+    "package_metadata": {
+      "package_version": "5.36.0",
+      "package_pretty_name": "Perl",
+      "package_type": "Programming Language",
+      "package_description": "Larry Wall's Practical Extraction and Report Language"
+    },
+    "test_results": [
+      {
+        "test_name": "test.sh",
+        "output": "Perl is installed.\nPerl is functioning correctly.\nPerl is functioning correctly.\n",
+        "passed": true
+      }
+    ],
+    "all_tests_passed": true
+  },
+  {
+    "distro": "bianbu",
+    "os_version": "Linux version 6.1.15 (root@bianbu-build-deb-37zn1-v692p) (gcc (Ubuntu 13.2.0-4ubuntu3-bb2) 13.2.0, GNU ld (GNU Binutils for Ubuntu) 2.41) #1.0 SMP PREEMPT Thu May 30 13:16:13 UTC 2024\n",
+    "kernel_version": "6.1.15\n",
+    "package_name": "python",
+    "package_metadata": {
+      "package_version": "3.11.6",
+      "package_pretty_name": "Python 3",
+      "package_type": "Programming Language",
+      "package_description": "Interactive high-level object-oriented language (default python3 version)"
+    },
+    "test_results": [
+      {
+        "test_name": "test.sh",
+        "output": "Python is installed.\nPython is functioning correctly.\nPython is functioning correctly.\n",
+        "passed": true
+      }
+    ],
+    "all_tests_passed": true
+  },
+  {
+    "distro": "bianbu",
+    "os_version": "Linux version 6.1.15 (root@bianbu-build-deb-37zn1-v692p) (gcc (Ubuntu 13.2.0-4ubuntu3-bb2) 13.2.0, GNU ld (GNU Binutils for Ubuntu) 2.41) #1.0 SMP PREEMPT Thu May 30 13:16:13 UTC 2024\n",
+    "kernel_version": "6.1.15\n",
+    "package_name": "ruby",
+    "package_metadata": {
+      "package_version": "3.1.2p20",
+      "package_pretty_name": "Ruby",
+      "package_type": "Programming Language",
+      "package_description": "Interpreter of object-oriented scripting language Ruby"
+    },
+    "test_results": [
+      {
+        "test_name": "test.sh",
+        "output": "Ruby is installed.\nRuby is functioning correctly.\nRuby is functioning correctly.\n",
+        "passed": true
+      }
+    ],
+    "all_tests_passed": true
+  },
+  {
+    "distro": "bianbu",
+    "os_version": "Linux version 6.1.15 (root@bianbu-build-deb-37zn1-v692p) (gcc (Ubuntu 13.2.0-4ubuntu3-bb2) 13.2.0, GNU ld (GNU Binutils for Ubuntu) 2.41) #1.0 SMP PREEMPT Thu May 30 13:16:13 UTC 2024\n",
+    "kernel_version": "6.1.15\n",
+    "package_name": "rust",
+    "package_metadata": {
+      "package_version": "1.71.1",
+      "package_pretty_name": "Rust",
+      "package_type": "Programming Language",
+      "package_description": "Rust compiler"
+    },
+    "test_results": [
+      {
+        "test_name": "test.sh",
+        "output": "[2024-09-23 05:42:08] Current directory: /tmp/lintestor/bianbu/rust\n[2024-09-23 05:42:08] Created temporary directory: /tmp/tmp.oxwIvvv2he\n[2024-09-23 05:42:08] Starting Rust test script...\n[2024-09-23 05:42:08] Checking system prerequisites...\n[2024-09-23 05:42:08] System prerequisites check passed.\n[2024-09-23 05:42:08] Rust is installed.\n[2024-09-23 05:42:09] Created temporary directory: /tmp/tmp.oN3BZmam8S\n[2024-09-23 05:42:09] Creating a new Rust project...\n[2024-09-23 05:42:09] Building the Rust project...\n[2024-09-23 05:42:12] Running the Rust project...\n[2024-09-23 05:42:12] Project output:     Finished dev [unoptimized + debuginfo] target(s) in 0.23s\n     Running `target/debug/hello_world`\nHello, world!\n[2024-09-23 05:42:12] Cleaned up temporary directory.\n[2024-09-23 05:42:12] Cleaned up temporary directory.\n[2024-09-23 05:42:12] Changed back to original directory: /tmp/lintestor/bianbu/rust\n[2024-09-23 05:42:12] Rust test passed successfully.\n[2024-09-23 05:42:12] Rust is functioning correctly.\n",
+        "passed": true
+      }
+    ],
+    "all_tests_passed": true
+  },
+  {
+    "distro": "bianbu",
+    "os_version": "Linux version 6.1.15 (root@bianbu-build-deb-37zn1-v692p) (gcc (Ubuntu 13.2.0-4ubuntu3-bb2) 13.2.0, GNU ld (GNU Binutils for Ubuntu) 2.41) #1.0 SMP PREEMPT Thu May 30 13:16:13 UTC 2024\n",
+    "kernel_version": "6.1.15\n",
+    "package_name": "sqlite",
+    "package_metadata": {
+      "package_version": "3.42.0",
+      "package_pretty_name": "SQLite 3",
+      "package_type": "Database",
+      "package_description": "Command-line interface for SQLite 3"
+    },
+    "test_results": [
+      {
+        "test_name": "test.sh",
+        "output": "[2024-09-23 05:42:15] Current directory: /tmp/lintestor/bianbu/sqlite\n[2024-09-23 05:42:15] Created temporary directory: /tmp/tmp.g0LqZmbiRW\n[2024-09-23 05:42:15] Starting SQLite test script...\n[2024-09-23 05:42:15] Checking system prerequisites...\n[2024-09-23 05:42:15] System prerequisites check passed.\n[2024-09-23 05:42:15] SQLite is installed.\n[2024-09-23 05:42:15] Cleaned up temporary directory.\n[2024-09-23 05:42:15] Creating test database...\n1|Alice\n2|Bob\n[2024-09-23 05:42:15] Querying test database...\n[2024-09-23 05:42:15] Database output:\n[2024-09-23 05:42:15] 1|Alice\n2|Bob\n[2024-09-23 05:42:15] SQLite test passed successfully.\n[2024-09-23 05:42:15] SQLite is functioning correctly.\n",
+        "passed": true
+      }
+    ],
+    "all_tests_passed": true
+  },
+  {
+    "distro": "bianbu",
+    "os_version": "Linux version 6.1.15 (root@bianbu-build-deb-37zn1-v692p) (gcc (Ubuntu 13.2.0-4ubuntu3-bb2) 13.2.0, GNU ld (GNU Binutils for Ubuntu) 2.41) #1.0 SMP PREEMPT Thu May 30 13:16:13 UTC 2024\n",
+    "kernel_version": "6.1.15\n",
+    "package_name": "varnish",
+    "package_metadata": {
+      "package_version": "7.1.1",
+      "package_pretty_name": "Varnish Cache",
+      "package_type": "Caching Server",
+      "package_description": "High-performance HTTP accelerator"
+    },
+    "test_results": [
+      {
+        "test_name": "test.sh",
+        "output": "[2024-09-23 05:42:18] Current directory: /tmp/lintestor/bianbu/varnish\n[2024-09-23 05:42:18] Created temporary directory: /tmp/tmp.yWVKU8FPuH\n[2024-09-23 05:42:18] Starting Varnish test script...\n[2024-09-23 05:42:18] Checking system prerequisites...\n[2024-09-23 05:42:18] System prerequisites check passed.\n[2024-09-23 05:42:18] Varnish is installed. Path: /usr/sbin/varnishd\n[2024-09-23 05:42:18] Verifying Varnish installation again...\n[2024-09-23 05:42:18] Varnish is installed. Path: /usr/sbin/varnishd\n[2024-09-23 05:42:18] Starting Varnish service...\n[2024-09-23 05:42:18] Checking Varnish service status...\n[2024-09-23 05:42:18] Testing Varnish configuration...\n[2024-09-23 05:42:21] Checking Varnish stats...\nMGT.uptime                   0         0.00 Management process uptime\nMGT.child_start              1         0.00 Child process started\nMGT.child_exit               0         0.00 Child process normal exit\nMGT.child_stop               0         0.00 Child process unexpected exit\nMGT.child_died               0         0.00 Child process died (signal)\nMGT.child_dump               0         0.00 Child process core dumped\nMGT.child_panic              0         0.00 Child process panic\n[2024-09-23 05:42:21] Stopping Varnish service...\n[2024-09-23 05:42:21] Varnish functionality test passed successfully.\n[2024-09-23 05:42:21] Varnish is functioning correctly.\n[2024-09-23 05:42:21] Cleaned up temporary directory.\n[2024-09-23 05:42:21] Varnish test script completed.\n",
+        "passed": true
+      }
+    ],
+    "all_tests_passed": true
+  },
+  {
+    "distro": "bianbu",
+    "os_version": "Linux version 6.1.15 (root@bianbu-build-deb-37zn1-v692p) (gcc (Ubuntu 13.2.0-4ubuntu3-bb2) 13.2.0, GNU ld (GNU Binutils for Ubuntu) 2.41) #1.0 SMP PREEMPT Thu May 30 13:16:13 UTC 2024\n",
+    "kernel_version": "6.1.15\n",
+    "package_name": "openssl",
+    "package_metadata": {
+      "package_version": "3.0.10",
+      "package_pretty_name": "OpenSSL",
+      "package_type": "Cryptography Library",
+      "package_description": "Secure Sockets Layer toolkit - cryptographic utility"
+    },
+    "test_results": [
+      {
+        "test_name": "test.sh",
+        "output": "OpenSSL is installed.\nOpenSSL encryption and decryption test passed.\nOpenSSL is functioning correctly.\n",
+        "passed": true
+      }
+    ],
+    "all_tests_passed": true
+  },
+  {
+    "distro": "bianbu",
+    "os_version": "Linux version 6.1.15 (root@bianbu-build-deb-37zn1-v692p) (gcc (Ubuntu 13.2.0-4ubuntu3-bb2) 13.2.0, GNU ld (GNU Binutils for Ubuntu) 2.41) #1.0 SMP PREEMPT Thu May 30 13:16:13 UTC 2024\n",
+    "kernel_version": "6.1.15\n",
+    "package_name": "postgresql",
+    "package_metadata": {
+      "package_version": "15.4",
+      "package_pretty_name": "PostgreSQL",
+      "package_type": "Database",
+      "package_description": "Object-relational SQL database, version 16 server"
+    },
+    "test_results": [
+      {
+        "test_name": "test.sh",
+        "output": "PostgreSQL is installed.\nCREATE ROLE\nDROP ROLE\nPostgreSQL is functioning correctly.\nPostgreSQL is functioning correctly.\n",
+        "passed": true
+      }
+    ],
+    "all_tests_passed": true
+  },
+  {
+    "distro": "bianbu",
+    "os_version": "Linux version 6.1.15 (root@bianbu-build-deb-37zn1-v692p) (gcc (Ubuntu 13.2.0-4ubuntu3-bb2) 13.2.0, GNU ld (GNU Binutils for Ubuntu) 2.41) #1.0 SMP PREEMPT Thu May 30 13:16:13 UTC 2024\n",
+    "kernel_version": "6.1.15\n",
+    "package_name": "redis",
+    "package_metadata": {
+      "package_version": "7.0.12",
+      "package_pretty_name": "Redis",
+      "package_type": "Database",
+      "package_description": "Persistent key-value database, server side"
+    },
+    "test_results": [
+      {
+        "test_name": "test.sh",
+        "output": "Redis is installed.\nRedis is functioning correctly.\nRedis is functioning correctly.\n",
+        "passed": true
+      }
+    ],
+    "all_tests_passed": true
+  },
+  {
+    "distro": "bianbu",
+    "os_version": "Linux version 6.1.15 (root@bianbu-build-deb-37zn1-v692p) (gcc (Ubuntu 13.2.0-4ubuntu3-bb2) 13.2.0, GNU ld (GNU Binutils for Ubuntu) 2.41) #1.0 SMP PREEMPT Thu May 30 13:16:13 UTC 2024\n",
+    "kernel_version": "6.1.15\n",
+    "package_name": "runc",
+    "package_metadata": {
+      "package_version": "1.1.7-0ubuntu2",
+      "package_pretty_name": "runc",
+      "package_type": "Container Runtime",
+      "package_description": "CLI tool for spawning and running containers according to the OCI specification"
+    },
+    "test_results": [
+      {
+        "test_name": "test.sh",
+        "output": "[2024-09-23 05:42:36] Starting runC test script...\n[2024-09-23 05:42:36] Checking system prerequisites...\n[2024-09-23 05:42:36] Kernel version: 6.1.15\n[2024-09-23 05:42:37] System prerequisites check completed.\n[2024-09-23 05:42:37] runC is installed.\n[2024-09-23 05:42:37] Created temporary directory: /tmp/tmp.fmwjsBw8Si\n[2024-09-23 05:42:37] Created config.json in /tmp/tmp.fmwjsBw8Si/bundle\n[2024-09-23 05:42:37] Attempting to run runc container...\n[2024-09-23 05:42:37] Failed to run runc container. Output:\n[2024-09-23 05:42:37] time=\"2024-09-23T05:42:37+08:00\" level=error msg=\"runc run failed: unable to start container process: error closing exec fds: open /proc/self/fd: no such file or directory\"\n[2024-09-23 05:42:37] runC is not functioning correctly.\n",
+        "passed": false
+      }
+    ],
+    "all_tests_passed": false
+  },
+  {
+    "distro": "bianbu",
+    "os_version": "Linux version 6.1.15 (root@bianbu-build-deb-37zn1-v692p) (gcc (Ubuntu 13.2.0-4ubuntu3-bb2) 13.2.0, GNU ld (GNU Binutils for Ubuntu) 2.41) #1.0 SMP PREEMPT Thu May 30 13:16:13 UTC 2024\n",
+    "kernel_version": "6.1.15\n",
+    "package_name": "scipy",
+    "package_metadata": {
+      "package_version": "1.10.1 (python 3.11.6)",
+      "package_pretty_name": "SciPy",
+      "package_type": "Python Library",
+      "package_description": "Scientific Tools for Python"
+    },
+    "test_results": [
+      {
+        "test_name": "test.sh",
+        "output": "[2024-09-23 05:42:40] Current directory: /tmp/lintestor/bianbu/scipy\n[2024-09-23 05:42:40] Created temporary directory: /tmp/tmp.yycEN7aKJi\n[2024-09-23 05:42:40] Starting SciPy test script...\n[2024-09-23 05:42:40] Checking system prerequisites...\n[2024-09-23 05:42:40] System prerequisites check passed.\n[2024-09-23 05:42:41] SciPy is installed.\n[2024-09-23 05:42:42] Created temporary directory: /tmp/tmp.VsdIc2zrBm\n[2024-09-23 05:42:42] Running the SciPy test script...\n[2024-09-23 05:42:46] Script output:\n[2024-09-23 05:42:46] Mean: 0.0048\nStandard Deviation: 0.9668\nT-statistic: 0.1570\nP-value: 0.8753\n[2024-09-23 05:42:46] Cleaned up temporary directory.\n[2024-09-23 05:42:46] Changed back to original directory: /tmp/lintestor/bianbu/scipy\n[2024-09-23 05:42:46] SciPy test passed successfully.\n[2024-09-23 05:42:46] SciPy is functioning correctly.\n",
+        "passed": true
+      }
+    ],
+    "all_tests_passed": true
+  },
+  {
+    "distro": "bianbu",
+    "os_version": "Linux version 6.1.15 (root@bianbu-build-deb-37zn1-v692p) (gcc (Ubuntu 13.2.0-4ubuntu3-bb2) 13.2.0, GNU ld (GNU Binutils for Ubuntu) 2.41) #1.0 SMP PREEMPT Thu May 30 13:16:13 UTC 2024\n",
+    "kernel_version": "6.1.15\n",
+    "package_name": "squid",
+    "package_metadata": {
+      "package_version": "6.1",
+      "package_pretty_name": "Squid",
+      "package_type": "Proxy Server",
+      "package_description": "Caching Proxy for the Web"
+    },
+    "test_results": [
+      {
+        "test_name": "test.sh",
+        "output": "[2024-09-23 05:42:50] Current directory: /tmp/lintestor/bianbu/squid\n[2024-09-23 05:42:50] Created temporary directory: /tmp/tmp.sXdQ418hvD\n[2024-09-23 05:42:50] Starting Squid test script...\n[2024-09-23 05:42:50] Checking system prerequisites...\n[2024-09-23 05:42:50] System prerequisites check passed.\n[2024-09-23 05:42:50] Squid is installed. Path: /usr/sbin/squid\n[2024-09-23 05:42:50] Verifying Squid installation again...\n[2024-09-23 05:42:50] Squid is installed. Path: /usr/sbin/squid\n[2024-09-23 05:42:50] Starting Squid service...\n[2024-09-23 05:42:51] Checking Squid service status...\n[2024-09-23 05:42:51] Testing Squid configuration...\n[2024-09-23 05:42:51] Stopping Squid service...\n[2024-09-23 05:43:23] Squid functionality test passed successfully.\n[2024-09-23 05:43:23] Squid is functioning correctly.\n[2024-09-23 05:43:23] Cleaned up temporary directory.\n[2024-09-23 05:43:23] Squid test script completed.\n",
+        "passed": true
+      }
+    ],
+    "all_tests_passed": true
+  },
+  {
+    "distro": "bianbu",
+    "os_version": "Linux version 6.1.15 (root@bianbu-build-deb-37zn1-v692p) (gcc (Ubuntu 13.2.0-4ubuntu3-bb2) 13.2.0, GNU ld (GNU Binutils for Ubuntu) 2.41) #1.0 SMP PREEMPT Thu May 30 13:16:13 UTC 2024\n",
+    "kernel_version": "6.1.15\n",
+    "package_name": "zookeeper",
+    "package_metadata": {
+      "package_version": "3.9.2",
+      "package_pretty_name": "ZooKeeper",
+      "package_type": "Distributed Coordination Service",
+      "package_description": "A high-performance coordination service for distributed applications"
+    },
+    "test_results": [
+      {
+        "test_name": "test.sh",
+        "output": "[2024-09-23 05:43:26] Current directory: /tmp/lintestor/bianbu/zookeeper\n[2024-09-23 05:43:26] Created temporary directory: /tmp/tmp.0QAeUHI5c7\n[2024-09-23 05:43:26] Starting ZooKeeper test script...\n[2024-09-23 05:43:26] Checking system prerequisites...\n[2024-09-23 05:43:26] System prerequisites check passed.\n[2024-09-23 05:43:26] ZooKeeper is installed. Path: /opt/zookeeper\n[2024-09-23 05:43:26] Verifying ZooKeeper installation again...\n[2024-09-23 05:43:26] ZooKeeper is installed. Path: /opt/zookeeper\n[2024-09-23 05:43:26] Starting ZooKeeper server...\n/usr/bin/java\nStarting zookeeper ... STARTED\n[2024-09-23 05:43:33] Checking ZooKeeper server status...\n/usr/bin/java\nClient port found: 2181. Client address: localhost. Client SSL: false.\nMode: standalone\n[2024-09-23 05:43:35] Testing ZooKeeper client connection...\n[2024-09-23 05:43:35] Stopping ZooKeeper server...\n/usr/bin/java\nStopping zookeeper ... STOPPED\n[2024-09-23 05:43:37] ZooKeeper functionality test passed successfully.\n[2024-09-23 05:43:37] ZooKeeper is functioning correctly.\n[2024-09-23 05:43:37] Cleaned up temporary directory.\n[2024-09-23 05:43:37] ZooKeeper test script completed.\n",
+        "passed": true
+      }
+    ],
+    "all_tests_passed": true
   }
 ]
