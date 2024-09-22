@@ -7,6 +7,9 @@ pub struct TestScriptManager {
     metadata_script: Option<String>,
 }
 
+/// The name of the metadata script, if it exists.
+const METADATA_SCRIPT_NAME: &str = "metadata.sh";
+
 impl TestScriptManager {
     /// Creates a new `TestScriptManager` instance.
     ///
@@ -49,7 +52,7 @@ impl TestScriptManager {
                 let final_path = path.to_str().unwrap_or_default().to_string();
                 if path
                     .file_name()
-                    .is_some_and(|name| name == std::ffi::OsStr::new("metadata.sh"))
+                    .is_some_and(|name| name == std::ffi::OsStr::new(METADATA_SCRIPT_NAME))
                 {
                     metadata_script = Some(final_path.clone());
                 }
@@ -90,6 +93,23 @@ impl TestScriptManager {
         &self.test_scripts
     }
 
+    /// Returns a slice containing the names of all discovered test scripts.
+    ///
+    /// # Returns
+    ///
+    /// A slice of `String`s, where each `String` is the name of a discovered test script.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use your_crate::TestScriptManager;
+    ///
+    /// let manager = TestScriptManager::new("ubuntu", "nginx").expect("Failed to create TestScriptManager");
+    /// let scripts = manager.get_test_script_names();
+    /// for script in scripts {
+    ///     println!("Test script: {}", script);
+    /// }
+    /// ```
     pub fn get_test_script_names(&self) -> Vec<String> {
         self.test_scripts
             .iter()
@@ -117,5 +137,26 @@ impl TestScriptManager {
     /// ```
     pub fn get_metadata_script(&self) -> Option<String> {
         self.metadata_script.clone() // Is there a way not to clone it?
+    }
+
+    /// Returns the name of the `metadata.sh` script, if it exists.
+    ///
+    /// # Returns
+    ///
+    /// A `Some` containing the name of the `metadata.sh` script if it exists, or `None` if it doesn't.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use your_crate::TestScriptManager;
+    ///
+    /// let manager = TestScriptManager::new("ubuntu", "nginx").expect("Failed to create TestScriptManager");
+    /// let metadata_script = manager.get_metadata_script_name();
+    /// if let Some(script) = metadata_script {
+    ///     println!("Metadata script: {}", script);
+    /// }
+    /// ```
+    pub fn get_metadata_script_name(&self) -> Option<String> {
+        Some(METADATA_SCRIPT_NAME.to_string())
     }
 }
