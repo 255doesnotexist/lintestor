@@ -39,13 +39,14 @@ pub fn generate_markdown_report(
 
     let mut markdown = String::new();
     markdown.push_str("# 软件包测试结果矩阵 Software package test results\n\n");
-    markdown.push_str("| 软件包 Package | 种类 Type | 测试环境信息 Env. info | "); // TODO: add field for description
+    markdown.push_str("| 软件包 Package | 种类 Type | "); // TODO: add field for description
     for distro in distros {
-        markdown.push_str(&format!("{} | ", distro));
+        markdown.push_str(&format!("测试环境信息 Env. info | {} | ", distro));
     }
     markdown.pop();
-    markdown.push_str("\n|:------|:-----|:------|");
+    markdown.push_str("\n|:------|:------| ");
     for _ in distros {
+        markdown.push_str(":-------| ");
         markdown.push_str(":-------| ");
     }
     markdown.pop();
