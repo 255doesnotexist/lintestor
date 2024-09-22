@@ -1,4 +1,4 @@
-use crate::utils::Report;
+use crate::utils::{PackageMetadata, Report};
 use log::info;
 use std::fs::File;
 use std::io::prelude::*;
@@ -38,13 +38,13 @@ pub fn generate_markdown_report(
     }
 
     let mut markdown = String::new();
-    markdown.push_str("# 软件包测试结果矩阵\n\n");
-    markdown.push_str("| 软件包 | 种类 | ");
+    markdown.push_str("# 软件包测试结果矩阵 Software package test results\n\n");
+    markdown.push_str("| 软件包 Package | 种类 Type | 测试环境信息 Env. info | "); // TODO: add field for description
     for distro in distros {
         markdown.push_str(&format!("{} | ", distro));
     }
     markdown.pop();
-    markdown.push_str("\n|:------|:-----| ");
+    markdown.push_str("\n|:------|:-----|:------|");
     for _ in distros {
         markdown.push_str(":-------| ");
     }
@@ -52,27 +52,36 @@ pub fn generate_markdown_report(
     markdown.push('\n');
 
     for (pkg_idx, &package) in packages.iter().enumerate() {
-        let package_type = reports
-            .iter()
-            .find(|r| r.package_name == package)
-            .map_or("", |r| r.package_metadata.package_type.as_str());
-        markdown.push_str(&format!("| {} | {} ", package, package_type));
+        let package_metadata = reports.iter().find(|r| r.package_name == package).map_or(
+            PackageMetadata {
+                ..Default::default()
+            },
+            |r| r.package_metadata.clone(),
+        ); // is clone really needed...?
+
+        markdown.push_str(&format!(
+            "| {} | {} ",
+            package_metadata.package_pretty_name, package_metadata.package_type
+        ));
 
         for distro_idx in 0..distros.len() {
             if let Some(report) = report_matrix[pkg_idx][distro_idx] {
+                let mut env_info = report.os_version.clone();
+                env_info.pop();
                 markdown.push_str(&format!(
-                    "| {} {}{} ",
+                    "| {} | {} {}{} ",
+                    env_info,
                     if report.all_tests_passed {
                         "✅"
                     } else {
                         "⚠️"
                     },
-                    if !report.package_metadata.package_version.is_empty() {
+                    if !package_metadata.package_version.is_empty() {
                         format!("{}=", report.package_name)
                     } else {
                         String::from("")
                     },
-                    report.package_metadata.package_version
+                    package_metadata.package_version
                 ));
             } else {
                 markdown.push_str("| ❓ ");

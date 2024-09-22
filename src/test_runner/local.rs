@@ -79,11 +79,7 @@ impl TestRunner for LocalTestRunner {
             });
         }
 
-        let mut package_metadata = PackageMetadata {
-            ..Default::default()
-        };
-
-        if let Some(metadata_script) = script_manager.get_metadata_script() {
+        let package_metadata = if let Some(metadata_script) = script_manager.get_metadata_script() {
             let metadata_command = format!("source {} && echo $PACKAGE_VERSION && echo $PACKAGE_PRETTY_NAME && echo $PACKAGE_TYPE && echo $PACKAGE_DESCRIPTION", metadata_script);
             let metadata_output = Command::new("bash")
                 .arg("-c")
@@ -93,13 +89,18 @@ impl TestRunner for LocalTestRunner {
                 .lines()
                 .map(|line| line.to_string())
                 .collect();
-            package_metadata = PackageMetadata {
+            PackageMetadata {
                 package_version: metadata_vec.get(0).unwrap().to_owned(),
                 package_pretty_name: metadata_vec.get(1).unwrap().to_owned(),
                 package_type: metadata_vec.get(2).unwrap().to_owned(),
                 package_description: metadata_vec.get(3).unwrap().to_owned(),
             }
-        }
+        } else {
+            PackageMetadata {
+                package_pretty_name: package.to_string(),
+                ..Default::default()
+            }
+        };
 
         let report = Report {
             distro: distro.to_string(),
