@@ -1,7 +1,7 @@
 use crate::aggregator::generate_report;
 use crate::test_runner::TestRunner;
 use crate::testscript_manager::TestScriptManager;
-use crate::utils::{CommandOutput, Report, TempFile, TestResult, REMOTE_TMP_DIR};
+use crate::utils::{CommandOutput, PackageMetadata, Report, TempFile, TestResult, REMOTE_TMP_DIR};
 use log::{debug, log_enabled, Level};
 use ssh2::Session;
 use std::fs::File;
@@ -172,34 +172,31 @@ impl TestRunner for RemoteTestRunner {
         // Run test commands
         self.print_ssh_msg(&format!("Running tests in directory {}", remote_dir));
 
-        let script_manager = TestScriptManager::new(distro, package);
+        let script_manager = TestScriptManager::new(distro, package)?;
         let mut all_tests_passed = true;
         let mut test_results = Vec::new();
-        let pkgver_tmpfile = format!("{}/pkgver", REMOTE_TMP_DIR);
-        for script in script_manager?.get_test_script_names() {
+        for script in script_manager.get_test_script_names() {
             let remote_prerequisite_path = "/tmp/prerequisite.sh";
             let result = self.run_command(
                 &sess,
                 &format!(
-                    "cd {}; {} source {} && echo -n $PACKAGE_VERSION > {}",
+                    "cd {}; {} source {}",
                     remote_dir,
                     if Path::new(&prerequisite_path).exists() {
                         format!("source {} &&", remote_prerequisite_path)
                     } else {
                         String::from("")
                     },
-                    script,
-                    pkgver_tmpfile
+                    script
                 ),
-            );
+            )?;
 
-            let unwrapped_result = result?;
-            let test_passed = unwrapped_result.exit_status == 0;
+            let test_passed = result.exit_status == 0;
             all_tests_passed &= test_passed;
 
-            let output = &unwrapped_result.output;
-            debug!("Command: {}", unwrapped_result.command);
-            debug!("{:?}", &unwrapped_result);
+            let output = &result.output;
+            debug!("Command: {}", result.command);
+            debug!("{:?}", &result);
             test_results.push(TestResult {
                 test_name: script.to_string(),
                 output: output.to_string(),
@@ -207,25 +204,43 @@ impl TestRunner for RemoteTestRunner {
             });
         }
 
-        // Get OS version and package version
-        let os_version = self.run_command(&sess, "cat /proc/version")?;
-        let package_version = self.run_command(
-            &sess,
-            &format!("cat {} && rm {}", pkgver_tmpfile, pkgver_tmpfile),
-        )?;
-        let kernel_version = self.run_command(&sess, "uname -r")?;
         if all_tests_passed {
             self.print_ssh_msg(&format!("Test successful for {}/{}", distro, package));
         } else {
             self.print_ssh_msg(&format!("Test failed for {}/{}", distro, package));
         }
-        let report: Report = Report {
+
+        // Get OS version and package metadata
+        let os_version = self.run_command(&sess, "cat /proc/version")?;
+        let kernel_version = self.run_command(&sess, "uname -r")?;
+
+        let mut package_metadata = PackageMetadata {
+            ..Default::default()
+        };
+
+        if let Some(metadata_script) = script_manager.get_metadata_script() {
+            let metadata_command = format!("source {} && echo $PACKAGE_VERSION && echo $PACKAGE_PRETTY_NAME && echo $PACKAGE_TYPE && echo $PACKAGE_DESCRIPTION", metadata_script);
+            let metadata_output = self.run_command(&sess, &metadata_command)?;
+            let metadata_vec: Vec<String> = metadata_output
+                .output
+                .to_string()
+                .lines()
+                .map(|line| line.to_string())
+                .collect();
+            package_metadata = PackageMetadata {
+                package_version: metadata_vec.get(0).unwrap().to_owned(),
+                package_pretty_name: metadata_vec.get(1).unwrap().to_owned(),
+                package_type: metadata_vec.get(2).unwrap().to_owned(),
+                package_description: metadata_vec.get(3).unwrap().to_owned(),
+            }
+        }
+
+        let report = Report {
             distro: distro.to_string(),
             os_version: os_version.output,
             kernel_version: kernel_version.output,
             package_name: package.to_string(),
-            package_type: String::from("package"),
-            package_version: package_version.output,
+            package_metadata,
             test_results,
             all_tests_passed,
         };
@@ -286,7 +301,7 @@ impl TestRunner for RemoteTestRunner {
         debug!("{}-{} report:\n {:?}", distro, package, report);
 
         if !all_tests_passed {
-            return Err(format!("Not all tests passed {}/{}", distro, package).into());
+            return Err(format!("Not all tests passed for {}/{}", distro, package).into());
         }
         Ok(())
     }

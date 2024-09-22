@@ -1,7 +1,7 @@
 use crate::aggregator::generate_report;
 use crate::test_runner::TestRunner;
 use crate::testscript_manager::TestScriptManager;
-use crate::utils::{Report, TestResult, REMOTE_TMP_DIR};
+use crate::utils::{PackageMetadata, Report, TestResult, REMOTE_TMP_DIR};
 use log::{log_enabled, Level};
 use std::fs::read_to_string;
 use std::path::Path;
@@ -35,7 +35,7 @@ impl TestRunner for LocalTestRunner {
     /// * Generating the report fails.
     /// * Not all tests passed for the given distribution and package.
     fn run_test(&self, distro: &str, package: &str) -> Result<(), Box<dyn std::error::Error>> {
-        let script_manager = TestScriptManager::new(distro, package);
+        let script_manager = TestScriptManager::new(distro, package)?;
 
         let os_version = read_to_string("/proc/version")?;
         let kernelver_output = Command::new("uname").arg("-r").output()?;
@@ -43,22 +43,20 @@ impl TestRunner for LocalTestRunner {
         let mut all_tests_passed = true;
         let mut test_results = Vec::new();
 
-        let pkgver_tmpfile = format!("{}/pkgver", REMOTE_TMP_DIR);
         let prerequisite_path = format!("{}/prerequisite.sh", distro);
 
-        for script in script_manager?.get_test_scripts() {
+        for script in script_manager.get_test_scripts() {
             let output = Command::new("bash")
                 .arg("-c")
                 .arg(format!(
-                    "mkdir -p {} {} && source {} && echo -n $PACKAGE_VERSION > {}",
+                    "mkdir -p {} {} && source {}",
                     REMOTE_TMP_DIR,
                     if Path::new(&prerequisite_path).exists() {
                         format!("&& source {}", prerequisite_path)
                     } else {
                         String::from("")
                     },
-                    script,
-                    pkgver_tmpfile
+                    script
                 ))
                 .stdout(if log_enabled!(Level::Debug) {
                     Stdio::inherit()
@@ -81,19 +79,34 @@ impl TestRunner for LocalTestRunner {
             });
         }
 
-        let package_version = read_to_string(&pkgver_tmpfile)?;
+        let mut package_metadata = PackageMetadata {
+            ..Default::default()
+        };
+
+        if let Some(metadata_script) = script_manager.get_metadata_script() {
+            let metadata_command = format!("source {} && echo $PACKAGE_VERSION && echo $PACKAGE_PRETTY_NAME && echo $PACKAGE_TYPE && echo $PACKAGE_DESCRIPTION", metadata_script);
+            let metadata_output = Command::new("bash")
+                .arg("-c")
+                .arg(metadata_command)
+                .output()?;
+            let metadata_vec: Vec<String> = String::from_utf8_lossy(&metadata_output.stdout)
+                .lines()
+                .map(|line| line.to_string())
+                .collect();
+            package_metadata = PackageMetadata {
+                package_version: metadata_vec.get(0).unwrap().to_owned(),
+                package_pretty_name: metadata_vec.get(1).unwrap().to_owned(),
+                package_type: metadata_vec.get(2).unwrap().to_owned(),
+                package_description: metadata_vec.get(3).unwrap().to_owned(),
+            }
+        }
 
         let report = Report {
             distro: distro.to_string(),
             os_version,
             kernel_version,
             package_name: package.to_string(),
-            package_type: String::from("package"),
-            package_version, // partially removed
-            // TODO: add a metadata.sh script for every package
-            // which generate a metadata.json file containing package version
-            // and other metadata (different distros / packages have really different
-            // metadata fetching methods so it is essential to write a metadata.sh for each one seperately)
+            package_metadata,
             test_results,
             all_tests_passed,
         };

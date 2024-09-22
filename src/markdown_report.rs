@@ -55,7 +55,7 @@ pub fn generate_markdown_report(
         let package_type = reports
             .iter()
             .find(|r| r.package_name == package)
-            .map_or("", |r| r.package_type.as_str());
+            .map_or("", |r| r.package_metadata.package_type.as_str());
         markdown.push_str(&format!("| {} | {} ", package, package_type));
 
         for distro_idx in 0..distros.len() {
@@ -67,12 +67,12 @@ pub fn generate_markdown_report(
                     } else {
                         "⚠️"
                     },
-                    if !report.package_version.is_empty() {
+                    if !report.package_metadata.package_version.is_empty() {
                         format!("{}=", report.package_name)
                     } else {
                         String::from("")
                     },
-                    report.package_version
+                    report.package_metadata.package_version
                 ));
             } else {
                 markdown.push_str("| ❓ ");

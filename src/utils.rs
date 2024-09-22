@@ -19,14 +19,37 @@ pub struct Report {
     pub kernel_version: String,
     /// The name of the package being tested.
     pub package_name: String,
-    /// The type of the package (temporarily deprecated).
-    pub package_type: String,
-    /// The version of the package being tested.
-    pub package_version: String,
+    /// A collection of extra metadata for the package,
+    /// defined by `metadata.sh` in the package's subdirectory.
+    pub package_metadata: PackageMetadata,
     /// A collection of individual test results.
     pub test_results: Vec<TestResult>,
     /// Indicates whether all tests passed.
     pub all_tests_passed: bool,
+}
+
+/// Represents package specific extra metadata information to be used in test reports
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct PackageMetadata {
+    /// The version of the package being tested.
+    pub package_version: String,
+    /// The pretty (formal) name of the package.
+    pub package_pretty_name: String,
+    /// The type of the package (temporarily deprecated).
+    pub package_type: String,
+    /// Brief description of the package (optional).
+    pub package_description: String,
+}
+
+impl Default for PackageMetadata {
+    fn default() -> PackageMetadata {
+        PackageMetadata {
+            package_pretty_name: String::new(),
+            package_type: String::from("package"),
+            package_version: String::from("Unknown"),
+            package_description: String::new(),
+        }
+    }
 }
 
 /// Represents the result of an individual test.
