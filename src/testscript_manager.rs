@@ -98,6 +98,23 @@ impl TestScriptManager {
             .collect()
     }
 
+    /// Returns the local path to the `metadata.sh` script, if it exists.
+    ///
+    /// # Returns
+    ///
+    /// A `Some` containing the path to the `metadata.sh` script if it exists, or `None` if it doesn't.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use your_crate::TestScriptManager;
+    ///
+    /// let manager = TestScriptManager::new("ubuntu", "nginx").expect("Failed to create TestScriptManager");
+    /// let metadata_script = manager.get_metadata_script();
+    /// if let Some(script) = metadata_script {
+    ///     println!("Metadata script: {}", script);
+    /// }
+    /// ```
     pub fn get_metadata_script(&self) -> Option<String> {
         self.metadata_script.clone() // Is there a way not to clone it?
     }
