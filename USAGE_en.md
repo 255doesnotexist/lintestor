@@ -23,7 +23,16 @@ port = 2222
 username = "root"
 password = "root"
 ```
-Each subdirectory corresponding to a package should contain at least one test script (multiple scripts would be treated as multiple test cases). For writing the respective test scripts, refer to existing ones under the `debian` folder to get you started.
+Each subdirectory corresponding to a package should contain at least one `metadata.sh` script for storing the package's metadata to be used in the generated reports. Please define the following variables in the script:
+```
+PACKAGE_VERSION="3.30.3" # Package version. Either specify manually or fetch with commands
+# e.g. get version of a package installed through `dpkg/apt` on Debian-based distros
+# PACKAGE_VERSION=$(dpkg -l | grep $PACKAGE_NAME | awk '{print $3}')
+PACKAGE_PRETTY_NAME="CMake" # A "pretty name" for the package (otherwise the name of the subdirectory would be used as package name)
+PACKAGE_TYPE="Build System" # Package type
+PACKAGE_DESCRIPTION="Cross-platform make" # Brief description of the package (variable currently unused)
+```
+Any other `.sh` scripts (except `metadata.sh`) in the subdirectory would be run as tests. Each script represents an individual "test case" for the package. For writing the respective test scripts, refer to existing ones under the `debian` folder to get you started.
 
 If certain commands need to be run globally prior each test script (eg. `export DEBIAN_FRONTEND=noninteractive` may be used on Debian-based systems to prevent apt interactive prompts), put them in `prerequisite.sh` under the distro directory. 
 
