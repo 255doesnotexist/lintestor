@@ -39,9 +39,13 @@ pub fn generate_markdown_report(
 
     let mut markdown = String::new();
     markdown.push_str("# 软件包测试结果矩阵 Software package test results\n\n");
+    markdown.push_str("> 图标说明 Legend: ✅ = 通过 Passed; ⚠️ = 部分或全部测试不通过 Not all tests passed; ❓ = 未知 Unknown\n\n");
     markdown.push_str("| 软件包 Package | 种类 Type | "); // TODO: add field for description
     for distro in distros {
-        markdown.push_str(&format!("测试环境信息 Env. info | {} | ", distro));
+        markdown.push_str(&format!(
+            "{}: 测试环境信息 Env. info | {}: 测试结果 Results | ",
+            distro, distro
+        ));
     }
     markdown.pop();
     markdown.push_str("\n|:------|:------| ");
