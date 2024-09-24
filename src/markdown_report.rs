@@ -103,11 +103,11 @@ pub fn generate_markdown_report(
     let mut appending_details = String::new();
 
     for (distro, packages) in &distro_env_infos {
-        appending_details.push_str(&format!("# <span id=\"{}\">{}</span>\n", distro, distro));
+        appending_details.push_str(&format!("# <span id=\"{}\">{}</span>\n\n", distro, distro));
         
         for (package, env_info) in packages {
             let package_id = format!("{}_{}", distro, package); // 创建唯一的 id
-            appending_details.push_str(&format!("- <span id=\"{}\">{}: {}</span>\n", package_id, package, env_info));
+            appending_details.push_str(&format!("- <span id=\"{}\">{}: {}</span>\n\n", package_id, package, env_info));
         }
     }
 

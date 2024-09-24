@@ -36,127 +36,191 @@
 | Squid | Proxy Server | ✅ squid=6.10 | ✅ squid=6.10 |
 | ZooKeeper | Distributed Coordination Service | ⚠️ zookeeper=3.9.2 | ✅ zookeeper=3.9.2 |
 # <span id="bianbu">bianbu</span>
+
 - <span id="bianbu_apache">apache: Linux version 6.1.15 (root@bianbu-build-deb-37zn1-v692p) (gcc (Ubuntu 13.2.0-4ubuntu3-bb2) 13.2.0, GNU ld (GNU Binutils for Ubuntu) 2.41) #1.0 SMP PREEMPT Thu May 30 13:16:13 UTC 2024
 </span>
+
 - <span id="bianbu_clang">clang: Linux version 6.1.15 (root@bianbu-build-deb-37zn1-v692p) (gcc (Ubuntu 13.2.0-4ubuntu3-bb2) 13.2.0, GNU ld (GNU Binutils for Ubuntu) 2.41) #1.0 SMP PREEMPT Thu May 30 13:16:13 UTC 2024
 </span>
+
 - <span id="bianbu_cmake">cmake: Linux version 6.1.15 (root@bianbu-build-deb-37zn1-v692p) (gcc (Ubuntu 13.2.0-4ubuntu3-bb2) 13.2.0, GNU ld (GNU Binutils for Ubuntu) 2.41) #1.0 SMP PREEMPT Thu May 30 13:16:13 UTC 2024
 </span>
+
 - <span id="bianbu_docker">docker: Linux version 6.1.15 (root@bianbu-build-deb-37zn1-v692p) (gcc (Ubuntu 13.2.0-4ubuntu3-bb2) 13.2.0, GNU ld (GNU Binutils for Ubuntu) 2.41) #1.0 SMP PREEMPT Thu May 30 13:16:13 UTC 2024
 </span>
+
 - <span id="bianbu_erlang">erlang: Linux version 6.1.15 (root@bianbu-build-deb-37zn1-v692p) (gcc (Ubuntu 13.2.0-4ubuntu3-bb2) 13.2.0, GNU ld (GNU Binutils for Ubuntu) 2.41) #1.0 SMP PREEMPT Thu May 30 13:16:13 UTC 2024
 </span>
+
 - <span id="bianbu_gcc">gcc: Linux version 6.1.15 (root@bianbu-build-deb-37zn1-v692p) (gcc (Ubuntu 13.2.0-4ubuntu3-bb2) 13.2.0, GNU ld (GNU Binutils for Ubuntu) 2.41) #1.0 SMP PREEMPT Thu May 30 13:16:13 UTC 2024
 </span>
+
 - <span id="bianbu_gdb">gdb: Linux version 6.1.15 (root@bianbu-build-deb-37zn1-v692p) (gcc (Ubuntu 13.2.0-4ubuntu3-bb2) 13.2.0, GNU ld (GNU Binutils for Ubuntu) 2.41) #1.0 SMP PREEMPT Thu May 30 13:16:13 UTC 2024
 </span>
+
 - <span id="bianbu_golang">golang: Linux version 6.1.15 (root@bianbu-build-deb-37zn1-v692p) (gcc (Ubuntu 13.2.0-4ubuntu3-bb2) 13.2.0, GNU ld (GNU Binutils for Ubuntu) 2.41) #1.0 SMP PREEMPT Thu May 30 13:16:13 UTC 2024
 </span>
+
 - <span id="bianbu_haproxy">haproxy: Linux version 6.1.15 (root@bianbu-build-deb-37zn1-v692p) (gcc (Ubuntu 13.2.0-4ubuntu3-bb2) 13.2.0, GNU ld (GNU Binutils for Ubuntu) 2.41) #1.0 SMP PREEMPT Thu May 30 13:16:13 UTC 2024
 </span>
+
 - <span id="bianbu_libmemcached">libmemcached: Linux version 6.1.15 (root@bianbu-build-deb-37zn1-v692p) (gcc (Ubuntu 13.2.0-4ubuntu3-bb2) 13.2.0, GNU ld (GNU Binutils for Ubuntu) 2.41) #1.0 SMP PREEMPT Thu May 30 13:16:13 UTC 2024
 </span>
+
 - <span id="bianbu_lighttpd">lighttpd: Linux version 6.1.15 (root@bianbu-build-deb-37zn1-v692p) (gcc (Ubuntu 13.2.0-4ubuntu3-bb2) 13.2.0, GNU ld (GNU Binutils for Ubuntu) 2.41) #1.0 SMP PREEMPT Thu May 30 13:16:13 UTC 2024
 </span>
+
 - <span id="bianbu_llvm">llvm: Linux version 6.1.15 (root@bianbu-build-deb-37zn1-v692p) (gcc (Ubuntu 13.2.0-4ubuntu3-bb2) 13.2.0, GNU ld (GNU Binutils for Ubuntu) 2.41) #1.0 SMP PREEMPT Thu May 30 13:16:13 UTC 2024
 </span>
+
 - <span id="bianbu_mariadb">mariadb: Linux version 6.1.15 (root@bianbu-build-deb-37zn1-v692p) (gcc (Ubuntu 13.2.0-4ubuntu3-bb2) 13.2.0, GNU ld (GNU Binutils for Ubuntu) 2.41) #1.0 SMP PREEMPT Thu May 30 13:16:13 UTC 2024
 </span>
+
 - <span id="bianbu_nginx">nginx: Linux version 6.1.15 (root@bianbu-build-deb-37zn1-v692p) (gcc (Ubuntu 13.2.0-4ubuntu3-bb2) 13.2.0, GNU ld (GNU Binutils for Ubuntu) 2.41) #1.0 SMP PREEMPT Thu May 30 13:16:13 UTC 2024
 </span>
+
 - <span id="bianbu_nodejs">nodejs: Linux version 6.1.15 (root@bianbu-build-deb-37zn1-v692p) (gcc (Ubuntu 13.2.0-4ubuntu3-bb2) 13.2.0, GNU ld (GNU Binutils for Ubuntu) 2.41) #1.0 SMP PREEMPT Thu May 30 13:16:13 UTC 2024
 </span>
+
 - <span id="bianbu_numpy">numpy: Linux version 6.1.15 (root@bianbu-build-deb-37zn1-v692p) (gcc (Ubuntu 13.2.0-4ubuntu3-bb2) 13.2.0, GNU ld (GNU Binutils for Ubuntu) 2.41) #1.0 SMP PREEMPT Thu May 30 13:16:13 UTC 2024
 </span>
+
 - <span id="bianbu_ocaml">ocaml: Linux version 6.1.15 (root@bianbu-build-deb-37zn1-v692p) (gcc (Ubuntu 13.2.0-4ubuntu3-bb2) 13.2.0, GNU ld (GNU Binutils for Ubuntu) 2.41) #1.0 SMP PREEMPT Thu May 30 13:16:13 UTC 2024
 </span>
+
 - <span id="bianbu_openjdk">openjdk: Linux version 6.1.15 (root@bianbu-build-deb-37zn1-v692p) (gcc (Ubuntu 13.2.0-4ubuntu3-bb2) 13.2.0, GNU ld (GNU Binutils for Ubuntu) 2.41) #1.0 SMP PREEMPT Thu May 30 13:16:13 UTC 2024
 </span>
+
 - <span id="bianbu_perl">perl: Linux version 6.1.15 (root@bianbu-build-deb-37zn1-v692p) (gcc (Ubuntu 13.2.0-4ubuntu3-bb2) 13.2.0, GNU ld (GNU Binutils for Ubuntu) 2.41) #1.0 SMP PREEMPT Thu May 30 13:16:13 UTC 2024
 </span>
+
 - <span id="bianbu_python">python: Linux version 6.1.15 (root@bianbu-build-deb-37zn1-v692p) (gcc (Ubuntu 13.2.0-4ubuntu3-bb2) 13.2.0, GNU ld (GNU Binutils for Ubuntu) 2.41) #1.0 SMP PREEMPT Thu May 30 13:16:13 UTC 2024
 </span>
+
 - <span id="bianbu_ruby">ruby: Linux version 6.1.15 (root@bianbu-build-deb-37zn1-v692p) (gcc (Ubuntu 13.2.0-4ubuntu3-bb2) 13.2.0, GNU ld (GNU Binutils for Ubuntu) 2.41) #1.0 SMP PREEMPT Thu May 30 13:16:13 UTC 2024
 </span>
+
 - <span id="bianbu_rust">rust: Linux version 6.1.15 (root@bianbu-build-deb-37zn1-v692p) (gcc (Ubuntu 13.2.0-4ubuntu3-bb2) 13.2.0, GNU ld (GNU Binutils for Ubuntu) 2.41) #1.0 SMP PREEMPT Thu May 30 13:16:13 UTC 2024
 </span>
+
 - <span id="bianbu_sqlite">sqlite: Linux version 6.1.15 (root@bianbu-build-deb-37zn1-v692p) (gcc (Ubuntu 13.2.0-4ubuntu3-bb2) 13.2.0, GNU ld (GNU Binutils for Ubuntu) 2.41) #1.0 SMP PREEMPT Thu May 30 13:16:13 UTC 2024
 </span>
+
 - <span id="bianbu_varnish">varnish: Linux version 6.1.15 (root@bianbu-build-deb-37zn1-v692p) (gcc (Ubuntu 13.2.0-4ubuntu3-bb2) 13.2.0, GNU ld (GNU Binutils for Ubuntu) 2.41) #1.0 SMP PREEMPT Thu May 30 13:16:13 UTC 2024
 </span>
+
 - <span id="bianbu_openssl">openssl: Linux version 6.1.15 (root@bianbu-build-deb-37zn1-v692p) (gcc (Ubuntu 13.2.0-4ubuntu3-bb2) 13.2.0, GNU ld (GNU Binutils for Ubuntu) 2.41) #1.0 SMP PREEMPT Thu May 30 13:16:13 UTC 2024
 </span>
+
 - <span id="bianbu_postgresql">postgresql: Linux version 6.1.15 (root@bianbu-build-deb-37zn1-v692p) (gcc (Ubuntu 13.2.0-4ubuntu3-bb2) 13.2.0, GNU ld (GNU Binutils for Ubuntu) 2.41) #1.0 SMP PREEMPT Thu May 30 13:16:13 UTC 2024
 </span>
+
 - <span id="bianbu_redis">redis: Linux version 6.1.15 (root@bianbu-build-deb-37zn1-v692p) (gcc (Ubuntu 13.2.0-4ubuntu3-bb2) 13.2.0, GNU ld (GNU Binutils for Ubuntu) 2.41) #1.0 SMP PREEMPT Thu May 30 13:16:13 UTC 2024
 </span>
+
 - <span id="bianbu_runc">runc: Linux version 6.1.15 (root@bianbu-build-deb-37zn1-v692p) (gcc (Ubuntu 13.2.0-4ubuntu3-bb2) 13.2.0, GNU ld (GNU Binutils for Ubuntu) 2.41) #1.0 SMP PREEMPT Thu May 30 13:16:13 UTC 2024
 </span>
+
 - <span id="bianbu_scipy">scipy: Linux version 6.1.15 (root@bianbu-build-deb-37zn1-v692p) (gcc (Ubuntu 13.2.0-4ubuntu3-bb2) 13.2.0, GNU ld (GNU Binutils for Ubuntu) 2.41) #1.0 SMP PREEMPT Thu May 30 13:16:13 UTC 2024
 </span>
+
 - <span id="bianbu_squid">squid: Linux version 6.1.15 (root@bianbu-build-deb-37zn1-v692p) (gcc (Ubuntu 13.2.0-4ubuntu3-bb2) 13.2.0, GNU ld (GNU Binutils for Ubuntu) 2.41) #1.0 SMP PREEMPT Thu May 30 13:16:13 UTC 2024
 </span>
+
 - <span id="bianbu_zookeeper">zookeeper: Linux version 6.1.15 (root@bianbu-build-deb-37zn1-v692p) (gcc (Ubuntu 13.2.0-4ubuntu3-bb2) 13.2.0, GNU ld (GNU Binutils for Ubuntu) 2.41) #1.0 SMP PREEMPT Thu May 30 13:16:13 UTC 2024
 </span>
+
 # <span id="debian">debian</span>
+
 - <span id="debian_apache">apache: Linux version 6.10.6-riscv64 (debian-kernel@lists.debian.org) (riscv64-linux-gnu-gcc-13 (Debian 13.3.0-5) 13.3.0, GNU ld (GNU Binutils for Debian) 2.43.1) #1 SMP Debian 6.10.6-1 (2024-08-19)
 </span>
+
 - <span id="debian_clang">clang: Linux version 6.10.6-riscv64 (debian-kernel@lists.debian.org) (riscv64-linux-gnu-gcc-13 (Debian 13.3.0-5) 13.3.0, GNU ld (GNU Binutils for Debian) 2.43.1) #1 SMP Debian 6.10.6-1 (2024-08-19)
 </span>
+
 - <span id="debian_cmake">cmake: Linux version 6.10.6-riscv64 (debian-kernel@lists.debian.org) (riscv64-linux-gnu-gcc-13 (Debian 13.3.0-5) 13.3.0, GNU ld (GNU Binutils for Debian) 2.43.1) #1 SMP Debian 6.10.6-1 (2024-08-19)
 </span>
+
 - <span id="debian_docker">docker: Linux version 6.10.6-riscv64 (debian-kernel@lists.debian.org) (riscv64-linux-gnu-gcc-13 (Debian 13.3.0-5) 13.3.0, GNU ld (GNU Binutils for Debian) 2.43.1) #1 SMP Debian 6.10.6-1 (2024-08-19)</span>
+
 - <span id="debian_erlang">erlang: Linux version 6.10.6-riscv64 (debian-kernel@lists.debian.org) (riscv64-linux-gnu-gcc-13 (Debian 13.3.0-5) 13.3.0, GNU ld (GNU Binutils for Debian) 2.43.1) #1 SMP Debian 6.10.6-1 (2024-08-19)
 </span>
+
 - <span id="debian_gcc">gcc: Linux version 6.10.6-riscv64 (debian-kernel@lists.debian.org) (riscv64-linux-gnu-gcc-13 (Debian 13.3.0-5) 13.3.0, GNU ld (GNU Binutils for Debian) 2.43.1) #1 SMP Debian 6.10.6-1 (2024-08-19)
 </span>
+
 - <span id="debian_gdb">gdb: Linux version 6.10.6-riscv64 (debian-kernel@lists.debian.org) (riscv64-linux-gnu-gcc-13 (Debian 13.3.0-5) 13.3.0, GNU ld (GNU Binutils for Debian) 2.43.1) #1 SMP Debian 6.10.6-1 (2024-08-19)
 </span>
+
 - <span id="debian_golang">golang: Linux version 6.10.6-riscv64 (debian-kernel@lists.debian.org) (riscv64-linux-gnu-gcc-13 (Debian 13.3.0-5) 13.3.0, GNU ld (GNU Binutils for Debian) 2.43.1) #1 SMP Debian 6.10.6-1 (2024-08-19)
 </span>
+
 - <span id="debian_haproxy">haproxy: Linux version 6.10.6-riscv64 (debian-kernel@lists.debian.org) (riscv64-linux-gnu-gcc-13 (Debian 13.3.0-5) 13.3.0, GNU ld (GNU Binutils for Debian) 2.43.1) #1 SMP Debian 6.10.6-1 (2024-08-19)
 </span>
+
 - <span id="debian_libmemcached">libmemcached: Linux version 6.10.6-riscv64 (debian-kernel@lists.debian.org) (riscv64-linux-gnu-gcc-13 (Debian 13.3.0-5) 13.3.0, GNU ld (GNU Binutils for Debian) 2.43.1) #1 SMP Debian 6.10.6-1 (2024-08-19)
 </span>
+
 - <span id="debian_lighttpd">lighttpd: Linux version 6.10.6-riscv64 (debian-kernel@lists.debian.org) (riscv64-linux-gnu-gcc-13 (Debian 13.3.0-5) 13.3.0, GNU ld (GNU Binutils for Debian) 2.43.1) #1 SMP Debian 6.10.6-1 (2024-08-19)
 </span>
+
 - <span id="debian_llvm">llvm: Linux version 6.10.6-riscv64 (debian-kernel@lists.debian.org) (riscv64-linux-gnu-gcc-13 (Debian 13.3.0-5) 13.3.0, GNU ld (GNU Binutils for Debian) 2.43.1) #1 SMP Debian 6.10.6-1 (2024-08-19)
 </span>
+
 - <span id="debian_mariadb">mariadb: Linux version 6.10.6-riscv64 (debian-kernel@lists.debian.org) (riscv64-linux-gnu-gcc-13 (Debian 13.3.0-5) 13.3.0, GNU ld (GNU Binutils for Debian) 2.43.1) #1 SMP Debian 6.10.6-1 (2024-08-19)
 </span>
+
 - <span id="debian_nginx">nginx: Linux version 6.10.6-riscv64 (debian-kernel@lists.debian.org) (riscv64-linux-gnu-gcc-13 (Debian 13.3.0-5) 13.3.0, GNU ld (GNU Binutils for Debian) 2.43.1) #1 SMP Debian 6.10.6-1 (2024-08-19)
 </span>
+
 - <span id="debian_nodejs">nodejs: Linux version 6.10.6-riscv64 (debian-kernel@lists.debian.org) (riscv64-linux-gnu-gcc-13 (Debian 13.3.0-5) 13.3.0, GNU ld (GNU Binutils for Debian) 2.43.1) #1 SMP Debian 6.10.6-1 (2024-08-19)
 </span>
+
 - <span id="debian_numpy">numpy: Linux version 6.10.6-riscv64 (debian-kernel@lists.debian.org) (riscv64-linux-gnu-gcc-13 (Debian 13.3.0-5) 13.3.0, GNU ld (GNU Binutils for Debian) 2.43.1) #1 SMP Debian 6.10.6-1 (2024-08-19)
 </span>
+
 - <span id="debian_ocaml">ocaml: Linux version 6.10.6-riscv64 (debian-kernel@lists.debian.org) (riscv64-linux-gnu-gcc-13 (Debian 13.3.0-5) 13.3.0, GNU ld (GNU Binutils for Debian) 2.43.1) #1 SMP Debian 6.10.6-1 (2024-08-19)
 </span>
+
 - <span id="debian_openjdk">openjdk: Linux version 6.10.6-riscv64 (debian-kernel@lists.debian.org) (riscv64-linux-gnu-gcc-13 (Debian 13.3.0-5) 13.3.0, GNU ld (GNU Binutils for Debian) 2.43.1) #1 SMP Debian 6.10.6-1 (2024-08-19)
 </span>
+
 - <span id="debian_perl">perl: Linux version 6.10.6-riscv64 (debian-kernel@lists.debian.org) (riscv64-linux-gnu-gcc-13 (Debian 13.3.0-5) 13.3.0, GNU ld (GNU Binutils for Debian) 2.43.1) #1 SMP Debian 6.10.6-1 (2024-08-19)
 </span>
+
 - <span id="debian_python">python: Linux version 6.10.6-riscv64 (debian-kernel@lists.debian.org) (riscv64-linux-gnu-gcc-13 (Debian 13.3.0-5) 13.3.0, GNU ld (GNU Binutils for Debian) 2.43.1) #1 SMP Debian 6.10.6-1 (2024-08-19)
 </span>
+
 - <span id="debian_ruby">ruby: Linux version 6.10.6-riscv64 (debian-kernel@lists.debian.org) (riscv64-linux-gnu-gcc-13 (Debian 13.3.0-5) 13.3.0, GNU ld (GNU Binutils for Debian) 2.43.1) #1 SMP Debian 6.10.6-1 (2024-08-19)
 </span>
+
 - <span id="debian_rust">rust: Linux version 6.10.6-riscv64 (debian-kernel@lists.debian.org) (riscv64-linux-gnu-gcc-13 (Debian 13.3.0-5) 13.3.0, GNU ld (GNU Binutils for Debian) 2.43.1) #1 SMP Debian 6.10.6-1 (2024-08-19)
 </span>
+
 - <span id="debian_sqlite">sqlite: Linux version 6.10.6-riscv64 (debian-kernel@lists.debian.org) (riscv64-linux-gnu-gcc-13 (Debian 13.3.0-5) 13.3.0, GNU ld (GNU Binutils for Debian) 2.43.1) #1 SMP Debian 6.10.6-1 (2024-08-19)
 </span>
+
 - <span id="debian_varnish">varnish: Linux version 6.10.6-riscv64 (debian-kernel@lists.debian.org) (riscv64-linux-gnu-gcc-13 (Debian 13.3.0-5) 13.3.0, GNU ld (GNU Binutils for Debian) 2.43.1) #1 SMP Debian 6.10.6-1 (2024-08-19)
 </span>
+
 - <span id="debian_openssl">openssl: Linux version 6.10.6-riscv64 (debian-kernel@lists.debian.org) (riscv64-linux-gnu-gcc-13 (Debian 13.3.0-5) 13.3.0, GNU ld (GNU Binutils for Debian) 2.43.1) #1 SMP Debian 6.10.6-1 (2024-08-19)
 </span>
+
 - <span id="debian_postgresql">postgresql: Linux version 6.10.6-riscv64 (debian-kernel@lists.debian.org) (riscv64-linux-gnu-gcc-13 (Debian 13.3.0-5) 13.3.0, GNU ld (GNU Binutils for Debian) 2.43.1) #1 SMP Debian 6.10.6-1 (2024-08-19)
 </span>
+
 - <span id="debian_redis">redis: Linux version 6.10.6-riscv64 (debian-kernel@lists.debian.org) (riscv64-linux-gnu-gcc-13 (Debian 13.3.0-5) 13.3.0, GNU ld (GNU Binutils for Debian) 2.43.1) #1 SMP Debian 6.10.6-1 (2024-08-19)
 </span>
+
 - <span id="debian_runc">runc: Linux version 6.10.6-riscv64 (debian-kernel@lists.debian.org) (riscv64-linux-gnu-gcc-13 (Debian 13.3.0-5) 13.3.0, GNU ld (GNU Binutils for Debian) 2.43.1) #1 SMP Debian 6.10.6-1 (2024-08-19)
 </span>
+
 - <span id="debian_scipy">scipy: Linux version 6.10.6-riscv64 (debian-kernel@lists.debian.org) (riscv64-linux-gnu-gcc-13 (Debian 13.3.0-5) 13.3.0, GNU ld (GNU Binutils for Debian) 2.43.1) #1 SMP Debian 6.10.6-1 (2024-08-19)
 </span>
+
 - <span id="debian_squid">squid: Linux version 6.10.6-riscv64 (debian-kernel@lists.debian.org) (riscv64-linux-gnu-gcc-13 (Debian 13.3.0-5) 13.3.0, GNU ld (GNU Binutils for Debian) 2.43.1) #1 SMP Debian 6.10.6-1 (2024-08-19)
 </span>
+
 - <span id="debian_zookeeper">zookeeper: Linux version 6.10.6-riscv64 (debian-kernel@lists.debian.org) (riscv64-linux-gnu-gcc-13 (Debian 13.3.0-5) 13.3.0, GNU ld (GNU Binutils for Debian) 2.43.1) #1 SMP Debian 6.10.6-1 (2024-08-19)
 </span>
+
