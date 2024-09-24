@@ -2,6 +2,7 @@ use crate::utils::{PackageMetadata, Report};
 use log::info;
 use std::fs::File;
 use std::io::prelude::*;
+use std::collections::BTreeMap;
 
 /// Generates a markdown report summarizing the test results for various packages across different distributions.
 /// Warning: hard coded for specific report markdown file XD
@@ -43,7 +44,7 @@ pub fn generate_markdown_report(
     markdown.push_str("| 软件包 Package | 种类 Type | "); // TODO: add field for description
     for distro in distros {
         markdown.push_str(&format!(
-            "{}: 测试环境信息 Env. info | {}: 测试结果 Results | ",
+            "[{}](#{}) | ",
             distro, distro
         ));
     }
@@ -51,10 +52,13 @@ pub fn generate_markdown_report(
     markdown.push_str("\n|:------|:------| ");
     for _ in distros {
         markdown.push_str(":-------| ");
-        markdown.push_str(":-------| ");
+        // markdown.push_str(":-------| ");
     }
     markdown.pop();
     markdown.push('\n');
+
+    // map: distro -> (package, env_info)
+    let mut distro_env_infos: BTreeMap<String, Vec<(String, String)>> = BTreeMap::new();
 
     for (pkg_idx, &package) in packages.iter().enumerate() {
         let package_metadata = reports.iter().find(|r| r.package_name == package).map_or(
@@ -71,11 +75,12 @@ pub fn generate_markdown_report(
 
         for distro_idx in 0..distros.len() {
             if let Some(report) = report_matrix[pkg_idx][distro_idx] {
-                let mut env_info = report.os_version.clone();
-                env_info.pop();
+                distro_env_infos
+                    .entry(distros[distro_idx].to_string())
+                    .or_insert_with(Vec::new)
+                    .push((packages[pkg_idx].to_string(), report.os_version.clone()));
                 markdown.push_str(&format!(
-                    "| {} | {} {}{} ",
-                    env_info,
+                    "| {} {}{} ",
                     if report.all_tests_passed {
                         "✅"
                     } else {
@@ -94,6 +99,20 @@ pub fn generate_markdown_report(
         }
         markdown.push_str("|\n");
     }
+    
+    let mut appending_details = String::new();
+
+    for (distro, packages) in &distro_env_infos {
+        appending_details.push_str(&format!("# <span id=\"{}\">{}</span>\n", distro, distro));
+        
+        for (package, env_info) in packages {
+            let package_id = format!("{}_{}", distro, package); // 创建唯一的 id
+            appending_details.push_str(&format!("- <span id=\"{}\">{}: {}</span>\n", package_id, package, env_info));
+        }
+    }
+
+    markdown.push_str(&appending_details);
+
     let file_path = "summary.md";
     let mut file = File::create(file_path)?;
     file.write_all(markdown.as_bytes())?;
