@@ -1,0 +1,50 @@
+name: Nightly Release
+
+on:
+  schedule:
+    - cron: '0 0 * * *'
+  workflow_dispatch:
+
+jobs:
+  create-nightly:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    
+    - name: Setup Rust
+      uses: actions-rs/toolchain@v1
+      with:
+        profile: minimal
+        toolchain: stable
+    
+    - name: Build
+      run: cargo build --release
+    
+    - name: Get current date
+      id: date
+      run: echo "::set-output name=date::$(date +'%Y-%m-%d')"
+    
+    - name: Create Release
+      id: create_release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: nightly-${{ steps.date.outputs.date }}
+        release_name: Nightly Release ${{ steps.date.outputs.date }}
+        body: |
+          This is an automated nightly release of Lintestor.
+          
+          **Note:** This build may be unstable and is not recommended for production use.
+        draft: false
+        prerelease: true
+    
+    - name: Upload Release Asset
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./target/release/lintestor
+        asset_name: lintestor-nightly-${{ steps.date.outputs.date }}-linux-x86_64
+        asset_content_type: application/octet-stream
