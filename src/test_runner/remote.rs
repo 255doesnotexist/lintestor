@@ -214,7 +214,9 @@ impl TestRunner for RemoteTestRunner {
         let os_version = self.run_command(&sess, "cat /proc/version")?;
         let kernel_version = self.run_command(&sess, "uname -r")?;
 
-        let package_metadata = if let Some(metadata_script_name) = script_manager.get_metadata_script_name() {
+        let package_metadata = if let Some(metadata_script_name) =
+            script_manager.get_metadata_script_name()
+        {
             let metadata_command = format!(
                 "source {}/{} && echo $PACKAGE_VERSION && echo $PACKAGE_PRETTY_NAME && echo $PACKAGE_TYPE && echo $PACKAGE_DESCRIPTION",
                 remote_dir, metadata_script_name
@@ -226,7 +228,7 @@ impl TestRunner for RemoteTestRunner {
                 .lines()
                 .map(|line| line.to_string())
                 .collect();
-        
+
             if let [version, pretty_name, package_type, description] = &metadata_vec[..] {
                 PackageMetadata {
                     package_version: version.to_owned(),
@@ -243,7 +245,7 @@ impl TestRunner for RemoteTestRunner {
                 package_pretty_name: package.to_string(),
                 ..Default::default()
             }
-        };        
+        };
 
         let report = Report {
             distro: distro.to_string(),

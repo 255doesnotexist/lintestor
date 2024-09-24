@@ -92,7 +92,7 @@ impl TestRunner for LocalTestRunner {
                 .lines()
                 .map(|line| line.to_string())
                 .collect();
-        
+
             if let [version, pretty_name, package_type, description] = &metadata_vec[..] {
                 PackageMetadata {
                     package_version: version.to_owned(),
@@ -109,7 +109,7 @@ impl TestRunner for LocalTestRunner {
                 package_pretty_name: package.to_string(),
                 ..Default::default()
             }
-        };        
+        };
 
         let report = Report {
             distro: distro.to_string(),
