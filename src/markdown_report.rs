@@ -1,8 +1,8 @@
 use crate::utils::{PackageMetadata, Report};
 use log::info;
+use std::collections::BTreeMap;
 use std::fs::File;
 use std::io::prelude::*;
-use std::collections::BTreeMap;
 
 /// Generates a markdown report summarizing the test results for various packages across different distributions.
 /// Warning: hard coded for specific report markdown file XD
@@ -43,10 +43,7 @@ pub fn generate_markdown_report(
     markdown.push_str("> 图标说明 Legend: ✅ = 通过 Passed; ⚠️ = 部分或全部测试不通过 Not all tests passed; ❓ = 未知 Unknown\n\n");
     markdown.push_str("| 软件包 Package | 种类 Type | "); // TODO: add field for description
     for distro in distros {
-        markdown.push_str(&format!(
-            "[{}](#{}) | ",
-            distro, distro
-        ));
+        markdown.push_str(&format!("[{}](#{}) | ", distro, distro));
     }
     markdown.pop();
     markdown.push_str("\n|:------|:------| ");
@@ -99,15 +96,18 @@ pub fn generate_markdown_report(
         }
         markdown.push_str("|\n");
     }
-    
+
     let mut appending_details = String::new();
 
     for (distro, packages) in &distro_env_infos {
         appending_details.push_str(&format!("# <span id=\"{}\">{}</span>\n\n", distro, distro));
-        
+
         for (package, env_info) in packages {
             let package_id = format!("{}_{}", distro, package); // 创建唯一的 id
-            appending_details.push_str(&format!("- <span id=\"{}\">{}: {}</span>\n\n", package_id, package, env_info));
+            appending_details.push_str(&format!(
+                "- <span id=\"{}\">{}: {}</span>\n\n",
+                package_id, package, env_info
+            ));
         }
     }
 
