@@ -16,11 +16,10 @@ jobs:
           - aarch64-unknown-linux-gnu
           - armv7-unknown-linux-gnueabihf
           - riscv64gc-unknown-linux-gnu
-          - riscv32gc-unknown-linux-gnu
-          - x86_64-pc-windows-gnu
-          - i686-pc-windows-gnu
-          - x86_64-apple-darwin
-          - aarch64-apple-darwin
+          - arm-unknown-linux-gnueabi
+          - armv5te-unknown-linux-gnueabi
+          - mips64-unknown-linux-gnuabi64
+          - powerpc64-unknown-linux-gnu
 
     steps:
     - uses: actions/checkout@v3
