@@ -1,0 +1,52 @@
+[target.x86_64-unknown-linux-gnu]
+pre-build = [
+    "export DEBIAN_FRONTEND=noninteractive",
+    "apt-get update",
+    "apt-get upgrade -y",
+    "apt-get install --assume-yes libssl-dev pkg-config build-essential"
+]
+
+[target.i686-unknown-linux-gnu]
+pre-build = [
+    "export DEBIAN_FRONTEND=noninteractive",
+    "dpkg --add-architecture i386",
+    "apt-get update",
+    "apt-get upgrade -y",
+    "apt-get install --assume-yes libssl-dev:i386 pkg-config build-essential"
+]
+
+[target.aarch64-unknown-linux-gnu]
+pre-build = [
+    "export DEBIAN_FRONTEND=noninteractive",
+    "dpkg --add-architecture arm64",
+    "apt-get update",
+    "apt-get upgrade -y",
+    "apt-get install --assume-yes libssl-dev:arm64 pkg-config build-essential"
+]
+
+[target.armv7-unknown-linux-gnueabihf]
+pre-build = [
+    "export DEBIAN_FRONTEND=noninteractive",
+    "dpkg --add-architecture armhf",
+    "apt-get update",
+    "apt-get upgrade -y",
+    "apt-get install --assume-yes libssl-dev:armhf pkg-config build-essential"
+]
+
+[target.riscv64gc-unknown-linux-gnu]
+pre-build = [
+    "export DEBIAN_FRONTEND=noninteractive",
+    "dpkg --add-architecture riscv64",
+    "apt-get update",
+    "apt-get upgrade -y",
+    "apt-get install --assume-yes libssl-dev pkg-config build-essential"
+]
+
+[target.powerpc64-unknown-linux-gnu]
+pre-build = [
+    "export DEBIAN_FRONTEND=noninteractive",
+    "dpkg --add-architecture ppc64el",
+    "apt-get update",
+    "apt-get upgrade -y",
+    "apt-get install --assume-yes libssl-dev:ppc64el pkg-config build-essential"
+]
