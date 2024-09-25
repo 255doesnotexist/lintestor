@@ -2,7 +2,7 @@ use crate::aggregator::generate_report;
 use crate::test_runner::TestRunner;
 use crate::testscript_manager::TestScriptManager;
 use crate::utils::{PackageMetadata, Report, TestResult, REMOTE_TMP_DIR};
-use log::{log_enabled, Level};
+use log::{debug, log_enabled, Level};
 use std::fs::read_to_string;
 use std::path::Path;
 use std::process::{Command, Stdio};
@@ -92,7 +92,7 @@ impl TestRunner for LocalTestRunner {
                 .lines()
                 .map(|line| line.to_string())
                 .collect();
-
+            debug!("Collected metadata: {:?}", metadata_vec);
             if let [version, pretty_name, package_type, description] = &metadata_vec[..] {
                 PackageMetadata {
                     package_version: version.to_owned(),

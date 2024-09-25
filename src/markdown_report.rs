@@ -70,11 +70,11 @@ pub fn generate_markdown_report(
             package_metadata.package_pretty_name, package_metadata.package_type
         ));
 
-        for distro_idx in 0..distros.len() {
+        for (distro_idx, &_distro) in distros.iter().enumerate() {
             if let Some(report) = report_matrix[pkg_idx][distro_idx] {
                 distro_env_infos
                     .entry(distros[distro_idx].to_string())
-                    .or_insert_with(Vec::new)
+                    .or_default()
                     .push((packages[pkg_idx].to_string(), report.os_version.clone()));
                 markdown.push_str(&format!(
                     "| {} {}{} ",

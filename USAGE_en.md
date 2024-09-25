@@ -60,7 +60,13 @@ Options:
       --test                       Run tests for all distributions
       --aggr                       Aggregate multiple report.json files into a single reports.json
       --summ                       Generate a summary report
+      --cleanup                    Clean up report.json files left by previous runs
       --config <Config file name>  Specify a different base configuration file
   -h, --help                       Print help
   -V, --version                    Print version
 ```
+
+## Prebuilt binaries
+> For now we recommend to just clone this repo and `cargo run` directly ;)
+
+Check out [Releases](https://github.com/255doesnotexist/lintestor/releases) for some experimental nightly builds.

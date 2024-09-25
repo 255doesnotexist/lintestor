@@ -72,6 +72,10 @@ Options:
       --aggr                       Aggregate multiple report.json files into a single reports.json
       --summ                       Generate a summary report
       --config <Config file name>  Specify a different base configuration file
+      --cleanup                    Clean up report.json files left by previous runs
   -h, --help                       Print help
   -V, --version                    Print version
 ```
+
+## 预构建二进制
+实验性的 Nightly 构建请见 [Releases](https://github.com/255doesnotexist/lintestor/releases) （~~但目前最好还是直接 clone 下来 `cargo run` 吧~~）

@@ -157,6 +157,8 @@ impl TestScriptManager {
     /// }
     /// ```
     pub fn get_metadata_script_name(&self) -> Option<String> {
-        Some(METADATA_SCRIPT_NAME.to_string())
+        self.metadata_script
+            .as_ref()
+            .map(|path: &String| path.rsplit('/').next().unwrap().to_string())
     }
 }
