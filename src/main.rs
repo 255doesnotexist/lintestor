@@ -176,12 +176,10 @@ fn run_tests(distros: &[&str], packages: &[&str], cleanup: bool) {
                 package,
                 if run_locally {
                     "locally"
+                } else if purely_remote {
+                    "remotely"
                 } else {
-                    if purely_remote {
-                        "remotely"
-                    } else {
-                        "with QEMU"
-                    }
+                    "with QEMU"
                 }
             );
 

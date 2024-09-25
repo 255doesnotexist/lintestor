@@ -157,10 +157,8 @@ impl TestScriptManager {
     /// }
     /// ```
     pub fn get_metadata_script_name(&self) -> Option<String> {
-        if let Some(metadata_script_path) = &self.metadata_script {
-            Some(metadata_script_path.rsplit('/').next().unwrap().to_string())
-        } else {
-            None
-        }
+        self.metadata_script
+            .as_ref()
+            .map(|path: &String| path.rsplit('/').next().unwrap().to_string())
     }
 }
