@@ -119,10 +119,10 @@ fn run_tests(distros: &[&str], packages: &[&str], cleanup: bool) {
         };
 
         let run_locally = distro_config.testing_type == "locally";
-        let purely_remote = distro_config.is_not_qemu_based_remote();
+        let purely_remote = distro_config.testing_type != "qemu-based-remote";
         let testenv_manager = crate::testenv_manager::TestEnvManager::new(&distro_config);
 
-        debug!(
+        info!(
             "Connection method: {}",
             if run_locally {
                 "local"
@@ -174,7 +174,15 @@ fn run_tests(distros: &[&str], packages: &[&str], cleanup: bool) {
                 "Running test for {}/{}, {}.",
                 distro,
                 package,
-                if run_locally { "locally" } else { "with QEMU" }
+                if run_locally {
+                    "locally"
+                } else {
+                    if purely_remote {
+                        "remotely"
+                    } else {
+                        "with QEMU"
+                    }
+                }
             );
 
             if !Path::new(format!("{}/{}", distro, package).as_str()).exists() {

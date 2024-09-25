@@ -29,9 +29,6 @@ pub struct DistroConfig {
 }
 
 impl DistroConfig {
-    pub fn is_not_qemu_based_remote(&self) -> bool {
-        self.testing_type != "qemu-based-remote"
-    }
     pub fn from_file(path: &str) -> Result<Self, Box<dyn std::error::Error>> {
         let contents = fs::read_to_string(path)?;
         let config: DistroConfig = toml::de::from_str(&contents)?;
