@@ -228,7 +228,7 @@ impl TestRunner for RemoteTestRunner {
                 .lines()
                 .map(|line| line.to_string())
                 .collect();
-
+            debug!("Collected metadata: {:?}", metadata_vec);
             if let [version, pretty_name, package_type, description] = &metadata_vec[..] {
                 PackageMetadata {
                     package_version: version.to_owned(),
