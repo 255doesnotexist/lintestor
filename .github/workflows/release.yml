@@ -6,24 +6,66 @@ on:
   workflow_dispatch:
 
 jobs:
-  create-nightly:
+  build-and-release:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        target:
+          - x86_64-unknown-linux-gnu
+          - i686-unknown-linux-gnu
+          - aarch64-unknown-linux-gnu
+          - armv7-unknown-linux-gnueabihf
+          - riscv64gc-unknown-linux-gnu
+          - riscv32gc-unknown-linux-gnu
+          - x86_64-pc-windows-gnu
+          - i686-pc-windows-gnu
+          - x86_64-apple-darwin
+          - aarch64-apple-darwin
+
     steps:
     - uses: actions/checkout@v2
-    
-    - name: Setup Rust
+
+    - name: Install Rust
       uses: actions-rs/toolchain@v1
       with:
-        profile: minimal
         toolchain: stable
-    
-    - name: Build
-      run: cargo build --release
-    
+        override: true
+
+    - name: Install cross
+      run: cargo install cross
+
+    - name: Build for ${{ matrix.target }}
+      run: cross build --release --target ${{ matrix.target }}
+
     - name: Get current date
       id: date
       run: echo "::set-output name=date::$(date +'%Y-%m-%d')"
-    
+
+    - name: Prepare artifact
+      run: |
+        mkdir -p ./artifacts
+        if [[ "${{ matrix.target }}" == *"-windows-"* ]]; then
+          cp ./target/${{ matrix.target }}/release/lintestor.exe ./artifacts/lintestor-${{ matrix.target }}.exe
+        else
+          cp ./target/${{ matrix.target }}/release/lintestor ./artifacts/lintestor-${{ matrix.target }}
+        fi
+
+    - name: Upload artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: lintestor-${{ matrix.target }}
+        path: ./artifacts/*
+
+  create-release:
+    needs: build-and-release
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Get current date
+      id: date
+      run: echo "::set-output name=date::$(date +'%Y-%m-%d')"
+
     - name: Create Release
       id: create_release
       uses: actions/create-release@v1
@@ -33,18 +75,25 @@ jobs:
         tag_name: nightly-${{ steps.date.outputs.date }}
         release_name: Nightly Release ${{ steps.date.outputs.date }}
         body: |
-          This is an automated nightly release of Lintestor.
+          This is an automated multi-architecture nightly release of Lintestor.
           
-          **Note:** This build may be unstable and is not recommended for production use.
+          **Note:** These builds may be unstable and are not recommended for production use.
         draft: false
         prerelease: true
-    
-    - name: Upload Release Asset
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./target/release/lintestor
-        asset_name: lintestor-nightly-${{ steps.date.outputs.date }}-linux-x86_64
-        asset_content_type: application/octet-stream
+
+    - name: Download all artifacts
+      uses: actions/download-artifact@v2
+
+    - name: Upload Release Assets
+      run: |
+        for artifact in ./lintestor-*/lintestor-*; do
+          asset_name=$(basename "$artifact")
+          echo "Uploading $asset_name"
+          curl -L \
+            -X POST \
+            -H "Accept: application/vnd.github+json" \
+            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Content-Type: application/octet-stream" \
+            "https://uploads.github.com/repos/${{ github.repository }}/releases/${{ steps.create_release.outputs.id }}/assets?name=${asset_name}" \
+            --data-binary "@$artifact"
+        done
