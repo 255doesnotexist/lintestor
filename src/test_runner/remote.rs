@@ -214,38 +214,34 @@ impl TestRunner for RemoteTestRunner {
         let os_version = self.run_command(&sess, "cat /proc/version")?;
         let kernel_version = self.run_command(&sess, "uname -r")?;
 
-        let package_metadata = if let Some(metadata_script_name) =
-            script_manager.get_metadata_script_name()
-        {
-            let metadata_command = format!(
-                "source {}/{} && echo $PACKAGE_VERSION && echo $PACKAGE_PRETTY_NAME && echo $PACKAGE_TYPE && echo $PACKAGE_DESCRIPTION",
-                remote_dir, metadata_script_name
-            );
-            let metadata_output = self.run_command(&sess, &metadata_command)?;
-            let metadata_vec: Vec<String> = metadata_output
-                .output
-                .to_string()
-                .lines()
-                .map(|line| line.to_string())
-                .collect();
-            debug!("Collected metadata: {:?}", metadata_vec);
-            if let [version, pretty_name, package_type, description] = &metadata_vec[..] {
-                PackageMetadata {
-                    package_version: version.to_owned(),
-                    package_pretty_name: pretty_name.to_owned(),
-                    package_type: package_type.to_owned(),
-                    package_description: description.to_owned(),
+        let package_metadata =
+            if let Some(metadata_script_name) = script_manager.get_metadata_script_name() {
+                let metadata_command = format!("source {}/{}", remote_dir, metadata_script_name);
+                let metadata_output = self.run_command(&sess, &metadata_command)?;
+                let metadata_vec: Vec<String> = metadata_output
+                    .output
+                    .to_string()
+                    .lines()
+                    .map(|line| line.to_string())
+                    .collect();
+                debug!("Collected metadata: {:?}", metadata_vec);
+                if let [version, pretty_name, package_type, description] = &metadata_vec[..] {
+                    PackageMetadata {
+                        package_version: version.to_owned(),
+                        package_pretty_name: pretty_name.to_owned(),
+                        package_type: package_type.to_owned(),
+                        package_description: description.to_owned(),
+                    }
+                } else {
+                    // 处理错误情况，如果 metadata_vec 不包含四个元素
+                    panic!("Unexpected metadata format: not enough elements in metadata_vec");
                 }
             } else {
-                // 处理错误情况，如果 metadata_vec 不包含四个元素
-                panic!("Unexpected metadata format: not enough elements in metadata_vec");
-            }
-        } else {
-            PackageMetadata {
-                package_pretty_name: package.to_string(),
-                ..Default::default()
-            }
-        };
+                PackageMetadata {
+                    package_pretty_name: package.to_string(),
+                    ..Default::default()
+                }
+            };
 
         let report = Report {
             distro: distro.to_string(),

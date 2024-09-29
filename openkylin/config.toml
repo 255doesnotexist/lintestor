@@ -1,0 +1,9 @@
+testing_type = "remote"
+skip_packages = ["docker"]
+
+[connection]
+method = "ssh"
+ip = "localhost"
+port = 22
+username = "openkylin"
+password = "openkylin"
