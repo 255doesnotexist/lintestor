@@ -60,8 +60,8 @@ Options:
       --test                       Run tests for all distributions
       --aggr                       Aggregate multiple report.json files into a single reports.json
       --summ                       Generate a summary report
-      --cleanup                    Clean up report.json files left by previous runs
       --config <Config file name>  Specify a different base configuration file
+      --skip-successful            Skip completed successful tests (instead of overwriting their results)
   -h, --help                       Print help
   -V, --version                    Print version
 ```
