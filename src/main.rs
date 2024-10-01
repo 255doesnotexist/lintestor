@@ -10,7 +10,8 @@ use crate::config::{distro_config::DistroConfig, root_config::Config};
 use crate::test_runner::{local::LocalTestRunner, remote::RemoteTestRunner, TestRunner};
 use clap::{Arg, ArgMatches, Command};
 use log::{debug, error, info, warn};
-use std::{env, fs::remove_file, path::Path};
+use std::{env, fs::File, path::Path};
+use utils::Report;
 
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 const NAME: &str = env!("CARGO_PKG_NAME");
@@ -27,7 +28,7 @@ fn main() {
     let test = matches.get_flag("test");
     let aggr = matches.get_flag("aggr");
     let summ = matches.get_flag("summ");
-    let cleanup = matches.get_flag("cleanup");
+    let skip_successful = matches.get_flag("skip-successful");
     let config_file = matches
         .get_one::<String>("config")
         .map(|s| s.as_str())
@@ -47,7 +48,7 @@ fn main() {
 
     if test {
         info!("Running tests");
-        run_tests(&distros, &packages, cleanup);
+        run_tests(&distros, &packages, skip_successful);
     }
 
     if aggr {
@@ -95,15 +96,15 @@ fn parse_args() -> ArgMatches {
                 .help("Specify a different base configuration file"),
         )
         .arg(
-            Arg::new("cleanup")
-                .long("cleanup")
+            Arg::new("skip-successful")
+                .long("skip-successful")
                 .action(clap::ArgAction::SetTrue)
-                .help("Clean up report.json files left by previous runs"),
+                .help("Skip previous successful tests (instead of overwriting their results)"),
         )
         .get_matches()
 }
 
-fn run_tests(distros: &[&str], packages: &[&str], cleanup: bool) {
+fn run_tests(distros: &[&str], packages: &[&str], skip_successful: bool) {
     for distro in distros {
         if !Path::new(distro).exists() {
             warn!("Distro directory '{}' not found, skipping", distro);
@@ -144,18 +145,30 @@ fn run_tests(distros: &[&str], packages: &[&str], cleanup: bool) {
         }
 
         for package in packages {
-            if cleanup {
+            if skip_successful {
                 let report_path = format!("{}/{}/report.json", distro, package);
-                let report_file_path = Path::new(&report_path);
-                if report_file_path.exists() {
-                    if let Err(e) = remove_file(report_file_path) {
-                        error!(
-                            "Failed to remove previous report file {}: {}",
-                            report_path, e
-                        );
-                    } else {
-                        info!("Removed previous report file {}", report_path);
+                if let Ok(file) = File::open(&report_path) {
+                    let report: Result<Report, serde_json::Error> = serde_json::from_reader(file);
+                    // TODO: only select failed *test scripts* in a package
+                    match report {
+                        Ok(r) => {
+                            if r.all_tests_passed {
+                                info!("Skipping previous successful test {}/{}", distro, package);
+                                continue;
+                            }
+                        }
+                        Err(_) => {
+                            warn!(
+                                "Failed to parse test report for {}/{}, test will run anyway",
+                                distro, package
+                            )
+                        }
                     }
+                } else {
+                    warn!(
+                        "Failed to open test report for {}/{}, test will run anyway",
+                        distro, package
+                    );
                 }
             }
 
