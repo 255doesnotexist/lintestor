@@ -40,7 +40,7 @@ pub fn generate_markdown_report(
 
     let mut markdown = String::new();
     markdown.push_str("# 软件包测试结果矩阵 Software package test results\n\n");
-    markdown.push_str("> 图标说明 Legend: ✅ = 通过 Passed; ⚠️ = 部分或全部测试不通过 Not all tests passed; ❓ = 未知 Unknown\n\n");
+    markdown.push_str("> 图标说明 Legend: ✅ = 通过 Passed; ⚠️ = 部分测试不通过 Not all tests passed; ❌ = 全部测试不通过 All tests failed; ❓ = 未知 Unknown\n\n");
     markdown.push_str("| 软件包 Package | 种类 Type | "); // TODO: add field for description
     for distro in distros {
         markdown.push_str(&format!("[{}](#{}) | ", distro, distro));
@@ -81,7 +81,16 @@ pub fn generate_markdown_report(
                     if report.all_tests_passed {
                         "✅"
                     } else {
-                        "⚠️"
+                        if report
+                            .test_results
+                            .iter()
+                            .find(|r| r.passed == true)
+                            .is_some()
+                        {
+                            "⚠️"
+                        } else {
+                            "❌"
+                        }
                     },
                     if !package_metadata.package_version.is_empty() {
                         format!("{}=", report.package_name)
@@ -98,14 +107,14 @@ pub fn generate_markdown_report(
     }
 
     let mut appending_details = String::new();
-
+    appending_details.push_str("# 测试环境信息 Environment info\n\n");
     for (distro, packages) in &distro_env_infos {
-        appending_details.push_str(&format!("# <span id=\"{}\">{}</span>\n\n", distro, distro));
+        appending_details.push_str(&format!("## <span id=\"{}\">{}</span>\n\n", distro, distro));
 
         for (package, env_info) in packages {
             let package_id = format!("{}_{}", distro, package); // 创建唯一的 id
             appending_details.push_str(&format!(
-                "- <span id=\"{}\">{}: {}</span>\n\n",
+                "- <span id=\"{}\">**{}**: {}</span>\n\n",
                 package_id, package, env_info
             ));
         }
