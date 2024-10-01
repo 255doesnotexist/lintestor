@@ -80,17 +80,10 @@ pub fn generate_markdown_report(
                     "| {} {}{} ",
                     if report.all_tests_passed {
                         "✅"
+                    } else if report.test_results.iter().any(|r| r.passed) {
+                        "⚠️"
                     } else {
-                        if report
-                            .test_results
-                            .iter()
-                            .find(|r| r.passed == true)
-                            .is_some()
-                        {
-                            "⚠️"
-                        } else {
-                            "❌"
-                        }
+                        "❌"
                     },
                     if !package_metadata.package_version.is_empty() {
                         format!("{}=", report.package_name)
