@@ -14,8 +14,9 @@ impl TestScriptManager {
     /// Creates a new `TestScriptManager` instance.
     ///
     /// This method scans the directory `./{distro}/{package}` for `.sh` files
-    /// and stores their paths. Note that `metadata.sh` files would be treated specially, as these scripts
-    /// are for storing the metadata variables of the package rather than for testing purposes.
+    /// and stores their paths. Note that `metadata.sh` files does not count as test scripts
+    /// and would be treated specially, as these scripts are for storing the metadata variables
+    /// of the package rather than for testing purposes.
     ///
     /// # Arguments
     ///
@@ -55,8 +56,9 @@ impl TestScriptManager {
                     .is_some_and(|name| name == std::ffi::OsStr::new(METADATA_SCRIPT_NAME))
                 {
                     metadata_script = Some(final_path.clone());
+                } else {
+                    test_scripts.push(final_path);
                 }
-                test_scripts.push(final_path);
             }
         }
         if metadata_script.is_none() {
@@ -114,7 +116,6 @@ impl TestScriptManager {
         self.test_scripts
             .iter()
             .map(|path| path.rsplit('/').next().unwrap().to_string())
-            .filter(|path| path != "metadata.sh")
             .collect()
     }
 
