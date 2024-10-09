@@ -1,7 +1,7 @@
 use crate::config::connection_config::ConnectionConfig;
 /// Represents the configuration for each distro.
 ///
-/// This struct is used to deserialize the configuration from a file using the `from_file` method.
+/// This struct is used to deserialize the configuration from a file using the `utils::read_toml_from_file` method.
 /// It contains the following fields:
 /// - `testing_type`: A string representing the type of testing ('locally' or 'remote' or 'qemu-based-remote').
 /// - `startup_script`: A string representing the startup script.
@@ -10,7 +10,6 @@ use crate::config::connection_config::ConnectionConfig;
 /// - `skip_packages`: An optional vector of strings representing the packages to be skipped.
 ///
 use serde::Deserialize;
-use std::fs;
 
 #[derive(Debug, Deserialize)]
 pub struct DistroConfig {
@@ -26,12 +25,4 @@ pub struct DistroConfig {
     #[serde(rename = "connection")]
     pub connection: ConnectionConfig,
     pub skip_packages: Option<Vec<String>>,
-}
-
-impl DistroConfig {
-    pub fn from_file(path: &str) -> Result<Self, Box<dyn std::error::Error>> {
-        let contents = fs::read_to_string(path)?;
-        let config: DistroConfig = toml::de::from_str(&contents)?;
-        Ok(config)
-    }
 }

@@ -33,7 +33,7 @@ fn main() {
         .get_one::<String>("config")
         .map(|s| s.as_str())
         .unwrap_or("config.toml");
-    let base_config = match Config::from_file(config_file) {
+    let base_config: Config = match utils::read_toml_from_file(config_file) {
         Ok(base_config) => base_config,
         Err(e) => {
             error!("Failed to load config from {}: {}", config_file, e);
@@ -111,7 +111,7 @@ fn run_tests(distros: &[&str], packages: &[&str], skip_successful: bool) {
             continue;
         }
         let distro_config_path = format!("{}/config.toml", distro);
-        let distro_config = match DistroConfig::from_file(&distro_config_path) {
+        let distro_config: DistroConfig = match utils::read_toml_from_file(&distro_config_path) {
             Ok(config) => config,
             Err(e) => {
                 error!("Failed to load config for {}: {}", distro, e);

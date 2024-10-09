@@ -3,7 +3,8 @@
 //! This module provides common structures and utilities used across the project,
 //! including report structures, temporary file management, and command output handling.
 
-use serde::{Deserialize, Serialize};
+use serde::{de::DeserializeOwned, Deserialize, Serialize};
+use std::{error::Error, fs};
 
 /// The remote temporary directory used for operations.
 pub static REMOTE_TMP_DIR: &str = "/tmp/lintestor";
@@ -104,4 +105,13 @@ pub struct CommandOutput {
     pub exit_status: i32,
     /// The output (stdout and stderr) of the command.
     pub output: String,
+}
+
+pub fn read_toml_from_file<T>(path: &str) -> Result<T, Box<dyn Error>>
+where
+    T: DeserializeOwned,
+{
+    let content = fs::read_to_string(path)?;
+    let config: T = toml::de::from_str(&content)?;
+    Ok(config)
 }
