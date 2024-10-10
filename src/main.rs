@@ -8,7 +8,7 @@ mod utils;
 
 use crate::config::{distro_config::DistroConfig, root_config::Config};
 use crate::test_runner::{local::LocalTestRunner, remote::RemoteTestRunner, TestRunner};
-use clap::{Arg, ArgMatches, Command};
+use clap::{Arg, ArgAction, ArgMatches, Command};
 use log::{debug, error, info, warn};
 use std::{env, fs::File, path::Path};
 use utils::Report;
@@ -41,9 +41,15 @@ fn main() {
         }
     };
 
-    let distros: Vec<&str> = base_config.distros.iter().map(|s| &**s).collect();
+    let distros: Vec<&str> = matches
+        .get_one::<String>("distro")
+        .map(|s| s.as_str().split(',').collect::<Vec<&str>>())
+        .unwrap_or(base_config.distros.iter().map(|s| &**s).collect());
     debug!("Distros: {:?}", distros);
-    let packages: Vec<&str> = base_config.packages.iter().map(|s| &**s).collect();
+    let packages: Vec<&str> = matches
+        .get_one::<String>("package")
+        .map(|s| s.as_str().split(',').collect::<Vec<&str>>())
+        .unwrap_or(base_config.packages.iter().map(|s| &**s).collect());
     debug!("Packages: {:?}", packages);
 
     if test {
@@ -74,19 +80,19 @@ fn parse_args() -> ArgMatches {
         .arg(
             Arg::new("test")
                 .long("test")
-                .action(clap::ArgAction::SetTrue)
+                .action(ArgAction::SetTrue)
                 .help("Run tests for all distributions"),
         )
         .arg(
             Arg::new("aggr")
                 .long("aggr")
-                .action(clap::ArgAction::SetTrue)
+                .action(ArgAction::SetTrue)
                 .help("Aggregate multiple report.json files into a single reports.json"),
         )
         .arg(
             Arg::new("summ")
                 .long("summ")
-                .action(clap::ArgAction::SetTrue)
+                .action(ArgAction::SetTrue)
                 .help("Generate a summary report"),
         )
         .arg(
@@ -96,9 +102,23 @@ fn parse_args() -> ArgMatches {
                 .help("Specify a different base configuration file"),
         )
         .arg(
+            Arg::new("distro")
+                .long("distro")
+                .help("Specify distros to test")
+                .action(ArgAction::Set)
+                .num_args(1),
+        )
+        .arg(
+            Arg::new("package")
+                .long("package")
+                .help("Specify packages to test")
+                .action(ArgAction::Set)
+                .num_args(1),
+        )
+        .arg(
             Arg::new("skip-successful")
                 .long("skip-successful")
-                .action(clap::ArgAction::SetTrue)
+                .action(ArgAction::SetTrue)
                 .help("Skip previous successful tests (instead of overwriting their results)"),
         )
         .get_matches()
