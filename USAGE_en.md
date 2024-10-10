@@ -36,7 +36,7 @@ Any other `.sh` scripts (except `metadata.sh`) in the subdirectory would be run 
 
 If certain commands need to be run globally prior each test script (eg. `export DEBIAN_FRONTEND=noninteractive` may be used on Debian-based systems to prevent apt interactive prompts), put them in `prerequisite.sh` under the distro directory. 
 
-### Run tests
+## Run tests
 
 Configure the tests following the steps above and run
 
@@ -47,6 +47,16 @@ cargo run -- --test --aggr --summ
 A `report.json` report would be generated for each package under their respective subfolders. Now that the tests are done, check out the aggregated `reports.json` and the Markdown result matrix `summary.md` in the current directory.
 
 To toggle logging levels, set the `RUST_LOG` environment variable to one of the following: debug, warn, info, error. `info` is the default logging level.
+
+### Specify distros or packages to test
+
+Append the `--distro` and the `--package` flag respectively, e.g.:
+```bash
+--distro debian --package apache
+--distro debian,bianbu,openkylin --package apache,clang,cmake
+```
+This is optional and will override the settings defined in the main config file.
+
 ## Full CLI parameters
 
 ```sh
@@ -61,7 +71,9 @@ Options:
       --aggr                       Aggregate multiple report.json files into a single reports.json
       --summ                       Generate a summary report
       --config <Config file name>  Specify a different base configuration file
-      --skip-successful            Skip completed successful tests (instead of overwriting their results)
+      --distro <distro>            Specify distros to test
+      --package <package>          Specify packages to test
+      --skip-successful            Skip previous successful tests (instead of overwriting their results)
   -h, --help                       Print help
   -V, --version                    Print version
 ```

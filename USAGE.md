@@ -46,6 +46,10 @@ PACKAGE_DESCRIPTION="Cross-platform make" # 软件包的简要说明（此项暂
 
 `--summ` 参数将执行生成结果操作。
 
+`--distro` 参数指定要测试的发行版（可选，将覆盖掉总配置文件）；语法形如 `--distro debian` 或 `--distro debian,bianbu,openkylin`。
+
+`--package` 参数指定要测试的软件包（可选，将覆盖掉总配置文件）；语法形如 `--package apache` 或 `--package apache,clang,cmake`。
+
 可使用 `RUST_LOG=(debug, warn, info, error)` 环境变量指定日志输出等级（包括ssh连接日志），默认为 `info`。
 
 ### 例：运行全部测试并生成结果汇总
@@ -72,7 +76,9 @@ Options:
       --aggr                       Aggregate multiple report.json files into a single reports.json
       --summ                       Generate a summary report
       --config <Config file name>  Specify a different base configuration file
-      --skip-successful            Skip completed successful tests (instead of overwriting their results)
+      --distro <distro>            Specify distros to test
+      --package <package>          Specify packages to test
+      --skip-successful            Skip previous successful tests (instead of overwriting their results)
   -h, --help                       Print help
   -V, --version                    Print version
 ```
