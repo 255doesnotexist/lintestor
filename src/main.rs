@@ -14,11 +14,16 @@ use log::{debug, error, info, warn};
 use std::{env, fs::File, path::Path};
 use utils::Report;
 
+/// The version of the application.
 const VERSION: &str = env!("CARGO_PKG_VERSION");
+/// The name of the application.
 const NAME: &str = env!("CARGO_PKG_NAME");
+/// The authors of the application.
 const AUTHORS: &str = env!("CARGO_PKG_AUTHORS");
+/// The description of the application.
 const DESCRIPTION: &str = env!("CARGO_PKG_DESCRIPTION");
 
+/// The main function of the application.
 fn main() {
     if env::var("RUST_LOG").is_err() {
         env::set_var("RUST_LOG", "info")
@@ -73,6 +78,8 @@ fn main() {
     }
 }
 
+/// Parses command line arguments.
+/// Returns the parsed `ArgMatches` object.
 fn parse_args() -> ArgMatches {
     Command::new(NAME)
         .version(VERSION)

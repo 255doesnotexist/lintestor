@@ -1,4 +1,4 @@
-///! Manages test scripts for a specific distribution and package.
+//! Manages test scripts for a specific distribution and package.
 ///
 /// This struct is responsible for discovering and storing paths to test scripts
 /// located in a specific directory structure.
