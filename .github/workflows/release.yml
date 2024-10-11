@@ -1,12 +1,14 @@
-name: Nightly Release
+name: Cross Compilation
 
 on:
-  schedule:
-    - cron: '0 0 * * *'
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
   workflow_dispatch:
 
 jobs:
-  build-and-release:
+  build:
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -21,39 +23,30 @@ jobs:
     steps:
     - uses: actions/checkout@v3
 
-    - name: Install Rust
-      uses: actions-rs/toolchain@v1
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v1
+
+    - name: Build and push Docker image
+      uses: docker/build-push-action@v2
       with:
-        toolchain: stable
-        override: true
+        context: .
+        push: false
+        load: true
+        tags: rust-cross-compile:latest
 
-    - name: Install cross
-      run: cargo install cross
-
-    - name: Build for ${{ matrix.target }}
-      run: cross build --release --target ${{ matrix.target }}
-
-    - name: Get current date
-      id: date
-      run: echo "date=$(date +'%Y-%m-%d')" >> $GITHUB_OUTPUT
-
-    - name: Prepare artifact
+    - name: Cross compile
       run: |
-        mkdir -p ./artifacts
-        if [[ "${{ matrix.target }}" == *"-windows-"* ]]; then
-          cp ./target/${{ matrix.target }}/release/lintestor.exe ./artifacts/lintestor-${{ matrix.target }}.exe
-        else
-          cp ./target/${{ matrix.target }}/release/lintestor ./artifacts/lintestor-${{ matrix.target }}
-        fi
+        docker run --rm -v ${{ github.workspace }}:/root/src rust-cross-compile:latest \
+          sh -c "cd /root/src && cargo build --release --target ${{ matrix.target }}"
 
     - name: Upload artifact
       uses: actions/upload-artifact@v3
       with:
         name: lintestor-${{ matrix.target }}
-        path: ./artifacts/*
+        path: target/${{ matrix.target }}/release/lintestor
 
   create-release:
-    needs: build-and-release
+    needs: build
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
@@ -68,23 +61,19 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        tag_name: nightly-${{ steps.date.outputs.date }}
-        release_name: Nightly Release ${{ steps.date.outputs.date }}
-        body: |
-          This is an automated multi-architecture nightly release of Lintestor.
-          
-          **Note:** These builds may be unstable and are not recommended for production use.
+        tag_name: release-${{ steps.date.outputs.date }}
+        release_name: Release ${{ steps.date.outputs.date }}
         draft: false
-        prerelease: true
+        prerelease: false
 
     - name: Download all artifacts
-      uses: actions/download-artifact@v4
+      uses: actions/download-artifact@v2
       with:
-        path: ./artifacts
+        path: artifacts
 
     - name: Upload Release Assets
       run: |
-        for artifact in ./artifacts/lintestor-*/lintestor-*; do
+        for artifact in artifacts/lintestor-*/*; do
           asset_name=$(basename "$artifact")
           echo "Uploading $asset_name"
           curl -L \
