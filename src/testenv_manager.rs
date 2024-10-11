@@ -1,3 +1,4 @@
+//! Manages the test environment for a distribution.
 use crate::config::{connection_config::ConnectionConfig, distro_config::DistroConfig};
 use std::io::Error;
 use std::process::Command;

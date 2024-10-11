@@ -1,3 +1,6 @@
+//! Test runner for local test environments.
+//!
+//! This module implements the `TestRunner` trait for the `LocalTestRunner` struct.
 use crate::aggregator::generate_report;
 use crate::test_runner::TestRunner;
 use crate::testscript_manager::TestScriptManager;

@@ -1,3 +1,4 @@
+//! Aggregates multiple test reports into a single report.
 use crate::utils::Report;
 use log::{error, info};
 use std::fs::File;

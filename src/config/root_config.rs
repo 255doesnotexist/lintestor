@@ -1,4 +1,4 @@
-/// Represents the root configuration for the application.
+//! Represents the root configuration for the application.
 ///
 /// This struct is used to deserialize the configuration from a file using the `utils::read_toml_from_file` method.
 /// It contains two fields:

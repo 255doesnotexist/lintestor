@@ -1,3 +1,4 @@
+//! Generates markdown reports summarizing test results for various packages across different distributions.
 use crate::utils::{PackageMetadata, Report};
 use log::info;
 use std::collections::BTreeMap;

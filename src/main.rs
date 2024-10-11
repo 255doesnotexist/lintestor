@@ -1,3 +1,4 @@
+//! Entry point of whole application
 mod aggregator;
 mod config;
 mod markdown_report;
@@ -124,6 +125,15 @@ fn parse_args() -> ArgMatches {
         .get_matches()
 }
 
+/// Run tests for all distributions
+/// # Arguments
+/// - `distros`: Array of distribution names.
+/// - `packages`: Array of package names.
+/// - `skip_successful`: Skip previous successful tests (instead of overwriting their results).
+/// 
+/// # Returns
+/// Returns `Ok(())` if successful, otherwise returns an error.
+///
 fn run_tests(distros: &[&str], packages: &[&str], skip_successful: bool) {
     for distro in distros {
         if !Path::new(distro).exists() {

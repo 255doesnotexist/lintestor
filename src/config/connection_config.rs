@@ -1,4 +1,4 @@
-/// Represents the configuration for a connection.
+//! Represents the configuration for a connection.
 ///
 /// This struct is used to store the connection details such as the method, IP address, port, username, and password.
 /// It is used in the context of a larger application to define how the application connects to a remote server or service.

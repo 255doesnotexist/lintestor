@@ -1,3 +1,6 @@
+//! Test runner for remote test environments.
+//!
+//! This module implements the `TestRunner` trait for the `RemoteTestRunner` struct.
 use crate::aggregator::generate_report;
 use crate::test_runner::TestRunner;
 use crate::testscript_manager::TestScriptManager;
@@ -9,6 +12,7 @@ use std::io::{Read, Write};
 use std::net::TcpStream;
 use std::path::Path;
 use std::process::Command;
+
 pub struct RemoteTestRunner {
     remote_ip: String,
     port: u16,
@@ -26,6 +30,7 @@ impl RemoteTestRunner {
         }
     }
 
+    /// Prints an SSH message. (maybe remove later)
     fn print_ssh_msg(&self, msg: &str) {
         // PRINT_SSH_MSG is deprecated, use RUST_LOG=debug
         if std::env::var("PRINT_SSH_MSG").is_ok() || log_enabled!(Level::Debug) {
@@ -33,6 +38,19 @@ impl RemoteTestRunner {
         }
     }
 
+    /// Runs a command on the remote server.
+    /// # Arguments
+    ///
+    /// * `sess` - The SSH session.
+    /// * `command` - The command to run.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the command fails or encounters any issues.
+    /// # Returns
+    ///
+    /// A `CommandOutput` struct containing the command, exit status, and output.
+    ///
     fn run_command(
         &self,
         sess: &Session,
