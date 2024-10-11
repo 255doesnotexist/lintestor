@@ -24,13 +24,13 @@ jobs:
     - name: Cross compile
       run: |
         docker run --rm -v ${{ github.workspace }}:/root/src 255doesnotexist/lintestor-cross-compile:latest \
-          sh -c "cd /root/src && cargo build --release --target ${{ matrix.target }}"
+          sh -c "cd /root/src && cargo build --release --target ${{ matrix.target }} && mv target/${{ matrix.target }}/release/lintestor target/${{ matrix.target }}/release/lintestor-${{ matrix.target }}"
 
     - name: Upload artifact
       uses: actions/upload-artifact@v3
       with:
         name: lintestor-${{ matrix.target }}
-        path: target/${{ matrix.target }}/release/lintestor
+        path: target/${{ matrix.target }}/release/lintestor-${{ matrix.target }}
 
   create-release:
     needs: build
@@ -49,7 +49,7 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         tag_name: release-${{ steps.date.outputs.date }}
-        release_name: Release ${{ steps.date.outputs.date }}
+        release_name: Nightly Release ${{ steps.date.outputs.date }}
         draft: false
         prerelease: false
 
