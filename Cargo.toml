@@ -1,7 +1,10 @@
 [package]
 name = "lintestor"
-version = "0.1.1"
+version = "0.1.2"
 edition = "2021"
+description = "Yet another Linux package tester"
+license = "MIT"
+repository = "https://github.com/255doesnotexist/lintestor"
 
 [dependencies]
 clap = "4.5.19"
