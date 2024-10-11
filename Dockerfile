@@ -4,17 +4,31 @@ FROM ubuntu:latest
 # 避免在构建过程中出现交互式提示
 ENV DEBIAN_FRONTEND=noninteractive
 
-# 安装必要的软件包和交叉编译工具链
+# 安装基本软件包和交叉编译工具链
 RUN apt-get update && apt-get install -y \
     software-properties-common \
-    && add-apt-repository ppa:ubuntu-toolchain-r/test \
-    && apt-get update && apt-get install -y \
     build-essential \
     curl \
     git \
     libssl-dev \
     pkg-config \
     cmake \
+    gcc-aarch64-linux-gnu \
+    g++-aarch64-linux-gnu \
+    gcc-arm-linux-gnueabihf \
+    g++-arm-linux-gnueabihf \
+    gcc-riscv64-linux-gnu \
+    g++-riscv64-linux-gnu \
+    gcc-powerpc64-linux-gnu \
+    g++-powerpc64-linux-gnu \
+    gcc-i686-linux-gnu \
+    g++-i686-linux-gnu \
+    libc6-dev-i386 \
+    && rm -rf /var/lib/apt/lists/*
+
+# 添加 PPA 并安装 GCC 14 和相关工具
+RUN add-apt-repository ppa:ubuntu-toolchain-r/test \
+    && apt-get update && apt-get install -y \
     gcc-14 \
     g++-14 \
     gcc-14-aarch64-linux-gnu \
@@ -27,13 +41,9 @@ RUN apt-get update && apt-get install -y \
     g++-14-powerpc64-linux-gnu \
     gcc-14-i686-linux-gnu \
     g++-14-i686-linux-gnu \
-    libc6-dev-i386 \
     && rm -rf /var/lib/apt/lists/*
 
-# 设置 GCC 14 为默认版本
-RUN update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-14 100 \
-    && update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-14 100
-
+# 设置工作目录
 WORKDIR /root
 
 # 安装 Rust
