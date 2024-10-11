@@ -1,6 +1,8 @@
 name: Cross Compilation
 
 on:
+  schedule:
+    - cron: '0 0 * * *'
   workflow_dispatch:
 
 jobs:
@@ -21,10 +23,14 @@ jobs:
     - name: Pull Docker image from Docker Hub
       run: docker pull 255doesnotexist/lintestor-cross-compile:latest
 
+    - name: Get current date
+      id: date
+      run: echo "date=$(date +'%Y-%m-%d')" >> $GITHUB_OUTPUT
+
     - name: Cross compile
       run: |
         docker run --rm -v ${{ github.workspace }}:/root/src 255doesnotexist/lintestor-cross-compile:latest \
-          sh -c "cd /root/src && cargo build --release --target ${{ matrix.target }} && mv target/${{ matrix.target }}/release/lintestor target/${{ matrix.target }}/release/lintestor-${{ matrix.target }}"
+          sh -c "cd /root/src && cargo build --release --target ${{ matrix.target }} && mv target/${{ matrix.target }}/release/lintestor target/${{ matrix.target }}/release/lintestor-${{ matrix.target }}-${{ steps.date.outputs.date }}"
 
     - name: Upload artifact
       uses: actions/upload-artifact@v3
