@@ -1,4 +1,5 @@
 //! Represents the configuration for each distro.
+use crate::config::connection_config::ConnectionConfig;
 /// This struct is used to deserialize the configuration from a file using the `utils::read_toml_from_file` method.
 /// It contains the following fields:
 /// - `testing_type`: A string representing the type of testing ('locally' or 'remote' or 'qemu-based-remote').
@@ -8,7 +9,6 @@
 /// - `skip_packages`: An optional vector of strings representing the packages to be skipped.
 ///
 use serde::Deserialize;
-use crate::config::connection_config::ConnectionConfig;
 
 #[derive(Debug, Deserialize)]
 pub struct DistroConfig {

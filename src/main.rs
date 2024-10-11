@@ -130,7 +130,7 @@ fn parse_args() -> ArgMatches {
 /// - `distros`: Array of distribution names.
 /// - `packages`: Array of package names.
 /// - `skip_successful`: Skip previous successful tests (instead of overwriting their results).
-/// 
+///
 /// # Returns
 /// Returns `Ok(())` if successful, otherwise returns an error.
 ///
