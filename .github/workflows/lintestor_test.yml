@@ -72,8 +72,12 @@ jobs:
       run: |
         ls -l ../ # 展示上级文件结构
         ls -l ../dqib_riscv64-virt # 展示文件结构
+        ls -l . # 展示本级结构
         # cargo run -- --test --aggr --summ
-        LATEST_BINARY=$(ls -1t lintestor-x86_64-unknown-linux-gnu* | head -1)
+        LATEST_BINARY=$(find . -type f -name "lintestor-x86_64-unknown-linux-gnu-*" | head -1)
+        if [ -n "$LATEST_BINARY" ]; then
+            cp "$LATEST_BINARY" .
+        fi
         echo with $LATEST_BINARY
         chmod +x $LATEST_BINARY
         $LATEST_BINARY --test --aggr --summ
