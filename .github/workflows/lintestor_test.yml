@@ -11,7 +11,16 @@ jobs:
     env:
       PRINT_SSH_MSG: 1
     steps:
-    - uses: actions/checkout@v2
+    - name: Checkout dirty branch
+      uses: actions/checkout@v2
+      with:
+        ref: 'dirty'
+    
+    - name: Download latest Lintestor binary
+      uses: robinraju/release-downloader@v1
+      with:
+        latest: true
+        fileName: ''
     
     - name: Set up Rust
       uses: actions-rs/toolchain@v1
@@ -63,7 +72,11 @@ jobs:
       run: |
         ls -l ../ # 展示上级文件结构
         ls -l ../dqib_riscv64-virt # 展示文件结构
-        cargo run -- --test --aggr --summ
+        # cargo run -- --test --aggr --summ
+        LATEST_BINARY=$(ls -1t lintestor-x86_64-unknown-linux-gnu* | head -1)
+        echo with $LATEST_BINARY
+        chmod +x $LATEST_BINARY
+        $LATEST_BINARY --test --aggr --summ
     
     - name: Upload test results
       uses: actions/upload-artifact@v4
