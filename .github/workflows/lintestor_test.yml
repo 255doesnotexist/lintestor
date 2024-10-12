@@ -16,12 +16,6 @@ jobs:
       with:
         ref: 'dirty'
     
-    - name: Download latest Lintestor binary
-      uses: robinraju/release-downloader@v1
-      with:
-        latest: true
-        fileName: ''
-    
     - name: Set up Rust
       uses: actions-rs/toolchain@v1
       with:
@@ -68,18 +62,16 @@ jobs:
         sed -i "s/{BIANBU_USERNAME}/${BIANBU_USERNAME}/" ./bianbu/config.toml
         sed -i "s/{BIANBU_PASSWORD}/${BIANBU_PASSWORD}/" ./bianbu/config.toml
     
-    - name: Run Lintestor
+    - name: Install & Run Lintestor
       run: |
         ls -l ../ # 展示上级文件结构
         ls -l ../dqib_riscv64-virt # 展示文件结构
         ls -l . # 展示本级结构
         # cargo run -- --test --aggr --summ
-        LATEST_BINARY=$(find . -type f -name "lintestor-x86_64-unknown-linux-gnu-*" | head -1)
-        if [ -n "$LATEST_BINARY" ]; then
-            cp "$LATEST_BINARY" .
-        fi
-        echo with $LATEST_BINARY
-        chmod +x $LATEST_BINARY
+
+        cargo install lintestor
+
+        LATEST_BINARY=lintestor
         $LATEST_BINARY --test --aggr --summ
     
     - name: Upload test results
