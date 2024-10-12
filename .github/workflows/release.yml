@@ -32,6 +32,10 @@ jobs:
         docker run --rm -v ${{ github.workspace }}:/root/src 255doesnotexist/lintestor-cross-compile:latest \
           sh -c "cd /root/src && cargo build --release --target ${{ matrix.target }} && mv target/${{ matrix.target }}/release/lintestor target/${{ matrix.target }}/release/lintestor-${{ matrix.target }}-${{ steps.date.outputs.date }}"
 
+    - name: Listing targets
+      run: |
+        ls target/${{ matrix.target }}/release/ # 不是我 binary 呢让我看看编译了吗
+
     - name: Upload artifact
       uses: actions/upload-artifact@v3
       with:
@@ -54,6 +58,10 @@ jobs:
       uses: actions/download-artifact@v3
       with:
         path: artifacts
+
+    - name: Listing artifacts
+      run: |
+        ls artifacts # 不是我 binary 呢让我看看啥情况
 
     - name: Create GitHub Release
       uses: softprops/action-gh-release@v2
