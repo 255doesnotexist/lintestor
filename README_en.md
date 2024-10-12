@@ -1,6 +1,6 @@
 # Lintestor
 
-[Docs](https://255doesnotexist.github.io/lintestor/) | [Example Summary](https://github.com/255doesnotexist/lintestor/blob/main/summary.md) | [Chinese README](README.md)
+[Docs](https://255doesnotexist.github.io/lintestor/) | [Example Summary](https://github.com/255doesnotexist/lintestor/blob/dirty/summary.md) | [Chinese README](README.md)
 
 `lintestor` is a Rust framework for automated software package availability testing, tailored for RISC-V platforms, with (theoretical) multi-distribution support.
 
