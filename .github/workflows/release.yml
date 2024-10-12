@@ -39,8 +39,8 @@ jobs:
     - name: Upload artifact
       uses: actions/upload-artifact@v3
       with:
-        name: lintestor-${{ matrix.target }}
-        path: target/${{ matrix.target }}/release/lintestor-${{ matrix.target }}
+        name: lintestor-${{ matrix.target }}-${{ steps.date.outputs.date }}
+        path: target/${{ matrix.target }}/release/lintestor-${{ matrix.target }}-${{ steps.date.outputs.date }}
 
   create-release:
     needs: build
@@ -54,6 +54,17 @@ jobs:
       id: date
       run: echo "date=$(date +'%Y-%m-%d')" >> $GITHUB_OUTPUT
 
+    - name: Create Release
+      id: create_release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: release-${{ steps.date.outputs.date }}
+        release_name: Nightly Release ${{ steps.date.outputs.date }}
+        draft: false
+        prerelease: false
+
     - name: Download all artifacts
       uses: actions/download-artifact@v3
       with:
@@ -63,15 +74,21 @@ jobs:
       run: |
         ls artifacts # 不是我 binary 呢让我看看啥情况
 
-    - name: Create GitHub Release
-      uses: softprops/action-gh-release@v2
-      with:
-        tag_name: release-${{ steps.date.outputs.date }}
-        name: Nightly Release ${{ steps.date.outputs.date }}
-        files: |
-          artifacts/lintestor-x86_64-unknown-linux-gnu-*
-          artifacts/lintestor-i686-unknown-linux-gnu-*
-          artifacts/lintestor-aarch64-unknown-linux-gnu-*
-          artifacts/lintestor-armv7-unknown-linux-gnueabihf-*
-          artifacts/lintestor-riscv64gc-unknown-linux-gnu-*
-        token: ${{ secrets.GITHUB_TOKEN }}
+    - name: Upload Release Assets
+      run: |
+        for artifact in artifacts/lintestor-*/*; do
+          if [ -f "$artifact" ]; then
+            ls -l "$artifact"
+            asset_name=$(basename "$artifact")
+            echo "Uploading $asset_name"
+            curl -L \
+              -X POST \
+              -H "Accept: application/vnd.github+json" \
+              -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+              -H "Content-Type: application/octet-stream" \
+              "https://uploads.github.com/repos/${{ github.repository }}/releases/${{ steps.create_release.outputs.id }}/assets?name=${asset_name}" \
+              --data-binary "@$artifact"
+          else
+            echo "File $artifact not found, skipping."
+          fi
+        done
