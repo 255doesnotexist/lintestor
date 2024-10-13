@@ -41,7 +41,8 @@ impl TestScriptManager {
     /// ```
     /// use your_crate::TestScriptManager;
     ///
-    /// let manager = TestScriptManager::new("ubuntu", "nginx").expect("Failed to create TestScriptManager");
+    /// let skip_scripts = vec!["test1.sh".to_string(), "test2.sh".to_string()];
+    /// let manager = TestScriptManager::new("ubuntu", "nginx", skip_scripts).expect("Failed to create TestScriptManager");
     /// ```
     pub fn new(
         distro: &str,
@@ -65,7 +66,7 @@ impl TestScriptManager {
                     .unwrap_or_default();
 
                 if skipped_scripts.contains(&file_name.to_string()) {
-                    log::info!("skiped {}", &file_name.to_string());
+                    log::debug!("skiped {}", &file_name.to_string());
                     continue;
                 }
 

@@ -186,7 +186,6 @@ fn run_tests(distros: &[&str], packages: &[&str], skip_successful: bool) {
 
             if skip_successful {
                 let report_path = format!("{}/{}/report.json", distro, package);
-                info!("Skipping mode enabled");
                 if let Ok(file) = File::open(&report_path) {
                     let report: Result<Report, serde_json::Error> = serde_json::from_reader(file);
                     // TODO: only select failed *test scripts* in a package
@@ -197,12 +196,13 @@ fn run_tests(distros: &[&str], packages: &[&str], skip_successful: bool) {
                                 continue;
                             } else {
                                 for result in r.test_results {
-                                    info!(
-                                        "Test: {}, passed: {:?}",
-                                        result.test_name, result.passed
-                                    );
                                     if result.passed {
-                                        skipped_scripts.push(result.test_name.clone());
+                                        info!(
+                                            "Skipping previous successful test {}/{}: {}",
+                                            distro, package, result.test_name
+                                        );
+
+                                        skipped_scripts.push(result.test_name);
                                     }
                                 }
                             }
@@ -221,7 +221,6 @@ fn run_tests(distros: &[&str], packages: &[&str], skip_successful: bool) {
                     );
                 }
             }
-            info!("skipped: {:?}", &skipped_scripts);
 
             if let Some(skip_packages) = &distro_config.skip_packages {
                 if skip_packages.contains(&package.to_string()) {
