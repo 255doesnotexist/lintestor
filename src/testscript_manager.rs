@@ -2,6 +2,7 @@
 ///
 /// This struct is responsible for discovering and storing paths to test scripts
 /// located in a specific directory structure.
+#[allow(dead_code)]
 pub struct TestScriptManager {
     test_scripts: Vec<String>,
     metadata_script: Option<String>,
