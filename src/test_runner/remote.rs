@@ -83,6 +83,7 @@ impl TestRunner for RemoteTestRunner {
     ///
     /// * `distro` - The name of the distribution.
     /// * `package` - The name of the package.
+    /// * `skip_scripts` - Some scripts skiped by use --skip-successful
     ///
     /// # Errors
     ///
