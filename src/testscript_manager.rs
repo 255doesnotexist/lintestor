@@ -66,7 +66,7 @@ impl TestScriptManager {
                     .unwrap_or_default();
 
                 if skipped_scripts.contains(&file_name.to_string()) {
-                    log::debug!("skiped {}", &file_name.to_string());
+                    log::debug!("skipped {}", &file_name.to_string());
                     continue;
                 }
 
