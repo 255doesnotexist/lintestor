@@ -37,8 +37,13 @@ impl TestRunner for LocalTestRunner {
     /// * Reading the package version from the temporary file fails.
     /// * Generating the report fails.
     /// * Not all tests passed for the given distribution and package.
-    fn run_test(&self, distro: &str, package: &str) -> Result<(), Box<dyn std::error::Error>> {
-        let script_manager = TestScriptManager::new(distro, package)?;
+    fn run_test(
+        &self,
+        distro: &str,
+        package: &str,
+        skip_scripts: Option<Vec<String>>,
+    ) -> Result<(), Box<dyn std::error::Error>> {
+        let script_manager = TestScriptManager::new(distro, package, skip_scripts)?;
 
         let os_version = read_to_string("/proc/version")?;
         let kernelver_output = Command::new("uname").arg("-r").output()?;

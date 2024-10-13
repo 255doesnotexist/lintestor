@@ -182,8 +182,11 @@ fn run_tests(distros: &[&str], packages: &[&str], skip_successful: bool) {
         }
 
         for package in packages {
+            let mut skipped_scripts = Vec::new();
+
             if skip_successful {
                 let report_path = format!("{}/{}/report.json", distro, package);
+                info!("Skipping mode enabled");
                 if let Ok(file) = File::open(&report_path) {
                     let report: Result<Report, serde_json::Error> = serde_json::from_reader(file);
                     // TODO: only select failed *test scripts* in a package
@@ -192,6 +195,16 @@ fn run_tests(distros: &[&str], packages: &[&str], skip_successful: bool) {
                             if r.all_tests_passed {
                                 info!("Skipping previous successful test {}/{}", distro, package);
                                 continue;
+                            } else {
+                                for result in r.test_results {
+                                    info!(
+                                        "Test: {}, passed: {:?}",
+                                        result.test_name, result.passed
+                                    );
+                                    if result.passed {
+                                        skipped_scripts.push(result.test_name.clone());
+                                    }
+                                }
                             }
                         }
                         Err(_) => {
@@ -208,6 +221,7 @@ fn run_tests(distros: &[&str], packages: &[&str], skip_successful: bool) {
                     );
                 }
             }
+            info!("skipped: {:?}", &skipped_scripts);
 
             if let Some(skip_packages) = &distro_config.skip_packages {
                 if skip_packages.contains(&package.to_string()) {
@@ -267,7 +281,7 @@ fn run_tests(distros: &[&str], packages: &[&str], skip_successful: bool) {
                 ))
             };
 
-            match test_runner.run_test(distro, package) {
+            match test_runner.run_test(distro, package, Some(skipped_scripts)) {
                 Ok(_) => info!("Test passed for {}/{}", distro, package),
                 Err(e) => error!("Test failed for {}/{}: {}", distro, package, e), // error or warn?
             }

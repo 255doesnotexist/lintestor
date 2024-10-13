@@ -87,7 +87,12 @@ impl TestRunner for RemoteTestRunner {
     /// # Errors
     ///
     /// Returns an error if the test fails or encounters any issues.
-    fn run_test(&self, distro: &str, package: &str) -> Result<(), Box<dyn std::error::Error>> {
+    fn run_test(
+        &self,
+        distro: &str,
+        package: &str,
+        skip_scripts: Option<Vec<String>>,
+    ) -> Result<(), Box<dyn std::error::Error>> {
         // Create SSH session
         let tcp = TcpStream::connect((self.remote_ip.as_str(), self.port))?;
         let mut sess = Session::new()?;
@@ -190,7 +195,8 @@ impl TestRunner for RemoteTestRunner {
         // Run test commands
         self.print_ssh_msg(&format!("Running tests in directory {}", remote_dir));
 
-        let script_manager = TestScriptManager::new(distro, package)?;
+        let script_manager = TestScriptManager::new(distro, package, skip_scripts)?;
+
         let mut all_tests_passed = true;
         let mut test_results = Vec::new();
         for script in script_manager.get_test_script_names() {

@@ -5,6 +5,7 @@
 pub struct TestScriptManager {
     test_scripts: Vec<String>,
     metadata_script: Option<String>,
+    skipped_scripts: Vec<String>,
 }
 
 /// The name of the metadata script, if it exists.
@@ -42,25 +43,40 @@ impl TestScriptManager {
     ///
     /// let manager = TestScriptManager::new("ubuntu", "nginx").expect("Failed to create TestScriptManager");
     /// ```
-    pub fn new(distro: &str, package: &str) -> Result<Self, Box<dyn std::error::Error>> {
+    pub fn new(
+        distro: &str,
+        package: &str,
+        skip_scripts: Option<Vec<String>>,
+    ) -> Result<Self, Box<dyn std::error::Error>> {
         let dir = format!("./{}/{}", distro, package);
         let mut test_scripts = Vec::new();
         let mut metadata_script = None;
+        let skipped_scripts = skip_scripts.unwrap_or_default();
+
         for entry in std::fs::read_dir(dir)? {
             let entry = entry?;
             let path = entry.path();
             if path.is_file() && path.extension().unwrap_or_default() == "sh" {
                 let final_path = path.to_str().unwrap_or_default().to_string();
-                if path
+                let file_name = path
                     .file_name()
-                    .is_some_and(|name| name == std::ffi::OsStr::new(METADATA_SCRIPT_NAME))
-                {
+                    .unwrap_or_default()
+                    .to_str()
+                    .unwrap_or_default();
+
+                if skipped_scripts.contains(&file_name.to_string()) {
+                    log::info!("skiped {}", &file_name.to_string());
+                    continue;
+                }
+
+                if file_name == METADATA_SCRIPT_NAME {
                     metadata_script = Some(final_path.clone());
                 } else {
                     test_scripts.push(final_path);
                 }
             }
         }
+
         if metadata_script.is_none() {
             log::warn!(
                 "Missing metadata.sh for {}/{}, its metadata will not be recorded",
@@ -71,6 +87,7 @@ impl TestScriptManager {
         Ok(TestScriptManager {
             test_scripts,
             metadata_script,
+            skipped_scripts,
         })
     }
 
