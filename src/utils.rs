@@ -3,8 +3,11 @@
 //! This module provides common structures and utilities used across the project,
 //! including report structures, temporary file management, and command output handling.
 
+use log::debug;
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
-use std::{error::Error, fs};
+use std::{collections::HashSet, error::Error, fs, path::Path};
+
+use crate::config::distro_config::DistroConfig;
 
 /// The remote temporary directory used for operations.
 pub static REMOTE_TMP_DIR: &str = "/tmp/lintestor";
@@ -114,4 +117,55 @@ where
     let content = fs::read_to_string(path)?;
     let config: T = toml::de::from_str(&content)?;
     Ok(config)
+}
+
+pub fn get_distros(dir: &str) -> Result<Vec<String>, Box<dyn Error>> {
+    let directory = Path::new(dir);
+    let mut distros = Vec::new();
+    for subdir in directory.read_dir()? {
+        let distro = subdir?;
+        let distro_dir_path = distro.path();
+        if distro_dir_path.is_dir() {
+            let distro_dir_name = distro.file_name().into_string().unwrap();
+            let distro_config_path = format!("{}/config.toml", distro_dir_path.display());
+            let distro_config: DistroConfig = match read_toml_from_file(&distro_config_path) {
+                Ok(config) => {
+                    debug!("Discovered distro directory {}", distro_dir_path.display());
+                    config
+                }
+                Err(_) => {
+                    continue;
+                }
+            };
+            if distro_config.enabled {
+                distros.push(distro_dir_name);
+            }
+        }
+    }
+    Ok(distros)
+}
+
+pub fn get_packages(distro: &str, dir: &str) -> Result<Vec<String>, Box<dyn Error>> {
+    let directory = Path::new(dir).join(distro);
+    let mut packages = Vec::new();
+    for subdir in directory.read_dir()? {
+        let package = subdir?;
+        let package_dir_path = package.path();
+        if package_dir_path.is_dir() {
+            let package_dir_name = package.file_name().into_string().unwrap();
+            packages.push(package_dir_name);
+        }
+    }
+    Ok(packages)
+}
+
+pub fn get_all_packages(distros: &[&str], dir: &str) -> Result<Vec<String>, Box<dyn Error>> {
+    let mut packages = HashSet::new();
+    for distro in distros {
+        let current_packages = get_packages(distro, dir).unwrap_or_default();
+        packages.extend(current_packages);
+    }
+    let mut packages_vec: Vec<String> = packages.into_iter().collect();
+    packages_vec.sort(); // do we really need sorting?
+    Ok(packages_vec)
 }

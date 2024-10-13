@@ -7,7 +7,7 @@ mod testenv_manager;
 mod testscript_manager;
 mod utils;
 
-use crate::config::{distro_config::DistroConfig, root_config::Config};
+use crate::config::distro_config::DistroConfig;
 use crate::test_runner::{local::LocalTestRunner, remote::RemoteTestRunner, TestRunner};
 use clap::{Arg, ArgAction, ArgMatches, Command};
 use log::{debug, error, info, warn};
@@ -35,27 +35,24 @@ fn main() {
     let aggr = matches.get_flag("aggr");
     let summ = matches.get_flag("summ");
     let skip_successful = matches.get_flag("skip-successful");
-    let config_file = matches
-        .get_one::<String>("config")
+    let cwd = env::current_dir().unwrap();
+    let working_directory = matches
+        .get_one::<String>("directory")
         .map(|s| s.as_str())
-        .unwrap_or("config.toml");
-    let base_config: Config = match utils::read_toml_from_file(config_file) {
-        Ok(base_config) => base_config,
-        Err(e) => {
-            error!("Failed to load config from {}: {}", config_file, e);
-            return;
-        }
-    };
+        .unwrap_or(cwd.to_str().unwrap());
 
+    let discovered_distros = utils::get_distros(working_directory).unwrap_or_default();
     let distros: Vec<&str> = matches
         .get_one::<String>("distro")
         .map(|s| s.as_str().split(',').collect::<Vec<&str>>())
-        .unwrap_or(base_config.distros.iter().map(|s| &**s).collect());
+        .unwrap_or(discovered_distros.iter().map(|s| s.as_str()).collect());
     debug!("Distros: {:?}", distros);
+    let discovered_packages =
+        utils::get_all_packages(&distros, working_directory).unwrap_or_default();
     let packages: Vec<&str> = matches
         .get_one::<String>("package")
         .map(|s| s.as_str().split(',').collect::<Vec<&str>>())
-        .unwrap_or(base_config.packages.iter().map(|s| &**s).collect());
+        .unwrap_or(discovered_packages.iter().map(|s| s.as_str()).collect());
     debug!("Packages: {:?}", packages);
 
     if test {
@@ -104,10 +101,10 @@ fn parse_args() -> ArgMatches {
                 .help("Generate a summary report"),
         )
         .arg(
-            Arg::new("config")
-                .long("config")
-                .value_name("Config file name")
-                .help("Specify a different base configuration file"),
+            Arg::new("directory")
+                .long("directory")
+                .value_name("Working directory")
+                .help("Specify working directory with preconfigured test files"),
         )
         .arg(
             Arg::new("distro")
