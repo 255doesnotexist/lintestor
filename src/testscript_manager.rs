@@ -92,30 +92,25 @@ impl TestScriptManager {
         })
     }
 
-    /// Returns a vector containing the paths of all discovered test scripts, excluding the skipped ones.
+    /// Returns a slice containing the paths of all discovered test scripts.
     ///
     /// # Returns
     ///
-    /// A `Vec<String>`, where each `String` is the path to a discovered test script that is not in the list of scripts to skip.
+    /// A slice of `String`s, where each `String` is the path to a discovered test script.
     ///
     /// # Example
     ///
     /// ```
     /// use your_crate::TestScriptManager;
     ///
-    /// let skip_scripts = vec!["test1.sh".to_string(), "test2.sh".to_string()];
-    /// let manager = TestScriptManager::new("ubuntu", "nginx", skip_scripts).expect("Failed to create TestScriptManager");
+    /// let manager = TestScriptManager::new("ubuntu", "nginx").expect("Failed to create TestScriptManager");
     /// let scripts = manager.get_test_scripts();
     /// for script in scripts {
     ///     println!("Test script: {}", script);
     /// }
     /// ```
-    pub fn get_test_scripts(&self) -> Vec<String> {
-        self.test_scripts
-            .iter()
-            .filter(|script| !self.skipped_scripts.contains(script))
-            .cloned()
-            .collect()
+    pub fn get_test_scripts(&self) -> &[String] {
+        &self.test_scripts
     }
 
     /// Returns a slice containing the names of all discovered test scripts.
