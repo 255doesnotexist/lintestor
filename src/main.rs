@@ -188,7 +188,6 @@ fn run_tests(distros: &[&str], packages: &[&str], skip_successful: bool) {
                 let report_path = format!("{}/{}/report.json", distro, package);
                 if let Ok(file) = File::open(&report_path) {
                     let report: Result<Report, serde_json::Error> = serde_json::from_reader(file);
-                    // TODO: only select failed *test scripts* in a package
                     match report {
                         Ok(r) => {
                             if r.all_tests_passed {
