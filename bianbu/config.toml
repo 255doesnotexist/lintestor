@@ -1,3 +1,4 @@
+enabled = true
 testing_type = "remote"
 skip_packages = []
 
