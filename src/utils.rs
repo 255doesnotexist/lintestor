@@ -5,7 +5,12 @@
 
 use log::debug;
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
-use std::{collections::HashSet, error::Error, fs, path::Path};
+use std::{
+    collections::HashSet,
+    error::Error,
+    fs,
+    path::{Path, PathBuf},
+};
 
 use crate::config::distro_config::DistroConfig;
 
@@ -67,7 +72,7 @@ pub struct TestResult {
     pub passed: bool,
 }
 
-/// A utility struct for managing temporary files.
+/// A utility struct for managing temporary files. (deprecated)
 ///
 /// This struct ensures that the file is deleted when it goes out of scope.
 pub struct TempFile {
@@ -84,7 +89,7 @@ impl TempFile {
     /// # Returns
     ///
     /// A new `TempFile` instance.
-    pub fn new(path: String) -> Self {
+    pub fn _new(path: String) -> Self {
         TempFile { path }
     }
 }
@@ -110,7 +115,7 @@ pub struct CommandOutput {
     pub output: String,
 }
 
-pub fn read_toml_from_file<T>(path: &str) -> Result<T, Box<dyn Error>>
+pub fn read_toml_from_file<T>(path: &PathBuf) -> Result<T, Box<dyn Error>>
 where
     T: DeserializeOwned,
 {
@@ -127,7 +132,7 @@ pub fn get_distros(dir: &str) -> Result<Vec<String>, Box<dyn Error>> {
         let distro_dir_path = distro.path();
         if distro_dir_path.is_dir() {
             let distro_dir_name = distro.file_name().into_string().unwrap();
-            let distro_config_path = format!("{}/config.toml", distro_dir_path.display());
+            let distro_config_path = distro_dir_path.join("config.toml");
             let distro_config: DistroConfig = match read_toml_from_file(&distro_config_path) {
                 Ok(config) => {
                     debug!("Discovered distro directory {}", distro_dir_path.display());

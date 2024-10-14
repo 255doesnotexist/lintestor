@@ -4,14 +4,16 @@
 use crate::aggregator::generate_report;
 use crate::test_runner::TestRunner;
 use crate::testscript_manager::TestScriptManager;
-use crate::utils::{CommandOutput, PackageMetadata, Report, TempFile, TestResult, REMOTE_TMP_DIR};
+use crate::utils::{CommandOutput, PackageMetadata, Report, TestResult, REMOTE_TMP_DIR};
 use log::{debug, log_enabled, Level};
 use ssh2::Session;
-use std::fs::File;
-use std::io::{Read, Write};
-use std::net::TcpStream;
-use std::path::Path;
-use std::process::Command;
+use std::{
+    fs::File,
+    io::{Read, Write},
+    net::TcpStream,
+    path::Path,
+    process::Command,
+};
 
 pub struct RemoteTestRunner {
     remote_ip: String,
@@ -83,11 +85,17 @@ impl TestRunner for RemoteTestRunner {
     ///
     /// * `distro` - The name of the distribution.
     /// * `package` - The name of the package.
+    /// * `dir` - Working directory which contains the test folders and files, defaults to env::current_dir()
     ///
     /// # Errors
     ///
     /// Returns an error if the test fails or encounters any issues.
-    fn run_test(&self, distro: &str, package: &str) -> Result<(), Box<dyn std::error::Error>> {
+    fn run_test(
+        &self,
+        distro: &str,
+        package: &str,
+        dir: &str,
+    ) -> Result<(), Box<dyn std::error::Error>> {
         // Create SSH session
         let tcp = TcpStream::connect((self.remote_ip.as_str(), self.port))?;
         let mut sess = Session::new()?;
@@ -108,9 +116,10 @@ impl TestRunner for RemoteTestRunner {
         }
 
         // Compress local test directory
-        let local_dir = format!("{}/{}", distro, package);
-        let tar_file = format!("{}.tar.gz", package);
-        let _temp_tar = TempFile::new(tar_file.clone());
+        let local_dir = Path::new(dir).join(format!("{}/{}", distro, package));
+        let tar_file_path_relative = format!("{}.tar.gz", package);
+        let tar_file = Path::new(dir).join(tar_file_path_relative.clone());
+        // let _temp_tar = TempFile::new(tar_file.clone());
         Command::new("tar")
             .arg("czf")
             .arg(&tar_file)
@@ -120,14 +129,15 @@ impl TestRunner for RemoteTestRunner {
             .output()?;
         self.print_ssh_msg(&format!(
             "Local directory {} compressed into {}",
-            local_dir, tar_file
+            local_dir.display(),
+            tar_file.display()
         ));
 
         // Make preparations on the remote server
         self.run_command(&sess, &format!("mkdir -p {}", REMOTE_TMP_DIR))?;
 
         // Upload compressed file to remote server
-        let remote_tar_path = format!("{}/{}", REMOTE_TMP_DIR, tar_file);
+        let remote_tar_path = format!("{}/{}", REMOTE_TMP_DIR, tar_file_path_relative);
         let mut remote_file = sess.scp_send(
             Path::new(&remote_tar_path),
             0o644,
@@ -138,10 +148,13 @@ impl TestRunner for RemoteTestRunner {
         let mut buffer = Vec::new();
         local_file.read_to_end(&mut buffer)?;
         remote_file.write_all(&buffer)?;
-        self.print_ssh_msg(&format!("File {} uploaded to remote server", tar_file));
+        self.print_ssh_msg(&format!(
+            "File {} uploaded to remote server",
+            tar_file_path_relative
+        ));
 
         // Upload prerequisite.sh (optional) to remote server
-        let prerequisite_path = format!("{}/prerequisite.sh", distro);
+        let prerequisite_path = Path::new(dir).join(format!("{}/prerequisite.sh", distro));
         if Path::new(&prerequisite_path).exists() {
             let remote_prerequisite_path = "/tmp/prerequisite.sh".to_string();
             let mut remote_file = sess.scp_send(
@@ -156,7 +169,7 @@ impl TestRunner for RemoteTestRunner {
             remote_file.write_all(&buffer)?;
             self.print_ssh_msg(&format!(
                 "File {} uploaded to remote server",
-                prerequisite_path
+                prerequisite_path.display()
             ));
         }
         // Ensure remote file is closed before proceeding
@@ -166,7 +179,7 @@ impl TestRunner for RemoteTestRunner {
         let remote_dir = format!("{}/{}/{}", REMOTE_TMP_DIR, distro, package);
         self.print_ssh_msg(&format!(
             "Extracting file {} on remote server at {}",
-            tar_file, remote_dir
+            tar_file_path_relative, remote_dir
         ));
         if let Ok(CommandOutput {
             exit_status: 0,
@@ -181,7 +194,7 @@ impl TestRunner for RemoteTestRunner {
         ) {
             self.print_ssh_msg(&format!(
                 "Successfully extracted file {} on remote server at {}",
-                tar_file, remote_dir
+                tar_file_path_relative, remote_dir
             ));
         } else {
             return Err("Failed to extract test files on remote server".into());
@@ -190,7 +203,7 @@ impl TestRunner for RemoteTestRunner {
         // Run test commands
         self.print_ssh_msg(&format!("Running tests in directory {}", remote_dir));
 
-        let script_manager = TestScriptManager::new(distro, package)?;
+        let script_manager = TestScriptManager::new(distro, package, dir.to_string())?;
         let mut all_tests_passed = true;
         let mut test_results = Vec::new();
         for script in script_manager.get_test_script_names() {
@@ -242,7 +255,10 @@ impl TestRunner for RemoteTestRunner {
                     .lines()
                     .map(|line| line.to_string())
                     .collect();
-                debug!("Collected metadata: {:?}", metadata_vec);
+                debug!(
+                    "Collected metadata for {}/{} from remote stream: {:?}",
+                    distro, package, metadata_vec
+                );
                 if let [version, pretty_name, package_type, description] = &metadata_vec[..] {
                     PackageMetadata {
                         package_version: version.to_owned(),
@@ -297,8 +313,8 @@ impl TestRunner for RemoteTestRunner {
         }
 
         // Download compressed test directory
-        let local_result_tar_file = format!("{}/{}_result.tar.gz", local_dir, package);
-        let _temp_result_tar = TempFile::new(local_result_tar_file.clone());
+        let local_result_tar_file = local_dir.join(format!("{}_result.tar.gz", package));
+        // let _temp_result_tar = TempFile::new(local_result_tar_file.clone());
         let (mut remote_file, _) = sess.scp_recv(Path::new(&remote_tar_file))?;
         let mut local_file = File::create(&local_result_tar_file)?;
         let mut buffer = Vec::new();
@@ -306,7 +322,7 @@ impl TestRunner for RemoteTestRunner {
         local_file.write_all(&buffer)?;
         self.print_ssh_msg(&format!(
             "Downloaded test results to local file {}",
-            local_result_tar_file
+            local_result_tar_file.display()
         ));
 
         // Extract downloaded test results
@@ -318,11 +334,12 @@ impl TestRunner for RemoteTestRunner {
             .output()?;
         self.print_ssh_msg(&format!(
             "Extracted test results into local directory {}",
-            local_dir
+            local_dir.display()
         ));
 
         // Generate report locally
-        let report_path = format!("{}/report.json", local_dir);
+
+        let report_path = local_dir.join("report.json");
         generate_report(report_path, report.clone())?;
         debug!("{}-{} report:\n {:?}", distro, package, report);
 

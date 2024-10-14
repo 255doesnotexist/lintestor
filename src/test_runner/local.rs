@@ -24,6 +24,7 @@ impl TestRunner for LocalTestRunner {
     ///
     /// * `distro` - The name of the distribution.
     /// * `package` - The name of the package.
+    /// * `dir` - Working directory which contains the test folders and files, defaults to env::current_dir()
     ///
     /// # Errors
     ///
@@ -37,8 +38,13 @@ impl TestRunner for LocalTestRunner {
     /// * Reading the package version from the temporary file fails.
     /// * Generating the report fails.
     /// * Not all tests passed for the given distribution and package.
-    fn run_test(&self, distro: &str, package: &str) -> Result<(), Box<dyn std::error::Error>> {
-        let script_manager = TestScriptManager::new(distro, package)?;
+    fn run_test(
+        &self,
+        distro: &str,
+        package: &str,
+        dir: &str,
+    ) -> Result<(), Box<dyn std::error::Error>> {
+        let script_manager = TestScriptManager::new(distro, package, dir.to_string())?;
 
         let os_version = read_to_string("/proc/version")?;
         let kernelver_output = Command::new("uname").arg("-r").output()?;
@@ -46,7 +52,7 @@ impl TestRunner for LocalTestRunner {
         let mut all_tests_passed = true;
         let mut test_results = Vec::new();
 
-        let prerequisite_path = format!("{}/prerequisite.sh", distro);
+        let prerequisite_path = Path::new(dir).join(format!("{}/prerequisite.sh", distro));
 
         for script in script_manager.get_test_scripts() {
             let output = Command::new("bash")
@@ -55,7 +61,7 @@ impl TestRunner for LocalTestRunner {
                     "mkdir -p {} {} && source {}",
                     REMOTE_TMP_DIR,
                     if Path::new(&prerequisite_path).exists() {
-                        format!("&& source {}", prerequisite_path)
+                        format!("&& source {}", prerequisite_path.display())
                     } else {
                         String::from("")
                     },
@@ -124,7 +130,7 @@ impl TestRunner for LocalTestRunner {
             all_tests_passed,
         };
 
-        let report_path = format!("{}/{}/report.json", distro, package);
+        let report_path = Path::new(dir).join(format!("{}/{}/report.json", distro, package));
         generate_report(report_path, report)?;
 
         if !all_tests_passed {

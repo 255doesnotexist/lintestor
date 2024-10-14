@@ -1,4 +1,6 @@
 //! Manages test scripts for a specific distribution and package.
+
+use std::path::Path;
 ///
 /// This struct is responsible for discovering and storing paths to test scripts
 /// located in a specific directory structure.
@@ -22,6 +24,7 @@ impl TestScriptManager {
     ///
     /// * `distro` - The name of the distribution.
     /// * `package` - The name of the package.
+    /// * `dir` - Working directory which contains the test folders and files, defaults to env::current_dir()
     ///
     /// # Returns
     ///
@@ -42,11 +45,15 @@ impl TestScriptManager {
     ///
     /// let manager = TestScriptManager::new("ubuntu", "nginx").expect("Failed to create TestScriptManager");
     /// ```
-    pub fn new(distro: &str, package: &str) -> Result<Self, Box<dyn std::error::Error>> {
-        let dir = format!("./{}/{}", distro, package);
+    pub fn new(
+        distro: &str,
+        package: &str,
+        working_dir: String,
+    ) -> Result<Self, Box<dyn std::error::Error>> {
+        let directory = Path::new(&working_dir).join(format!("{}/{}", distro, package));
         let mut test_scripts = Vec::new();
         let mut metadata_script = None;
-        for entry in std::fs::read_dir(dir)? {
+        for entry in std::fs::read_dir(directory)? {
             let entry = entry?;
             let path = entry.path();
             if path.is_file() && path.extension().unwrap_or_default() == "sh" {
@@ -55,7 +62,7 @@ impl TestScriptManager {
                     .file_name()
                     .is_some_and(|name| name == std::ffi::OsStr::new(METADATA_SCRIPT_NAME))
                 {
-                    metadata_script = Some(final_path.clone());
+                    metadata_script = Some(final_path);
                 } else {
                     test_scripts.push(final_path);
                 }

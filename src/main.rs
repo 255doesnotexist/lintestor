@@ -35,20 +35,19 @@ fn main() {
     let aggr = matches.get_flag("aggr");
     let summ = matches.get_flag("summ");
     let skip_successful = matches.get_flag("skip-successful");
-    let cwd = env::current_dir().unwrap();
-    let working_directory = matches
+    let cwd = env::current_dir().unwrap_or(".".into()); // is "." viable?
+    let working_dir = matches
         .get_one::<String>("directory")
         .map(|s| s.as_str())
         .unwrap_or(cwd.to_str().unwrap());
 
-    let discovered_distros = utils::get_distros(working_directory).unwrap_or_default();
+    let discovered_distros = utils::get_distros(working_dir).unwrap_or_default();
     let distros: Vec<&str> = matches
         .get_one::<String>("distro")
         .map(|s| s.as_str().split(',').collect::<Vec<&str>>())
         .unwrap_or(discovered_distros.iter().map(|s| s.as_str()).collect());
     debug!("Distros: {:?}", distros);
-    let discovered_packages =
-        utils::get_all_packages(&distros, working_directory).unwrap_or_default();
+    let discovered_packages = utils::get_all_packages(&distros, working_dir).unwrap_or_default();
     let packages: Vec<&str> = matches
         .get_one::<String>("package")
         .map(|s| s.as_str().split(',').collect::<Vec<&str>>())
@@ -57,19 +56,20 @@ fn main() {
 
     if test {
         info!("Running tests");
-        run_tests(&distros, &packages, skip_successful);
+        run_tests(&distros, &packages, skip_successful, working_dir);
     }
 
     if aggr {
         info!("Aggregating reports");
-        if let Err(e) = aggregator::aggregate_reports(&distros, &packages) {
+        if let Err(e) = aggregator::aggregate_reports(&distros, &packages, working_dir) {
             error!("Failed to aggregate reports: {}", e);
         }
     }
 
     if summ {
         info!("Generating summary report");
-        if let Err(e) = markdown_report::generate_markdown_report(&distros, &packages) {
+        if let Err(e) = markdown_report::generate_markdown_report(&distros, &packages, working_dir)
+        {
             error!("Failed to generate markdown report: {}", e);
         }
     }
@@ -103,7 +103,7 @@ fn parse_args() -> ArgMatches {
         .arg(
             Arg::new("directory")
                 .long("directory")
-                .value_name("Working directory")
+                .value_name("working_directory")
                 .help("Specify working directory with preconfigured test files"),
         )
         .arg(
@@ -138,13 +138,17 @@ fn parse_args() -> ArgMatches {
 /// # Returns
 /// Returns `Ok(())` if successful, otherwise returns an error.
 ///
-fn run_tests(distros: &[&str], packages: &[&str], skip_successful: bool) {
+fn run_tests(distros: &[&str], packages: &[&str], skip_successful: bool, dir: &str) {
     for distro in distros {
-        if !Path::new(distro).exists() {
-            warn!("Distro directory '{}' not found, skipping", distro);
+        let distro_directory = Path::new(dir).join(distro);
+        if !distro_directory.exists() {
+            warn!(
+                "Distro directory '{}' not found, skipping",
+                distro_directory.display()
+            );
             continue;
         }
-        let distro_config_path = format!("{}/config.toml", distro);
+        let distro_config_path = distro_directory.join("config.toml");
         let distro_config: DistroConfig = match utils::read_toml_from_file(&distro_config_path) {
             Ok(config) => config,
             Err(e) => {
@@ -179,8 +183,16 @@ fn run_tests(distros: &[&str], packages: &[&str], skip_successful: bool) {
         }
 
         for package in packages {
+            let package_directory = distro_directory.join(package);
+            if !package_directory.exists() {
+                warn!(
+                    "Package testing directory '{}' not found, skipping",
+                    package_directory.display()
+                );
+                continue;
+            }
             if skip_successful {
-                let report_path = format!("{}/{}/report.json", distro, package);
+                let report_path = package_directory.join("report.json");
                 if let Ok(file) = File::open(&report_path) {
                     let report: Result<Report, serde_json::Error> = serde_json::from_reader(file);
                     // TODO: only select failed *test scripts* in a package
@@ -212,10 +224,6 @@ fn run_tests(distros: &[&str], packages: &[&str], skip_successful: bool) {
                     continue;
                 }
             }
-            if !Path::new(distro).exists() {
-                warn!("Package directory '{}' not found, skipping", package);
-                continue;
-            }
 
             info!(
                 "Running test for {}/{}, {}.",
@@ -229,14 +237,6 @@ fn run_tests(distros: &[&str], packages: &[&str], skip_successful: bool) {
                     "with QEMU"
                 }
             );
-
-            if !Path::new(format!("{}/{}", distro, package).as_str()).exists() {
-                error!(
-                    "Package testing directory '{}/{}' does not exist, skipping",
-                    distro, package
-                );
-                continue;
-            }
 
             let test_runner: Box<dyn TestRunner> = if run_locally {
                 Box::new(LocalTestRunner::new(distro, package))
@@ -264,7 +264,7 @@ fn run_tests(distros: &[&str], packages: &[&str], skip_successful: bool) {
                 ))
             };
 
-            match test_runner.run_test(distro, package) {
+            match test_runner.run_test(distro, package, dir) {
                 Ok(_) => info!("Test passed for {}/{}", distro, package),
                 Err(e) => error!("Test failed for {}/{}: {}", distro, package, e), // error or warn?
             }
