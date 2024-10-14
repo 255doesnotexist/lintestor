@@ -12,6 +12,7 @@ use serde::Deserialize;
 
 #[derive(Debug, Deserialize)]
 pub struct DistroConfig {
+    pub enabled: bool,
     pub testing_type: String, // 'locally' or 'remote' or 'qemu-based-remote'
     #[serde(rename = "startup_script")]
     #[serde(default, skip_serializing_if = "is_not_qemu_based_remote")]

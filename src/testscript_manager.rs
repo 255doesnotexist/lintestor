@@ -1,4 +1,6 @@
 //! Manages test scripts for a specific distribution and package.
+
+use std::path::Path;
 ///
 /// This struct is responsible for discovering and storing paths to test scripts
 /// located in a specific directory structure.
@@ -24,6 +26,7 @@ impl TestScriptManager {
     ///
     /// * `distro` - The name of the distribution.
     /// * `package` - The name of the package.
+    /// * `dir` - Working directory which contains the test folders and files, defaults to env::current_dir()
     ///
     /// # Returns
     ///
@@ -49,30 +52,28 @@ impl TestScriptManager {
         distro: &str,
         package: &str,
         skip_scripts: Option<Vec<String>>,
+        working_dir: String,
     ) -> Result<Self, Box<dyn std::error::Error>> {
-        let dir = format!("./{}/{}", distro, package);
+        let directory = Path::new(&working_dir).join(format!("{}/{}", distro, package));
         let mut test_scripts = Vec::new();
         let mut metadata_script = None;
         let skipped_scripts = skip_scripts.unwrap_or_default();
 
-        for entry in std::fs::read_dir(dir)? {
+        for entry in std::fs::read_dir(directory)? {
             let entry = entry?;
             let path = entry.path();
             if path.is_file() && path.extension().unwrap_or_default() == "sh" {
                 let final_path = path.to_str().unwrap_or_default().to_string();
-                let file_name = path
-                    .file_name()
-                    .unwrap_or_default()
-                    .to_str()
-                    .unwrap_or_default();
+                let file_name = path.file_name();
 
-                if skipped_scripts.contains(&file_name.to_string()) {
-                    log::debug!("skipped {}", &file_name.to_string());
+                if skipped_scripts.contains(&file_name.unwrap().to_string_lossy().to_string()) {
+                    log::debug!("skipped {}", file_name.unwrap().to_string_lossy());
                     continue;
                 }
 
-                if file_name == METADATA_SCRIPT_NAME {
-                    metadata_script = Some(final_path.clone());
+                if file_name.is_some_and(|name| name == std::ffi::OsStr::new(METADATA_SCRIPT_NAME))
+                {
+                    metadata_script = Some(final_path);
                 } else {
                     test_scripts.push(final_path);
                 }

@@ -1,8 +1,11 @@
 //! Aggregates multiple test reports into a single report.
 use crate::utils::Report;
 use log::{error, info};
-use std::fs::File;
-use std::io::{prelude::*, BufWriter};
+use std::{
+    fs::File,
+    io::{prelude::*, BufWriter},
+    path::{Path, PathBuf},
+};
 
 /// Generates a report and writes it to the specified file path.
 ///
@@ -19,7 +22,7 @@ use std::io::{prelude::*, BufWriter};
 ///
 /// Returns an error if file creation or writing fails.
 pub fn generate_report(
-    file_path: String,
+    file_path: PathBuf,
     report: Report,
 ) -> Result<(), Box<dyn std::error::Error>> {
     let report_file = File::create(file_path)?;
@@ -46,19 +49,23 @@ pub fn generate_report(
 pub fn aggregate_reports(
     distros: &[&str],
     packages: &[&str],
+    dir: &str,
 ) -> Result<(), Box<dyn std::error::Error>> {
     let mut consolidated_report = vec![];
 
     for &distro in distros {
         for &package in packages {
-            let report_path = format!("{}/{}/report.json", distro, package);
+            let report_path = Path::new(dir).join(format!("{}/{}/report.json", distro, package));
             if let Ok(file) = File::open(&report_path) {
-                info!("Aggregating {}", report_path);
+                info!("Aggregating {}", report_path.display());
                 let mut report: Report = serde_json::from_reader(file)?;
                 report.distro = distro.to_string();
                 consolidated_report.push(report);
             } else {
-                error!("Failed to open file {} for aggregation", report_path)
+                error!(
+                    "Failed to open file {} for aggregation",
+                    report_path.display()
+                )
             }
         }
     }
