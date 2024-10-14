@@ -183,6 +183,8 @@ fn run_tests(distros: &[&str], packages: &[&str], skip_successful: bool, dir: &s
         }
 
         for package in packages {
+            let mut skipped_scripts = Vec::new();
+
             let package_directory = distro_directory.join(package);
             if !package_directory.exists() {
                 warn!(
@@ -195,12 +197,22 @@ fn run_tests(distros: &[&str], packages: &[&str], skip_successful: bool, dir: &s
                 let report_path = package_directory.join("report.json");
                 if let Ok(file) = File::open(&report_path) {
                     let report: Result<Report, serde_json::Error> = serde_json::from_reader(file);
-                    // TODO: only select failed *test scripts* in a package
                     match report {
                         Ok(r) => {
                             if r.all_tests_passed {
                                 info!("Skipping previous successful test {}/{}", distro, package);
                                 continue;
+                            } else {
+                                for result in r.test_results {
+                                    if result.passed {
+                                        info!(
+                                            "Skipping previous successful test {}/{}: {}",
+                                            distro, package, result.test_name
+                                        );
+
+                                        skipped_scripts.push(result.test_name);
+                                    }
+                                }
                             }
                         }
                         Err(_) => {
@@ -264,7 +276,7 @@ fn run_tests(distros: &[&str], packages: &[&str], skip_successful: bool, dir: &s
                 ))
             };
 
-            match test_runner.run_test(distro, package, dir) {
+            match test_runner.run_test(distro, package, Some(skipped_scripts), dir) {
                 Ok(_) => info!("Test passed for {}/{}", distro, package),
                 Err(e) => error!("Test failed for {}/{}: {}", distro, package, e), // error or warn?
             }

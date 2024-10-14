@@ -85,6 +85,7 @@ impl TestRunner for RemoteTestRunner {
     ///
     /// * `distro` - The name of the distribution.
     /// * `package` - The name of the package.
+    /// * `skip_scripts` - Some scripts skiped by use --skip-successful
     /// * `dir` - Working directory which contains the test folders and files, defaults to env::current_dir()
     ///
     /// # Errors
@@ -94,6 +95,7 @@ impl TestRunner for RemoteTestRunner {
         &self,
         distro: &str,
         package: &str,
+        skip_scripts: Option<Vec<String>>,
         dir: &str,
     ) -> Result<(), Box<dyn std::error::Error>> {
         // Create SSH session
@@ -203,7 +205,8 @@ impl TestRunner for RemoteTestRunner {
         // Run test commands
         self.print_ssh_msg(&format!("Running tests in directory {}", remote_dir));
 
-        let script_manager = TestScriptManager::new(distro, package, dir.to_string())?;
+        let script_manager =
+            TestScriptManager::new(distro, package, skip_scripts, dir.to_string())?;
         let mut all_tests_passed = true;
         let mut test_results = Vec::new();
         for script in script_manager.get_test_script_names() {

@@ -9,6 +9,7 @@ pub trait TestRunner {
         &self,
         distro: &str,
         package: &str,
+        skip_scripts: Option<Vec<String>>,
         dir: &str,
     ) -> Result<(), Box<dyn std::error::Error>>;
 }

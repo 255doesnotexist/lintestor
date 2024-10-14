@@ -4,9 +4,11 @@ use std::path::Path;
 ///
 /// This struct is responsible for discovering and storing paths to test scripts
 /// located in a specific directory structure.
+#[allow(dead_code)]
 pub struct TestScriptManager {
     test_scripts: Vec<String>,
     metadata_script: Option<String>,
+    skipped_scripts: Vec<String>,
 }
 
 /// The name of the metadata script, if it exists.
@@ -43,24 +45,33 @@ impl TestScriptManager {
     /// ```
     /// use your_crate::TestScriptManager;
     ///
-    /// let manager = TestScriptManager::new("ubuntu", "nginx").expect("Failed to create TestScriptManager");
+    /// let skip_scripts = vec!["test1.sh".to_string(), "test2.sh".to_string()];
+    /// let manager = TestScriptManager::new("ubuntu", "nginx", skip_scripts).expect("Failed to create TestScriptManager");
     /// ```
     pub fn new(
         distro: &str,
         package: &str,
+        skip_scripts: Option<Vec<String>>,
         working_dir: String,
     ) -> Result<Self, Box<dyn std::error::Error>> {
         let directory = Path::new(&working_dir).join(format!("{}/{}", distro, package));
         let mut test_scripts = Vec::new();
         let mut metadata_script = None;
+        let skipped_scripts = skip_scripts.unwrap_or_default();
+
         for entry in std::fs::read_dir(directory)? {
             let entry = entry?;
             let path = entry.path();
             if path.is_file() && path.extension().unwrap_or_default() == "sh" {
                 let final_path = path.to_str().unwrap_or_default().to_string();
-                if path
-                    .file_name()
-                    .is_some_and(|name| name == std::ffi::OsStr::new(METADATA_SCRIPT_NAME))
+                let file_name = path.file_name();
+
+                if skipped_scripts.contains(&file_name.unwrap().to_string_lossy().to_string()) {
+                    log::debug!("skipped {}", file_name.unwrap().to_string_lossy());
+                    continue;
+                }
+
+                if file_name.is_some_and(|name| name == std::ffi::OsStr::new(METADATA_SCRIPT_NAME))
                 {
                     metadata_script = Some(final_path);
                 } else {
@@ -68,6 +79,7 @@ impl TestScriptManager {
                 }
             }
         }
+
         if metadata_script.is_none() {
             log::warn!(
                 "Missing metadata.sh for {}/{}, its metadata will not be recorded",
@@ -78,6 +90,7 @@ impl TestScriptManager {
         Ok(TestScriptManager {
             test_scripts,
             metadata_script,
+            skipped_scripts,
         })
     }
 
