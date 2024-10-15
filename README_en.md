@@ -18,6 +18,5 @@ See [USAGE_en.md](USAGE_en.md).
 中文使用说明参见 [USAGE.md](USAGE.md).
 
 ## Prebuilt binaries
-> For now we recommend to just clone this repo and `cargo run` directly ;)
 
 Check out [Releases](https://github.com/255doesnotexist/lintestor/releases) for some experimental nightly builds.

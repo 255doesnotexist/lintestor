@@ -19,4 +19,4 @@ See [USAGE_en.md](USAGE_en.md) for English usage.
 
 
 ## 预构建二进制
-实验性的 Nightly 构建请见 [Releases](https://github.com/255doesnotexist/lintestor/releases) （~~但目前最好还是直接 clone 下来 `cargo run` 吧~~）
+实验性的 Nightly 构建请见 [Releases](https://github.com/255doesnotexist/lintestor/releases) 。

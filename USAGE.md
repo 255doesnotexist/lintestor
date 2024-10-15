@@ -1,15 +1,10 @@
 # 使用说明
 ## 配置测试
-首先在总配置文件 `./config.toml` 中指定需要测试的发行版和软件包，例如：
 
-```toml
-distros = ["debian"]
-packages = ["apache", "clang", "cmake", "docker", "erlang", "gcc", "gdb", "golang", "haproxy", "libmemcached", "lighttpd", "llvm", "mariadb", "nginx", "nodejs", "numpy", "ocaml"]
-```
-
-对于每个发行版，`./<distro>/config.toml` 是它的发行版配置文件，示例如下：
+对于每个发行版，在工作目录（默认为程序所在目录， 可使用 `--directory` 参数指定）下分别为其创建一个 `./<distro>` 目录，`./<distro>/config.toml` 是它的发行版配置文件，示例如下：
   
 ```toml
+enabled = true # 启用该发行版的测试；为 false 则该目录将不会被检测到
 testing_type = "qemu-based-remote" # 或 "locally"、"remote"
 # 指定测试环境类型。在参数为 locally、remote 时不需求 qemu 启动脚本。在 locally 时不需求连接信息。
 startup_script = "./debian/start_qemu.sh" # qemu 启动脚本；如果测试环境类型为 locally 或 remote 则无需此项
@@ -46,39 +41,42 @@ PACKAGE_DESCRIPTION="Cross-platform make" # 软件包的简要说明（此项暂
 
 `--summ` 参数将执行生成结果操作。
 
+`--directory` 参数指定测试文件所在的工作目录（如上文所述）。
+
 `--distro` 参数指定要测试的发行版（可选，将覆盖掉总配置文件）；语法形如 `--distro debian` 或 `--distro debian,bianbu,openkylin`。
 
 `--package` 参数指定要测试的软件包（可选，将覆盖掉总配置文件）；语法形如 `--package apache` 或 `--package apache,clang,cmake`。
 
 可使用 `RUST_LOG=(debug, warn, info, error)` 环境变量指定日志输出等级（包括ssh连接日志），默认为 `info`。
 
-### 例：运行全部测试并生成结果汇总
+### 运行全部测试并生成结果汇总
 
 参考上文配置好测试后运行
 
 ```bash
-cargo run -- --test --aggr --summ
+./lintestor --test --aggr --summ
 ```
 
-将在发行版目录下的每个软件包子目录中各生成一个 report.json 作为该软件包的测试结果，并在当前目录生成聚合后的总报告 reports.json 和 summary.md。
+将在发行版目录下的每个软件包子目录中各生成一个 report.json 作为该软件包的测试结果，并在当前**工作目录下**生成聚合后的总报告 reports.json 和 summary.md。
 
 ## 全部命令行参数
 
-```sh
-cargo run -- --help
+```bash
+./lintestor --help
 ```
 
-```sh
+```bash
 Usage: lintestor [OPTIONS]
 
 Options:
-      --test                       Run tests for all distributions
-      --aggr                       Aggregate multiple report.json files into a single reports.json
-      --summ                       Generate a summary report
-      --config <Config file name>  Specify a different base configuration file
-      --distro <distro>            Specify distros to test
-      --package <package>          Specify packages to test
-      --skip-successful            Skip previous successful tests (instead of overwriting their results)
-  -h, --help                       Print help
-  -V, --version                    Print version
+      --test                           Run tests for all distributions
+      --aggr                           Aggregate multiple report.json files into a single reports.json
+      --summ                           Generate a summary report
+      --directory <working_directory>  Specify working directory with preconfigured test files
+      --distro <distro>                Specify distros to test
+      --package <package>              Specify packages to test
+      --skip-successful                Skip previous successful tests (instead of overwriting their results)
+  -h, --help                           Print help
+  -V, --version                        Print version
+
 ```

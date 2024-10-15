@@ -1,15 +1,9 @@
 # Usage Guide
 ## Setup Tests
-To start, define the distribution name and packages of interest in the main config file `./config.toml`, eg.:
-
-```toml
-distros = ["debian"]
-packages = ["apache", "clang", "cmake", "docker", "erlang", "gcc", "gdb", "golang", "haproxy", "libmemcached", "lighttpd", "llvm", "mariadb", "nginx", "nodejs", "numpy", "ocaml"]
-```
-
-Then specify distro-specifc options in the target distribution's config file `./<distro>/config.toml`:
+Each distribution should have all their test files stored in separate subdirectories (`./<distro>`) under the working directory (defaults to the program's CWD; set with the `--directory` flag). Specify distro-specifc options in their respective config files (`./<distro>/config.toml`) as follows:
   
 ```toml
+enabled = true # Enable tests for this distribution. Its folder will not be discovered if set to false
 testing_type = "qemu-based-remote" # or "locally"、"remote"
 
 startup_script = "./debian/start_qemu.sh" # path to QEMU startup script. IGNORED when testing_type is set to "locally" or "remote"
@@ -41,7 +35,7 @@ If certain commands need to be run globally prior each test script (eg. `export 
 Configure the tests following the steps above and run
 
 ```bash
-cargo run -- --test --aggr --summ
+./lintestor --test --aggr --summ
 ```
 
 A `report.json` report would be generated for each package under their respective subfolders. Now that the tests are done, check out the aggregated `reports.json` and the Markdown result matrix `summary.md` in the current directory.
@@ -59,21 +53,22 @@ This is optional and will override the settings defined in the main config file.
 
 ## Full CLI parameters
 
-```sh
-cargo run -- --help
+```bash
+./lintestor --help
 ```
 
-```sh
+```bash
 Usage: lintestor [OPTIONS]
 
 Options:
-      --test                       Run tests for all distributions
-      --aggr                       Aggregate multiple report.json files into a single reports.json
-      --summ                       Generate a summary report
-      --config <Config file name>  Specify a different base configuration file
-      --distro <distro>            Specify distros to test
-      --package <package>          Specify packages to test
-      --skip-successful            Skip previous successful tests (instead of overwriting their results)
-  -h, --help                       Print help
-  -V, --version                    Print version
+      --test                           Run tests for all distributions
+      --aggr                           Aggregate multiple report.json files into a single reports.json
+      --summ                           Generate a summary report
+      --directory <working_directory>  Specify working directory with preconfigured test files
+      --distro <distro>                Specify distros to test
+      --package <package>              Specify packages to test
+      --skip-successful                Skip previous successful tests (instead of overwriting their results)
+  -h, --help                           Print help
+  -V, --version                        Print version
+
 ```
