@@ -1,6 +1,6 @@
 # Usage Guide
 ## Setup Tests
-Each distribution should have all their test files stored in separate subdirectories (`./<distro>`) under the working directory (defaults to the program's CWD; set with the `--directory` flag). Specify distro-specifc options in their respective config files (`./<distro>/config.toml`) as follows:
+Each distribution should have all their test files stored in separate subdirectories (`./<distro>`) under the working directory (defaults to the program's CWD; set with the `-D`/`--directory` flag). Specify distro-specifc options in their respective config files (`./<distro>/config.toml`) as follows:
   
 ```toml
 enabled = true # Enable tests for this distribution. Its folder will not be discovered if set to false
@@ -37,8 +37,12 @@ Configure the tests following the steps above and run
 ```bash
 ./lintestor --test --aggr --summ
 ```
+or simply
+```bash
+./lintestor -tas
+```
 
-A `report.json` report would be generated for each package under their respective subfolders. Now that the tests are done, check out the aggregated `reports.json` and the Markdown result matrix `summary.md` in the current directory.
+A `report.json` report would be generated for each package under their respective subfolders under the program's working directory. Now that the tests are done, check out the aggregated `reports.json` and the Markdown result matrix `summary.md` in the current directory.
 
 To toggle logging levels, set the `RUST_LOG` environment variable to one of the following: debug, warn, info, error. `info` is the default logging level.
 
@@ -61,14 +65,13 @@ This is optional and will override the settings defined in the main config file.
 Usage: lintestor [OPTIONS]
 
 Options:
-      --test                           Run tests for all distributions
-      --aggr                           Aggregate multiple report.json files into a single reports.json
-      --summ                           Generate a summary report
-      --directory <working_directory>  Specify working directory with preconfigured test files
-      --distro <distro>                Specify distros to test
-      --package <package>              Specify packages to test
+  -t, --test                           Run tests (for all distributions by default)
+  -a, --aggr                           Aggregate multiple report.json files into a single reports.json
+  -s, --summ                           Generate a summary report
+  -D, --directory <working_directory>  Specify working directory with preconfigured test files
+  -d, --distro <distro>                Specify distributions to test
+  -p, --package <package>              Specify packages to test
       --skip-successful                Skip previous successful tests (instead of overwriting their results)
   -h, --help                           Print help
   -V, --version                        Print version
-
 ```

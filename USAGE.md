@@ -1,7 +1,7 @@
 # 使用说明
 ## 配置测试
 
-对于每个发行版，在工作目录（默认为程序所在目录， 可使用 `--directory` 参数指定）下分别为其创建一个 `./<distro>` 目录，`./<distro>/config.toml` 是它的发行版配置文件，示例如下：
+对于每个发行版，在工作目录（默认为程序所在目录， 可使用 `-D`/`--directory` 参数指定）下分别为其创建一个 `./<distro>` 目录，`./<distro>/config.toml` 是它的发行版配置文件，示例如下：
   
 ```toml
 enabled = true # 启用该发行版的测试；为 false 则该目录将不会被检测到
@@ -57,6 +57,11 @@ PACKAGE_DESCRIPTION="Cross-platform make" # 软件包的简要说明（此项暂
 ./lintestor --test --aggr --summ
 ```
 
+或者
+
+```bash
+./lintestor -tas
+```
 将在发行版目录下的每个软件包子目录中各生成一个 report.json 作为该软件包的测试结果，并在当前**工作目录下**生成聚合后的总报告 reports.json 和 summary.md。
 
 ## 全部命令行参数
@@ -69,14 +74,13 @@ PACKAGE_DESCRIPTION="Cross-platform make" # 软件包的简要说明（此项暂
 Usage: lintestor [OPTIONS]
 
 Options:
-      --test                           Run tests for all distributions
-      --aggr                           Aggregate multiple report.json files into a single reports.json
-      --summ                           Generate a summary report
-      --directory <working_directory>  Specify working directory with preconfigured test files
-      --distro <distro>                Specify distros to test
-      --package <package>              Specify packages to test
+  -t, --test                           Run tests (for all distributions by default)
+  -a, --aggr                           Aggregate multiple report.json files into a single reports.json
+  -s, --summ                           Generate a summary report
+  -D, --directory <working_directory>  Specify working directory with preconfigured test files
+  -d, --distro <distro>                Specify distributions to test
+  -p, --package <package>              Specify packages to test
       --skip-successful                Skip previous successful tests (instead of overwriting their results)
   -h, --help                           Print help
   -V, --version                        Print version
-
 ```
