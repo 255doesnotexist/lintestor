@@ -84,37 +84,43 @@ fn parse_args() -> ArgMatches {
         .about(DESCRIPTION)
         .arg(
             Arg::new("test")
+                .short('t')
                 .long("test")
                 .action(ArgAction::SetTrue)
-                .help("Run tests for all distributions"),
+                .help("Run tests (for all distributions by default)"),
         )
         .arg(
             Arg::new("aggr")
+                .short('a')
                 .long("aggr")
                 .action(ArgAction::SetTrue)
                 .help("Aggregate multiple report.json files into a single reports.json"),
         )
         .arg(
             Arg::new("summ")
+                .short('s')
                 .long("summ")
                 .action(ArgAction::SetTrue)
                 .help("Generate a summary report"),
         )
         .arg(
             Arg::new("directory")
+                .short('D')
                 .long("directory")
                 .value_name("working_directory")
                 .help("Specify working directory with preconfigured test files"),
         )
         .arg(
             Arg::new("distro")
+                .short('d')
                 .long("distro")
-                .help("Specify distros to test")
+                .help("Specify distributions to test")
                 .action(ArgAction::Set)
                 .num_args(1),
         )
         .arg(
             Arg::new("package")
+                .short('p')
                 .long("package")
                 .help("Specify packages to test")
                 .action(ArgAction::Set)
@@ -129,7 +135,7 @@ fn parse_args() -> ArgMatches {
         .get_matches()
 }
 
-/// Run tests for all distributions
+/// Run tests (for all distributions by default)
 /// # Arguments
 /// - `distros`: Array of distribution names.
 /// - `packages`: Array of package names.
