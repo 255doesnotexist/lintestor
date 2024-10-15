@@ -75,6 +75,8 @@ jobs:
 
         LATEST_BINARY=lintestor
         $LATEST_BINARY --test --aggr --summ
+
+        rm .gitignore
     
     - name: Upload test results
       uses: actions/upload-artifact@v4
@@ -87,7 +89,7 @@ jobs:
     - name: Commit reports
       uses: stefanzweifel/git-auto-commit-action@v5
       with:
-        commit_message: "style: apply automatic formatting"
+        commit_message: "test(report): weekly test reports update"
         file_pattern: |
           **/*.json
           **/*/*.json
