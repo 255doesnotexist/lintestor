@@ -82,9 +82,9 @@ pub struct TempFile {
 impl TempFile {
     /// Creates a new `TempFile` instance.
     ///
-    /// # Arguments
+    /// # Parameters
     ///
-    /// * `path` - The path of the temporary file.
+    /// - `path`: The path of the temporary file.
     ///
     /// # Returns
     ///
@@ -115,6 +115,19 @@ pub struct CommandOutput {
     pub output: String,
 }
 
+/// Reads a TOML file into an arbitrary struct.
+///
+/// # Parameters
+///
+/// - `path`: The path of the TOML file.
+///
+/// # Returns
+///
+/// Returns a struct of the specified type containing deserialized data.
+///
+/// # Errors
+///
+/// Returns an error if data parsing fails.
 pub fn read_toml_from_file<T>(path: &PathBuf) -> Result<T, Box<dyn Error>>
 where
     T: DeserializeOwned,
@@ -124,6 +137,20 @@ where
     Ok(config)
 }
 
+/// Discover available distribution test directories under the working directory.
+///
+/// # Parameters
+///
+/// - `dir`: The path of the program's working directory.
+///
+/// # Returns
+///
+/// Returns a vector of strings containing the paths of the discovered distribution
+/// test directories if successful, otherwise returns an error.
+///
+/// # Errors
+///
+/// Returns an error if directory traversal fails.
 pub fn get_distros(dir: &str) -> Result<Vec<String>, Box<dyn Error>> {
     let directory = Path::new(dir);
     let mut distros = Vec::new();
@@ -150,6 +177,21 @@ pub fn get_distros(dir: &str) -> Result<Vec<String>, Box<dyn Error>> {
     Ok(distros)
 }
 
+/// Discover available package tests of the given distribution.
+///
+/// # Parameters
+///
+/// - `distro`: The name of the distribution.
+/// - `dir`: The path of the program's working directory.
+///
+/// # Returns
+///
+/// Returns a vector of strings containing the paths of the discovered package
+/// test directories under the given distribution's directory if successful, otherwise returns an error.
+///
+/// # Errors
+///
+/// Returns an error if directory traversal fails.
 pub fn get_packages(distro: &str, dir: &str) -> Result<Vec<String>, Box<dyn Error>> {
     let directory = Path::new(dir).join(distro);
     let mut packages = Vec::new();
@@ -164,6 +206,21 @@ pub fn get_packages(distro: &str, dir: &str) -> Result<Vec<String>, Box<dyn Erro
     Ok(packages)
 }
 
+/// Discover available package test directories under the given distribution directory.
+///
+/// # Parameters
+///
+/// - `distros`: Array of distribution names.
+/// - `dir`: The path of the program's working directory.
+///
+/// # Returns
+///
+/// Returns a vector of strings containing the names of all the package tests discovered,
+/// otherwise returns an error. Note that duplicates would be removed from the list beforehand.
+///
+/// # Errors
+///
+/// Returns an error if the process fails.
 pub fn get_all_packages(distros: &[&str], dir: &str) -> Result<Vec<String>, Box<dyn Error>> {
     let mut packages = HashSet::new();
     for distro in distros {
