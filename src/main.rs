@@ -10,6 +10,7 @@ mod utils;
 use crate::config::distro_config::DistroConfig;
 use crate::test_runner::{local::LocalTestRunner, remote::RemoteTestRunner, TestRunner};
 use clap::{Arg, ArgAction, ArgMatches, Command};
+use env_logger::Env;
 use log::{debug, error, info, warn};
 use std::{env, fs::File, path::Path};
 use utils::Report;
@@ -25,10 +26,7 @@ const DESCRIPTION: &str = env!("CARGO_PKG_DESCRIPTION");
 
 /// The main function of the application.
 fn main() {
-    if env::var("RUST_LOG").is_err() {
-        env::set_var("RUST_LOG", "info")
-    }
-    env_logger::init();
+    env_logger::Builder::from_env(Env::default().default_filter_or("info")).init();
     let matches = parse_args();
 
     let test = matches.get_flag("test");
