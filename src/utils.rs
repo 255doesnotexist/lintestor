@@ -3,7 +3,7 @@
 //! This module provides common structures and utilities used across the project,
 //! including report structures, temporary file management, and command output handling.
 
-use log::debug;
+use log::{debug, error};
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
 use std::{
     collections::HashSet,
@@ -133,7 +133,13 @@ where
     T: DeserializeOwned,
 {
     let content = fs::read_to_string(path)?;
-    let config: T = toml::de::from_str(&content)?;
+    let config: T = match toml::de::from_str(&content) {
+        Ok(config) => config,
+        Err(e) => {
+            error!("Failed to parse TOML file: {}", e);
+            return Err(Box::new(e));
+        }
+    };
     Ok(config)
 }
 
@@ -153,21 +159,26 @@ where
 /// Returns an error if directory traversal fails.
 pub fn get_distros(dir: &Path) -> Result<Vec<String>, Box<dyn Error>> {
     let mut distros = Vec::new();
+    debug!("Scanning distros in directory {}", dir.display());
     for subdir in dir.read_dir()? {
         let distro = subdir?;
+        debug!("Scanning subdirectory {}", distro.path().display());
         let distro_dir_path = distro.path();
         if distro_dir_path.is_dir() {
+            debug!("Discovered distro directory {}", distro_dir_path.display());
             let distro_dir_name = distro.file_name().into_string().unwrap();
             let distro_config_path = distro_dir_path.join("config.toml");
             let distro_config: DistroConfig = match read_toml_from_file(&distro_config_path) {
                 Ok(config) => {
-                    debug!("Discovered distro directory {}", distro_dir_path.display());
+                    debug!("Loaded config for distro directory {}", distro_dir_path.display());
                     config
                 }
                 Err(_) => {
+                    debug!("Cannot load config for distro directory {}", distro_dir_path.display());
                     continue;
                 }
             };
+            debug!("Loaded config for distro {}: \n{:?}", distro_dir_name, distro_config);
             if distro_config.enabled {
                 distros.push(distro_dir_name);
             }

@@ -10,7 +10,7 @@ use std::process::Command;
 pub struct TestEnvManager {
     startup_script: String,
     stop_script: String,
-    connection: ConnectionConfig,
+    connection: Option<ConnectionConfig>,
 }
 
 impl TestEnvManager {
@@ -45,6 +45,8 @@ impl TestEnvManager {
     ///
     /// This function will return an error if the script fails to execute or returns a non-zero exit status.
     fn run_script(&self, script: &String) -> Result<(), Error> {
+        let connection_unwrapped = self.connection.clone().unwrap();
+
         Command::new("bash")
             .arg(script)
             .env_remove("USER")
@@ -53,17 +55,17 @@ impl TestEnvManager {
             .env_remove("PORT")
             .env(
                 "USER",
-                self.connection.username.as_deref().unwrap_or("root"),
+                connection_unwrapped.username.as_deref().unwrap_or("root"),
             )
             .env(
                 "PASSWORD",
-                self.connection.password.as_deref().unwrap_or(""),
+                connection_unwrapped.password.as_deref().unwrap_or(""),
             )
             .env(
                 "ADDRESS",
-                self.connection.ip.as_deref().unwrap_or("localhost"),
+                connection_unwrapped.ip.as_deref().unwrap_or("localhost"),
             )
-            .env("PORT", self.connection.port.unwrap_or(2222).to_string())
+            .env("PORT", connection_unwrapped.port.unwrap_or(2222).to_string())
             .spawn()?
             .wait()?;
         Ok(())

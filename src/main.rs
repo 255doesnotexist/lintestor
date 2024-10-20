@@ -167,10 +167,10 @@ fn run_tests(distros: &[&str], packages: &[&str], skip_successful: bool, dir: &P
 
         info!(
             "Connection method: {}",
-            if run_locally {
-                "local"
+            if let Some(connection) = &distro_config.connection {
+                &connection.method
             } else {
-                &distro_config.connection.method
+                "None"
             }
         );
 
@@ -259,18 +259,17 @@ fn run_tests(distros: &[&str], packages: &[&str], skip_successful: bool, dir: &P
             } else {
                 // assert!(distro_config.connection.method == "ssh");
 
-                let ip = distro_config
-                    .connection
-                    .ip
-                    .as_deref()
-                    .unwrap_or("localhost");
-                let port = distro_config.connection.port.unwrap_or(2222);
-                let username = distro_config
-                    .connection
-                    .username
-                    .as_deref()
-                    .unwrap_or("root");
-                let password = distro_config.connection.password.as_deref();
+                let _connection_config = match &distro_config.connection {
+                    Some(c) => c,
+                    None => {
+                        error!("No connection config found for {}", distro);
+                        continue;
+                    }
+                };
+                let ip = _connection_config.ip.as_deref().unwrap_or("localhost");
+                let port = _connection_config.port.unwrap_or(2222);
+                let username = _connection_config.username.as_deref().unwrap_or("root");
+                let password = _connection_config.password.as_deref();
                 debug!("Connecting to environment with credentials: IP={}, Port={}, Username={}, Password={}",ip,port,username,password.unwrap_or("None"));
                 Box::new(RemoteTestRunner::new(
                     ip.to_string(),
