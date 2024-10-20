@@ -96,7 +96,7 @@ impl TestRunner for RemoteTestRunner {
         distro: &str,
         package: &str,
         skip_scripts: Option<Vec<String>>,
-        dir: &str,
+        dir: &Path,
     ) -> Result<(), Box<dyn std::error::Error>> {
         // Create SSH session
         let tcp = TcpStream::connect((self.remote_ip.as_str(), self.port))?;
@@ -205,8 +205,7 @@ impl TestRunner for RemoteTestRunner {
         // Run test commands
         self.print_ssh_msg(&format!("Running tests in directory {}", remote_dir));
 
-        let script_manager =
-            TestScriptManager::new(distro, package, skip_scripts, dir.to_string())?;
+        let script_manager = TestScriptManager::new(distro, package, skip_scripts, dir)?;
         let mut all_tests_passed = true;
         let mut test_results = Vec::new();
         for script in script_manager.get_test_script_names() {
@@ -343,7 +342,7 @@ impl TestRunner for RemoteTestRunner {
         // Generate report locally
 
         let report_path = local_dir.join("report.json");
-        generate_report(report_path, report.clone())?;
+        generate_report(&report_path, report.clone())?;
         debug!("{}-{} report:\n {:?}", distro, package, report);
 
         if !all_tests_passed {

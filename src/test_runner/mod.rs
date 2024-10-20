@@ -1,5 +1,7 @@
 //! Test runner for local and remote test environments.
 
+use std::path::Path;
+
 pub mod local;
 pub mod remote;
 
@@ -10,6 +12,6 @@ pub trait TestRunner {
         distro: &str,
         package: &str,
         skip_scripts: Option<Vec<String>>,
-        dir: &str,
+        dir: &Path,
     ) -> Result<(), Box<dyn std::error::Error>>;
 }

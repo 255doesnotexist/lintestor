@@ -44,10 +44,9 @@ impl TestRunner for LocalTestRunner {
         distro: &str,
         package: &str,
         skip_scripts: Option<Vec<String>>,
-        dir: &str,
+        dir: &Path,
     ) -> Result<(), Box<dyn std::error::Error>> {
-        let script_manager =
-            TestScriptManager::new(distro, package, skip_scripts, dir.to_string())?;
+        let script_manager = TestScriptManager::new(distro, package, skip_scripts, dir)?;
 
         let os_version = read_to_string("/proc/version")?;
         let kernelver_output = Command::new("uname").arg("-r").output()?;
@@ -55,7 +54,7 @@ impl TestRunner for LocalTestRunner {
         let mut all_tests_passed = true;
         let mut test_results = Vec::new();
 
-        let prerequisite_path = Path::new(dir).join(format!("{}/prerequisite.sh", distro));
+        let prerequisite_path = dir.join(format!("{}/prerequisite.sh", distro));
 
         for script in script_manager.get_test_scripts() {
             let output = Command::new("bash")
@@ -133,8 +132,8 @@ impl TestRunner for LocalTestRunner {
             all_tests_passed,
         };
 
-        let report_path = Path::new(dir).join(format!("{}/{}/report.json", distro, package));
-        generate_report(report_path, report)?;
+        let report_path = dir.join(format!("{}/{}/report.json", distro, package));
+        generate_report(&report_path, report)?;
 
         if !all_tests_passed {
             return Err(format!("Not all tests passed for {}/{}", distro, package).into());

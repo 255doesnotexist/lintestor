@@ -151,10 +151,9 @@ where
 /// # Errors
 ///
 /// Returns an error if directory traversal fails.
-pub fn get_distros(dir: &str) -> Result<Vec<String>, Box<dyn Error>> {
-    let directory = Path::new(dir);
+pub fn get_distros(dir: &Path) -> Result<Vec<String>, Box<dyn Error>> {
     let mut distros = Vec::new();
-    for subdir in directory.read_dir()? {
+    for subdir in dir.read_dir()? {
         let distro = subdir?;
         let distro_dir_path = distro.path();
         if distro_dir_path.is_dir() {
@@ -192,8 +191,8 @@ pub fn get_distros(dir: &str) -> Result<Vec<String>, Box<dyn Error>> {
 /// # Errors
 ///
 /// Returns an error if directory traversal fails.
-pub fn get_packages(distro: &str, dir: &str) -> Result<Vec<String>, Box<dyn Error>> {
-    let directory = Path::new(dir).join(distro);
+pub fn get_packages(distro: &str, dir: &Path) -> Result<Vec<String>, Box<dyn Error>> {
+    let directory = dir.join(distro);
     let mut packages = Vec::new();
     for subdir in directory.read_dir()? {
         let package = subdir?;
@@ -221,7 +220,7 @@ pub fn get_packages(distro: &str, dir: &str) -> Result<Vec<String>, Box<dyn Erro
 /// # Errors
 ///
 /// Returns an error if the process fails.
-pub fn get_all_packages(distros: &[&str], dir: &str) -> Result<Vec<String>, Box<dyn Error>> {
+pub fn get_all_packages(distros: &[&str], dir: &Path) -> Result<Vec<String>, Box<dyn Error>> {
     let mut packages = HashSet::new();
     for distro in distros {
         let current_packages = get_packages(distro, dir).unwrap_or_default();

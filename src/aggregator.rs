@@ -4,7 +4,7 @@ use log::{error, info};
 use std::{
     fs::File,
     io::{prelude::*, BufWriter},
-    path::{Path, PathBuf},
+    path::Path,
 };
 
 /// Generates a report and writes it to the specified file path.
@@ -21,10 +21,7 @@ use std::{
 /// # Errors
 ///
 /// Returns an error if file creation or writing fails.
-pub fn generate_report(
-    file_path: PathBuf,
-    report: Report,
-) -> Result<(), Box<dyn std::error::Error>> {
+pub fn generate_report(file_path: &Path, report: Report) -> Result<(), Box<dyn std::error::Error>> {
     let report_file = File::create(file_path)?;
     let mut writer = BufWriter::new(report_file);
     serde_json::to_writer(&mut writer, &report)?;
@@ -38,6 +35,7 @@ pub fn generate_report(
 ///
 /// - `distros`: Array of distribution names.
 /// - `packages`: Array of package names.
+/// - `dir`: The path of the program's working directory.
 ///
 /// # Returns
 ///
@@ -49,13 +47,13 @@ pub fn generate_report(
 pub fn aggregate_reports(
     distros: &[&str],
     packages: &[&str],
-    dir: &str,
+    dir: &Path,
 ) -> Result<(), Box<dyn std::error::Error>> {
     let mut consolidated_report = vec![];
 
     for &distro in distros {
         for &package in packages {
-            let report_path = Path::new(dir).join(format!("{}/{}/report.json", distro, package));
+            let report_path = dir.join(format!("{}/{}/report.json", distro, package));
             if let Ok(file) = File::open(&report_path) {
                 info!("Aggregating {}", report_path.display());
                 let mut report: Report = serde_json::from_reader(file)?;

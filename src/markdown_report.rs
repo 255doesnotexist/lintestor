@@ -10,6 +10,7 @@ use std::{collections::BTreeMap, fs::File, io::prelude::*, path::Path};
 ///
 /// - `distros`: Array of distribution names.
 /// - `packages`: Array of package names.
+/// - `dir`: The path of the program's working directory.
 ///
 /// # Returns
 ///
@@ -21,9 +22,9 @@ use std::{collections::BTreeMap, fs::File, io::prelude::*, path::Path};
 pub fn generate_markdown_report(
     distros: &[&str],
     packages: &[&str],
-    dir: &str,
+    dir: &Path,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    let report_path = Path::new(dir).join("reports.json");
+    let report_path = dir.join("reports.json");
     if let Ok(file) = File::open(&report_path) {
         let reports: Vec<Report> = serde_json::from_reader(file)?;
 
@@ -117,7 +118,7 @@ pub fn generate_markdown_report(
 
         markdown.push_str(&appending_details);
 
-        let file_path = Path::new(dir).join("summary.md");
+        let file_path = dir.join("summary.md");
         let mut file = File::create(&file_path)?;
         file.write_all(markdown.as_bytes())?;
         info!("Markdown report generated at {}", file_path.display());

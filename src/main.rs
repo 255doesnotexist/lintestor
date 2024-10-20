@@ -6,14 +6,13 @@ mod test_runner;
 mod testenv_manager;
 mod testscript_manager;
 mod utils;
-
 use crate::config::distro_config::DistroConfig;
 use crate::test_runner::{local::LocalTestRunner, remote::RemoteTestRunner, TestRunner};
+use crate::utils::Report;
 use clap::{Arg, ArgAction, ArgMatches, Command};
 use env_logger::Env;
 use log::{debug, error, info, warn};
 use std::{env, fs::File, path::Path};
-use utils::Report;
 
 /// The version of the application.
 const VERSION: &str = env!("CARGO_PKG_VERSION");
@@ -36,16 +35,17 @@ fn main() {
     let cwd = env::current_dir().unwrap_or(".".into()); // is "." viable?
     let working_dir = matches
         .get_one::<String>("directory")
-        .map(|s| s.as_str())
-        .unwrap_or(cwd.to_str().unwrap());
+        .map(|s| cwd.join(s))
+        .unwrap_or(cwd);
+    debug!("Working directory: {}", working_dir.display());
 
-    let discovered_distros = utils::get_distros(working_dir).unwrap_or_default();
+    let discovered_distros = utils::get_distros(&working_dir).unwrap_or_default();
     let distros: Vec<&str> = matches
         .get_one::<String>("distro")
         .map(|s| s.as_str().split(',').collect::<Vec<&str>>())
         .unwrap_or(discovered_distros.iter().map(|s| s.as_str()).collect());
     debug!("Distros: {:?}", distros);
-    let discovered_packages = utils::get_all_packages(&distros, working_dir).unwrap_or_default();
+    let discovered_packages = utils::get_all_packages(&distros, &working_dir).unwrap_or_default();
     let packages: Vec<&str> = matches
         .get_one::<String>("package")
         .map(|s| s.as_str().split(',').collect::<Vec<&str>>())
@@ -54,19 +54,19 @@ fn main() {
 
     if test {
         info!("Running tests");
-        run_tests(&distros, &packages, skip_successful, working_dir);
+        run_tests(&distros, &packages, skip_successful, &working_dir);
     }
 
     if aggr {
         info!("Aggregating reports");
-        if let Err(e) = aggregator::aggregate_reports(&distros, &packages, working_dir) {
+        if let Err(e) = aggregator::aggregate_reports(&distros, &packages, &working_dir) {
             error!("Failed to aggregate reports: {}", e);
         }
     }
 
     if summ {
         info!("Generating summary report");
-        if let Err(e) = markdown_report::generate_markdown_report(&distros, &packages, working_dir)
+        if let Err(e) = markdown_report::generate_markdown_report(&distros, &packages, &working_dir)
         {
             error!("Failed to generate markdown report: {}", e);
         }
@@ -142,9 +142,9 @@ fn parse_args() -> ArgMatches {
 /// # Returns
 /// Returns `Ok(())` if successful, otherwise returns an error.
 ///
-fn run_tests(distros: &[&str], packages: &[&str], skip_successful: bool, dir: &str) {
+fn run_tests(distros: &[&str], packages: &[&str], skip_successful: bool, dir: &Path) {
     for distro in distros {
-        let distro_directory = Path::new(dir).join(distro);
+        let distro_directory = dir.join(distro);
         if !distro_directory.exists() {
             warn!(
                 "Distro directory '{}' not found, skipping",

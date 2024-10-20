@@ -52,9 +52,9 @@ impl TestScriptManager {
         distro: &str,
         package: &str,
         skip_scripts: Option<Vec<String>>,
-        working_dir: String,
+        working_dir: &Path,
     ) -> Result<Self, Box<dyn std::error::Error>> {
-        let directory = Path::new(&working_dir).join(format!("{}/{}", distro, package));
+        let directory = working_dir.join(format!("{}/{}", distro, package));
         let mut test_scripts = Vec::new();
         let mut metadata_script = None;
         let skipped_scripts = skip_scripts.unwrap_or_default();
