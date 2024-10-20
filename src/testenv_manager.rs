@@ -65,7 +65,10 @@ impl TestEnvManager {
                 "ADDRESS",
                 connection_unwrapped.ip.as_deref().unwrap_or("localhost"),
             )
-            .env("PORT", connection_unwrapped.port.unwrap_or(2222).to_string())
+            .env(
+                "PORT",
+                connection_unwrapped.port.unwrap_or(2222).to_string(),
+            )
             .spawn()?
             .wait()?;
         Ok(())

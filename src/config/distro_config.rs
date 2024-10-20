@@ -11,12 +11,14 @@ use crate::config::connection_config::ConnectionConfig;
 use serde::Deserialize;
 
 #[allow(dead_code)]
-fn is_not_qemu_based_remote(value: &String) -> bool { // keep this function as it is, just for serde plz
+fn is_not_qemu_based_remote(value: &String) -> bool {
+    // keep this function as it is, just for serde plz
     value != "qemu-based-remote"
 }
 
 #[allow(dead_code)]
-fn is_not_remote(value: &String) -> bool { // keep this function as it is, just for serde plz
+fn is_not_remote(value: &String) -> bool {
+    // keep this function as it is, just for serde plz
     value != "remote" && value != "qemu-based-remote"
 }
 
@@ -35,6 +37,6 @@ pub struct DistroConfig {
     #[serde(rename = "connection")]
     #[serde(default, skip_serializing_if = "is_not_remote")]
     pub connection: Option<ConnectionConfig>,
-    
+
     pub skip_packages: Option<Vec<String>>,
 }

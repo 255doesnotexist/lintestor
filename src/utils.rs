@@ -170,15 +170,24 @@ pub fn get_distros(dir: &Path) -> Result<Vec<String>, Box<dyn Error>> {
             let distro_config_path = distro_dir_path.join("config.toml");
             let distro_config: DistroConfig = match read_toml_from_file(&distro_config_path) {
                 Ok(config) => {
-                    debug!("Loaded config for distro directory {}", distro_dir_path.display());
+                    debug!(
+                        "Loaded config for distro directory {}",
+                        distro_dir_path.display()
+                    );
                     config
                 }
                 Err(_) => {
-                    debug!("Cannot load config for distro directory {}", distro_dir_path.display());
+                    debug!(
+                        "Cannot load config for distro directory {}",
+                        distro_dir_path.display()
+                    );
                     continue;
                 }
             };
-            debug!("Loaded config for distro {}: \n{:?}", distro_dir_name, distro_config);
+            debug!(
+                "Loaded config for distro {}: \n{:?}",
+                distro_dir_name, distro_config
+            );
             if distro_config.enabled {
                 distros.push(distro_dir_name);
             }
