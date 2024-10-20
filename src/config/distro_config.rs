@@ -10,6 +10,13 @@ use crate::config::connection_config::ConnectionConfig;
 ///
 use serde::Deserialize;
 
+impl DistroConfig {
+    #[allow(dead_code)]
+    pub fn is_not_qemu_based_remote(value: &String) -> bool { // keep this function as it is, just for serde plz
+        value != "qemu-based-remote"
+    }
+}
+
 #[derive(Debug, Deserialize)]
 pub struct DistroConfig {
     pub enabled: bool,
