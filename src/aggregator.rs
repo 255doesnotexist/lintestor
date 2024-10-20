@@ -69,9 +69,9 @@ pub fn aggregate_reports(
     }
 
     let consolidated_json = serde_json::to_string_pretty(&consolidated_report)?;
-    let file_path = "reports.json";
-    let mut file = File::create(file_path)?;
+    let file_path = dir.join("reports.json");
+    let mut file = File::create(&file_path)?;
     file.write_all(consolidated_json.as_bytes())?;
-    info!("Aggregated report generated at {}", file_path);
+    info!("Aggregated report generated at {}", file_path.display());
     Ok(())
 }
