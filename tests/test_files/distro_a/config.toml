@@ -1,12 +1,5 @@
 enabled = true
 testing_type = "locally"
-startup_script = "prerequisite.sh"
-stop_script = "prerequisite.sh"
+# startup_script = "prerequisite.sh"
+# stop_script = "prerequisite.sh"
 skip_packages = ["docker"]
-
-[connection]
-method = "ssh"
-ip = "localhost"
-port = 2222
-username = "root"
-password = "root"
