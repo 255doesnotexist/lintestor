@@ -43,7 +43,7 @@ impl TestRunner for LocalTestRunner {
         &self,
         distro: &str,
         package: &str,
-        skip_scripts: Option<Vec<String>>,
+        skip_scripts: Vec<String>,
         dir: &Path,
     ) -> Result<(), Box<dyn std::error::Error>> {
         let script_manager = TestScriptManager::new(distro, package, skip_scripts, dir)?;
