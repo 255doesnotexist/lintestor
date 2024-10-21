@@ -95,7 +95,7 @@ impl TestRunner for RemoteTestRunner {
         &self,
         distro: &str,
         package: &str,
-        skip_scripts: Option<Vec<String>>,
+        skip_scripts: Vec<String>,
         dir: &Path,
     ) -> Result<(), Box<dyn std::error::Error>> {
         // Create SSH session

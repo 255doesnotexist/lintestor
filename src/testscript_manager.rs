@@ -4,11 +4,9 @@ use std::path::Path;
 ///
 /// This struct is responsible for discovering and storing paths to test scripts
 /// located in a specific directory structure.
-#[allow(dead_code)]
 pub struct TestScriptManager {
     test_scripts: Vec<String>,
     metadata_script: Option<String>,
-    skipped_scripts: Vec<String>,
 }
 
 /// The name of the metadata script, if it exists.
@@ -51,13 +49,12 @@ impl TestScriptManager {
     pub fn new(
         distro: &str,
         package: &str,
-        skip_scripts: Option<Vec<String>>,
+        skip_scripts: Vec<String>,
         working_dir: &Path,
     ) -> Result<Self, Box<dyn std::error::Error>> {
         let directory = working_dir.join(format!("{}/{}", distro, package));
         let mut test_scripts = Vec::new();
         let mut metadata_script = None;
-        let skipped_scripts = skip_scripts.unwrap_or_default();
 
         for entry in std::fs::read_dir(directory)? {
             let entry = entry?;
@@ -66,7 +63,7 @@ impl TestScriptManager {
                 let final_path = path.to_str().unwrap_or_default().to_string();
                 let file_name = path.file_name();
 
-                if skipped_scripts.contains(&file_name.unwrap().to_string_lossy().to_string()) {
+                if skip_scripts.contains(&file_name.unwrap().to_string_lossy().to_string()) {
                     log::debug!("skipped {}", file_name.unwrap().to_string_lossy());
                     continue;
                 }
@@ -78,22 +75,20 @@ impl TestScriptManager {
                     test_scripts.push(final_path);
                 }
             }
-        }
 
-        if metadata_script.is_none() {
-            log::warn!(
-                "Missing metadata.sh for {}/{}, its metadata will not be recorded",
-                distro,
-                package
-            );
+            if metadata_script.is_none() {
+                log::warn!(
+                    "Missing metadata.sh for {}/{}, its metadata will not be recorded",
+                    distro,
+                    package
+                );
+            }
         }
         Ok(TestScriptManager {
             test_scripts,
             metadata_script,
-            skipped_scripts,
         })
     }
-
     /// Returns a slice containing the paths of all discovered test scripts.
     ///
     /// # Returns
@@ -111,6 +106,7 @@ impl TestScriptManager {
     ///     println!("Test script: {}", script);
     /// }
     /// ```
+    /// Returns a slice containing the paths of all discovered test scripts.
     pub fn get_test_scripts(&self) -> &[String] {
         &self.test_scripts
     }
