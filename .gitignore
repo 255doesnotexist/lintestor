@@ -1,5 +1,5 @@
 /target
 *report.json
-/reports.json
-/summary.md
+*reports.json
+*summary.md
 .aider*
