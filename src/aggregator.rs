@@ -1,5 +1,5 @@
 //! Aggregates multiple test reports into a single report.
-use crate::utils::Report;
+use crate::utils::{get_packages, Report};
 use log::{error, info};
 use std::{
     fs::File,
@@ -52,7 +52,12 @@ pub fn aggregate_reports(
     let mut consolidated_report = vec![];
 
     for &distro in distros {
-        for &package in packages {
+        let packages_of_distro = get_packages(distro, dir).unwrap_or_default();
+
+        for &package in packages
+            .into_iter()
+            .filter(|p| packages_of_distro.contains(&String::from(**p)))
+        {
             let report_path = dir.join(format!("{}/{}/report.json", distro, package));
             if let Ok(file) = File::open(&report_path) {
                 info!("Aggregating {}", report_path.display());

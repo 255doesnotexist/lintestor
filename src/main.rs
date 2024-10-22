@@ -170,7 +170,7 @@ fn run_tests(distros: &[&str], packages: &[&str], skip_successful: bool, dir: &P
             if let Some(connection) = &distro_config.connection {
                 &connection.method
             } else {
-                "None"
+                "None (Locally)"
             }
         );
 
@@ -186,7 +186,11 @@ fn run_tests(distros: &[&str], packages: &[&str], skip_successful: bool, dir: &P
             }
         }
 
-        for package in packages {
+        let packages_of_distro = utils::get_packages(distro, dir).unwrap_or_default();
+        for package in packages
+            .into_iter()
+            .filter(|p| packages_of_distro.contains(&String::from(**p)))
+        {
             let mut skipped_scripts = Vec::new();
 
             let package_directory = distro_directory.join(package);
