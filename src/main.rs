@@ -188,7 +188,7 @@ fn run_tests(distros: &[&str], packages: &[&str], skip_successful: bool, dir: &P
 
         let packages_of_distro = utils::get_packages(distro, dir).unwrap_or_default();
         for package in packages
-            .into_iter()
+            .iter()
             .filter(|p| packages_of_distro.contains(&String::from(**p)))
         {
             let mut skipped_scripts = Vec::new();

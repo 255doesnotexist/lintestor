@@ -55,7 +55,7 @@ pub fn aggregate_reports(
         let packages_of_distro = get_packages(distro, dir).unwrap_or_default();
 
         for &package in packages
-            .into_iter()
+            .iter()
             .filter(|p| packages_of_distro.contains(&String::from(**p)))
         {
             let report_path = dir.join(format!("{}/{}/report.json", distro, package));
