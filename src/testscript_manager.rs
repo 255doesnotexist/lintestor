@@ -75,14 +75,13 @@ impl TestScriptManager {
                     test_scripts.push(final_path);
                 }
             }
-
-            if metadata_script.is_none() {
-                log::warn!(
-                    "Missing metadata.sh for {}/{}, its metadata will not be recorded",
-                    distro,
-                    package
-                );
-            }
+        }
+        if metadata_script.is_none() {
+            log::warn!(
+                "Missing metadata.sh for {}/{}, its metadata will not be recorded",
+                distro,
+                package
+            );
         }
         Ok(TestScriptManager {
             test_scripts,
