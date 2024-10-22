@@ -44,13 +44,13 @@ fn main() {
         .get_one::<String>("distro")
         .map(|s| s.as_str().split(',').collect::<Vec<&str>>())
         .unwrap_or(discovered_distros.iter().map(|s| s.as_str()).collect());
-    debug!("Distros: {:?}", distros);
+    info!("Distros: {:?}", distros);
     let discovered_packages = utils::get_all_packages(&distros, &working_dir).unwrap_or_default();
     let packages: Vec<&str> = matches
         .get_one::<String>("package")
         .map(|s| s.as_str().split(',').collect::<Vec<&str>>())
         .unwrap_or(discovered_packages.iter().map(|s| s.as_str()).collect());
-    debug!("Packages: {:?}", packages);
+    info!("Packages: {:?}", packages);
 
     if test {
         info!("Running tests");
@@ -138,6 +138,7 @@ fn parse_args() -> ArgMatches {
 /// - `distros`: Array of distribution names.
 /// - `packages`: Array of package names.
 /// - `skip_successful`: Skip previous successful tests (instead of overwriting their results).
+/// - `dir`: Working directory which contains the test folders and files, defaults to env::current_dir()
 ///
 /// # Returns
 /// Returns `Ok(())` if successful, otherwise returns an error.
