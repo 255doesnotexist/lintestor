@@ -1,5 +1,6 @@
 //! Generates markdown reports summarizing test results for various packages across different distributions.
 use crate::utils::{PackageMetadata, Report};
+use chrono::Utc;
 use log::info;
 use std::{collections::BTreeMap, fs::File, io::prelude::*, path::Path};
 
@@ -42,6 +43,15 @@ pub fn generate_markdown_report(
 
         let mut markdown = String::new();
         markdown.push_str("# 软件包测试结果矩阵 Software package test results\n\n");
+        /// 测试时间的标准格式：YYYY-MM-DD HH:mm:ss
+        const TEST_TIME_FORMAT: &str = "%Y-%m-%d %H:%M:%S";
+
+        let utc_time = Utc::now();
+        markdown.push_str(&format!(
+            "测试时间 Testing time: {} UTC\n\n",
+            utc_time.format(TEST_TIME_FORMAT)
+        ));
+
         markdown.push_str("> 图标说明 Legend: ✅ = 通过 Passed; ⚠️ = 部分测试不通过 Not all tests passed; ❌ = 全部测试不通过 All tests failed; ❓ = 未知 Unknown\n\n");
         markdown.push_str("| 软件包 Package | 种类 Type | "); // TODO: add field for description
         for distro in distros {
@@ -102,7 +112,7 @@ pub fn generate_markdown_report(
         }
 
         let mut appending_details = String::new();
-        appending_details.push_str("# 测试环境信息 Environment info\n\n");
+        appending_details.push_str("\n# 测试环境信息 Environment info\n\n");
         for (distro, packages) in &distro_env_infos {
             appending_details
                 .push_str(&format!("## <span id=\"{}\">{}</span>\n\n", distro, distro));
