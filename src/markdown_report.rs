@@ -43,10 +43,13 @@ pub fn generate_markdown_report(
 
         let mut markdown = String::new();
         markdown.push_str("# 软件包测试结果矩阵 Software package test results\n\n");
+        /// 测试时间的标准格式：YYYY-MM-DD HH:mm:ss
+        const TEST_TIME_FORMAT: &str = "%Y-%m-%d %H:%M:%S";
+
         let utc_time = Utc::now();
         markdown.push_str(&format!(
             "测试时间 Testing time: {} UTC\n\n",
-            utc_time.format("%Y-%m-%d %H:%M:%S")
+            utc_time.format(TEST_TIME_FORMAT)
         ));
 
         markdown.push_str("> 图标说明 Legend: ✅ = 通过 Passed; ⚠️ = 部分测试不通过 Not all tests passed; ❌ = 全部测试不通过 All tests failed; ❓ = 未知 Unknown\n\n");
