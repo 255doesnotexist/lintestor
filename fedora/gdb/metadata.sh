@@ -1,0 +1,12 @@
+#!/bin/bash
+
+PACKAGE_NAME="gdb"
+PACKAGE_VERSION=$(gdb --version | head -n1)
+PACKAGE_PRETTY_NAME="GNU Debugger"
+PACKAGE_TYPE="Debugging Tool"
+PACKAGE_DESCRIPTION="The GNU Debugger"
+
+echo $PACKAGE_VERSION
+echo $PACKAGE_PRETTY_NAME
+echo $PACKAGE_TYPE
+echo $PACKAGE_DESCRIPTION
