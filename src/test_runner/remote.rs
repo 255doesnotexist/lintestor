@@ -189,6 +189,10 @@ impl TestRunner for RemoteTestRunner {
 
         // Upload compressed file to remote server
         let remote_tar_path = format!("{}/{}", REMOTE_TMP_DIR, tar_file_path_relative);
+        self.print_ssh_msg(&format!(
+            "Ready to upload {} to {} on the remote server", 
+            tar_file_path_relative, remote_tar_path
+        ));
         let mut remote_file = sess.scp_send(
             Path::new(&remote_tar_path),
             0o644,
