@@ -20,4 +20,5 @@ pub struct ConnectionConfig {
     pub port: Option<u16>,
     pub username: Option<String>,
     pub password: Option<String>,
+    pub private_key_path: Option<String>,
 }

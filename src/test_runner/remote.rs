@@ -20,15 +20,23 @@ pub struct RemoteTestRunner {
     port: u16,
     username: String,
     password: Option<String>,
+    private_key_path: Option<String>,
 }
 
 impl RemoteTestRunner {
-    pub fn new(remote_ip: String, port: u16, username: String, password: Option<String>) -> Self {
+    pub fn new(
+        remote_ip: String,
+        port: u16,
+        username: String,
+        password: Option<String>,
+        private_key_path: Option<String>,
+    ) -> Self {
         RemoteTestRunner {
             remote_ip,
             port,
             username,
             password,
+            private_key_path,
         }
     }
 
@@ -106,12 +114,53 @@ impl TestRunner for RemoteTestRunner {
         self.print_ssh_msg("SSH handshake completed");
 
         // Authentication
-        if let Some(password) = &self.password {
-            sess.userauth_password(&self.username, password)?;
-            self.print_ssh_msg("SSH password authentication completed");
-        } else {
-            sess.userauth_agent(&self.username)?;
-            self.print_ssh_msg("SSH agent authentication completed");
+        if !sess.authenticated() {
+            if let Some(password) = &self.password {
+                match sess.userauth_password(&self.username, password) {
+                    Ok(_) => {
+                        self.print_ssh_msg("SSH password authentication completed");
+                    }
+                    Err(e) => {
+                        self.print_ssh_msg(format!("SSH password authentication failed: {:?}", e).as_str());
+                    }
+                }
+            }
+        }
+        self.print_ssh_msg(&format!("SSH private key path: {:?}", self.private_key_path));
+        if !sess.authenticated() {
+            if let Some(private_key_path) = &self.private_key_path {
+                let private_key_path = if private_key_path.starts_with("~") { // expand home directory path
+                    let home_dir = std::env::var("HOME").unwrap();
+                    let _private_key_path = private_key_path.trim_start_matches("~/");
+                    std::path::PathBuf::from(format!("{}/{}", home_dir, _private_key_path))
+                } else {
+                    std::path::PathBuf::from(private_key_path)
+                };
+            
+                match sess.userauth_pubkey_file(
+                    &self.username,
+                    None,
+                    private_key_path.as_path(),
+                    None,
+                ) {
+                    Ok(_) => {
+                        self.print_ssh_msg("SSH public key authentication completed");
+                    }
+                    Err(e) => {
+                        self.print_ssh_msg(format!("SSH public key authentication failed: {:?}", e).as_str());
+                    }
+                }
+            }
+        }
+        if !sess.authenticated() {
+            match sess.userauth_agent(&self.username) {
+                Ok(_) => {
+                    self.print_ssh_msg("SSH agent authentication completed");
+                }
+                Err(e) => {
+                    self.print_ssh_msg(format!("SSH agent authentication failed: {:?}", e).as_str());
+                }
+            }
         }
         if !sess.authenticated() {
             return Err("Authentication failed".into());

@@ -275,12 +275,14 @@ fn run_tests(distros: &[&str], packages: &[&str], skip_successful: bool, dir: &P
                 let port = _connection_config.port.unwrap_or(2222);
                 let username = _connection_config.username.as_deref().unwrap_or("root");
                 let password = _connection_config.password.as_deref();
+                let private_key_path = _connection_config.private_key_path.as_deref();
                 debug!("Connecting to environment with credentials: IP={}, Port={}, Username={}, Password={}",ip,port,username,password.unwrap_or("None"));
                 Box::new(RemoteTestRunner::new(
                     ip.to_string(),
                     port,
                     username.to_string(),
                     password.map(|p| p.to_string()),
+                    private_key_path.map(|p| p.to_string()),
                 ))
             };
 
