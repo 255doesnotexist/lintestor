@@ -1,0 +1,12 @@
+enabled = true
+testing_type = "qemu-based-remote"
+startup_script = "./fedora/start_qemu.sh"
+stop_script = "./fedora/stop_qemu.sh"
+skip_packages = ["docker"]
+
+[connection]
+method = "ssh"
+ip = "localhost"
+port = 2222
+username = "root"
+password = "riscv" # not need because we use pubkey
