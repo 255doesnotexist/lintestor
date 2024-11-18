@@ -56,7 +56,20 @@ cat > boot.sh << 'EOL'
 # Call init.sh to ensure dependencies are installed
 ./init.sh
 
-# Create expect script for auto login and sshd configuration
+# Check for existing SSH keys or generate new ones
+echo "Checking for existing SSH keys..."
+SSH_KEY_FILE="$HOME/.ssh/id_rsa.pub"
+if [ ! -f "$SSH_KEY_FILE" ]; then
+    echo "No SSH key found, generating one..."
+    ssh-keygen -t rsa -b 2048 -f "$HOME/.ssh/id_rsa" -N "" -q
+    echo "New SSH key generated at $HOME/.ssh/id_rsa"
+fi
+
+# Read the public key into a variable
+SSH_PUBLIC_KEY=$(cat "$SSH_KEY_FILE")
+echo "Using public key: $SSH_PUBLIC_KEY"
+
+# Create expect script for auto login and configure SSH
 cat > auto_config.exp << 'EXPECT'
 #!/usr/bin/expect -f
 set timeout -1
@@ -79,18 +92,25 @@ send "riscv\r"
 
 # Wait for shell prompt
 expect "#"
-# Configure sshd to allow password authentication
-send "sed -i 's/#PasswordAuthentication yes/PasswordAuthentication yes/' /etc/ssh/sshd_config\r"
+# Configure sshd to allow public key authentication
+send "mkdir -p /root/.ssh && chmod 700 /root/.ssh\r"
 expect "#"
-send "sed -i 's/PasswordAuthentication no/PasswordAuthentication yes/' /etc/ssh/sshd_config\r"
+send "echo '$env(SSH_PUBLIC_KEY)' > /root/.ssh/authorized_keys\r"
 expect "#"
-# Start sshd service
+send "chmod 600 /root/.ssh/authorized_keys\r"
+expect "#"
+# Restart sshd service
+send "sed -i 's/^#*PubkeyAuthentication no/PubkeyAuthentication yes/' /etc/ssh/sshd_config\r"
+expect "#"
 send "systemctl restart sshd\r"
 expect "#"
 
 # Keep the session alive
 interact
 EXPECT
+
+# Export the public key to the environment for expect to use
+export SSH_PUBLIC_KEY="$SSH_PUBLIC_KEY"
 
 # Make expect script executable
 chmod +x auto_config.exp
