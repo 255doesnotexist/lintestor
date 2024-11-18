@@ -1,2 +1,1 @@
-export DEBIAN_FRONTEND=noninteractive
-apt-get install -y sudo curl apt-transport-https ca-certificates gnupg lsb-release netcat-openbsd
+dnf install -y sudo tar curl ca-certificates gnupg2 redhat-lsb-core nmap-ncat

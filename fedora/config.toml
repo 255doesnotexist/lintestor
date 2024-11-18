@@ -9,4 +9,5 @@ method = "ssh"
 ip = "localhost"
 port = 2222
 username = "root"
-password = "riscv" # not need because we use pubkey
+#password = "riscv" # not need because we use pubkey
+private_key_path = "~/.ssh/id_rsa"
