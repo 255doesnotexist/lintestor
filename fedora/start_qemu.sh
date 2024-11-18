@@ -34,7 +34,7 @@ start_qemu() {
 
 # Function to wait for QEMU to start and become accessible via SSH
 wait_for_qemu() {
-    local retries=20
+    local retries=2000 # 不知道为什么这个 fedora 开机很慢
     local delay=5
 
     for ((i=0; i<$retries; i++)); do
