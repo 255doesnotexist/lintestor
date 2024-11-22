@@ -22,6 +22,12 @@ fn is_not_remote(value: &String) -> bool {
     value != "remote" && value != "qemu-based-remote"
 }
 
+#[allow(dead_code)]
+fn is_not_boardtest(value: &String) -> bool {
+    // keep this function as it is, just for serde plz
+    value != "boardtest"
+}
+
 #[derive(Debug, Deserialize)]
 pub struct DistroConfig {
     pub enabled: bool,
@@ -37,6 +43,10 @@ pub struct DistroConfig {
     #[serde(rename = "connection")]
     #[serde(default, skip_serializing_if = "is_not_remote")]
     pub connection: Option<ConnectionConfig>,
+
+    #[serde(rename = "boardtest")]
+    #[serde(default, skip_serializing_if = "is_not_boardtest")]
+    pub boardtest: Option<BoardtestConfig>,
 
     pub skip_packages: Option<Vec<String>>,
 }
