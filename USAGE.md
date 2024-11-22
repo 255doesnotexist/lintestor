@@ -5,7 +5,7 @@
   
 ```toml
 enabled = true # 启用该发行版的测试；为 false 则该目录将不会被检测到
-testing_type = "qemu-based-remote" # 或 "locally"、"remote"
+testing_type = "qemu-based-remote" # 或 "locally"、"remote"、"boardtest"
 # 指定测试环境类型。在参数为 locally、remote 时不需求 qemu 启动脚本。在 locally 时不需求连接信息。
 startup_script = "./debian/start_qemu.sh" # qemu 启动脚本；如果测试环境类型为 locally 或 remote 则无需此项
 stop_script = "./debian/stop_qemu.sh" # qemu 停止脚本；如果测试环境类型为 locally 或 remote 则无需此项
@@ -17,6 +17,15 @@ ip = "localhost"
 port = 2222
 username = "root"
 password = "root"
+
+[boardtest]
+token = "put-your-boardtest-server-token-here"
+board_config = "boards/bpif3.toml" // Path to board config TOML file (on the boardtest server)
+serial = "sdwirec_alpha" // Serial number for SD Mux device
+mi_sdk_enabled = false // Optional: Enable Mi SDK controller
+api_url = "http://yourserver:23333/" // API server URL
+timeout_secs = 300 // Test timeout in seconds
+
 ```
 
 发行版目录下，每个软件包对应一个子目录，其中至少各存放一个 `metadata.sh` 存放该软件包对应的元数据。请在其中定义好以下变量：

@@ -163,6 +163,7 @@ fn run_tests(distros: &[&str], packages: &[&str], skip_successful: bool, dir: &P
         };
 
         let run_locally = distro_config.testing_type == "locally";
+        let via_boardtest = distro_config.testing_type == "boardtest";
         let purely_remote = distro_config.testing_type != "qemu-based-remote";
         let testenv_manager = crate::testenv_manager::TestEnvManager::new(&distro_config);
 
@@ -254,13 +255,22 @@ fn run_tests(distros: &[&str], packages: &[&str], skip_successful: bool, dir: &P
                     "locally"
                 } else if purely_remote {
                     "remotely"
+                } else if via_boardtest {
+                    "via Boardtest Server"
                 } else {
                     "with QEMU"
                 }
             );
 
+            // TODO: refactor to matching-case and runner_manager
             let test_runner: Box<dyn TestRunner> = if run_locally {
                 Box::new(LocalTestRunner::new(distro, package))
+            } else if via_boardtest {
+                let boardtest_config = distro_config
+                    .boardtest
+                    .ok_or("Boardtest config needed")?;
+                let test_runner = Box::new(BoardtestRunner::new(boardtest_config));
+                test_runner.run_test(&distro, &package, skip_scripts, dir)?;
             } else {
                 // assert!(distro_config.connection.method == "ssh");
 

@@ -33,7 +33,7 @@ fn is_not_boardtest(value: &String) -> bool {
 #[derive(Debug, Deserialize)]
 pub struct DistroConfig {
     pub enabled: bool,
-    pub testing_type: String, // 'locally' or 'remote' or 'qemu-based-remote'
+    pub testing_type: String, // 'locally' or 'remote' or 'qemu-based-remote' or 'boardtest'
     #[serde(rename = "startup_script")]
     #[serde(default, skip_serializing_if = "is_not_qemu_based_remote")]
     pub startup_script: String,
