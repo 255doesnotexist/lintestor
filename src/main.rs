@@ -266,9 +266,7 @@ fn run_tests(distros: &[&str], packages: &[&str], skip_successful: bool, dir: &P
             let test_runner: Box<dyn TestRunner> = if run_locally {
                 Box::new(LocalTestRunner::new(distro, package))
             } else if via_boardtest {
-                let boardtest_config = distro_config
-                    .boardtest
-                    .ok_or("Boardtest config needed")?;
+                let boardtest_config = distro_config.boardtest.ok_or("Boardtest config needed")?;
                 let test_runner = Box::new(BoardtestRunner::new(boardtest_config));
                 test_runner.run_test(&distro, &package, skip_scripts, dir)?;
             } else {

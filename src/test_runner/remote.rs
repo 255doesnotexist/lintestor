@@ -121,22 +121,28 @@ impl TestRunner for RemoteTestRunner {
                         self.print_ssh_msg("SSH password authentication completed");
                     }
                     Err(e) => {
-                        self.print_ssh_msg(format!("SSH password authentication failed: {:?}", e).as_str());
+                        self.print_ssh_msg(
+                            format!("SSH password authentication failed: {:?}", e).as_str(),
+                        );
                     }
                 }
             }
         }
-        self.print_ssh_msg(&format!("SSH private key path: {:?}", self.private_key_path));
+        self.print_ssh_msg(&format!(
+            "SSH private key path: {:?}",
+            self.private_key_path
+        ));
         if !sess.authenticated() {
             if let Some(private_key_path) = &self.private_key_path {
-                let private_key_path = if private_key_path.starts_with("~") { // expand home directory path
+                let private_key_path = if private_key_path.starts_with("~") {
+                    // expand home directory path
                     let home_dir = std::env::var("HOME").unwrap();
                     let _private_key_path = private_key_path.trim_start_matches("~/");
                     std::path::PathBuf::from(format!("{}/{}", home_dir, _private_key_path))
                 } else {
                     std::path::PathBuf::from(private_key_path)
                 };
-            
+
                 match sess.userauth_pubkey_file(
                     &self.username,
                     None,
@@ -147,7 +153,9 @@ impl TestRunner for RemoteTestRunner {
                         self.print_ssh_msg("SSH public key authentication completed");
                     }
                     Err(e) => {
-                        self.print_ssh_msg(format!("SSH public key authentication failed: {:?}", e).as_str());
+                        self.print_ssh_msg(
+                            format!("SSH public key authentication failed: {:?}", e).as_str(),
+                        );
                     }
                 }
             }
@@ -158,7 +166,9 @@ impl TestRunner for RemoteTestRunner {
                     self.print_ssh_msg("SSH agent authentication completed");
                 }
                 Err(e) => {
-                    self.print_ssh_msg(format!("SSH agent authentication failed: {:?}", e).as_str());
+                    self.print_ssh_msg(
+                        format!("SSH agent authentication failed: {:?}", e).as_str(),
+                    );
                 }
             }
         }
@@ -190,7 +200,7 @@ impl TestRunner for RemoteTestRunner {
         // Upload compressed file to remote server
         let remote_tar_path = format!("{}/{}", REMOTE_TMP_DIR, tar_file_path_relative);
         self.print_ssh_msg(&format!(
-            "Ready to upload {} to {} on the remote server", 
+            "Ready to upload {} to {} on the remote server",
             tar_file_path_relative, remote_tar_path
         ));
         let mut remote_file = sess.scp_send(
