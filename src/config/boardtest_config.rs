@@ -1,6 +1,6 @@
 use serde::Deserialize;
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Clone)]
 pub struct BoardtestConfig {
     pub token: String,
     pub board_config: String, // Path to board config TOML file

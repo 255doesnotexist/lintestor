@@ -4,6 +4,7 @@ use std::path::Path;
 
 pub mod local;
 pub mod remote;
+pub mod boardtest;
 
 /// Test runner for local and remote test environments.
 pub trait TestRunner {

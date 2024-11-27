@@ -1,9 +1,13 @@
 //! Test runner for remote boardtest server test environments.
+use crate::config::boardtest_config::BoardtestConfig;
 use crate::test_runner::TestRunner;
 use crate::utils::{CommandOutput, PackageMetadata, Report, TestResult, REMOTE_TMP_DIR};
+use anyhow::Context as _;
 use log::{debug, error, info};
 use reqwest::blocking::Client;
 use serde::{Deserialize, Serialize};
+use serde_json::json;
+use std::error::{Error, Error as StdError};
 use std::fs::{self, File};
 use std::io::Read;
 use std::path::Path;
@@ -11,7 +15,7 @@ use std::process::Command;
 use std::thread;
 use std::time::{Duration, Instant};
 use base64::{Engine as _, engine::general_purpose::STANDARD as BASE64};
-use anyhow::{Context, Result};
+use async_trait::async_trait;
 
 #[derive(Debug)]
 pub struct BoardtestRunner {
@@ -43,18 +47,18 @@ struct TestCase {
 }
 
 impl BoardtestRunner {
-    pub fn new(config: BoardtestConfig) -> Self {
-        BoardtestRunner { config }
+    pub fn new(config: &BoardtestConfig) -> Self {
+        BoardtestRunner { config: config.clone() }
     }
 
-    fn create_test_client(&self) -> Result<Client> {
+    fn create_test_client(&self) -> Result<Client, anyhow::Error> {
         Client::builder()
             .timeout(Duration::from_secs(self.config.timeout_secs))
             .build()
             .context("Failed to create HTTP client")
     }
 
-    async fn create_test(&self, client: &Client, base64_content: &str) -> Result<String> {
+    fn create_test(&self, client: &Client, base64_content: &str) -> Result<String, Box<dyn std::error::Error>> {
         // First write the test configuration
         let test_config = TestConfig {
             tests: vec![
@@ -82,7 +86,7 @@ impl BoardtestRunner {
             .context("Failed to write test configuration")?;
 
         if !write_test_resp.status().is_success() {
-            return Err(anyhow!("Failed to write test configuration: {}", write_test_resp.text()?));
+            return Err(anyhow!("Failed to write test configuration: {}", write_test_resp.text()?).into());
         }
 
         // Then create the test
@@ -103,14 +107,14 @@ impl BoardtestRunner {
             .context("Failed to create test")?;
 
         if !create_resp.status().is_success() {
-            return Err(anyhow!("Failed to create test: {}", create_resp.text()?));
+            return Err(anyhow!("Failed to create test: {}", create_resp.text()?).into());
         }
 
         let create_test_response: CreateTestResponse = create_resp.json()?;
         Ok(create_test_response.test_id)
     }
 
-    async fn start_test(&self, client: &Client, test_id: &str) -> Result<()> {
+    fn start_test(&self, client: &Client, test_id: &str) -> Result<(), Box<dyn std::error::Error>> {
         let resp = client
             .post(format!("{}/start_test/{}", self.config.api_url, test_id))
             .json(&json!({
@@ -120,12 +124,12 @@ impl BoardtestRunner {
             .context("Failed to start test")?;
 
         if !resp.status().is_success() {
-            return Err(anyhow!("Failed to start test: {}", resp.text()?));
+            return Err(anyhow!("Failed to start test: {}", resp.text()?).into());
         }
         Ok(())
     }
 
-    async fn wait_for_test_completion(&self, client: &Client, test_id: &str) -> Result<bool> {
+    fn wait_for_test_completion(&self, client: &Client, test_id: &str) -> Result<bool, anyhow::Error> {
         let start_time = Instant::now();
         
         while start_time.elapsed() < Duration::from_secs(self.config.timeout_secs) {
@@ -153,7 +157,7 @@ impl BoardtestRunner {
         Err(anyhow!("Test timeout after {} seconds", self.config.timeout_secs))
     }
 
-    async fn get_test_output(&self, client: &Client, test_id: &str) -> Result<String> {
+    fn get_test_output(&self, client: &Client, test_id: &str) -> Result<String, anyhow::Error> {
         let resp = client
             .get(format!("{}/test_output/{}", self.config.api_url, test_id))
             .send()
@@ -169,13 +173,13 @@ impl BoardtestRunner {
 
 #[async_trait::async_trait]
 impl TestRunner for BoardtestRunner {
-    async fn run_test(
+    fn run_test(
         &self,
         distro: &str,
         package: &str,
         skip_scripts: Vec<String>,
         dir: &Path,
-    ) -> Result<()> {
+    ) -> Result<(), Box<(dyn StdError + 'static)>> {
         info!("Starting boardtest for {}/{}", distro, package);
         
         // Create HTTP client
@@ -209,12 +213,12 @@ impl TestRunner for BoardtestRunner {
         let base64_content = BASE64.encode(&tar_buffer);
 
         // Create and start test
-        let test_id = self.create_test(&client, &base64_content).await?;
-        self.start_test(&client, &test_id).await?;
+        let test_id = self.create_test(&client, &base64_content)?;
+        self.start_test(&client, &test_id)?;
 
         // Wait for test completion and get results
-        let test_passed = self.wait_for_test_completion(&client, &test_id).await?;
-        let test_output = self.get_test_output(&client, &test_id).await?;
+        let test_passed = self.wait_for_test_completion(&client, &test_id)?;
+        let test_output = self.get_test_output(&client, &test_id)?;
 
         // Create test result
         let test_results = vec![TestResult {
@@ -242,7 +246,7 @@ impl TestRunner for BoardtestRunner {
         crate::aggregator::generate_report(&report_path, report)?;
 
         if !test_passed {
-            return Err(anyhow!("Not all tests passed for {}/{}", distro, package));
+            return Err(anyhow!("Not all tests passed for {}/{}", distro, package).into());
         }
 
         Ok(())

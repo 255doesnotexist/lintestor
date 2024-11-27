@@ -18,6 +18,10 @@ env_logger = "0.11.5"
 log = "0.4.22"
 chrono = "0.4.38"
 dirs = "5.0.1"
+reqwest = { version = "0.12.9", features = ["blocking", "json"] }
+base64 = "0.22.1"
+anyhow = "1.0.93"
+async-trait = "0.1.83"
 [dev-dependencies]
 assert_cmd = "2.0.16"
 
