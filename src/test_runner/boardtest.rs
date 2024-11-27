@@ -3,6 +3,7 @@ use crate::config::boardtest_config::BoardtestConfig;
 use crate::test_runner::TestRunner;
 use crate::utils::{PackageMetadata, Report, TestResult, REMOTE_TMP_DIR};
 use anyhow::Context as _;
+use base64::{engine::general_purpose::STANDARD as BASE64, Engine as _};
 use log::{info, warn};
 use reqwest::blocking::Client;
 use serde::{Deserialize, Serialize};
@@ -12,7 +13,6 @@ use std::path::Path;
 use std::process::Command;
 use std::thread;
 use std::time::{Duration, Instant};
-use base64::{Engine as _, engine::general_purpose::STANDARD as BASE64};
 
 #[derive(Debug)]
 pub struct BoardtestRunner {
@@ -45,7 +45,9 @@ struct TestCase {
 
 impl BoardtestRunner {
     pub fn new(config: &BoardtestConfig) -> Self {
-        BoardtestRunner { config: config.clone() }
+        BoardtestRunner {
+            config: config.clone(),
+        }
     }
 
     fn create_test_client(&self) -> Result<Client, anyhow::Error> {
@@ -55,21 +57,23 @@ impl BoardtestRunner {
             .context("Failed to create HTTP client")
     }
 
-    fn create_test(&self, client: &Client, base64_content: &str) -> Result<String, Box<dyn std::error::Error>> {
+    fn create_test(
+        &self,
+        client: &Client,
+        base64_content: &str,
+    ) -> Result<String, Box<dyn std::error::Error>> {
         // First write the test configuration
         let test_config = TestConfig {
-            tests: vec![
-                TestCase {
-                    name: "extract_and_run".to_string(),
-                    command: format!(
-                        "echo '{}' | base64 -d | tar xz -C {} && cd {}/test && bash test.sh",
-                        base64_content, REMOTE_TMP_DIR, REMOTE_TMP_DIR
-                    ),
-                    expected_output: "0".to_string(), // We expect the test script to return 0
-                    method: "exit_code".to_string(),
-                    timeout: self.config.timeout_secs,
-                }
-            ]
+            tests: vec![TestCase {
+                name: "extract_and_run".to_string(),
+                command: format!(
+                    "echo '{}' | base64 -d | tar xz -C {} && cd {}/test && bash test.sh",
+                    base64_content, REMOTE_TMP_DIR, REMOTE_TMP_DIR
+                ),
+                expected_output: "0".to_string(), // We expect the test script to return 0
+                method: "exit_code".to_string(),
+                timeout: self.config.timeout_secs,
+            }],
         };
 
         let write_test_resp = client
@@ -83,7 +87,11 @@ impl BoardtestRunner {
             .context("Failed to write test configuration")?;
 
         if !write_test_resp.status().is_success() {
-            return Err(anyhow!("Failed to write test configuration: {}", write_test_resp.text()?).into());
+            return Err(anyhow!(
+                "Failed to write test configuration: {}",
+                write_test_resp.text()?
+            )
+            .into());
         }
 
         // Then create the test
@@ -91,7 +99,11 @@ impl BoardtestRunner {
             "-f -t -s -b {} -S {}{}",
             self.config.board_config,
             self.config.serial,
-            if self.config.mi_sdk_enabled { " -M" } else { "" }
+            if self.config.mi_sdk_enabled {
+                " -M"
+            } else {
+                ""
+            }
         );
 
         let create_resp = client
@@ -126,9 +138,13 @@ impl BoardtestRunner {
         Ok(())
     }
 
-    fn wait_for_test_completion(&self, client: &Client, test_id: &str) -> Result<bool, anyhow::Error> {
+    fn wait_for_test_completion(
+        &self,
+        client: &Client,
+        test_id: &str,
+    ) -> Result<bool, anyhow::Error> {
         let start_time = Instant::now();
-        
+
         while start_time.elapsed() < Duration::from_secs(self.config.timeout_secs) {
             let resp = client
                 .get(format!("{}/test_status/{}", self.config.api_url, test_id))
@@ -151,7 +167,10 @@ impl BoardtestRunner {
             }
         }
 
-        Err(anyhow!("Test timeout after {} seconds", self.config.timeout_secs))
+        Err(anyhow!(
+            "Test timeout after {} seconds",
+            self.config.timeout_secs
+        ))
     }
 
     fn get_test_output(&self, client: &Client, test_id: &str) -> Result<String, anyhow::Error> {
@@ -178,15 +197,18 @@ impl TestRunner for BoardtestRunner {
         dir: &Path,
     ) -> Result<(), Box<(dyn StdError + 'static)>> {
         info!("Starting boardtest for {}/{}", distro, package);
-        warn!("Those scripts should be skipped: {:?}, but this functionality is not implemented yet.", skip_scripts);
-        
+        warn!(
+            "Those scripts should be skipped: {:?}, but this functionality is not implemented yet.",
+            skip_scripts
+        );
+
         // Create HTTP client
         let client = self.create_test_client()?;
 
         // Compress local test directory
         let local_dir = Path::new(dir).join(format!("{}/{}", distro, package));
         let mut tar_buffer = Vec::new();
-        
+
         Command::new("tar")
             .arg("czf")
             .arg("-")
@@ -201,7 +223,10 @@ impl TestRunner for BoardtestRunner {
                 } else {
                     Err(std::io::Error::new(
                         std::io::ErrorKind::Other,
-                        format!("tar command failed: {}", String::from_utf8_lossy(&output.stderr))
+                        format!(
+                            "tar command failed: {}",
+                            String::from_utf8_lossy(&output.stderr)
+                        ),
                     ))
                 }
             })

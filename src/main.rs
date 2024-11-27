@@ -12,8 +12,8 @@ use crate::utils::Report;
 use clap::{Arg, ArgAction, ArgMatches, Command};
 use env_logger::Env;
 use log::{debug, error, info, warn};
-use test_runner::boardtest::BoardtestRunner;
 use std::{env, fs::File, path::Path};
+use test_runner::boardtest::BoardtestRunner;
 
 #[macro_use]
 extern crate anyhow;
