@@ -1,21 +1,18 @@
 //! Test runner for remote boardtest server test environments.
 use crate::config::boardtest_config::BoardtestConfig;
 use crate::test_runner::TestRunner;
-use crate::utils::{CommandOutput, PackageMetadata, Report, TestResult, REMOTE_TMP_DIR};
+use crate::utils::{PackageMetadata, Report, TestResult, REMOTE_TMP_DIR};
 use anyhow::Context as _;
-use log::{debug, error, info};
+use log::{info, warn};
 use reqwest::blocking::Client;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
-use std::error::{Error, Error as StdError};
-use std::fs::{self, File};
-use std::io::Read;
+use std::error::Error as StdError;
 use std::path::Path;
 use std::process::Command;
 use std::thread;
 use std::time::{Duration, Instant};
 use base64::{Engine as _, engine::general_purpose::STANDARD as BASE64};
-use async_trait::async_trait;
 
 #[derive(Debug)]
 pub struct BoardtestRunner {
@@ -181,6 +178,7 @@ impl TestRunner for BoardtestRunner {
         dir: &Path,
     ) -> Result<(), Box<(dyn StdError + 'static)>> {
         info!("Starting boardtest for {}/{}", distro, package);
+        warn!("Those scripts should be skipped: {:?}, but this functionality is not implemented yet.", skip_scripts);
         
         // Create HTTP client
         let client = self.create_test_client()?;
