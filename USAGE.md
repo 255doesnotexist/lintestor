@@ -19,12 +19,12 @@ username = "root"
 password = "root"
 
 [boardtest]
-token = "put-your-boardtest-server-token-here"
-board_config = "boards/bpif3.toml" // Path to board config TOML file (on the boardtest server)
-serial = "sdwirec_alpha" // Serial number for SD Mux device
-mi_sdk_enabled = false // Optional: Enable Mi SDK controller
-api_url = "http://yourserver:23333/" // API server URL
-timeout_secs = 300 // Test timeout in seconds
+token = "put-your-boardtest-server-token-here" // 验证凭据
+board_config = "boards/bpif3.toml" // 在 Boardtest Server 上的板配置信息路径
+serial = "sdwirec_alpha" // SDWireC 设备的串号
+mi_sdk_enabled = false // 可选：利用米家 API 自动上电
+api_url = "http://yourserver:23333/" // API 基地址
+timeout_secs = 300 // Boardtest 中单个测试的超时时长（包括传输时间因此长一些好）
 
 ```
 

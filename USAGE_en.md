@@ -16,6 +16,14 @@ ip = "localhost"
 port = 2222
 username = "root"
 password = "root"
+
+[boardtest]
+token = "put-your-boardtest-server-token-here"
+board_config = "boards/bpif3.toml" // Path to board config TOML file (on the boardtest server)
+serial = "sdwirec_alpha" // Serial number for SD Mux device
+mi_sdk_enabled = false // Optional: Enable Mi SDK controller
+api_url = "http://yourserver:23333/" // API server URL
+timeout_secs = 300 // Test timeout in seconds
 ```
 Each subdirectory corresponding to a package should contain at least one `metadata.sh` script for storing the package's metadata to be used in the generated reports. Please define the following variables in the script:
 ```
