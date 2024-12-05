@@ -1,5 +1,6 @@
 //! Manages the test environment for a distribution.
 use crate::config::{connection_config::ConnectionConfig, distro_config::DistroConfig};
+use log::info;
 use std::io::Error;
 use std::process::Command;
 
@@ -47,8 +48,8 @@ impl TestEnvManager {
     fn run_script(&self, script: &String) -> Result<(), Error> {
         let connection_unwrapped = self.connection.clone().unwrap();
 
-        Command::new("bash")
-            .arg(script)
+        let mut cmd = Command::new("bash");
+        cmd.arg(script)
             .env_remove("USER")
             .env_remove("PASSWORD")
             .env_remove("ADDRESS")
@@ -68,9 +69,15 @@ impl TestEnvManager {
             .env(
                 "PORT",
                 connection_unwrapped.port.unwrap_or(2222).to_string(),
-            )
-            .spawn()?
-            .wait()?;
+            );
+        info!("Command: bash {} with env USER={} PASSWORD={} ADDRESS={} PORT={}",
+            script,
+            connection_unwrapped.username.as_deref().unwrap_or("root"),
+            connection_unwrapped.password.as_deref().unwrap_or(""),
+            connection_unwrapped.ip.as_deref().unwrap_or("localhost"),
+            connection_unwrapped.port.unwrap_or(2222).to_string()
+        );
+        cmd.spawn()?.wait()?;
         Ok(())
     }
 
@@ -84,6 +91,9 @@ impl TestEnvManager {
     ///
     /// This function will return an error if the startup script fails to execute or returns a non-zero exit status.
     pub fn start(&self) -> Result<(), Error> {
+        let binding = std::env::current_dir().unwrap();
+        let cwd = binding.to_str().unwrap();
+        info!("Starting test environment in {}...", cwd);
         self.run_script(&self.startup_script)
     }
 
