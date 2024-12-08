@@ -73,7 +73,8 @@ impl TestEnvManager {
                 "PORT",
                 connection_unwrapped.port.unwrap_or(2222).to_string(),
             );
-        info!("Command: bash {} with env USER={} PASSWORD={} ADDRESS={} PORT={}",
+        info!(
+            "Command: bash {} with env USER={} PASSWORD={} ADDRESS={} PORT={}",
             script,
             connection_unwrapped.username.as_deref().unwrap_or("root"),
             connection_unwrapped.password.as_deref().unwrap_or(""),
