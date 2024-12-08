@@ -2,6 +2,7 @@
 use crate::config::{connection_config::ConnectionConfig, distro_config::DistroConfig};
 use log::info;
 use std::io::Error;
+use std::path::Path;
 use std::process::Command;
 
 /// Manages the test environment for a distribution.
@@ -12,6 +13,7 @@ pub struct TestEnvManager {
     startup_script: String,
     stop_script: String,
     connection: Option<ConnectionConfig>,
+    dir: std::path::PathBuf,
 }
 
 impl TestEnvManager {
@@ -24,11 +26,12 @@ impl TestEnvManager {
     /// # Returns
     ///
     /// A new `TestEnvManager` instance initialized with the provided configuration.
-    pub fn new(config: &DistroConfig) -> Self {
+    pub fn new(config: &DistroConfig, dir: &Path) -> Self {
         TestEnvManager {
             startup_script: config.startup_script.clone(),
             stop_script: config.stop_script.clone(),
             connection: config.connection.clone(),
+            dir: dir.to_path_buf(),
         }
     }
 
@@ -49,7 +52,7 @@ impl TestEnvManager {
         let connection_unwrapped = self.connection.clone().unwrap();
 
         let mut cmd = Command::new("bash");
-        cmd.arg(script)
+        cmd.arg(self.dir.join(script).to_str().unwrap())
             .env_remove("USER")
             .env_remove("PASSWORD")
             .env_remove("ADDRESS")
