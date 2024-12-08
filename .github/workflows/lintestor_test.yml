@@ -42,7 +42,7 @@ jobs:
         echo '-drive file=image.qcow2,if=none,id=hd \' >> boot.sh
         echo '-device virtio-net-device,netdev=net \' >> boot.sh
         echo '-netdev user,id=net,hostfwd=tcp::2222-:22 \' >> boot.sh
-        echo '-bios /usr/lib/riscv64-linux-gnu/opensbi/generic/fw_jump.elf \' >> boot.sh
+        echo '-bios /usr/lib/riscv64-linux-gnu/opensbi/generic/fw_jump.bin \' >> boot.sh
         echo '-kernel /usr/lib/u-boot/qemu-riscv64_smode/uboot.elf \' >> boot.sh
         echo '-object rng-random,filename=/dev/urandom,id=rng \' >> boot.sh
         echo '-device virtio-rng-device,rng=rng \' >> boot.sh
