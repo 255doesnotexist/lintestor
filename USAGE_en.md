@@ -1,5 +1,6 @@
 # Usage Guide
 ## Setup Tests
+### Distro setup
 Each distribution should have all their test files stored in separate subdirectories (`./<distro>`) under the working directory (defaults to the program's CWD; set with the `-D`/`--directory` flag). Specify distro-specifc options in their respective config files (`./<distro>/config.toml`) as follows:
   
 ```toml
@@ -10,21 +11,23 @@ startup_script = "./debian/start_qemu.sh" # path to QEMU startup script. IGNORED
 stop_script = "./debian/stop_qemu.sh" # path to QEMU stop script. IGNORED when testing_type is set to "locally" or "remote"
 skip_packages = ["docker"] # Skip testing for these packages
 
-[connection] # IGNORED when testing_type is set to "locally". Only SSH is supported at the moment
+[connection] # Valid for "remote"/"qemu-based-remote". Only SSH is supported at the moment
 method = "ssh"
 ip = "localhost"
 port = 2222
 username = "root"
 password = "root"
 
-[boardtest]
-token = "put-your-boardtest-server-token-here"
-board_config = "boards/bpif3.toml" // Path to board config TOML file (on the boardtest server)
-serial = "sdwirec_alpha" // Serial number for SD Mux device
-mi_sdk_enabled = false // Optional: Enable Mi SDK controller
-api_url = "http://yourserver:23333/" // API server URL
-timeout_secs = 300 // Test timeout in seconds
+[boardtest] # Valid for "boardtest"
+token = "your_boardtest_server_token" # Auth credentials
+board_config = "boards/bpif3.toml" # Path to board config TOML file (on the boardtest server)
+serial = "sdwirec_alpha" # Serial number for SD Mux device
+mi_sdk_enabled = false # Optional: Enable Mi SDK controller
+api_url = "http://yourserver:23333/" # API server URL
+timeout_secs = 300 # Test timeout in seconds
 ```
+
+### Package setup
 Each subdirectory corresponding to a package should contain at least one `metadata.sh` script for storing the package's metadata to be used in the generated reports. Please define the following variables in the script:
 ```
 PACKAGE_VERSION="3.30.3" # Package version. Either specify manually or fetch with commands
