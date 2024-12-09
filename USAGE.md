@@ -1,6 +1,7 @@
 # 使用说明
 ## 配置测试
 
+### 发行版配置
 对于每个发行版，在工作目录（默认为程序所在目录， 可使用 `-D`/`--directory` 参数指定）下分别为其创建一个 `./<distro>` 目录，`./<distro>/config.toml` 是它的发行版配置文件，示例如下：
   
 ```toml
@@ -11,23 +12,24 @@ startup_script = "./debian/start_qemu.sh" # qemu 启动脚本；如果测试环�
 stop_script = "./debian/stop_qemu.sh" # qemu 停止脚本；如果测试环境类型为 locally 或 remote 则无需此项
 skip_packages = ["docker"] # 应跳过测试的包
 
-[connection] # 如果测试环境类型为 locally 则无需此项；目前仅支持 SSH
+[connection] # 仅 "remote"/"qemu-based-remote" 适用；目前仅支持 SSH
 method = "ssh"
 ip = "localhost"
 port = 2222
 username = "root"
 password = "root"
 
-[boardtest]
-token = "put-your-boardtest-server-token-here" // 验证凭据
-board_config = "boards/bpif3.toml" // 在 Boardtest Server 上的板配置信息路径
-serial = "sdwirec_alpha" // SDWireC 设备的串号
-mi_sdk_enabled = false // 可选：利用米家 API 自动上电
-api_url = "http://yourserver:23333/" // API 基地址
-timeout_secs = 300 // Boardtest 中单个测试的超时时长（包括传输时间因此长一些好）
+[boardtest] # 仅 "boardtest" 适用
+token = "your_boardtest_server_token" # 验证凭据
+board_config = "boards/bpif3.toml" # 在 Boardtest Server 上的板配置信息路径
+serial = "sdwirec_alpha" # SDWireC 设备的串号
+mi_sdk_enabled = false # 可选：利用米家 API 自动上电
+api_url = "http://yourserver:23333/" # API 基地址
+timeout_secs = 300 # Boardtest 中单个测试的超时时长（包括传输时间因此长一些好）
 
 ```
 
+### 软件包配置
 发行版目录下，每个软件包对应一个子目录，其中至少各存放一个 `metadata.sh` 存放该软件包对应的元数据。请在其中定义好以下变量：
 ```
 PACKAGE_VERSION="3.30.3" # 软件包版本，可手动指定也可使用命令获取。
