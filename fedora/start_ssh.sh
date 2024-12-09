@@ -3,7 +3,7 @@
 # the following environmental variables should be controlled directly from TestEnvManager
 # USER="root"
 # PASSWORD="riscv"
-# PORT=2222
+# PORT=2223
 # ADDRESS="localhost"
 
 # echo $USER

@@ -3,7 +3,7 @@
 # Define the SSH connection parameters
 USER="root"
 PASSWORD="riscv"
-PORT=2222
+PORT=2223
 ADDRESS="localhost"
 
 # Function to check if sshpass is installed
