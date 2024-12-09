@@ -31,7 +31,7 @@ jobs:
         sudo apt-get install -y qemu-utils qemu-system-x86 qemu-system-misc opensbi u-boot-qemu
         sudo apt-get install -y sshpass
     
-    - name: Setup RISC-V Debian QEMU
+    - name: Setup Debian QEMU env for RISC-V
       run: |
         cd ..
         wget -O rv64deb.zip "https://gitlab.com/api/v4/projects/giomasce%2Fdqib/jobs/artifacts/master/download?job=convert_riscv64-virt"
@@ -49,6 +49,19 @@ jobs:
         echo '-nographic -append "root=LABEL=rootfs console=ttyS0  cmdline no4lvl"' >> boot.sh
         chmod +x boot.sh
         ls -l # 展示文件结构
+        cd ../lintestor  # 回到项目目录
+        ls -l # 再次展示文件结构
+    
+    - name: Setup Fedora QEMU env for RISC-V
+      run: |
+        mkdir ../fedora
+        cp ./fedora/init.sh ../fedora
+        cp ./fedora/boot.sh ../fedora
+        cd ../fedora
+        chmod +x init.sh
+        chmod +x boot.sh
+        ls -l # 展示文件结构
+        ./init.sh
         cd ../lintestor  # 回到项目目录
         ls -l # 再次展示文件结构
 
