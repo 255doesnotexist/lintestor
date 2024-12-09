@@ -169,7 +169,7 @@ fn run_tests(distros: &[&str], packages: &[&str], skip_successful: bool, dir: &P
         let run_locally = distro_config.testing_type == "locally";
         let via_boardtest = distro_config.testing_type == "boardtest";
         let purely_remote = distro_config.testing_type != "qemu-based-remote";
-        let testenv_manager = crate::testenv_manager::TestEnvManager::new(&distro_config, &dir);
+        let testenv_manager = crate::testenv_manager::TestEnvManager::new(&distro_config, dir);
 
         info!(
             "Connection method: {}",
