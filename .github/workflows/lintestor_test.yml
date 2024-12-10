@@ -10,6 +10,7 @@ jobs:
     runs-on: [self-hosted, linux]
     env:
       PRINT_SSH_MSG: 1
+      RUST_LOG: debug
     permissions:
       contents: write
     steps:
