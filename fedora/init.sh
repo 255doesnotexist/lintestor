@@ -43,7 +43,7 @@ if [ ! -f "$SSH_KEY_FILE" ]; then
 fi
 
 # Read the public key into a variable
-SSH_PUBLIC_KEY=$(cat "$SSH_KEY_FILE")
+export SSH_PUBLIC_KEY=$(cat "$SSH_KEY_FILE")
 echo "Using public key: $SSH_PUBLIC_KEY"
 
 # Create expect script for auto login and configure SSH
@@ -82,6 +82,7 @@ expect "#"
 send "systemctl restart sshd\r"
 expect "#"
 send "halt\r"
+expect "#"
 EXPECT
 
 # Make expect script executable
