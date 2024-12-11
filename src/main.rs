@@ -59,7 +59,13 @@ fn main() {
 
     if test {
         info!("Running tests");
-        run_tests(&distros, &packages, skip_successful, &working_dir, &allow_interactive_prompts);
+        run_tests(
+            &distros,
+            &packages,
+            skip_successful,
+            &working_dir,
+            &allow_interactive_prompts,
+        );
     }
 
     if aggr {
@@ -155,7 +161,13 @@ fn parse_args() -> ArgMatches {
 /// # Returns
 /// Returns `Ok(())` if successful, otherwise returns an error.
 ///
-fn run_tests(distros: &[&str], packages: &[&str], skip_successful: bool, dir: &Path, allow_interactive_prompts: &bool) {
+fn run_tests(
+    distros: &[&str],
+    packages: &[&str],
+    skip_successful: bool,
+    dir: &Path,
+    allow_interactive_prompts: &bool,
+) {
     for distro in distros {
         let distro_directory = dir.join(distro);
         if !distro_directory.exists() {
