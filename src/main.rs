@@ -36,6 +36,7 @@ fn main() {
     let aggr = matches.get_flag("aggr");
     let summ = matches.get_flag("summ");
     let skip_successful = matches.get_flag("skip-successful");
+    let allow_interactive_prompts = matches.get_flag("interactive");
     let cwd = env::current_dir().unwrap_or(".".into()); // is "." viable?
     let working_dir = matches
         .get_one::<String>("directory")
@@ -58,7 +59,7 @@ fn main() {
 
     if test {
         info!("Running tests");
-        run_tests(&distros, &packages, skip_successful, &working_dir);
+        run_tests(&distros, &packages, skip_successful, &working_dir, &allow_interactive_prompts);
     }
 
     if aggr {
@@ -134,6 +135,13 @@ fn parse_args() -> ArgMatches {
                 .action(ArgAction::SetTrue)
                 .help("Skip previous successful tests (instead of overwriting their results)"),
         )
+        .arg(
+            Arg::new("interactive")
+                .short('i')
+                .long("interactive")
+                .action(ArgAction::SetTrue)
+                .help("Run lintestor in interactive mode. Possibly require user input which may pause the test."),
+        )
         .get_matches()
 }
 
@@ -147,7 +155,7 @@ fn parse_args() -> ArgMatches {
 /// # Returns
 /// Returns `Ok(())` if successful, otherwise returns an error.
 ///
-fn run_tests(distros: &[&str], packages: &[&str], skip_successful: bool, dir: &Path) {
+fn run_tests(distros: &[&str], packages: &[&str], skip_successful: bool, dir: &Path, allow_interactive_prompts: &bool) {
     for distro in distros {
         let distro_directory = dir.join(distro);
         if !distro_directory.exists() {
@@ -303,7 +311,21 @@ fn run_tests(distros: &[&str], packages: &[&str], skip_successful: bool, dir: &P
 
             match test_runner.run_test(distro, package, skipped_scripts, dir) {
                 Ok(_) => info!("Test passed for {}/{}", distro, package),
-                Err(e) => error!("Test failed for {}/{}: {}", distro, package, e), // error or warn?
+                Err(e) => {
+                    error!("Test failed for {}/{}: {}", distro, package, e); // error or warn?
+                    if *allow_interactive_prompts {
+                        use dialoguer::Confirm;
+                        let resume = Confirm::new()
+                            .with_prompt(format!("An previous test was failed for {}/{}. Do you want to continue the test?", distro, package))
+                            .default(true)
+                            .interact()
+                            .unwrap();
+                        if !resume {
+                            info!("Skipping the test for {}/{}", distro, package);
+                            break;
+                        }
+                    }
+                }
             }
         }
 
