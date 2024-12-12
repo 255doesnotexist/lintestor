@@ -82,7 +82,7 @@ expect "#"
 send "systemctl restart sshd\r"
 expect "#"
 send "halt\r"
-expect "#"
+expect eof
 EXPECT
 
 # Make expect script executable
