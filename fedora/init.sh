@@ -49,7 +49,7 @@ echo "Using public key: $SSH_PUBLIC_KEY"
 # Create expect script for auto login and configure SSH
 cat > auto_config.exp << 'EXPECT'
 #!/usr/bin/expect -f
-set timeout -1
+set timeout 120
 
 # Start QEMU and expect login prompt
 spawn qemu-system-riscv64 -nographic \
