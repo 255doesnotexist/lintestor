@@ -221,9 +221,9 @@ impl TestRunner for RemoteTestRunner {
         // Upload prerequisite.sh (optional) to remote server
         let prerequisite_path = Path::new(dir).join(format!("{}/prerequisite.sh", distro));
         if Path::new(&prerequisite_path).exists() {
-            let remote_prerequisite_path = "/tmp/prerequisite.sh".to_string();
+            let remote_prerequisite_path = "/tmp/prerequisite.sh";
             let mut remote_file = sess.scp_send(
-                Path::new(&remote_prerequisite_path),
+                Path::new(remote_prerequisite_path),
                 0o644,
                 std::fs::metadata(&prerequisite_path)?.len(),
                 None,
@@ -290,12 +290,11 @@ impl TestRunner for RemoteTestRunner {
             let test_passed = result.exit_status == 0;
             all_tests_passed &= test_passed;
 
-            let output = &result.output;
             debug!("Command: {}", result.command);
             debug!("{:?}", &result);
             test_results.push(TestResult {
-                test_name: script.to_string(),
-                output: output.to_string(),
+                test_name: script,
+                output: result.output,
                 passed: test_passed,
             });
         }
@@ -316,7 +315,6 @@ impl TestRunner for RemoteTestRunner {
                 let metadata_output = self.run_command(&sess, &metadata_command)?;
                 let metadata_vec: Vec<String> = metadata_output
                     .output
-                    .to_string()
                     .lines()
                     .map(|line| line.to_string())
                     .collect();

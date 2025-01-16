@@ -56,7 +56,7 @@ pub fn aggregate_reports(
 
         for &package in packages
             .iter()
-            .filter(|p| packages_of_distro.contains(&String::from(**p)))
+            .filter(|p| packages_of_distro.iter().any(|pkg| p == &pkg))
         {
             let report_path = dir.join(format!("{}/{}/report.json", distro, package));
             if let Ok(file) = File::open(&report_path) {
