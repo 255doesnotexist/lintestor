@@ -63,16 +63,19 @@ impl TestScriptManager {
                 let final_path = path.to_str().unwrap_or_default().to_string();
                 let file_name = path.file_name();
 
-                if skip_scripts.contains(&file_name.unwrap().to_string_lossy().to_string()) {
+                if skip_scripts
+                    .iter()
+                    .any(|s| s.as_str() == file_name.unwrap())
+                {
                     log::debug!("skipped {}", file_name.unwrap().to_string_lossy());
                     continue;
                 }
 
-                if file_name.is_some_and(|name| name == std::ffi::OsStr::new(METADATA_SCRIPT_NAME))
-                {
-                    metadata_script = Some(final_path);
-                } else {
-                    test_scripts.push(final_path);
+                match file_name {
+                    Some(name) if name == METADATA_SCRIPT_NAME => {
+                        metadata_script = Some(final_path)
+                    }
+                    _ => test_scripts.push(final_path),
                 }
             }
         }

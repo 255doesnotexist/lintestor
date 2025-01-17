@@ -215,7 +215,7 @@ fn run_tests(
         let packages_of_distro = utils::get_packages(distro, dir).unwrap_or_default();
         for package in packages
             .iter()
-            .filter(|p| packages_of_distro.contains(&String::from(**p)))
+            .filter(|p| packages_of_distro.iter().any(|pkg| p == &pkg))
         {
             let mut skipped_scripts = Vec::new();
 
@@ -265,7 +265,7 @@ fn run_tests(
             }
 
             if let Some(skip_packages) = &distro_config.skip_packages {
-                if skip_packages.contains(&package.to_string()) {
+                if skip_packages.iter().any(|pkg| pkg == package) {
                     info!("Skipping test for {}/{}", distro, package);
                     continue;
                 }
