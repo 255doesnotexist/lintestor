@@ -52,7 +52,7 @@ jobs:
         ls -l . # 展示本级结构
         cargo install lintestor
         LATEST_BINARY=lintestor
-        $LATEST_BINARY --test --aggr --summ
+        $LATEST_BINARY --test --aggr --summ -d fedora
         rm .gitignore
     
     - name: Upload test results
