@@ -1,8 +1,8 @@
-name: Lintestor Test (Decrepated)
+name: Debian Test
 
 on:
-  # schedule:
-  #   - cron: '0 2 * * 1'  # 每周一凌晨2点运行
+  schedule:
+    - cron: '0 2 * * 1'  # 每周一凌晨2点运行
   workflow_dispatch:  # 允许手动触发
 
 jobs:
@@ -53,49 +53,20 @@ jobs:
         cd ../lintestor  # 回到项目目录
         ls -l # 再次展示文件结构
     
-    - name: Setup Fedora QEMU env for RISC-V
-      run: |
-        mkdir ../fedora
-        cp ./fedora/init.sh ../fedora
-        cp ./fedora/boot.sh ../fedora
-        cd ../fedora
-        chmod +x init.sh
-        chmod +x boot.sh
-        ls -l # 展示文件结构
-        ./init.sh
-        cd ../lintestor  # 回到项目目录
-        ls -l # 再次展示文件结构
-
-    - name: Setup Bianbu remote credentials with ACTIONS SECRETs
-      env:
-        BIANBU_IP: ${{ secrets.BIANBU_IP }}
-        BIANBU_PORT: ${{ secrets.BIANBU_PORT }}
-        BIANBU_USERNAME: ${{ secrets.BIANBU_USERNAME }}
-        BIANBU_PASSWORD: ${{ secrets.BIANBU_PASSWORD }}
-      run: |
-        sed -i "s/{BIANBU_IP}/${BIANBU_IP}/" ./bianbu/config.toml
-        sed -i "s/{BIANBU_PORT}/${BIANBU_PORT}/" ./bianbu/config.toml
-        sed -i "s/{BIANBU_USERNAME}/${BIANBU_USERNAME}/" ./bianbu/config.toml
-        sed -i "s/{BIANBU_PASSWORD}/${BIANBU_PASSWORD}/" ./bianbu/config.toml
-    
     - name: Install & Run Lintestor
       run: |
         ls -l ../ # 展示上级文件结构
         ls -l ../dqib_riscv64-virt # 展示文件结构
         ls -l . # 展示本级结构
-        # cargo run -- --test --aggr --summ
-
         cargo install lintestor
-
         LATEST_BINARY=lintestor
         $LATEST_BINARY --test --aggr --summ
-
         rm .gitignore
     
     - name: Upload test results
       uses: actions/upload-artifact@v4
       with:
-        name: test-results
+        name: debian-test-results
         path: |
           reports.json
           summary.md
@@ -103,7 +74,7 @@ jobs:
     - name: Commit reports
       uses: stefanzweifel/git-auto-commit-action@v5
       with:
-        commit_message: "test(report): weekly test reports update"
+        commit_message: "test(report): Debian weekly test reports update"
         file_pattern: |
           **/*.json
           **/*/*.json

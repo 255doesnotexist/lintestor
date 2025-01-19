@@ -1,0 +1,74 @@
+name: Fedora Test
+
+on:
+  schedule:
+    - cron: '30 2 * * 1'  # 每周一凌晨2:30运行
+  workflow_dispatch:  # 允许手动触发
+
+jobs:
+  test:
+    runs-on: [self-hosted, linux]
+    env:
+      PRINT_SSH_MSG: 1
+      RUST_LOG: debug
+    permissions:
+      contents: write
+    steps:
+    - name: Checkout dirty branch
+      uses: actions/checkout@v2
+      with:
+        ref: 'dirty'
+    
+    - name: Set up Rust
+      uses: actions-rs/toolchain@v1
+      with:
+        profile: minimal
+        toolchain: stable
+    
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y libssl-dev # lintestor build dependencies
+        sudo apt-get install -y qemu-utils qemu-system-x86 qemu-system-misc opensbi u-boot-qemu
+        sudo apt-get install -y sshpass
+    
+    - name: Setup Fedora QEMU env for RISC-V
+      run: |
+        mkdir ../fedora
+        cp ./fedora/init.sh ../fedora
+        cp ./fedora/boot.sh ../fedora
+        cd ../fedora
+        chmod +x init.sh
+        chmod +x boot.sh
+        ls -l # 展示文件结构
+        ./init.sh
+        cd ../lintestor  # 回到项目目录
+        ls -l # 再次展示文件结构
+    
+    - name: Install & Run Lintestor
+      run: |
+        ls -l ../ # 展示上级文件结构
+        ls -l ../fedora # 展示文件结构
+        ls -l . # 展示本级结构
+        cargo install lintestor
+        LATEST_BINARY=lintestor
+        $LATEST_BINARY --test --aggr --summ
+        rm .gitignore
+    
+    - name: Upload test results
+      uses: actions/upload-artifact@v4
+      with:
+        name: fedora-test-results
+        path: |
+          reports.json
+          summary.md
+    
+    - name: Commit reports
+      uses: stefanzweifel/git-auto-commit-action@v5
+      with:
+        commit_message: "test(report): Fedora weekly test reports update"
+        file_pattern: |
+          **/*.json
+          **/*/*.json
+          summary.md
+          reports.md
