@@ -7,7 +7,7 @@ license = "MIT"
 repository = "https://github.com/255doesnotexist/lintestor"
 
 [dependencies]
-clap = "4.5.26"
+clap = "4.5.27"
 serde = { version = "1.0.217", features = ["derive"] }
 serde_derive = "1.0.204"
 serde_json = "1.0.137"
