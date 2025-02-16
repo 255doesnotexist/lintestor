@@ -8,7 +8,14 @@ REPORT_FILE="report.json"
 
 # Function to check if OpenJDK is installed
 is_openjdk_installed() {
-    dpkg -l | grep -qw $PACKAGE_NAME
+    # as real package name in `dpkg -l`'s output looks like "openjdk-11-jdk:riscv64" 
+    # cannot be word matched by pattern "openjdk-11-jdk" 
+    # so removed -w option from grep is a workaround
+    # but as dpkg's -l [pattern] option could match package pattern correctly,
+    # it is better to just use `dpkg -l` to check package status
+    # if the return value is 0, that means a package is already installed
+    # or the package is not installed, the return value is 1
+    dpkg -l $PACKAGE_NAME
     return $?
 }
 
