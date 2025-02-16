@@ -1,4 +1,5 @@
 /target/
+*.tar.gz
 # *report.json
 # /reports.json
 # /summary.md
