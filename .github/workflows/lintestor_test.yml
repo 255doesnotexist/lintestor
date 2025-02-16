@@ -38,7 +38,7 @@ jobs:
         wget -O rv64deb.zip "https://gitlab.com/api/v4/projects/giomasce%2Fdqib/jobs/artifacts/master/download?job=convert_riscv64-virt"
         unzip rv64deb.zip
         cd dqib_riscv64-virt
-        echo 'qemu-system-riscv64 -machine virt -m 1G -smp 8 -cpu rv64 \' > boot.sh
+        echo 'qemu-system-riscv64 -machine virt -m 1G -smp 8 -cpu rv64,sv57=off \' > boot.sh
         echo '-device virtio-blk-device,drive=hd \' >> boot.sh
         echo '-drive file=image.qcow2,if=none,id=hd \' >> boot.sh
         echo '-device virtio-net-device,netdev=net \' >> boot.sh
