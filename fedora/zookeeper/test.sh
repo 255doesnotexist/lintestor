@@ -37,7 +37,7 @@ install_zookeeper() {
     fi
 
     # Download and install ZooKeeper
-    local zk_version="3.9.2"
+    local zk_version="3.9.3"
     local zk_url="https://dlcdn.apache.org/zookeeper/zookeeper-${zk_version}/apache-zookeeper-${zk_version}-bin.tar.gz"
     
     if ! curl -o zookeeper.tar.gz "$zk_url"; then
