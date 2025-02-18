@@ -123,6 +123,22 @@ pub fn generate_markdown_report(
                     "- <span id=\"{}\">**{}**: {}</span>\n\n",
                     package_id, package, env_info
                 ));
+
+                // check if all tests passed, or else append the test details
+                let pkg_idx = packages.iter().position(|(p, _)| p == package).unwrap();
+                let distro_idx = distros.iter().position(|d| d == distro).unwrap();
+
+                if let Some(report) = report_matrix[pkg_idx][distro_idx] {
+                    if !report.all_tests_passed {
+                        appending_details.push_str(&format!("  - {} 未通过的测试 Unpassed tests\n\n", package));
+                        for test_result in &report.test_results {
+                            appending_details.push_str(&format!(
+                                "  - {}\n\n```shell\n{}\n```\n\n",
+                                test_result.test_name, test_result.output
+                            ));
+                        }
+                    }
+                }
             }
         }
 
