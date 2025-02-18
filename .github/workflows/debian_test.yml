@@ -1,5 +1,4 @@
 name: Debian Test
-
 on:
   schedule:
     - cron: '0 2 * * 1'  # 每周一凌晨2点运行
@@ -11,6 +10,7 @@ jobs:
     env:
       PRINT_SSH_MSG: 1
       RUST_LOG: debug
+      SEGMENT_DOWNLOAD_TIMEOUT_MINS: 20  # 增加下载超时时间到20分钟
     permissions:
       contents: write
     steps:
@@ -31,8 +31,19 @@ jobs:
         sudo apt-get install -y libssl-dev # lintestor build dependencies
         sudo apt-get install -y qemu-utils qemu-system-x86 qemu-system-misc opensbi u-boot-qemu
         sudo apt-get install -y sshpass
+
+    - name: Restore QEMU image cache
+      id: cache-qemu-restore
+      uses: actions/cache/restore@v4
+      with:
+        path: |
+          ../dqib_riscv64-virt
+        key: debian-qemu-system-riscv64
+        enableCrossOsArchive: true  # 跨操作系统缓存
+        fail-on-cache-miss: false  # 缓存未命中时继续执行
     
     - name: Setup Debian QEMU env for RISC-V
+      if: steps.cache-qemu-restore.outputs.cache-hit != 'true'
       run: |
         cd ..
         wget -O rv64deb.zip "https://gitlab.com/api/v4/projects/giomasce%2Fdqib/jobs/artifacts/master/download?job=convert_riscv64-virt"
@@ -49,15 +60,17 @@ jobs:
         echo '-device virtio-rng-device,rng=rng \' >> boot.sh
         echo '-nographic -append "root=LABEL=rootfs console=ttyS0  cmdline no4lvl"' >> boot.sh
         chmod +x boot.sh
-        ls -l # 展示文件结构
-        cd ../lintestor  # 回到项目目录
-        ls -l # 再次展示文件结构
+
+    - name: Save QEMU image cache
+      if: steps.cache-qemu-restore.outputs.cache-hit != 'true'
+      uses: actions/cache/save@v4  # 使用独立的保存操作
+      with:
+        path: |
+          ../dqib_riscv64-virt
+        key: debian-qemu-system-riscv64
     
     - name: Install & Run Lintestor
       run: |
-        ls -l ../ # 展示上级文件结构
-        ls -l ../dqib_riscv64-virt # 展示文件结构
-        ls -l . # 展示本级结构
         cargo install lintestor
         LATEST_BINARY=lintestor
         $LATEST_BINARY --test --aggr --summ -d debian
