@@ -130,7 +130,8 @@ pub fn generate_markdown_report(
 
                 if let Some(report) = report_matrix[pkg_idx][distro_idx] {
                     if !report.all_tests_passed {
-                        appending_details.push_str(&format!("  - {} 未通过的测试 Unpassed tests\n\n", package));
+                        appending_details
+                            .push_str(&format!("  - {} 未通过的测试 Unpassed tests\n\n", package));
                         for test_result in &report.test_results {
                             appending_details.push_str(&format!(
                                 "  - {}\n\n```shell\n{}\n```\n\n",
