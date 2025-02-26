@@ -31,17 +31,26 @@ jobs:
         sudo apt-get install -y libssl-dev # lintestor build dependencies
         sudo apt-get install -y qemu-utils qemu-system-x86 qemu-system-misc opensbi u-boot-qemu
         sudo apt-get install -y sshpass
+
+    - name: Restore QEMU image cache
+      id: cache-qemu-restore
+      uses: actions/cache/restore@v4
+      with:
+        path: |
+          /tmp/runner/work/lintestor/fedora
+        key: fedora-qemu-system-riscv64
+        enableCrossOsArchive: true  # 跨操作系统缓存
+        fail-on-cache-miss: false  # 缓存未命中时继续执行
     
     - name: Setup Fedora QEMU env for RISC-V
+      if: steps.cache-qemu-restore.outputs.cache-hit != 'true'
       run: |
         mkdir ../fedora
         cp ./fedora/init.sh ../fedora
-        cp ./fedora/boot.sh ../fedora
         cd ../fedora
         chmod +x init.sh
-        chmod +x boot.sh
-        ls -l # 展示文件结构
         ./init.sh
+        ls -l # 展示文件结构
         cd ../lintestor  # 回到项目目录
         ls -l # 再次展示文件结构
     
@@ -55,6 +64,14 @@ jobs:
         $LATEST_BINARY --test --aggr --summ -d fedora
         rm .gitignore
     
+    - name: Save QEMU image cache
+      if: steps.cache-qemu-restore.outputs.cache-hit != 'true'
+      uses: actions/cache/save@v4  # 使用独立的保存操作
+      with:
+        path: |
+          /tmp/runner/work/lintestor/fedora
+        key: fedora-qemu-system-riscv64
+
     - name: Upload test results
       uses: actions/upload-artifact@v4
       with:
