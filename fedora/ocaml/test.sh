@@ -4,13 +4,13 @@ PACKAGE_NAME="ocaml"
 
 # 检查 OCaml 是否已安装
 is_ocaml_installed() {
-    rpm -q $PACKAGE_NAME > /dev/null 2>&1
+    sudo rpm -q $PACKAGE_NAME > /dev/null 2>&1
     return $?
 }
 
 # 安装 OCaml 包
 install_ocaml_package() {
-    dnf install -y $PACKAGE_NAME ocamlbuild
+    sudo dnf install -y $PACKAGE_NAME ocamlbuild
     return $?
 }
 
@@ -27,7 +27,7 @@ let () = print_endline "Hello, OCaml!"
 EOF
 
     cd "$temp_dir"
-    ocamlc -o hello hello.ml
+    sudo ocamlc -o hello hello.ml
 
     if [[ -x "$executable" ]]; then
         local output=$("$executable")
@@ -54,7 +54,7 @@ main() {
         fi
     fi
 
-    PACKAGE_VERSION=$(rpm -q --queryformat '%{VERSION}' $PACKAGE_NAME)
+    PACKAGE_VERSION=$(sudo rpm -q --queryformat '%{VERSION}' $PACKAGE_NAME)
 
     if test_ocaml_functionality; then
         echo "OCaml is functioning correctly."

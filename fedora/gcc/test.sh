@@ -12,7 +12,7 @@ is_package_installed() {
 
 # Function to install a package
 install_package() {
-    dnf install -y $1
+    sudo dnf install -y $1
     return $?
 }
 
@@ -40,9 +40,9 @@ test_gcc_functionality() {
 
 # Function to compile and run the test program
 compile_and_run_test_program() {
-    make clean && make
+    sudo make clean && sudo make
     if [ $? -eq 0 ]; then
-        ./test_program
+        sudo ./test_program
         return $?
     else
         return 1
@@ -51,7 +51,7 @@ compile_and_run_test_program() {
 
 # Function to check if the program output is as expected
 check_program_output() {
-    OUTPUT=$(./test_program)
+    OUTPUT=$(sudo ./test_program)
     EXPECTED_OUTPUT="This program tests the availability of make and gcc.
 If you can see this message, both make and gcc are working!
 
@@ -136,7 +136,7 @@ main() {
 
     # Clean up compiled files
     echo "Cleaning up..."
-    make clean
+    sudo make clean
     
     if [ $result -eq 0 ]; then
         echo "All tests completed successfully."
@@ -153,3 +153,4 @@ RESULT=$?
 
 # Return the result (this will be an exit if the script is executed, or a return if sourced)
 return $RESULT
+

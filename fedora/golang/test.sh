@@ -11,7 +11,7 @@ is_go_installed() {
 
 # Function to install Go package
 install_go_package() {
-    dnf install -y $PACKAGE_NAME
+    sudo dnf install -y $PACKAGE_NAME
     return $?
 }
 

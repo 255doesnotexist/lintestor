@@ -30,7 +30,7 @@ is_varnish_installed() {
 # Function to install Varnish
 install_varnish() {
     log "Attempting to install Varnish..."
-    dnf install -y varnish
+    sudo dnf install -y varnish
     if ! is_varnish_installed; then
         echo "Failed to install Varnish."
         return 1
@@ -53,13 +53,13 @@ check_prerequisites() {
 # Function to test Varnish functionality
 test_varnish_functionality() {
     log "Starting Varnish service..."
-    if ! systemctl start varnish; then
+    if ! sudo systemctl start varnish; then
         log "Failed to start Varnish service."
         return 1
     fi
 
     log "Checking Varnish service status..."
-    if ! systemctl is-active --quiet varnish; then
+    if ! sudo systemctl is-active --quiet varnish; then
         log "Varnish service is not active."
         return 1
     fi
@@ -77,7 +77,7 @@ test_varnish_functionality() {
     fi
 
     log "Stopping Varnish service..."
-    if ! systemctl stop varnish; then
+    if ! sudo systemctl stop varnish; then
         log "Failed to stop Varnish service."
         return 1
     fi

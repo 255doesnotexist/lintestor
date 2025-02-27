@@ -11,7 +11,7 @@ is_mariadb_installed() {
 
 # Function to install MariaDB package
 install_mariadb_package() {
-    dnf install -y $PACKAGE_NAME
+    sudo dnf install -y $PACKAGE_NAME
     return $?
 }
 
@@ -50,18 +50,18 @@ PACKAGE_VERSION=$(rpm -q $PACKAGE_NAME | awk '{print $2}')
 # Check MariaDB service status
 if test_mariadb_service; then
     echo "MariaDB service is active and responding."
-        if [ "${BASH_SOURCE[0]}" = "${0}" ]; then
-            exit 0
-        else
-            return 0
-        fi
+    if [ "${BASH_SOURCE[0]}" = "${0}" ]; then
+        exit 0
+    else
+        return 0
+    fi
 else
     echo "MariaDB service is active but not responding."
-        if [ "${BASH_SOURCE[0]}" = "${0}" ]; then
-            exit 1
-        else
-            return 1
-        fi
+    if [ "${BASH_SOURCE[0]}" = "${0}" ]; then
+        exit 1
+    else
+        return 1
+    fi
 fi
 
 # End of the script

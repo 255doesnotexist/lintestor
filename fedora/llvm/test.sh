@@ -5,13 +5,13 @@ PACKAGE_NAME="llvm"
 
 # Function to check if LLVM is installed
 is_llvm_installed() {
-    rpm -qa | grep -qw $PACKAGE_NAME
+    sudo rpm -qa | grep -qw $PACKAGE_NAME
     return $?
 }
 
 # Function to install LLVM package
 install_llvm_package() {
-    dnf install -y $PACKAGE_NAME clang
+    sudo dnf install -y $PACKAGE_NAME clang
     return $?
 }
 
@@ -32,7 +32,7 @@ int main() {
 EOF
 
     # Compile the C program with LLVM
-    clang "$c_file" -o "${executable}"
+    sudo clang "$c_file" -o "${executable}"
 
     # Check if the executable was created and runs without error
     if [[ -x "$executable" && "$("${executable}")" == "Hello, LLVM!" ]]; then
@@ -60,7 +60,7 @@ else
     fi
 fi
 
-PACKAGE_VERSION=$(rpm -qi $PACKAGE_NAME | grep Version | awk '{print $2}')
+PACKAGE_VERSION=$(sudo rpm -qi $PACKAGE_NAME | grep Version | awk '{print $2}')
 
 # Check LLVM functionality by compiling and running a simple C program
 if test_llvm_functionality; then

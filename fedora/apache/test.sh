@@ -26,19 +26,19 @@ find_available_port() {
 # 更新 Apache 配置使用新的端口
 update_apache_port() {
     local new_port=$1
-    sed -i "s/Listen $DEFAULT_PORT/Listen $new_port/" $APACHE_CONF_FILE
+    sudo sed -i "s/Listen $DEFAULT_PORT/Listen $new_port/" $APACHE_CONF_FILE
     return $?
 }
 
 # 检查 Apache 服务是否正在运行
 is_apache_active() {
-    systemctl is-active --quiet httpd
+    sudo systemctl is-active --quiet httpd
     return $?
 }
 
 # 检查 Apache 服务是否启用
 is_apache_enabled() {
-    systemctl is-enabled --quiet httpd
+    sudo systemctl is-enabled --quiet httpd
     return $?
 }
 
@@ -50,7 +50,7 @@ is_package_installed() {
 
 # 安装 Apache 包
 install_apache_package() {
-    dnf install -y $PACKAGE_NAME
+    sudo dnf install -y $PACKAGE_NAME
     return $?
 }
 
@@ -84,7 +84,7 @@ main() {
             update_apache_port $new_port
         fi
 
-        systemctl start httpd
+        sudo systemctl start httpd
         if is_apache_active; then
             echo "Apache service started successfully."
             exit_status=0
@@ -95,15 +95,15 @@ main() {
     fi
 
     if [ "$initial_state_active" -eq 0 ]; then
-        systemctl start httpd
+        sudo systemctl start httpd
     else
-        systemctl stop httpd
+        sudo systemctl stop httpd
     fi
 
     if [ "$initial_state_enabled" -eq 0 ]; then
-        systemctl enable httpd
+        sudo systemctl enable httpd
     else
-        systemctl disable httpd
+        sudo systemctl disable httpd
     fi
 
     echo "Apache service state has been restored."

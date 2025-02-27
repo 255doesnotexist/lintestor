@@ -11,9 +11,9 @@ is_postgresql_installed() {
 
 # Function to install PostgreSQL package
 install_postgresql_package() {
-    dnf install -y $PACKAGE_NAME postgresql-contrib
-    systemctl enable postgresql
-    systemctl start postgresql
+    sudo dnf install -y $PACKAGE_NAME postgresql-contrib
+    sudo systemctl enable postgresql
+    sudo systemctl start postgresql
     return $?
 }
 
@@ -60,7 +60,7 @@ else
     fi
 fi
 
-PACKAGE_VERSION=$(psql --version | awk '{print $3}')
+PACKAGE_VERSION=$(sudo psql --version | awk '{print $3}')
 
 # Check PostgreSQL functionality by running a simple query
 if test_postgresql_functionality; then

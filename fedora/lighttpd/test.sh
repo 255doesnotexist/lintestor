@@ -11,7 +11,7 @@ is_lighttpd_installed() {
 
 # Function to install Lighttpd package
 install_lighttpd_package() {
-    dnf install -y $PACKAGE_NAME
+    sudo dnf install -y $PACKAGE_NAME
     return $?
 }
 
@@ -41,7 +41,7 @@ else
     fi
 fi
 
-PACKAGE_VERSION=$(rpm -q --queryformat "%{VERSION}" $PACKAGE_NAME)
+PACKAGE_VERSION=$(sudo rpm -q --queryformat "%{VERSION}" $PACKAGE_NAME)
 
 # Check Lighttpd service status by connecting to the default port
 if test_lighttpd_service; then

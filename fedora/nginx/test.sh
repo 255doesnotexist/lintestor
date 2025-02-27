@@ -11,7 +11,7 @@ is_nginx_installed() {
 
 # Function to install Nginx package
 install_nginx_package() {
-    dnf install -y $PACKAGE_NAME
+    sudo dnf install -y $PACKAGE_NAME
     return $?
 }
 
@@ -41,7 +41,7 @@ else
     fi
 fi
 
-PACKAGE_VERSION=$(rpm -qi $PACKAGE_NAME | grep "Version" | awk '{print $2}')
+PACKAGE_VERSION=$(sudo rpm -qi $PACKAGE_NAME | grep "Version" | awk '{print $2}')
 
 # Check Nginx service status by connecting to the default port
 if test_nginx_service; then

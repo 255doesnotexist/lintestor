@@ -7,7 +7,7 @@ REPORT_FILE="report.json"
 
 # Function to check if Docker service is active
 is_docker_active() {
-    systemctl is-active --quiet docker
+    sudo systemctl is-active --quiet docker
     return $?
 }
 
@@ -20,14 +20,14 @@ is_package_installed() {
 # Function to install Docker package
 install_docker_package() {
     # Install required dependencies for adding the repository
-    dnf install -y dnf-utils 
+    sudo dnf install -y dnf-utils 
     
     # Add Docker's official GPG key
     sudo dnf config-manager --add-repo https://download.docker.com/linux/fedora/docker-ce.repo
     
     # Update package index and install Docker
-    dnf update -y
-    dnf install -y $PACKAGE_NAME
+    sudo dnf update -y
+    sudo dnf install -y $PACKAGE_NAME
     return $?
 }
 
@@ -97,7 +97,7 @@ if is_docker_active; then
 else
     echo "Docker service is not running."
     # Try to start Docker service
-    systemctl start docker
+    sudo systemctl start docker
     # Check again if Docker service is running
     if is_docker_active; then
         echo "Docker service started successfully."
@@ -115,13 +115,12 @@ fi
 # Restore the initial state of Docker service
 if [ "$initial_state_active" -eq 0 ]; then
     # If Docker was active initially, ensure it's still active
-    systemctl start docker
+    sudo systemctl start docker
 else
     # If Docker was not active initially, stop it
-    systemctl stop docker
+    sudo systemctl stop docker
 fi
 
 echo "Docker service state has been restored."
 
 # End of the script
-echo "Skip docker test"

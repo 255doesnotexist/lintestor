@@ -30,7 +30,7 @@ is_squid_installed() {
 # Function to install Squid
 install_squid() {
     log "Attempting to install Squid..."
-    dnf install -y squid
+    sudo dnf install -y squid
     if ! is_squid_installed; then
         echo "Failed to install Squid."
         return 1
@@ -100,7 +100,7 @@ main() {
         return 1
     fi
 
-    PACKAGE_VERSION=$(squid -v | head -n1 | awk '{print $4}') || PACKAGE_VERSION="Unknown"
+    PACKAGE_VERSION=$(sudo squid -v | head -n1 | awk '{print $4}') || PACKAGE_VERSION="Unknown"
 
     cd "$original_dir"
     if test_squid_functionality; then

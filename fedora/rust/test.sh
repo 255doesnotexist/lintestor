@@ -18,7 +18,7 @@ PACKAGE_NAME="rust"
 
 # Function to check if Rust is installed
 is_rust_installed() {
-    if command -v rustc >/dev/null 2>&1 && command -v cargo >/dev/null 2>&1; then
+    if sudo command -v rustc >/dev/null 2>&1 && sudo command -v cargo >/dev/null 2>&1; then
         log "Rust is installed."
         return 0
     else
@@ -30,7 +30,7 @@ is_rust_installed() {
 # Function to install Rust
 install_rust() {
     log "Attempting to install Rust..."
-    if ! curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y; then
+    if ! sudo curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sudo sh -s -- -y; then
         echo "Failed to install Rust."
         return 1
     fi
@@ -43,13 +43,13 @@ check_prerequisites() {
     log "Checking system prerequisites..."
 
     # Check for curl
-    if ! command -v curl >/dev/null 2>&1; then
+    if ! sudo command -v curl >/dev/null 2>&1; then
         echo "curl is not installed. Please install curl and try again."
         return 1
     fi
 
     # Check for gcc (or a compatible compiler)
-    if ! command -v gcc >/dev/null 2>&1; then
+    if ! sudo command -v gcc >/dev/null 2>&1; then
         echo "gcc is not installed. Please install a C compiler (e.g., gcc, clang) and try again."
         return 1
     fi
@@ -67,7 +67,7 @@ test_rust_functionality() {
 
     # Create a new Rust project
     log "Creating a new Rust project..."
-    if ! cargo new hello_world; then
+    if ! sudo cargo new hello_world; then
         rm -rf "$temp_dir"
         echo "Failed to create Rust project."
         return 1
@@ -77,7 +77,7 @@ test_rust_functionality() {
 
     # Build the project
     log "Building the Rust project..."
-    if ! cargo build; then
+    if ! sudo cargo build; then
         rm -rf "$temp_dir"
         echo "Failed to build Rust project."
         return 1
@@ -85,7 +85,7 @@ test_rust_functionality() {
 
     # Run the project
     log "Running the Rust project..."
-    if ! output=$(cargo run 2>&1); then
+    if ! output=$(sudo cargo run 2>&1); then
         log "Failed to run Rust project. Output:"
         log "$output"
         rm -rf "$temp_dir"
@@ -128,8 +128,8 @@ main() {
         fi
     fi
 
-    local rust_version=$(rustc --version | awk '{print $2}') || rust_version="Unknown"
-    local cargo_version=$(cargo --version | awk '{print $2}') || cargo_version="Unknown"
+    local rust_version=$(sudo rustc --version | awk '{print $2}') || rust_version="Unknown"
+    local cargo_version=$(sudo cargo --version | awk '{print $2}') || cargo_version="Unknown"
     PACKAGE_VERSION="$rust_version ($cargo_version)"
 
     if test_rust_functionality; then

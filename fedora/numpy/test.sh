@@ -5,31 +5,31 @@ PACKAGE_NAME="python3-numpy"
 
 # Function to check if Python 3 is installed
 is_python3_installed() {
-    python3 --version > /dev/null 2>&1
+    sudo python3 --version > /dev/null 2>&1
     return $?
 }
 
 # Function to check if NumPy is installed
 is_numpy_installed() {
-    python3 -c "import numpy" 2>/dev/null
+    sudo python3 -c "import numpy" 2>/dev/null
     return $?
 }
 
 # Function to install Python 3 package
 install_python3_package() {
-    dnf install -y python3 python3-pip
+    sudo dnf install -y python3 python3-pip
     return $?
 }
 
 # Function to install NumPy
 install_numpy() {
-    dnf install -y $PACKAGE_NAME
+    sudo dnf install -y $PACKAGE_NAME
     return $?
 }
 
 # Function to test Numpy functionality
 test_numpy_functionality() {
-    local temp_dir=$(mktemp -d)
+    local temp_dir=$(sudo mktemp -d)
     local python_file="${temp_dir}/test_numpy.py"
     local output_file="${temp_dir}/numpy_output.txt"
 
@@ -41,7 +41,7 @@ print(np.array([1, 2, 3]))
 EOF
 
     # Run the Python script with Numpy
-    python3 "$python_file" > "$output_file"
+    sudo python3 "$python_file" > "$output_file"
 
     # Check if the script ran successfully and the output is as expected
     if [[ -f "$output_file" && "$(cat "$output_file")" == "[1 2 3]" ]]; then
@@ -83,7 +83,7 @@ else
     fi
 fi
 
-PACKAGE_VERSION="$(python3 --version) ($(python3 -c "import numpy; print(numpy.__version__)"))"
+PACKAGE_VERSION="$(sudo python3 --version) ($(sudo python3 -c "import numpy; print(numpy.__version__)"))"
 echo "Python and NumPy versions: $PACKAGE_VERSION"
 
 # Check Numpy functionality by compiling and running a simple Python script

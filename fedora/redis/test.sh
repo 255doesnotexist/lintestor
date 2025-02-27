@@ -5,15 +5,15 @@ PACKAGE_NAME="redis"
 
 # Function to check if Redis is installed
 is_redis_installed() {
-    rpm -q $PACKAGE_NAME > /dev/null 2>&1
+    sudo rpm -q $PACKAGE_NAME > /dev/null 2>&1
     return $?
 }
 
 # Function to install Redis package
 install_redis_package() {
-    dnf install -y $PACKAGE_NAME
-    systemctl start redis
-    systemctl enable redis
+    sudo dnf install -y $PACKAGE_NAME
+    sudo systemctl start redis
+    sudo systemctl enable redis
     return $?
 }
 
@@ -23,13 +23,13 @@ test_redis_functionality() {
     local test_value="test_value"
 
     # Set a key-value pair
-    redis-cli SET $test_key $test_value > /dev/null
+    sudo redis-cli SET $test_key $test_value > /dev/null
 
     # Get the value
-    local retrieved_value=$(redis-cli GET $test_key)
+    local retrieved_value=$(sudo redis-cli GET $test_key)
 
     # Delete the key
-    redis-cli DEL $test_key > /dev/null
+    sudo redis-cli DEL $test_key > /dev/null
 
     # Check if the retrieved value matches the set value
     if [ "$retrieved_value" = "$test_value" ]; then
@@ -59,7 +59,7 @@ else
     fi
 fi
 
-PACKAGE_VERSION=$(redis-server --version | awk '{print $3}' | cut -d '=' -f2)
+PACKAGE_VERSION=$(sudo redis-server --version | awk '{print $3}' | cut -d '=' -f2)
 
 # Check Redis functionality by performing basic operations
 if test_redis_functionality; then

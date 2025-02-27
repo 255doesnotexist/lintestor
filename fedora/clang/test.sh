@@ -5,13 +5,13 @@ check_and_install_clang() {
     if ! command -v clang &> /dev/null; then
         echo "clang not found. Attempting to install..."
         if command -v dnf &> /dev/null; then
-            dnf install -y clang
+            sudo dnf install -y clang
         elif command -v yum &> /dev/null; then
-            yum install -y clang
+            sudo yum install -y clang
         elif command -v zypper &> /dev/null; then
-            zypper install -y clang
+            sudo zypper install -y clang
         elif command -v pacman &> /dev/null; then
-            pacman -S --noconfirm clang
+            sudo pacman -S --noconfirm clang
         else
             echo "Unable to install clang. Please install it manually."
             return 1
@@ -33,7 +33,7 @@ int main() {
 EOF
 
 # 使用clang编译程序
-clang test.c -o test_program
+sudo clang test.c -o test_program
 
 # 检查编译是否成功
 if [ $? -eq 0 ]; then
@@ -48,6 +48,6 @@ fi
 # 清理临时文件
 rm test.c test_program
 
-PACKAGE_VERSION=$(clang --version | grep -oP "version\W?\K.*")
+PACKAGE_VERSION=$(sudo clang --version | grep -oP "version\W?\K.*")
 
 return $exit_status

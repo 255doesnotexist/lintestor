@@ -11,7 +11,7 @@ is_perl_installed() {
 
 # Function to install Perl package
 install_perl_package() {
-    dnf install -y $PACKAGE_NAME
+    sudo dnf install -y $PACKAGE_NAME
 
     return $?
 }
@@ -35,7 +35,7 @@ print "The sum is: $sum\n";
 EOF
 
     # Run the Perl script
-    perl "$perl_file" > "$output_file"
+    sudo perl "$perl_file" > "$output_file"
 
     # Check if the script ran successfully and the output is as expected
     if [[ -f "$output_file" && "$(cat "$output_file")" == "The sum is: 15" ]]; then
@@ -63,7 +63,7 @@ else
     fi
 fi
 
-PACKAGE_VERSION=$(perl -v | grep -oP "v\K(\d+\.\d+\.\d+)")
+PACKAGE_VERSION=$(sudo perl -v | grep -oP "v\K(\d+\.\d+\.\d+)")
 
 # Check Perl functionality by running a simple Perl script
 if test_perl_functionality; then

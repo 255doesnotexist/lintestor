@@ -11,7 +11,7 @@ is_package_installed() {
 
 # Install Erlang package
 install_erlang_package() {
-    dnf install -y $PACKAGE_NAME
+    sudo dnf install -y $PACKAGE_NAME
     return $?
 }
 

@@ -13,20 +13,20 @@ is_package_installed() {
 
 # 安装 libmemcached 和 memcached 包
 install_libmemcached_package() {
-    dnf install -y $PACKAGE_NAME $PACKAGE_DEV_NAME $MEMCACHED_PACKAGE
+    sudo dnf install -y $PACKAGE_NAME $PACKAGE_DEV_NAME $MEMCACHED_PACKAGE
     return $?
 }
 
 # 启动 memcached 服务
 start_memcached() {
-    systemctl enable memcached
-    systemctl start memcached
+    sudo systemctl enable memcached
+    sudo systemctl start memcached
     return $?
 }
 
 # 停止 memcached 服务
 stop_memcached() {
-    systemctl stop memcached
+    sudo systemctl stop memcached
     return $?
 }
 

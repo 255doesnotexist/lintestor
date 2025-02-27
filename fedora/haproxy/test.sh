@@ -11,19 +11,19 @@ is_haproxy_installed() {
 
 # Function to install HAProxy package
 install_haproxy_package() {
-    dnf install -y $PACKAGE_NAME
+    sudo dnf install -y $PACKAGE_NAME
     return $?
 }
 
 # Function to check HAProxy service status
 test_haproxy_service() {
-    systemctl is-active --quiet haproxy
+    sudo systemctl is-active --quiet haproxy
     return $?
 }
 
 # Function to start HAProxy service
 start_haproxy_service() {
-    systemctl start haproxy
+    sudo systemctl start haproxy
     return $?
 }
 

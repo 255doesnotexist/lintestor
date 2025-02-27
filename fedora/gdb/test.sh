@@ -11,7 +11,7 @@ is_gdb_installed() {
 
 # Function to install GDB package
 install_gdb_package() {
-    dnf install -y $PACKAGE_NAME
+    sudo dnf install -y $PACKAGE_NAME
     return $?
 }
 

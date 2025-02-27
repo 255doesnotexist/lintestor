@@ -5,14 +5,14 @@ PACKAGE_NAME="python3"
 
 # Function to check if Python is installed
 is_python_installed() {
-    command -v python3 >/dev/null 2>&1
+    sudo command -v python3 >/dev/null 2>&1
     return $?
 }
 
 # Function to install Python package
 install_python_package() {
     # Use dnf instead of apt-get for Fedora
-    dnf install -y python3 python3-pip
+    sudo dnf install -y python3 python3-pip
     return $?
 }
 
@@ -55,7 +55,7 @@ if __name__ == "__main__":
 EOF
 
     # Run the Python script
-    python3 "$python_file" > "$output_file" 2>&1
+    sudo python3 "$python_file" > "$output_file" 2>&1
 
     # Check if the script ran successfully and the output is as expected
     if [[ -f "$output_file" && "$(cat "$output_file")" == "All tests passed successfully!" ]]; then
@@ -84,7 +84,7 @@ else
     fi
 fi
 
-PACKAGE_VERSION=$(python3 --version | awk '{print $2}')
+PACKAGE_VERSION=$(sudo python3 --version | awk '{print $2}')
 
 # Check Python functionality by running a test script
 if test_python_functionality; then

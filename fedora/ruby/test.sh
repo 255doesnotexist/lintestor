@@ -12,7 +12,7 @@ is_ruby_installed() {
 # Function to install Ruby package
 install_ruby_package() {
     # Use dnf instead of apt-get
-    dnf install -y $PACKAGE_NAME
+    sudo dnf install -y $PACKAGE_NAME
     return $?
 }
 
@@ -78,7 +78,7 @@ else
     fi
 fi
 
-PACKAGE_VERSION=$(ruby --version | awk '{print $2}')
+PACKAGE_VERSION=$(sudo ruby --version | awk '{print $2}')
 
 # Check Ruby functionality by running a test script
 if test_ruby_functionality; then
@@ -89,6 +89,5 @@ else
     exit_status=1
 fi
 
-rm test_file.txt
+sudo rm test_file.txt
 return $exit_status
-# End of the script

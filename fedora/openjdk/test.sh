@@ -8,13 +8,13 @@ REPORT_FILE="report.json"
 
 # Function to check if OpenJDK is installed
 is_openjdk_installed() {
-    rpm -q $PACKAGE_NAME > /dev/null 2>&1
+    sudo rpm -q $PACKAGE_NAME > /dev/null 2>&1
     return $?
 }
 
 # Function to install OpenJDK package
 install_openjdk_package() {
-    dnf install -y $PACKAGE_NAME
+    sudo dnf install -y $PACKAGE_NAME
     return $?
 }
 
@@ -35,7 +35,7 @@ public class TestJava {
 EOF
 
     # Compile the Java file
-    javac "$java_file"
+    sudo javac "$java_file"
 
     # Check if compilation was successful
     if [ ! -f "$class_file" ]; then
@@ -44,7 +44,7 @@ EOF
     fi
 
     # Run the compiled Java program
-    java -cp "$temp_dir" TestJava > "$output_file"
+    sudo java -cp "$temp_dir" TestJava > "$output_file"
 
     # Check if the program ran successfully and the output is as expected
     if [[ -f "$output_file" && "$(cat "$output_file")" == "OpenJDK is working!" ]]; then
@@ -72,7 +72,7 @@ else
     fi
 fi
 
-PACKAGE_VERSION=$(java -version 2>&1 | awk -F '"' '/version/ {print $2}')
+PACKAGE_VERSION=$(sudo java -version 2>&1 | awk -F '"' '/version/ {print $2}')
 
 # Check OpenJDK functionality by compiling and running a simple Java program
 if test_openjdk_functionality; then

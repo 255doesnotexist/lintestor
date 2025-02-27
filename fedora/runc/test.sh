@@ -24,7 +24,7 @@ is_runc_installed() {
 # Function to install runc package
 install_runc_package() {
     log "Attempting to install runC..."
-    if ! dnf install -y runc; then
+    if ! sudo dnf install -y runc; then
         echo "Failed to install runC."
         return 1
     fi
@@ -49,7 +49,7 @@ check_prerequisites() {
     # Check /proc mount
     if ! mount | grep -q "proc on /proc type proc"; then
         log "WARNING: /proc is not mounted correctly. Attempting to remount..."
-        if ! mount -t proc proc /proc; then
+        if ! sudo mount -t proc proc /proc; then
             echo "Failed to mount /proc."
             return 1
         fi
@@ -80,7 +80,7 @@ check_prerequisites() {
     fi
 
     # Check unshare command
-    if ! unshare --fork --pid --mount-proc sleep 1; then
+    if ! sudo unshare --fork --pid --mount-proc sleep 1; then
         log "WARNING: unshare command failed. This might indicate issues with namespace support."
     fi
 
@@ -136,17 +136,17 @@ EOF
 
     # Run the container
     log "Attempting to run runc container..."
-    if ! output=$(runc run --bundle "$bundle_dir" test-container 2>&1); then
+    if ! output=$(sudo runc run --bundle "$bundle_dir" test-container 2>&1); then
         log "Failed to run runc container. Output:"
         log "$output"
-        rm -rf "$temp_dir"
+        sudo rm -rf "$temp_dir"
         return 1
     fi
 
     log "Container output: $output"
 
     # Clean up
-    rm -rf "$temp_dir"
+    sudo rm -rf "$temp_dir"
     log "Cleaned up temporary directory."
 
     # Check if the output is as expected

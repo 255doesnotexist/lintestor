@@ -18,7 +18,7 @@ PACKAGE_NAME="sqlite"
 
 # Function to check if SQLite is installed
 is_sqlite_installed() {
-    if command -v sqlite3 >/dev/null 2>&1; then
+    if sudo command -v sqlite3 >/dev/null 2>&1; then
         log "SQLite is installed."
         return 0
     else
@@ -30,7 +30,7 @@ is_sqlite_installed() {
 # Function to install SQLite
 install_sqlite() {
     log "Attempting to install SQLite..."
-    dnf install -y sqlite
+    sudo dnf install -y sqlite
     
     if ! is_sqlite_installed; then
         echo "SQLite installation failed. The 'sqlite3' command is still not available."
@@ -53,7 +53,7 @@ test_sqlite_functionality() {
     local output
 
     log "Creating test database..."
-    sqlite3 "$db_file" <<EOF
+    sudo sqlite3 "$db_file" <<EOF
 CREATE TABLE test (id INTEGER PRIMARY KEY, name TEXT);
 INSERT INTO test (name) VALUES ('Alice');
 INSERT INTO test (name) VALUES ('Bob');
@@ -62,7 +62,7 @@ SELECT * FROM test;
 EOF
 
     log "Querying test database..."
-    output=$(sqlite3 "$db_file" "SELECT * FROM test;")
+    output=$(sudo sqlite3 "$db_file" "SELECT * FROM test;")
 
     log "Database output:"
     log "$output"
@@ -92,7 +92,7 @@ main() {
         fi
     fi
 
-    PACKAGE_VERSION=$(sqlite3 --version | awk '{print $1}') || PACKAGE_VERSION="Unknown"
+    PACKAGE_VERSION=$(sudo sqlite3 --version | awk '{print $1}') || PACKAGE_VERSION="Unknown"
 
     # Clean up
     cd "$original_dir"
@@ -111,4 +111,4 @@ main() {
 
 # Run the main function
 main
-rm test.db
+sudo rm test.db

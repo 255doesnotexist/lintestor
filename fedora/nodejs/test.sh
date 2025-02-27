@@ -3,17 +3,17 @@
 PACKAGE_NAME="nodejs"
 
 is_nodejs_installed() {
-    rpm -q $PACKAGE_NAME > /dev/null 2>&1
+    sudo rpm -q $PACKAGE_NAME > /dev/null 2>&1
     return $?
 }
 
 install_nodejs_package() {
-    dnf install -y $PACKAGE_NAME
+    sudo dnf install -y $PACKAGE_NAME
     return $?
 }
 
 test_nodejs_functionality() {
-    local temp_dir=$(mktemp -d)
+    local temp_dir=$(sudo mktemp -d)
     echo "Temp dir: $temp_dir"
 
     local js_file="${temp_dir}/hello.js"
@@ -22,7 +22,7 @@ test_nodejs_functionality() {
 console.log('Hello, Node.js!');
 EOF
 
-    local output=$(node "$js_file")
+    local output=$(sudo node "$js_file")
     if [[ "$output" == "Hello, Node.js!" ]]; then
         echo "Node.js is functioning correctly."
         return 0
@@ -43,7 +43,7 @@ else
         return 1
     fi
 fi
-PACKAGE_VERSION=$(rpm -qi $PACKAGE_NAME | grep Version | awk '{print $2}')
+PACKAGE_VERSION=$(sudo rpm -qi $PACKAGE_NAME | grep Version | awk '{print $2}')
 if test_nodejs_functionality; then
     echo "Node.js is functioning correctly."
     return 0
