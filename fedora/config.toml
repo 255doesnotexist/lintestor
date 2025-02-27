@@ -8,6 +8,8 @@ skip_packages = ["docker"]
 method = "ssh"
 ip = "localhost"
 port = 2223
-username = "root"
-#password = "riscv" # not need because we use pubkey
-private_key_path = "~/.ssh/id_rsa"
+username = "fedora"
+password = "linux"
+#now we use cloud-init to initialize fedora vm
+#password = "riscv" # not need before because we use pubkey before
+#private_key_path = "~/.ssh/id_rsa"
