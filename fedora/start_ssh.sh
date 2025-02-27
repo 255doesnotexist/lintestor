@@ -1,8 +1,8 @@
 #!/bin/bash
 
 # the following environmental variables should be controlled directly from TestEnvManager
-# USER="root"
-# PASSWORD="riscv"
+# USER="fedora"
+# PASSWORD="linux"
 # PORT=2223
 # ADDRESS="localhost"
 
@@ -21,7 +21,7 @@ check_sshpass() {
 
 # Function to check if SSH connection is possible
 check_ssh_connection() {
-    if ssh -o StrictHostKeyChecking=no -o ConnectTimeout=5 -i ~/.ssh/id_rsa "$USER@$ADDRESS" -p "$PORT" "exit" &> /dev/null; then
+    if sshpass -p "$PASSWORD" ssh -o StrictHostKeyChecking=no -o ConnectTimeout=5 "$USER@$ADDRESS" -p "$PORT" "exit" &> /dev/null; then
         echo "Able to establish SSH connection."
         return 0
     else

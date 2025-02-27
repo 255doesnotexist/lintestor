@@ -54,6 +54,14 @@ if [ ! -f ".initialized" ]; then
     cat > user-data << 'USERDATA'
 #cloud-config
 
+ssh_pwauth: true
+
+users:
+  - default
+  - name: root
+    lock_passwd: false
+disable_root: false
+
 password: linux
 chpasswd:
   expire: false
@@ -61,13 +69,14 @@ chpasswd:
 ssh_pwauth: true
 
 # Enable SSH password authentication and root login
-ssh_authorized_keys: []
+# ssh_authorized_keys: []
 
 runcmd:
   - sed -i 's/^#*PermitRootLogin.*$/PermitRootLogin yes/' /etc/ssh/sshd_config
   - sed -i 's/^#*PasswordAuthentication.*$/PasswordAuthentication yes/' /etc/ssh/sshd_config
   - systemctl restart sshd
   - touch /etc/cloud/cloud-init.disabled
+  - shutdown -h now  # Shutdown after completing cloud-init
 USERDATA
 
     cat > meta-data << 'METADATA'

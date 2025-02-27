@@ -1,8 +1,8 @@
 #!/bin/bash
 
 # Define the SSH connection parameters
-USER="root"
-PASSWORD="riscv"
+USER="fedora"
+PASSWORD="linux"
 PORT=2223
 ADDRESS="localhost"
 
@@ -20,7 +20,7 @@ stop_qemu_ssh() {
     local delay=5
 
     for ((i=0; i<$retries; i++)); do
-        if ssh -o StrictHostKeyChecking=no -o ConnectTimeout=5 -i ~/.ssh/id_rsa "$USER@$ADDRESS" -p "$PORT" "halt" &> /dev/null; then
+        if sshpass -p "$PASSWORD" ssh -o StrictHostKeyChecking=no -o ConnectTimeout=5 "$USER@$ADDRESS" -p "$PORT" "sudo halt" &> /dev/null; then
             echo "Successfully sent halt command to QEMU via SSH."
             return 0
         fi
