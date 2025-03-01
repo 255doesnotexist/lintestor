@@ -265,6 +265,22 @@ impl TestRunner for RemoteTestRunner {
             return Err("Failed to extract test files on remote server".into());
         }
 
+        // Clean up previous probably existing report.json after extracting the remote tar file
+        match self.run_command(
+            &sess,
+            &format!(
+                "rm -rf {}/report.json",
+                remote_dir
+            )
+        ) {
+            Ok(_) => {
+                self.print_ssh_msg("Removed report.json on remote server");
+            }
+            Err(e) => {
+                self.print_ssh_msg(&format!("Failed to remove report.json on remote server: {}", e));
+            }
+        };
+
         // Run test commands
         self.print_ssh_msg(&format!("Running tests in directory {}", remote_dir));
 
@@ -279,7 +295,7 @@ impl TestRunner for RemoteTestRunner {
                     "cd {}; {} source {}",
                     remote_dir,
                     if Path::new(&prerequisite_path).exists() {
-                        format!("source {} &&", remote_prerequisite_path)
+                        format!("source {};", remote_prerequisite_path)
                     } else {
                         String::from("")
                     },
