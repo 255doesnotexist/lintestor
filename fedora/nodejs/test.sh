@@ -18,9 +18,9 @@ test_nodejs_functionality() {
 
     local js_file="${temp_dir}/hello.js"
 
-    cat <<EOF > "$js_file"
+    sudo sh -c "cat <<EOF > "$js_file"
 console.log('Hello, Node.js!');
-EOF
+EOF"
 
     local output=$(sudo node "$js_file")
     if [[ "$output" == "Hello, Node.js!" ]]; then

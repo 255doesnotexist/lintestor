@@ -34,17 +34,18 @@ test_numpy_functionality() {
     local output_file="${temp_dir}/numpy_output.txt"
 
     # Write a simple Python script to test Numpy functionality
-    cat <<EOF > "$python_file"
+    cat <<EOF | sudo tee "$python_file"
 import numpy as np
 
 print(np.array([1, 2, 3]))
 EOF
 
     # Run the Python script with Numpy
-    sudo python3 "$python_file" > "$output_file"
+    sudo python3 "$python_file" | sudo tee "$output_file"
+    sudo cat "$output_file"
 
     # Check if the script ran successfully and the output is as expected
-    if [[ -f "$output_file" && "$(cat "$output_file")" == "[1 2 3]" ]]; then
+    if [[ "$(sudo cat "$output_file")" == "[1 2 3]" ]]; then
         echo "Numpy is functioning correctly."
         return 0
     else

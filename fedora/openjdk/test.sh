@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Define the package details
-PACKAGE_NAME="java-11-openjdk-devel"
+PACKAGE_NAME="java-17-openjdk-devel"
 PACKAGE_SHOW_NAME="OpenJDK"
 PACKAGE_TYPE="Java Development Kit"
 REPORT_FILE="report.json"
@@ -26,7 +26,7 @@ test_openjdk_functionality() {
     local output_file="${temp_dir}/java_output.txt"
 
     # Write a simple Java program to test OpenJDK functionality
-    cat <<EOF > "$java_file"
+    cat <<EOF | sudo tee "$java_file"
 public class TestJava {
     public static void main(String[] args) {
         System.out.println("OpenJDK is working!");

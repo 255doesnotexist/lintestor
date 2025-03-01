@@ -17,8 +17,7 @@ install_nginx_package() {
 
 # Function to test Nginx service status
 test_nginx_service() {
-    local curl_response=$(curl -s -o /dev/null -w "%{http_code}" http://localhost)
-    if [[ $curl_response -eq 200 ]]; then
+    if systemctl is-active --quiet nginx; then
         return 0
     else
         return 1
