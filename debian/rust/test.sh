@@ -16,11 +16,19 @@ cd "$temp_dir"
 # Define the package details
 PACKAGE_NAME="rust"
 
-# Function to check if Rust is installed
+# Function to check if Rust is installed and properly configured
 is_rust_installed() {
     if command -v rustc >/dev/null 2>&1 && command -v cargo >/dev/null 2>&1; then
         log "Rust is installed."
-        return 0
+        
+        # Check if a default toolchain is configured
+        if rustc --version >/dev/null 2>&1 && cargo --version >/dev/null 2>&1; then
+            log "Rust toolchain is properly configured."
+            return 0
+        else
+            log "Rust is installed but no default toolchain is configured."
+            return 1
+        fi
     else
         log "Rust is not installed."
         return 1
@@ -31,11 +39,36 @@ is_rust_installed() {
 install_rust() {
     log "Attempting to install Rust..."
     if ! curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y; then
-        echo "Failed to install Rust."
+        log "Failed to install Rust."
         return 1
     fi
-    source $HOME/.cargo/env
+    
+    # Load rustup into current shell
+    export PATH="$HOME/.cargo/bin:$PATH"
+    
+    # Set default toolchain
+    log "Setting up default toolchain..."
+    if ! rustup default stable; then
+        log "Failed to set default toolchain."
+        return 1
+    fi
+    
     log "Rust installed successfully."
+    return 0
+}
+
+# Function to configure Rust if already installed but not set up
+configure_rust() {
+    log "Configuring Rust toolchain..."
+    export PATH="$HOME/.cargo/bin:$PATH"
+    
+    if ! rustup default stable; then
+        log "Failed to set default toolchain."
+        return 1
+    fi
+    
+    log "Rust toolchain configured successfully."
+    return 0
 }
 
 # Function to check system prerequisites
@@ -60,7 +93,7 @@ check_prerequisites() {
 # Function to test Rust functionality
 test_rust_functionality() {
     local temp_dir
-    temp_dir=$(mktemp -d) || error_exit "Failed to create temporary directory."
+    temp_dir=$(mktemp -d) || { log "Failed to create temporary directory."; return 1; }
     log "Created temporary directory: $temp_dir"
 
     cd "$temp_dir"
@@ -68,8 +101,8 @@ test_rust_functionality() {
     # Create a new Rust project
     log "Creating a new Rust project..."
     if ! cargo new hello_world; then
-        rm -rf "$temp_dir"
-        echo "Failed to create Rust project."
+        log "Failed to create Rust project."
+        cd "$original_dir"
         return 1
     fi
 
@@ -78,31 +111,26 @@ test_rust_functionality() {
     # Build the project
     log "Building the Rust project..."
     if ! cargo build; then
-        rm -rf "$temp_dir"
-        echo "Failed to build Rust project."
+        log "Failed to build Rust project."
+        cd "$original_dir"
         return 1
     fi
 
     # Run the project
     log "Running the Rust project..."
-    if ! output=$(cargo run 2>&1); then
+    output=$(cargo run 2>&1) || {
         log "Failed to run Rust project. Output:"
         log "$output"
-        rm -rf "$temp_dir"
+        cd "$original_dir"
         return 1
-    fi
+    }
 
     log "Project output: $output"
 
     # Clean up
-    cd ..
+    cd "$original_dir"
     rm -rf "$temp_dir"
     log "Cleaned up temporary directory."
-
-    # After cleaning up:
-    log "Cleaned up temporary directory."
-    cd "$original_dir"
-    log "Changed back to original directory: $original_dir"
 
     # Check if the output is as expected
     if [[ "$output" == *"Hello, world!"* ]]; then
@@ -122,15 +150,29 @@ main() {
         return 1
     fi
 
+    # Check if Rust is installed and configured
     if ! is_rust_installed; then
-        if ! install_rust; then
-            return 1
+        if command -v rustup >/dev/null 2>&1; then
+            # Rust is partially installed (rustup exists) but needs configuration
+            log "Rust is partially installed. Configuring..."
+            if ! configure_rust; then
+                if ! install_rust; then
+                    return 1
+                fi
+            fi
+        else
+            # Rust is not installed at all
+            if ! install_rust; then
+                return 1
+            fi
         fi
     fi
 
-    local rust_version=$(rustc --version | awk '{print $2}') || rust_version="Unknown"
-    local cargo_version=$(cargo --version | awk '{print $2}') || cargo_version="Unknown"
+    # Get Rust and Cargo versions
+    local rust_version=$(rustc --version 2>/dev/null | awk '{print $2}') || rust_version="Unknown"
+    local cargo_version=$(cargo --version 2>/dev/null | awk '{print $2}') || cargo_version="Unknown"
     PACKAGE_VERSION="$rust_version ($cargo_version)"
+    log "Using Rust version: $rust_version, Cargo version: $cargo_version"
 
     if test_rust_functionality; then
         log "Rust is functioning correctly."
