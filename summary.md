@@ -1,43 +1,43 @@
 # 软件包测试结果矩阵 Software package test results
 
-测试时间 Testing time: 2024-12-09 17:19:49 UTC
+测试时间 Testing time: 2025-03-01 22:28:53 UTC
 
 > 图标说明 Legend: ✅ = 通过 Passed; ⚠️ = 部分测试不通过 Not all tests passed; ❌ = 全部测试不通过 All tests failed; ❓ = 未知 Unknown
 
 | 软件包 Package | 种类 Type | [debian](#debian) | [fedora](#fedora) | [bianbu](#bianbu) |
 |:------|:------| :-------| :-------| :-------|
-| Apache HTTP Server | Web Server | ✅ apache=2.4.62-1 | ✅ apache=2.4.62-1 | ✅ apache=2.4.62-1 |
-| Clang C/C++ Compiler | Compiler Toolchain | ✅ clang=16.0.6 (27+b1) | ✅ clang=16.0.6 (27+b1) | ✅ clang=16.0.6 (27+b1) |
-| CMake | Build System | ✅ cmake=3.30.2 | ✅ cmake=3.30.2 | ✅ cmake=3.30.2 |
+| Apache HTTP Server | Web Server | ✅ apache=2.4.63-1 | ✅ apache=2.4.63-1 | ✅ apache=2.4.63-1 |
+| Clang C/C++ Compiler | Compiler Toolchain | ✅ clang=19.1.7 (1+b1) | ✅ clang=19.1.7 (1+b1) | ✅ clang=19.1.7 (1+b1) |
+| CMake | Build System | ✅ cmake=3.31.5 | ✅ cmake=3.31.5 | ✅ cmake=3.31.5 |
 | Docker | Containerization Platform | ✅ docker=5:27.1.1-1~debian.12~bookworm | ❓ | ✅ docker=5:27.1.1-1~debian.12~bookworm |
-| Erlang Programming Language | Programming Language | ✅ erlang=1:25.3.2.12+dfsg-1 | ✅ erlang=1:25.3.2.12+dfsg-1 | ✅ erlang=1:25.3.2.12+dfsg-1 |
+| Erlang Programming Language | Programming Language | ✅ erlang=1:27.2.2+dfsg-1 | ✅ erlang=1:27.2.2+dfsg-1 | ✅ erlang=1:27.2.2+dfsg-1 |
 | example | package | ✅ example=Unknown | ✅ example=Unknown | ❓ |
-| GNU Compiler Collection | Compiler Toolchain | ✅ gcc=14.2.0 | ❌ gcc=14.2.0 | ✅ gcc=14.2.0 |
-| GNU Debugger | Debugging Tool | ✅ gdb=GNU gdb (Debian 15.1-1) 15.1 | ✅ gdb=GNU gdb (Debian 15.1-1) 15.1 | ✅ gdb=GNU gdb (Debian 15.1-1) 15.1 |
-| Go Programming Language | Programming Language | ✅ golang=2:1.22~3 | ✅ golang=2:1.22~3 | ✅ golang=2:1.22~3 |
-| HAProxy | Load Balancer | ✅ haproxy=2.9.9-1 | ✅ haproxy=2.9.9-1 | ✅ haproxy=2.9.9-1 |
-| libmemcached | Caching Library | ✅ libmemcached=1.1.4-1.1+b1 | ✅ libmemcached=1.1.4-1.1+b1 | ❌ libmemcached=1.1.4-1.1+b1 |
-| Lighttpd | Web Server | ✅ lighttpd=1.4.76-1 | ❌ lighttpd=1.4.76-1 | ✅ lighttpd=1.4.76-1 |
-| LLVM Compiler Infrastructure | Compiler Toolchain | ✅ llvm=1:16.0.6-27+b1 | ✅ llvm=1:16.0.6-27+b1 | ✅ llvm=1:16.0.6-27+b1 |
-| MariaDB database server | Database | ✅ mariadb=1:11.4.3-1 | ❌ mariadb=1:11.4.3-1 | ✅ mariadb=1:11.4.3-1 |
-| Nginx | Web Server | ✅ nginx=1.26.0-2 | ❌ nginx=1.26.0-2 | ✅ nginx=1.26.0-2 |
-| Node.js | Javascript Runtime | ✅ nodejs=20.16.0+dfsg-1 | ❌ nodejs=20.16.0+dfsg-1 | ✅ nodejs=20.16.0+dfsg-1 |
-| NumPy | Python Library | ✅ numpy=Python 3.12.5 (1.26.4) | ✅ numpy=Python 3.12.5 (1.26.4) | ✅ numpy=Python 3.12.5 (1.26.4) |
-| Objective Caml | Programming Language | ✅ ocaml=5.0.1-3+b3 | ✅ ocaml=5.0.1-3+b3 | ✅ ocaml=5.0.1-3+b3 |
-| OpenJDK Development Kit (JDK) | Java Development Kit | ✅ openjdk=11.0.24 | ❌ openjdk=11.0.24 | ✅ openjdk=11.0.24 |
-| OpenSSL | Cryptography Library | ✅ openssl=3.3.1 | ✅ openssl=3.3.1 | ✅ openssl=3.3.1 |
-| Perl | Programming Language | ✅ perl=5.38.2 | ✅ perl=5.38.2 | ✅ perl=5.38.2 |
-| PostgreSQL | Database | ✅ postgresql=16.4 | ❌ postgresql=16.4 | ✅ postgresql=16.4 |
-| Python 3 | Programming Language | ✅ python=3.12.5 | ✅ python=3.12.5 | ✅ python=3.12.5 |
+| GNU Compiler Collection | Compiler Toolchain | ✅ gcc=14.2.0 | ✅ gcc=14.2.0 | ✅ gcc=14.2.0 |
+| GNU Debugger | Debugging Tool | ✅ gdb=GNU gdb (Debian 16.2-1) 16.2 | ✅ gdb=GNU gdb (Debian 16.2-1) 16.2 | ✅ gdb=GNU gdb (Debian 16.2-1) 16.2 |
+| Go Programming Language | Programming Language | ✅ golang=2:1.24~2 | ✅ golang=2:1.24~2 | ✅ golang=2:1.24~2 |
+| HAProxy | Load Balancer | ✅ haproxy=3.0.8-1 | ✅ haproxy=3.0.8-1 | ✅ haproxy=3.0.8-1 |
+| libmemcached | Caching Library | ✅ libmemcached=1.1.4-1.1+b2 | ✅ libmemcached=1.1.4-1.1+b2 | ❌ libmemcached=1.1.4-1.1+b2 |
+| Lighttpd | Web Server | ✅ lighttpd=1.4.77-1 | ✅ lighttpd=1.4.77-1 | ✅ lighttpd=1.4.77-1 |
+| LLVM Compiler Infrastructure | Compiler Toolchain | ✅ llvm=1:19.1.7-1+b1 | ✅ llvm=1:19.1.7-1+b1 | ✅ llvm=1:19.1.7-1+b1 |
+| MariaDB database server | Database | ✅ mariadb=1:11.4.4-3 | ✅ mariadb=1:11.4.4-3 | ✅ mariadb=1:11.4.4-3 |
+| Nginx | Web Server | ✅ nginx=1.26.3-2 | ✅ nginx=1.26.3-2 | ✅ nginx=1.26.3-2 |
+| Node.js | Javascript Runtime | ✅ nodejs=20.18.3+dfsg-1 | ✅ nodejs=20.18.3+dfsg-1 | ✅ nodejs=20.18.3+dfsg-1 |
+| NumPy | Python Library | ✅ numpy=Python 3.13.2 (2.2.2) | ✅ numpy=Python 3.13.2 (2.2.2) | ✅ numpy=Python 3.13.2 (2.2.2) |
+| Objective Caml | Programming Language | ✅ ocaml=5.0.1-3+b4 | ✅ ocaml=5.0.1-3+b4 | ✅ ocaml=5.0.1-3+b4 |
+| OpenJDK Development Kit (JDK) | Java Development Kit | ✅ openjdk=21.0.6 | ✅ openjdk=21.0.6 | ✅ openjdk=21.0.6 |
+| OpenSSL | Cryptography Library | ✅ openssl=3.4.1 | ✅ openssl=3.4.1 | ✅ openssl=3.4.1 |
+| Perl | Programming Language | ✅ perl=5.40.1 | ✅ perl=5.40.1 | ✅ perl=5.40.1 |
+| PostgreSQL | Database | ✅ postgresql=17.3 | ✅ postgresql=17.3 | ✅ postgresql=17.3 |
+| Python 3 | Programming Language | ✅ python=3.13.2 | ✅ python=3.13.2 | ✅ python=3.13.2 |
 | Redis | Database | ✅ redis=7.0.15 | ❌ redis=7.0.15 | ✅ redis=7.0.15 |
-| Ruby | Programming Language | ✅ ruby=3.1.2p20 | ✅ ruby=3.1.2p20 | ✅ ruby=3.1.2p20 |
-| runc | Container Runtime | ❌ runc=1.1.12+ds1 | ❌ runc=1.1.12+ds1 | ❌ runc=1.1.12+ds1 |
-| Rust | Programming Language | ✅ rust=1.80.1 | ❌ rust=1.80.1 | ✅ rust=1.80.1 |
-| SciPy | Python Library | ✅ scipy=1.13.1 (python 3.12.5) | ✅ scipy=1.13.1 (python 3.12.5) | ✅ scipy=1.13.1 (python 3.12.5) |
+| Ruby | Programming Language | ✅ ruby=3.3.7 | ✅ ruby=3.3.7 | ✅ ruby=3.3.7 |
+| runc | Container Runtime | ❌ runc=1.1.15+ds1 | ✅ runc=1.1.15+ds1 | ❌ runc=1.1.15+ds1 |
+| Rust | Programming Language | ✅ rust=1.85.0 | ❌ rust=1.85.0 | ✅ rust=1.85.0 |
+| SciPy | Python Library | ✅ scipy=1.14.1 (python 3.13.2) | ✅ scipy=1.14.1 (python 3.13.2) | ✅ scipy=1.14.1 (python 3.13.2) |
 | SQLite 3 | Database | ✅ sqlite=3.46.1 | ✅ sqlite=3.46.1 | ✅ sqlite=3.46.1 |
-| Squid | Proxy Server | ✅ squid=6.10 | ✅ squid=6.10 | ✅ squid=6.10 |
-| Varnish Cache | Caching Server | ✅ varnish=7.5.0 | ✅ varnish=7.5.0 | ✅ varnish=7.5.0 |
-| ZooKeeper | Distributed Coordination Service | ❌ zookeeper=3.9.2 | ❌ zookeeper=3.9.2 | ✅ zookeeper=3.9.2 |
+| Squid | Proxy Server | ✅ squid=6.13 | ✅ squid=6.13 | ✅ squid=6.13 |
+| Varnish Cache | Caching Server | ✅ varnish=7.6.1 | ✅ varnish=7.6.1 | ✅ varnish=7.6.1 |
+| ZooKeeper | Distributed Coordination Service | ❌ zookeeper=3.9.3 | ❌ zookeeper=3.9.3 | ✅ zookeeper=3.9.3 |
 
 # 测试环境信息 Environment info
 
@@ -75,6 +75,25 @@
 
 - <span id="bianbu_lighttpd">**lighttpd**: Linux version 6.1.15 (root@bianbu-build-deb-37zn1-v692p) (gcc (Ubuntu 13.2.0-4ubuntu3-bb2) 13.2.0, GNU ld (GNU Binutils for Ubuntu) 2.41) #1.0 SMP PREEMPT Thu May 30 13:16:13 UTC 2024
 </span>
+
+  - lighttpd 未通过的测试 Unpassed tests
+
+  - test.sh
+
+```shell
+Package libmemcached11t64 is not installed. Attempting to install...
+命中:1 http://archive.spacemit.com/bianbu-ports mantic/snapshots/v1.0 InRelease
+命中:2 http://archive.spacemit.com/bianbu-ports mantic-security/snapshots/v1.0 InRelease
+命中:3 http://archive.spacemit.com/bianbu-ports mantic-spacemit/snapshots/v1.0 InRelease
+命中:4 http://archive.spacemit.com/bianbu-ports mantic-porting/snapshots/v1.0 InRelease
+命中:5 http://archive.spacemit.com/bianbu-ports mantic-customization/snapshots/v1.0 InRelease
+正在读取软件包列表...
+正在读取软件包列表...
+正在分析软件包的依赖关系树...
+正在读取状态信息...
+Failed to install package libmemcached11t64.
+
+```
 
 - <span id="bianbu_llvm">**llvm**: Linux version 6.1.15 (root@bianbu-build-deb-37zn1-v692p) (gcc (Ubuntu 13.2.0-4ubuntu3-bb2) 13.2.0, GNU ld (GNU Binutils for Ubuntu) 2.41) #1.0 SMP PREEMPT Thu May 30 13:16:13 UTC 2024
 </span>
@@ -121,6 +140,25 @@
 - <span id="bianbu_rust">**rust**: Linux version 6.1.15 (root@bianbu-build-deb-37zn1-v692p) (gcc (Ubuntu 13.2.0-4ubuntu3-bb2) 13.2.0, GNU ld (GNU Binutils for Ubuntu) 2.41) #1.0 SMP PREEMPT Thu May 30 13:16:13 UTC 2024
 </span>
 
+  - rust 未通过的测试 Unpassed tests
+
+  - test.sh
+
+```shell
+[2024-10-15 17:23:10] Starting runC test script...
+[2024-10-15 17:23:10] Checking system prerequisites...
+[2024-10-15 17:23:10] Kernel version: 6.1.15
+[2024-10-15 17:23:11] System prerequisites check completed.
+[2024-10-15 17:23:11] runC is installed.
+[2024-10-15 17:23:11] Created temporary directory: /tmp/tmp.lD9WAZQUAL
+[2024-10-15 17:23:11] Created config.json in /tmp/tmp.lD9WAZQUAL/bundle
+[2024-10-15 17:23:11] Attempting to run runc container...
+[2024-10-15 17:23:11] Failed to run runc container. Output:
+[2024-10-15 17:23:11] time="2024-10-15T17:23:11+08:00" level=error msg="runc run failed: unable to start container process: error closing exec fds: open /proc/self/fd: no such file or directory"
+[2024-10-15 17:23:11] runC is not functioning correctly.
+
+```
+
 - <span id="bianbu_scipy">**scipy**: Linux version 6.1.15 (root@bianbu-build-deb-37zn1-v692p) (gcc (Ubuntu 13.2.0-4ubuntu3-bb2) 13.2.0, GNU ld (GNU Binutils for Ubuntu) 2.41) #1.0 SMP PREEMPT Thu May 30 13:16:13 UTC 2024
 </span>
 
@@ -138,193 +176,398 @@
 
 ## <span id="debian">debian</span>
 
-- <span id="debian_apache">**apache**: Linux version 6.10.6-riscv64 (debian-kernel@lists.debian.org) (riscv64-linux-gnu-gcc-13 (Debian 13.3.0-5) 13.3.0, GNU ld (GNU Binutils for Debian) 2.43.1) #1 SMP Debian 6.10.6-1 (2024-08-19)
+- <span id="debian_apache">**apache**: Linux version 6.12.13-riscv64 (debian-kernel@lists.debian.org) (riscv64-linux-gnu-gcc-14 (Debian 14.2.0-12) 14.2.0, GNU ld (GNU Binutils for Debian) 2.44) #1 SMP Debian 6.12.13-1 (2025-02-09)
 </span>
 
-- <span id="debian_clang">**clang**: Linux version 6.10.6-riscv64 (debian-kernel@lists.debian.org) (riscv64-linux-gnu-gcc-13 (Debian 13.3.0-5) 13.3.0, GNU ld (GNU Binutils for Debian) 2.43.1) #1 SMP Debian 6.10.6-1 (2024-08-19)
+- <span id="debian_clang">**clang**: Linux version 6.12.13-riscv64 (debian-kernel@lists.debian.org) (riscv64-linux-gnu-gcc-14 (Debian 14.2.0-12) 14.2.0, GNU ld (GNU Binutils for Debian) 2.44) #1 SMP Debian 6.12.13-1 (2025-02-09)
 </span>
 
-- <span id="debian_cmake">**cmake**: Linux version 6.10.6-riscv64 (debian-kernel@lists.debian.org) (riscv64-linux-gnu-gcc-13 (Debian 13.3.0-5) 13.3.0, GNU ld (GNU Binutils for Debian) 2.43.1) #1 SMP Debian 6.10.6-1 (2024-08-19)
+- <span id="debian_cmake">**cmake**: Linux version 6.12.13-riscv64 (debian-kernel@lists.debian.org) (riscv64-linux-gnu-gcc-14 (Debian 14.2.0-12) 14.2.0, GNU ld (GNU Binutils for Debian) 2.44) #1 SMP Debian 6.12.13-1 (2025-02-09)
 </span>
 
 - <span id="debian_docker">**docker**: Linux version 6.10.6-riscv64 (debian-kernel@lists.debian.org) (riscv64-linux-gnu-gcc-13 (Debian 13.3.0-5) 13.3.0, GNU ld (GNU Binutils for Debian) 2.43.1) #1 SMP Debian 6.10.6-1 (2024-08-19)</span>
 
-- <span id="debian_erlang">**erlang**: Linux version 6.10.6-riscv64 (debian-kernel@lists.debian.org) (riscv64-linux-gnu-gcc-13 (Debian 13.3.0-5) 13.3.0, GNU ld (GNU Binutils for Debian) 2.43.1) #1 SMP Debian 6.10.6-1 (2024-08-19)
+- <span id="debian_erlang">**erlang**: Linux version 6.12.13-riscv64 (debian-kernel@lists.debian.org) (riscv64-linux-gnu-gcc-14 (Debian 14.2.0-12) 14.2.0, GNU ld (GNU Binutils for Debian) 2.44) #1 SMP Debian 6.12.13-1 (2025-02-09)
 </span>
 
-- <span id="debian_example">**example**: Linux version 6.10.6-riscv64 (debian-kernel@lists.debian.org) (riscv64-linux-gnu-gcc-13 (Debian 13.3.0-5) 13.3.0, GNU ld (GNU Binutils for Debian) 2.43.1) #1 SMP Debian 6.10.6-1 (2024-08-19)
+- <span id="debian_example">**example**: Linux version 6.12.13-riscv64 (debian-kernel@lists.debian.org) (riscv64-linux-gnu-gcc-14 (Debian 14.2.0-12) 14.2.0, GNU ld (GNU Binutils for Debian) 2.44) #1 SMP Debian 6.12.13-1 (2025-02-09)
 </span>
 
-- <span id="debian_gcc">**gcc**: Linux version 6.10.6-riscv64 (debian-kernel@lists.debian.org) (riscv64-linux-gnu-gcc-13 (Debian 13.3.0-5) 13.3.0, GNU ld (GNU Binutils for Debian) 2.43.1) #1 SMP Debian 6.10.6-1 (2024-08-19)
+- <span id="debian_gcc">**gcc**: Linux version 6.12.13-riscv64 (debian-kernel@lists.debian.org) (riscv64-linux-gnu-gcc-14 (Debian 14.2.0-12) 14.2.0, GNU ld (GNU Binutils for Debian) 2.44) #1 SMP Debian 6.12.13-1 (2025-02-09)
 </span>
 
-- <span id="debian_gdb">**gdb**: Linux version 6.10.6-riscv64 (debian-kernel@lists.debian.org) (riscv64-linux-gnu-gcc-13 (Debian 13.3.0-5) 13.3.0, GNU ld (GNU Binutils for Debian) 2.43.1) #1 SMP Debian 6.10.6-1 (2024-08-19)
+- <span id="debian_gdb">**gdb**: Linux version 6.12.13-riscv64 (debian-kernel@lists.debian.org) (riscv64-linux-gnu-gcc-14 (Debian 14.2.0-12) 14.2.0, GNU ld (GNU Binutils for Debian) 2.44) #1 SMP Debian 6.12.13-1 (2025-02-09)
 </span>
 
-- <span id="debian_golang">**golang**: Linux version 6.10.6-riscv64 (debian-kernel@lists.debian.org) (riscv64-linux-gnu-gcc-13 (Debian 13.3.0-5) 13.3.0, GNU ld (GNU Binutils for Debian) 2.43.1) #1 SMP Debian 6.10.6-1 (2024-08-19)
+- <span id="debian_golang">**golang**: Linux version 6.12.13-riscv64 (debian-kernel@lists.debian.org) (riscv64-linux-gnu-gcc-14 (Debian 14.2.0-12) 14.2.0, GNU ld (GNU Binutils for Debian) 2.44) #1 SMP Debian 6.12.13-1 (2025-02-09)
 </span>
 
-- <span id="debian_haproxy">**haproxy**: Linux version 6.10.6-riscv64 (debian-kernel@lists.debian.org) (riscv64-linux-gnu-gcc-13 (Debian 13.3.0-5) 13.3.0, GNU ld (GNU Binutils for Debian) 2.43.1) #1 SMP Debian 6.10.6-1 (2024-08-19)
+- <span id="debian_haproxy">**haproxy**: Linux version 6.12.13-riscv64 (debian-kernel@lists.debian.org) (riscv64-linux-gnu-gcc-14 (Debian 14.2.0-12) 14.2.0, GNU ld (GNU Binutils for Debian) 2.44) #1 SMP Debian 6.12.13-1 (2025-02-09)
 </span>
 
-- <span id="debian_libmemcached">**libmemcached**: Linux version 6.10.6-riscv64 (debian-kernel@lists.debian.org) (riscv64-linux-gnu-gcc-13 (Debian 13.3.0-5) 13.3.0, GNU ld (GNU Binutils for Debian) 2.43.1) #1 SMP Debian 6.10.6-1 (2024-08-19)
+- <span id="debian_libmemcached">**libmemcached**: Linux version 6.12.13-riscv64 (debian-kernel@lists.debian.org) (riscv64-linux-gnu-gcc-14 (Debian 14.2.0-12) 14.2.0, GNU ld (GNU Binutils for Debian) 2.44) #1 SMP Debian 6.12.13-1 (2025-02-09)
 </span>
 
-- <span id="debian_lighttpd">**lighttpd**: Linux version 6.10.6-riscv64 (debian-kernel@lists.debian.org) (riscv64-linux-gnu-gcc-13 (Debian 13.3.0-5) 13.3.0, GNU ld (GNU Binutils for Debian) 2.43.1) #1 SMP Debian 6.10.6-1 (2024-08-19)
+- <span id="debian_lighttpd">**lighttpd**: Linux version 6.12.13-riscv64 (debian-kernel@lists.debian.org) (riscv64-linux-gnu-gcc-14 (Debian 14.2.0-12) 14.2.0, GNU ld (GNU Binutils for Debian) 2.44) #1 SMP Debian 6.12.13-1 (2025-02-09)
 </span>
 
-- <span id="debian_llvm">**llvm**: Linux version 6.10.6-riscv64 (debian-kernel@lists.debian.org) (riscv64-linux-gnu-gcc-13 (Debian 13.3.0-5) 13.3.0, GNU ld (GNU Binutils for Debian) 2.43.1) #1 SMP Debian 6.10.6-1 (2024-08-19)
+- <span id="debian_llvm">**llvm**: Linux version 6.12.13-riscv64 (debian-kernel@lists.debian.org) (riscv64-linux-gnu-gcc-14 (Debian 14.2.0-12) 14.2.0, GNU ld (GNU Binutils for Debian) 2.44) #1 SMP Debian 6.12.13-1 (2025-02-09)
 </span>
 
-- <span id="debian_mariadb">**mariadb**: Linux version 6.10.6-riscv64 (debian-kernel@lists.debian.org) (riscv64-linux-gnu-gcc-13 (Debian 13.3.0-5) 13.3.0, GNU ld (GNU Binutils for Debian) 2.43.1) #1 SMP Debian 6.10.6-1 (2024-08-19)
+- <span id="debian_mariadb">**mariadb**: Linux version 6.12.13-riscv64 (debian-kernel@lists.debian.org) (riscv64-linux-gnu-gcc-14 (Debian 14.2.0-12) 14.2.0, GNU ld (GNU Binutils for Debian) 2.44) #1 SMP Debian 6.12.13-1 (2025-02-09)
 </span>
 
-- <span id="debian_nginx">**nginx**: Linux version 6.10.6-riscv64 (debian-kernel@lists.debian.org) (riscv64-linux-gnu-gcc-13 (Debian 13.3.0-5) 13.3.0, GNU ld (GNU Binutils for Debian) 2.43.1) #1 SMP Debian 6.10.6-1 (2024-08-19)
+- <span id="debian_nginx">**nginx**: Linux version 6.12.13-riscv64 (debian-kernel@lists.debian.org) (riscv64-linux-gnu-gcc-14 (Debian 14.2.0-12) 14.2.0, GNU ld (GNU Binutils for Debian) 2.44) #1 SMP Debian 6.12.13-1 (2025-02-09)
 </span>
 
-- <span id="debian_nodejs">**nodejs**: Linux version 6.10.6-riscv64 (debian-kernel@lists.debian.org) (riscv64-linux-gnu-gcc-13 (Debian 13.3.0-5) 13.3.0, GNU ld (GNU Binutils for Debian) 2.43.1) #1 SMP Debian 6.10.6-1 (2024-08-19)
+- <span id="debian_nodejs">**nodejs**: Linux version 6.12.13-riscv64 (debian-kernel@lists.debian.org) (riscv64-linux-gnu-gcc-14 (Debian 14.2.0-12) 14.2.0, GNU ld (GNU Binutils for Debian) 2.44) #1 SMP Debian 6.12.13-1 (2025-02-09)
 </span>
 
-- <span id="debian_numpy">**numpy**: Linux version 6.10.6-riscv64 (debian-kernel@lists.debian.org) (riscv64-linux-gnu-gcc-13 (Debian 13.3.0-5) 13.3.0, GNU ld (GNU Binutils for Debian) 2.43.1) #1 SMP Debian 6.10.6-1 (2024-08-19)
+- <span id="debian_numpy">**numpy**: Linux version 6.12.13-riscv64 (debian-kernel@lists.debian.org) (riscv64-linux-gnu-gcc-14 (Debian 14.2.0-12) 14.2.0, GNU ld (GNU Binutils for Debian) 2.44) #1 SMP Debian 6.12.13-1 (2025-02-09)
 </span>
 
-- <span id="debian_ocaml">**ocaml**: Linux version 6.10.6-riscv64 (debian-kernel@lists.debian.org) (riscv64-linux-gnu-gcc-13 (Debian 13.3.0-5) 13.3.0, GNU ld (GNU Binutils for Debian) 2.43.1) #1 SMP Debian 6.10.6-1 (2024-08-19)
+- <span id="debian_ocaml">**ocaml**: Linux version 6.12.13-riscv64 (debian-kernel@lists.debian.org) (riscv64-linux-gnu-gcc-14 (Debian 14.2.0-12) 14.2.0, GNU ld (GNU Binutils for Debian) 2.44) #1 SMP Debian 6.12.13-1 (2025-02-09)
 </span>
 
-- <span id="debian_openjdk">**openjdk**: Linux version 6.10.6-riscv64 (debian-kernel@lists.debian.org) (riscv64-linux-gnu-gcc-13 (Debian 13.3.0-5) 13.3.0, GNU ld (GNU Binutils for Debian) 2.43.1) #1 SMP Debian 6.10.6-1 (2024-08-19)
+- <span id="debian_openjdk">**openjdk**: Linux version 6.12.13-riscv64 (debian-kernel@lists.debian.org) (riscv64-linux-gnu-gcc-14 (Debian 14.2.0-12) 14.2.0, GNU ld (GNU Binutils for Debian) 2.44) #1 SMP Debian 6.12.13-1 (2025-02-09)
 </span>
 
-- <span id="debian_openssl">**openssl**: Linux version 6.10.6-riscv64 (debian-kernel@lists.debian.org) (riscv64-linux-gnu-gcc-13 (Debian 13.3.0-5) 13.3.0, GNU ld (GNU Binutils for Debian) 2.43.1) #1 SMP Debian 6.10.6-1 (2024-08-19)
+- <span id="debian_openssl">**openssl**: Linux version 6.12.13-riscv64 (debian-kernel@lists.debian.org) (riscv64-linux-gnu-gcc-14 (Debian 14.2.0-12) 14.2.0, GNU ld (GNU Binutils for Debian) 2.44) #1 SMP Debian 6.12.13-1 (2025-02-09)
 </span>
 
-- <span id="debian_perl">**perl**: Linux version 6.10.6-riscv64 (debian-kernel@lists.debian.org) (riscv64-linux-gnu-gcc-13 (Debian 13.3.0-5) 13.3.0, GNU ld (GNU Binutils for Debian) 2.43.1) #1 SMP Debian 6.10.6-1 (2024-08-19)
+- <span id="debian_perl">**perl**: Linux version 6.12.13-riscv64 (debian-kernel@lists.debian.org) (riscv64-linux-gnu-gcc-14 (Debian 14.2.0-12) 14.2.0, GNU ld (GNU Binutils for Debian) 2.44) #1 SMP Debian 6.12.13-1 (2025-02-09)
 </span>
 
-- <span id="debian_postgresql">**postgresql**: Linux version 6.10.6-riscv64 (debian-kernel@lists.debian.org) (riscv64-linux-gnu-gcc-13 (Debian 13.3.0-5) 13.3.0, GNU ld (GNU Binutils for Debian) 2.43.1) #1 SMP Debian 6.10.6-1 (2024-08-19)
+- <span id="debian_postgresql">**postgresql**: Linux version 6.12.13-riscv64 (debian-kernel@lists.debian.org) (riscv64-linux-gnu-gcc-14 (Debian 14.2.0-12) 14.2.0, GNU ld (GNU Binutils for Debian) 2.44) #1 SMP Debian 6.12.13-1 (2025-02-09)
 </span>
 
-- <span id="debian_python">**python**: Linux version 6.10.6-riscv64 (debian-kernel@lists.debian.org) (riscv64-linux-gnu-gcc-13 (Debian 13.3.0-5) 13.3.0, GNU ld (GNU Binutils for Debian) 2.43.1) #1 SMP Debian 6.10.6-1 (2024-08-19)
+- <span id="debian_python">**python**: Linux version 6.12.13-riscv64 (debian-kernel@lists.debian.org) (riscv64-linux-gnu-gcc-14 (Debian 14.2.0-12) 14.2.0, GNU ld (GNU Binutils for Debian) 2.44) #1 SMP Debian 6.12.13-1 (2025-02-09)
 </span>
 
-- <span id="debian_redis">**redis**: Linux version 6.10.6-riscv64 (debian-kernel@lists.debian.org) (riscv64-linux-gnu-gcc-13 (Debian 13.3.0-5) 13.3.0, GNU ld (GNU Binutils for Debian) 2.43.1) #1 SMP Debian 6.10.6-1 (2024-08-19)
+- <span id="debian_redis">**redis**: Linux version 6.12.13-riscv64 (debian-kernel@lists.debian.org) (riscv64-linux-gnu-gcc-14 (Debian 14.2.0-12) 14.2.0, GNU ld (GNU Binutils for Debian) 2.44) #1 SMP Debian 6.12.13-1 (2025-02-09)
 </span>
 
-- <span id="debian_ruby">**ruby**: Linux version 6.10.6-riscv64 (debian-kernel@lists.debian.org) (riscv64-linux-gnu-gcc-13 (Debian 13.3.0-5) 13.3.0, GNU ld (GNU Binutils for Debian) 2.43.1) #1 SMP Debian 6.10.6-1 (2024-08-19)
+- <span id="debian_ruby">**ruby**: Linux version 6.12.13-riscv64 (debian-kernel@lists.debian.org) (riscv64-linux-gnu-gcc-14 (Debian 14.2.0-12) 14.2.0, GNU ld (GNU Binutils for Debian) 2.44) #1 SMP Debian 6.12.13-1 (2025-02-09)
 </span>
 
-- <span id="debian_runc">**runc**: Linux version 6.10.6-riscv64 (debian-kernel@lists.debian.org) (riscv64-linux-gnu-gcc-13 (Debian 13.3.0-5) 13.3.0, GNU ld (GNU Binutils for Debian) 2.43.1) #1 SMP Debian 6.10.6-1 (2024-08-19)
+- <span id="debian_runc">**runc**: Linux version 6.12.16-riscv64 (debian-kernel@lists.debian.org) (riscv64-linux-gnu-gcc-14 (Debian 14.2.0-16) 14.2.0, GNU ld (GNU Binutils for Debian) 2.44) #1 SMP Debian 6.12.16-1 (2025-02-22)
 </span>
 
-- <span id="debian_rust">**rust**: Linux version 6.10.6-riscv64 (debian-kernel@lists.debian.org) (riscv64-linux-gnu-gcc-13 (Debian 13.3.0-5) 13.3.0, GNU ld (GNU Binutils for Debian) 2.43.1) #1 SMP Debian 6.10.6-1 (2024-08-19)
+  - runc 未通过的测试 Unpassed tests
+
+  - test.sh
+
+```shell
+Hit:1 http://deb.debian.org/debian unstable InRelease
+Reading package lists...
+Building dependency tree...
+Reading state information...
+2 packages can be upgraded. Run 'apt list --upgradable' to see them.
+Reading package lists...
+Building dependency tree...
+Reading state information...
+Calculating upgrade...
+The following packages were automatically installed and are no longer required:
+  golang-1.23-go           libwebrtc-audio-processing1
+  golang-1.23-src          libx265-209
+  idle-python3.12          libxcb-dri2-0
+  libapt-pkg6.0t64         linux-image-6.12.3-riscv64
+  libdirectfb-1.7-7t64     linux-image-6.8.12-riscv64
+  libdrm-radeon1           python3-autocommand
+  libflac12t64             python3-inflect
+  libglapi-mesa            python3-jaraco.context
+  libjxl0.9                python3-jaraco.functools
+  libldap-2.5-0            python3-more-itertools
+  libnsl2                  python3-pkg-resources
+  libpaper1                python3-typeguard
+  libpython3.12-dev        python3-typing-extensions
+  libpython3.12-minimal    python3.12
+  libpython3.12-stdlib     python3.12-dev
+  libpython3.12-testsuite  python3.12-doc
+  libpython3.12t64         python3.12-examples
+  libtag1v5                python3.12-full
+  libtag1v5-vanilla        python3.12-minimal
+  libunwind8               python3.12-venv
+Use 'apt autoremove' to remove them.
+
+Not upgrading:
+  gstreamer1.0-plugins-bad  libgstreamer-plugins-bad1.0-0
+
+Summary:
+  Upgrading: 0, Installing: 0, Removing: 0, Not Upgrading: 2
+Reading package lists...
+Building dependency tree...
+Reading state information...
+sudo is already the newest version (1.9.16p2-1).
+curl is already the newest version (8.12.1-3).
+apt-transport-https is already the newest version (2.9.30).
+ca-certificates is already the newest version (20241223).
+gnupg is already the newest version (2.2.46-2).
+lsb-release is already the newest version (12.1-1).
+netcat-openbsd is already the newest version (1.228-1).
+The following packages were automatically installed and are no longer required:
+  golang-1.23-go golang-1.23-src idle-python3.12 libapt-pkg6.0t64
+  libdirectfb-1.7-7t64 libdrm-radeon1 libflac12t64 libglapi-mesa libjxl0.9
+  libldap-2.5-0 libnsl2 libpaper1 libpython3.12-dev libpython3.12-minimal
+  libpython3.12-stdlib libpython3.12-testsuite libpython3.12t64 libtag1v5
+  libtag1v5-vanilla libunwind8 libwebrtc-audio-processing1 libx265-209
+  libxcb-dri2-0 linux-image-6.12.3-riscv64 linux-image-6.8.12-riscv64
+  python3-autocommand python3-inflect python3-jaraco.context
+  python3-jaraco.functools python3-more-itertools python3-pkg-resources
+  python3-typeguard python3-typing-extensions python3.12 python3.12-dev
+  python3.12-doc python3.12-examples python3.12-full python3.12-minimal
+  python3.12-venv
+Use 'apt autoremove' to remove them.
+0 upgraded, 0 newly installed, 0 to remove and 2 not upgraded.
+[2025-03-01 22:24:05] Starting runC test script...
+[2025-03-01 22:24:05] Checking system prerequisites...
+[2025-03-01 22:24:05] Kernel version: 6.12.16-riscv64
+[2025-03-01 22:24:06] System prerequisites check completed.
+[2025-03-01 22:24:06] runC is installed.
+[2025-03-01 22:24:07] Created temporary directory: /tmp/tmp.frBq6dbgNo
+[2025-03-01 22:24:07] Created config.json in /tmp/tmp.frBq6dbgNo/bundle
+[2025-03-01 22:24:07] Attempting to run runc container...
+[2025-03-01 22:24:08] Failed to run runc container. Output:
+[2025-03-01 22:24:08] time="2025-03-01T22:24:08Z" level=error msg="runc run failed: unable to start container process: error during container init: error reopening /dev/null inside container: open /dev/null: permission denied"
+[2025-03-01 22:24:08] runC is not functioning correctly.
+
+```
+
+- <span id="debian_rust">**rust**: Linux version 6.12.16-riscv64 (debian-kernel@lists.debian.org) (riscv64-linux-gnu-gcc-14 (Debian 14.2.0-16) 14.2.0, GNU ld (GNU Binutils for Debian) 2.44) #1 SMP Debian 6.12.16-1 (2025-02-22)
 </span>
 
-- <span id="debian_scipy">**scipy**: Linux version 6.10.6-riscv64 (debian-kernel@lists.debian.org) (riscv64-linux-gnu-gcc-13 (Debian 13.3.0-5) 13.3.0, GNU ld (GNU Binutils for Debian) 2.43.1) #1 SMP Debian 6.10.6-1 (2024-08-19)
+- <span id="debian_scipy">**scipy**: Linux version 6.12.13-riscv64 (debian-kernel@lists.debian.org) (riscv64-linux-gnu-gcc-14 (Debian 14.2.0-12) 14.2.0, GNU ld (GNU Binutils for Debian) 2.44) #1 SMP Debian 6.12.13-1 (2025-02-09)
 </span>
 
-- <span id="debian_sqlite">**sqlite**: Linux version 6.10.6-riscv64 (debian-kernel@lists.debian.org) (riscv64-linux-gnu-gcc-13 (Debian 13.3.0-5) 13.3.0, GNU ld (GNU Binutils for Debian) 2.43.1) #1 SMP Debian 6.10.6-1 (2024-08-19)
+- <span id="debian_sqlite">**sqlite**: Linux version 6.12.16-riscv64 (debian-kernel@lists.debian.org) (riscv64-linux-gnu-gcc-14 (Debian 14.2.0-16) 14.2.0, GNU ld (GNU Binutils for Debian) 2.44) #1 SMP Debian 6.12.16-1 (2025-02-22)
 </span>
 
-- <span id="debian_squid">**squid**: Linux version 6.10.6-riscv64 (debian-kernel@lists.debian.org) (riscv64-linux-gnu-gcc-13 (Debian 13.3.0-5) 13.3.0, GNU ld (GNU Binutils for Debian) 2.43.1) #1 SMP Debian 6.10.6-1 (2024-08-19)
+- <span id="debian_squid">**squid**: Linux version 6.12.13-riscv64 (debian-kernel@lists.debian.org) (riscv64-linux-gnu-gcc-14 (Debian 14.2.0-12) 14.2.0, GNU ld (GNU Binutils for Debian) 2.44) #1 SMP Debian 6.12.13-1 (2025-02-09)
 </span>
 
-- <span id="debian_varnish">**varnish**: Linux version 6.10.6-riscv64 (debian-kernel@lists.debian.org) (riscv64-linux-gnu-gcc-13 (Debian 13.3.0-5) 13.3.0, GNU ld (GNU Binutils for Debian) 2.43.1) #1 SMP Debian 6.10.6-1 (2024-08-19)
+- <span id="debian_varnish">**varnish**: Linux version 6.12.13-riscv64 (debian-kernel@lists.debian.org) (riscv64-linux-gnu-gcc-14 (Debian 14.2.0-12) 14.2.0, GNU ld (GNU Binutils for Debian) 2.44) #1 SMP Debian 6.12.13-1 (2025-02-09)
 </span>
 
-- <span id="debian_zookeeper">**zookeeper**: Linux version 6.10.6-riscv64 (debian-kernel@lists.debian.org) (riscv64-linux-gnu-gcc-13 (Debian 13.3.0-5) 13.3.0, GNU ld (GNU Binutils for Debian) 2.43.1) #1 SMP Debian 6.10.6-1 (2024-08-19)
+- <span id="debian_zookeeper">**zookeeper**: Linux version 6.12.16-riscv64 (debian-kernel@lists.debian.org) (riscv64-linux-gnu-gcc-14 (Debian 14.2.0-16) 14.2.0, GNU ld (GNU Binutils for Debian) 2.44) #1 SMP Debian 6.12.16-1 (2025-02-22)
 </span>
+
+  - zookeeper 未通过的测试 Unpassed tests
+
+  - test.sh
+
+```shell
+Hit:1 http://deb.debian.org/debian unstable InRelease
+Reading package lists...
+Building dependency tree...
+Reading state information...
+2 packages can be upgraded. Run 'apt list --upgradable' to see them.
+Reading package lists...
+Building dependency tree...
+Reading state information...
+Calculating upgrade...
+The following packages were automatically installed and are no longer required:
+  golang-1.23-go           libwebrtc-audio-processing1
+  golang-1.23-src          libx265-209
+  idle-python3.12          libxcb-dri2-0
+  libapt-pkg6.0t64         linux-image-6.12.3-riscv64
+  libdirectfb-1.7-7t64     linux-image-6.8.12-riscv64
+  libdrm-radeon1           python3-autocommand
+  libflac12t64             python3-inflect
+  libglapi-mesa            python3-jaraco.context
+  libjxl0.9                python3-jaraco.functools
+  libldap-2.5-0            python3-more-itertools
+  libnsl2                  python3-pkg-resources
+  libpaper1                python3-typeguard
+  libpython3.12-dev        python3-typing-extensions
+  libpython3.12-minimal    python3.12
+  libpython3.12-stdlib     python3.12-dev
+  libpython3.12-testsuite  python3.12-doc
+  libpython3.12t64         python3.12-examples
+  libtag1v5                python3.12-full
+  libtag1v5-vanilla        python3.12-minimal
+  libunwind8               python3.12-venv
+Use 'apt autoremove' to remove them.
+
+Not upgrading:
+  gstreamer1.0-plugins-bad  libgstreamer-plugins-bad1.0-0
+
+Summary:
+  Upgrading: 0, Installing: 0, Removing: 0, Not Upgrading: 2
+Reading package lists...
+Building dependency tree...
+Reading state information...
+sudo is already the newest version (1.9.16p2-1).
+curl is already the newest version (8.12.1-3).
+apt-transport-https is already the newest version (2.9.30).
+ca-certificates is already the newest version (20241223).
+gnupg is already the newest version (2.2.46-2).
+lsb-release is already the newest version (12.1-1).
+netcat-openbsd is already the newest version (1.228-1).
+The following packages were automatically installed and are no longer required:
+  golang-1.23-go golang-1.23-src idle-python3.12 libapt-pkg6.0t64
+  libdirectfb-1.7-7t64 libdrm-radeon1 libflac12t64 libglapi-mesa libjxl0.9
+  libldap-2.5-0 libnsl2 libpaper1 libpython3.12-dev libpython3.12-minimal
+  libpython3.12-stdlib libpython3.12-testsuite libpython3.12t64 libtag1v5
+  libtag1v5-vanilla libunwind8 libwebrtc-audio-processing1 libx265-209
+  libxcb-dri2-0 linux-image-6.12.3-riscv64 linux-image-6.8.12-riscv64
+  python3-autocommand python3-inflect python3-jaraco.context
+  python3-jaraco.functools python3-more-itertools python3-pkg-resources
+  python3-typeguard python3-typing-extensions python3.12 python3.12-dev
+  python3.12-doc python3.12-examples python3.12-full python3.12-minimal
+  python3.12-venv
+Use 'apt autoremove' to remove them.
+0 upgraded, 0 newly installed, 0 to remove and 2 not upgraded.
+[2025-03-01 22:24:42] Current directory: /tmp/lintestor/debian/zookeeper
+[2025-03-01 22:24:42] Created temporary directory: /tmp/tmp.Uwz9QlDw7J
+[2025-03-01 22:24:42] Starting ZooKeeper test script...
+[2025-03-01 22:24:42] Checking system prerequisites...
+[2025-03-01 22:24:42] Java is installed: /usr/bin/java
+[2025-03-01 22:24:42] System prerequisites check passed.
+[2025-03-01 22:24:42] ZooKeeper is installed. Path: /opt/zookeeper
+[2025-03-01 22:24:42] Verifying ZooKeeper installation again...
+[2025-03-01 22:24:42] ZooKeeper is installed. Path: /opt/zookeeper
+[2025-03-01 22:24:53] ZooKeeper is not running.
+[2025-03-01 22:24:53] Starting ZooKeeper server...
+/usr/bin/java
+Starting zookeeper ... STARTED
+[2025-03-01 22:25:00] Checking ZooKeeper server status after start...
+[2025-03-01 22:25:09] ZooKeeper is not running.
+[2025-03-01 22:25:09] ZooKeeper server failed to start properly.
+[2025-03-01 22:25:09] ZooKeeper is not functioning correctly.
+[2025-03-01 22:25:09] Cleaned up temporary directory.
+[2025-03-01 22:25:09] ZooKeeper test script completed.
+
+```
 
 ## <span id="fedora">fedora</span>
 
-- <span id="fedora_apache">**apache**: Linux version 6.5.0-0.rc4.30.5.riscv64.fc38.riscv64 (mockbuild@fedora-riscv) (gcc (GCC) 13.1.1 20230614 (Red Hat 13.1.1-4), GNU ld version 2.39-12.rv64.fc38) #1 SMP Sun Aug  6 10:43:52 EDT 2023
+- <span id="fedora_apache">**apache**: Linux version 6.12.7-200.0.riscv64.fc41.riscv64 (mockbuild@b085e57e93af4f97a92adef0cd6a5f7b) (gcc (GCC) 14.2.1 20240912 (Red Hat 14.2.1-3), GNU ld version 2.43.1-5.fc41) #1 SMP PREEMPT_DYNAMIC Sat Dec 28 10:55:11 EST 2024
 </span>
 
-- <span id="fedora_clang">**clang**: Linux version 6.5.0-0.rc4.30.5.riscv64.fc38.riscv64 (mockbuild@fedora-riscv) (gcc (GCC) 13.1.1 20230614 (Red Hat 13.1.1-4), GNU ld version 2.39-12.rv64.fc38) #1 SMP Sun Aug  6 10:43:52 EDT 2023
+- <span id="fedora_clang">**clang**: Linux version 6.12.7-200.0.riscv64.fc41.riscv64 (mockbuild@b085e57e93af4f97a92adef0cd6a5f7b) (gcc (GCC) 14.2.1 20240912 (Red Hat 14.2.1-3), GNU ld version 2.43.1-5.fc41) #1 SMP PREEMPT_DYNAMIC Sat Dec 28 10:55:11 EST 2024
 </span>
 
-- <span id="fedora_cmake">**cmake**: Linux version 6.5.0-0.rc4.30.5.riscv64.fc38.riscv64 (mockbuild@fedora-riscv) (gcc (GCC) 13.1.1 20230614 (Red Hat 13.1.1-4), GNU ld version 2.39-12.rv64.fc38) #1 SMP Sun Aug  6 10:43:52 EDT 2023
+- <span id="fedora_cmake">**cmake**: Linux version 6.12.7-200.0.riscv64.fc41.riscv64 (mockbuild@b085e57e93af4f97a92adef0cd6a5f7b) (gcc (GCC) 14.2.1 20240912 (Red Hat 14.2.1-3), GNU ld version 2.43.1-5.fc41) #1 SMP PREEMPT_DYNAMIC Sat Dec 28 10:55:11 EST 2024
 </span>
 
-- <span id="fedora_erlang">**erlang**: Linux version 6.5.0-0.rc4.30.5.riscv64.fc38.riscv64 (mockbuild@fedora-riscv) (gcc (GCC) 13.1.1 20230614 (Red Hat 13.1.1-4), GNU ld version 2.39-12.rv64.fc38) #1 SMP Sun Aug  6 10:43:52 EDT 2023
+- <span id="fedora_erlang">**erlang**: Linux version 6.12.7-200.0.riscv64.fc41.riscv64 (mockbuild@b085e57e93af4f97a92adef0cd6a5f7b) (gcc (GCC) 14.2.1 20240912 (Red Hat 14.2.1-3), GNU ld version 2.43.1-5.fc41) #1 SMP PREEMPT_DYNAMIC Sat Dec 28 10:55:11 EST 2024
 </span>
 
-- <span id="fedora_example">**example**: Linux version 6.5.0-0.rc4.30.5.riscv64.fc38.riscv64 (mockbuild@fedora-riscv) (gcc (GCC) 13.1.1 20230614 (Red Hat 13.1.1-4), GNU ld version 2.39-12.rv64.fc38) #1 SMP Sun Aug  6 10:43:52 EDT 2023
+- <span id="fedora_example">**example**: Linux version 6.12.7-200.0.riscv64.fc41.riscv64 (mockbuild@b085e57e93af4f97a92adef0cd6a5f7b) (gcc (GCC) 14.2.1 20240912 (Red Hat 14.2.1-3), GNU ld version 2.43.1-5.fc41) #1 SMP PREEMPT_DYNAMIC Sat Dec 28 10:55:11 EST 2024
 </span>
 
-- <span id="fedora_gcc">**gcc**: Linux version 6.5.0-0.rc4.30.5.riscv64.fc38.riscv64 (mockbuild@fedora-riscv) (gcc (GCC) 13.1.1 20230614 (Red Hat 13.1.1-4), GNU ld version 2.39-12.rv64.fc38) #1 SMP Sun Aug  6 10:43:52 EDT 2023
+- <span id="fedora_gcc">**gcc**: Linux version 6.12.7-200.0.riscv64.fc41.riscv64 (mockbuild@b085e57e93af4f97a92adef0cd6a5f7b) (gcc (GCC) 14.2.1 20240912 (Red Hat 14.2.1-3), GNU ld version 2.43.1-5.fc41) #1 SMP PREEMPT_DYNAMIC Sat Dec 28 10:55:11 EST 2024
 </span>
 
-- <span id="fedora_gdb">**gdb**: Linux version 6.5.0-0.rc4.30.5.riscv64.fc38.riscv64 (mockbuild@fedora-riscv) (gcc (GCC) 13.1.1 20230614 (Red Hat 13.1.1-4), GNU ld version 2.39-12.rv64.fc38) #1 SMP Sun Aug  6 10:43:52 EDT 2023
+- <span id="fedora_gdb">**gdb**: Linux version 6.12.7-200.0.riscv64.fc41.riscv64 (mockbuild@b085e57e93af4f97a92adef0cd6a5f7b) (gcc (GCC) 14.2.1 20240912 (Red Hat 14.2.1-3), GNU ld version 2.43.1-5.fc41) #1 SMP PREEMPT_DYNAMIC Sat Dec 28 10:55:11 EST 2024
 </span>
 
-- <span id="fedora_golang">**golang**: Linux version 6.5.0-0.rc4.30.5.riscv64.fc38.riscv64 (mockbuild@fedora-riscv) (gcc (GCC) 13.1.1 20230614 (Red Hat 13.1.1-4), GNU ld version 2.39-12.rv64.fc38) #1 SMP Sun Aug  6 10:43:52 EDT 2023
+- <span id="fedora_golang">**golang**: Linux version 6.12.7-200.0.riscv64.fc41.riscv64 (mockbuild@b085e57e93af4f97a92adef0cd6a5f7b) (gcc (GCC) 14.2.1 20240912 (Red Hat 14.2.1-3), GNU ld version 2.43.1-5.fc41) #1 SMP PREEMPT_DYNAMIC Sat Dec 28 10:55:11 EST 2024
 </span>
 
-- <span id="fedora_haproxy">**haproxy**: Linux version 6.5.0-0.rc4.30.5.riscv64.fc38.riscv64 (mockbuild@fedora-riscv) (gcc (GCC) 13.1.1 20230614 (Red Hat 13.1.1-4), GNU ld version 2.39-12.rv64.fc38) #1 SMP Sun Aug  6 10:43:52 EDT 2023
+- <span id="fedora_haproxy">**haproxy**: Linux version 6.12.7-200.0.riscv64.fc41.riscv64 (mockbuild@b085e57e93af4f97a92adef0cd6a5f7b) (gcc (GCC) 14.2.1 20240912 (Red Hat 14.2.1-3), GNU ld version 2.43.1-5.fc41) #1 SMP PREEMPT_DYNAMIC Sat Dec 28 10:55:11 EST 2024
 </span>
 
-- <span id="fedora_libmemcached">**libmemcached**: Linux version 6.5.0-0.rc4.30.5.riscv64.fc38.riscv64 (mockbuild@fedora-riscv) (gcc (GCC) 13.1.1 20230614 (Red Hat 13.1.1-4), GNU ld version 2.39-12.rv64.fc38) #1 SMP Sun Aug  6 10:43:52 EDT 2023
+- <span id="fedora_libmemcached">**libmemcached**: Linux version 6.12.7-200.0.riscv64.fc41.riscv64 (mockbuild@b085e57e93af4f97a92adef0cd6a5f7b) (gcc (GCC) 14.2.1 20240912 (Red Hat 14.2.1-3), GNU ld version 2.43.1-5.fc41) #1 SMP PREEMPT_DYNAMIC Sat Dec 28 10:55:11 EST 2024
 </span>
 
-- <span id="fedora_lighttpd">**lighttpd**: Linux version 6.5.0-0.rc4.30.5.riscv64.fc38.riscv64 (mockbuild@fedora-riscv) (gcc (GCC) 13.1.1 20230614 (Red Hat 13.1.1-4), GNU ld version 2.39-12.rv64.fc38) #1 SMP Sun Aug  6 10:43:52 EDT 2023
+- <span id="fedora_lighttpd">**lighttpd**: Linux version 6.12.7-200.0.riscv64.fc41.riscv64 (mockbuild@b085e57e93af4f97a92adef0cd6a5f7b) (gcc (GCC) 14.2.1 20240912 (Red Hat 14.2.1-3), GNU ld version 2.43.1-5.fc41) #1 SMP PREEMPT_DYNAMIC Sat Dec 28 10:55:11 EST 2024
 </span>
 
-- <span id="fedora_llvm">**llvm**: Linux version 6.5.0-0.rc4.30.5.riscv64.fc38.riscv64 (mockbuild@fedora-riscv) (gcc (GCC) 13.1.1 20230614 (Red Hat 13.1.1-4), GNU ld version 2.39-12.rv64.fc38) #1 SMP Sun Aug  6 10:43:52 EDT 2023
+- <span id="fedora_llvm">**llvm**: Linux version 6.12.7-200.0.riscv64.fc41.riscv64 (mockbuild@b085e57e93af4f97a92adef0cd6a5f7b) (gcc (GCC) 14.2.1 20240912 (Red Hat 14.2.1-3), GNU ld version 2.43.1-5.fc41) #1 SMP PREEMPT_DYNAMIC Sat Dec 28 10:55:11 EST 2024
 </span>
 
-- <span id="fedora_mariadb">**mariadb**: Linux version 6.5.0-0.rc4.30.5.riscv64.fc38.riscv64 (mockbuild@fedora-riscv) (gcc (GCC) 13.1.1 20230614 (Red Hat 13.1.1-4), GNU ld version 2.39-12.rv64.fc38) #1 SMP Sun Aug  6 10:43:52 EDT 2023
+- <span id="fedora_mariadb">**mariadb**: Linux version 6.12.7-200.0.riscv64.fc41.riscv64 (mockbuild@b085e57e93af4f97a92adef0cd6a5f7b) (gcc (GCC) 14.2.1 20240912 (Red Hat 14.2.1-3), GNU ld version 2.43.1-5.fc41) #1 SMP PREEMPT_DYNAMIC Sat Dec 28 10:55:11 EST 2024
 </span>
 
-- <span id="fedora_nginx">**nginx**: Linux version 6.5.0-0.rc4.30.5.riscv64.fc38.riscv64 (mockbuild@fedora-riscv) (gcc (GCC) 13.1.1 20230614 (Red Hat 13.1.1-4), GNU ld version 2.39-12.rv64.fc38) #1 SMP Sun Aug  6 10:43:52 EDT 2023
+- <span id="fedora_nginx">**nginx**: Linux version 6.12.7-200.0.riscv64.fc41.riscv64 (mockbuild@b085e57e93af4f97a92adef0cd6a5f7b) (gcc (GCC) 14.2.1 20240912 (Red Hat 14.2.1-3), GNU ld version 2.43.1-5.fc41) #1 SMP PREEMPT_DYNAMIC Sat Dec 28 10:55:11 EST 2024
 </span>
 
-- <span id="fedora_nodejs">**nodejs**: Linux version 6.5.0-0.rc4.30.5.riscv64.fc38.riscv64 (mockbuild@fedora-riscv) (gcc (GCC) 13.1.1 20230614 (Red Hat 13.1.1-4), GNU ld version 2.39-12.rv64.fc38) #1 SMP Sun Aug  6 10:43:52 EDT 2023
+- <span id="fedora_nodejs">**nodejs**: Linux version 6.12.7-200.0.riscv64.fc41.riscv64 (mockbuild@b085e57e93af4f97a92adef0cd6a5f7b) (gcc (GCC) 14.2.1 20240912 (Red Hat 14.2.1-3), GNU ld version 2.43.1-5.fc41) #1 SMP PREEMPT_DYNAMIC Sat Dec 28 10:55:11 EST 2024
 </span>
 
-- <span id="fedora_numpy">**numpy**: Linux version 6.5.0-0.rc4.30.5.riscv64.fc38.riscv64 (mockbuild@fedora-riscv) (gcc (GCC) 13.1.1 20230614 (Red Hat 13.1.1-4), GNU ld version 2.39-12.rv64.fc38) #1 SMP Sun Aug  6 10:43:52 EDT 2023
+- <span id="fedora_numpy">**numpy**: Linux version 6.12.7-200.0.riscv64.fc41.riscv64 (mockbuild@b085e57e93af4f97a92adef0cd6a5f7b) (gcc (GCC) 14.2.1 20240912 (Red Hat 14.2.1-3), GNU ld version 2.43.1-5.fc41) #1 SMP PREEMPT_DYNAMIC Sat Dec 28 10:55:11 EST 2024
 </span>
 
-- <span id="fedora_ocaml">**ocaml**: Linux version 6.5.0-0.rc4.30.5.riscv64.fc38.riscv64 (mockbuild@fedora-riscv) (gcc (GCC) 13.1.1 20230614 (Red Hat 13.1.1-4), GNU ld version 2.39-12.rv64.fc38) #1 SMP Sun Aug  6 10:43:52 EDT 2023
+- <span id="fedora_ocaml">**ocaml**: Linux version 6.12.7-200.0.riscv64.fc41.riscv64 (mockbuild@b085e57e93af4f97a92adef0cd6a5f7b) (gcc (GCC) 14.2.1 20240912 (Red Hat 14.2.1-3), GNU ld version 2.43.1-5.fc41) #1 SMP PREEMPT_DYNAMIC Sat Dec 28 10:55:11 EST 2024
 </span>
 
-- <span id="fedora_openjdk">**openjdk**: Linux version 6.5.0-0.rc4.30.5.riscv64.fc38.riscv64 (mockbuild@fedora-riscv) (gcc (GCC) 13.1.1 20230614 (Red Hat 13.1.1-4), GNU ld version 2.39-12.rv64.fc38) #1 SMP Sun Aug  6 10:43:52 EDT 2023
+- <span id="fedora_openjdk">**openjdk**: Linux version 6.12.7-200.0.riscv64.fc41.riscv64 (mockbuild@b085e57e93af4f97a92adef0cd6a5f7b) (gcc (GCC) 14.2.1 20240912 (Red Hat 14.2.1-3), GNU ld version 2.43.1-5.fc41) #1 SMP PREEMPT_DYNAMIC Sat Dec 28 10:55:11 EST 2024
 </span>
 
-- <span id="fedora_openssl">**openssl**: Linux version 6.5.0-0.rc4.30.5.riscv64.fc38.riscv64 (mockbuild@fedora-riscv) (gcc (GCC) 13.1.1 20230614 (Red Hat 13.1.1-4), GNU ld version 2.39-12.rv64.fc38) #1 SMP Sun Aug  6 10:43:52 EDT 2023
+- <span id="fedora_openssl">**openssl**: Linux version 6.12.7-200.0.riscv64.fc41.riscv64 (mockbuild@b085e57e93af4f97a92adef0cd6a5f7b) (gcc (GCC) 14.2.1 20240912 (Red Hat 14.2.1-3), GNU ld version 2.43.1-5.fc41) #1 SMP PREEMPT_DYNAMIC Sat Dec 28 10:55:11 EST 2024
 </span>
 
-- <span id="fedora_perl">**perl**: Linux version 6.5.0-0.rc4.30.5.riscv64.fc38.riscv64 (mockbuild@fedora-riscv) (gcc (GCC) 13.1.1 20230614 (Red Hat 13.1.1-4), GNU ld version 2.39-12.rv64.fc38) #1 SMP Sun Aug  6 10:43:52 EDT 2023
+- <span id="fedora_perl">**perl**: Linux version 6.12.7-200.0.riscv64.fc41.riscv64 (mockbuild@b085e57e93af4f97a92adef0cd6a5f7b) (gcc (GCC) 14.2.1 20240912 (Red Hat 14.2.1-3), GNU ld version 2.43.1-5.fc41) #1 SMP PREEMPT_DYNAMIC Sat Dec 28 10:55:11 EST 2024
 </span>
 
-- <span id="fedora_postgresql">**postgresql**: Linux version 6.5.0-0.rc4.30.5.riscv64.fc38.riscv64 (mockbuild@fedora-riscv) (gcc (GCC) 13.1.1 20230614 (Red Hat 13.1.1-4), GNU ld version 2.39-12.rv64.fc38) #1 SMP Sun Aug  6 10:43:52 EDT 2023
+- <span id="fedora_postgresql">**postgresql**: Linux version 6.12.7-200.0.riscv64.fc41.riscv64 (mockbuild@b085e57e93af4f97a92adef0cd6a5f7b) (gcc (GCC) 14.2.1 20240912 (Red Hat 14.2.1-3), GNU ld version 2.43.1-5.fc41) #1 SMP PREEMPT_DYNAMIC Sat Dec 28 10:55:11 EST 2024
 </span>
 
-- <span id="fedora_python">**python**: Linux version 6.5.0-0.rc4.30.5.riscv64.fc38.riscv64 (mockbuild@fedora-riscv) (gcc (GCC) 13.1.1 20230614 (Red Hat 13.1.1-4), GNU ld version 2.39-12.rv64.fc38) #1 SMP Sun Aug  6 10:43:52 EDT 2023
+- <span id="fedora_python">**python**: Linux version 6.12.7-200.0.riscv64.fc41.riscv64 (mockbuild@b085e57e93af4f97a92adef0cd6a5f7b) (gcc (GCC) 14.2.1 20240912 (Red Hat 14.2.1-3), GNU ld version 2.43.1-5.fc41) #1 SMP PREEMPT_DYNAMIC Sat Dec 28 10:55:11 EST 2024
 </span>
 
-- <span id="fedora_redis">**redis**: Linux version 6.5.0-0.rc4.30.5.riscv64.fc38.riscv64 (mockbuild@fedora-riscv) (gcc (GCC) 13.1.1 20230614 (Red Hat 13.1.1-4), GNU ld version 2.39-12.rv64.fc38) #1 SMP Sun Aug  6 10:43:52 EDT 2023
+- <span id="fedora_redis">**redis**: Linux version 6.12.7-200.0.riscv64.fc41.riscv64 (mockbuild@b085e57e93af4f97a92adef0cd6a5f7b) (gcc (GCC) 14.2.1 20240912 (Red Hat 14.2.1-3), GNU ld version 2.43.1-5.fc41) #1 SMP PREEMPT_DYNAMIC Sat Dec 28 10:55:11 EST 2024
 </span>
 
-- <span id="fedora_ruby">**ruby**: Linux version 6.5.0-0.rc4.30.5.riscv64.fc38.riscv64 (mockbuild@fedora-riscv) (gcc (GCC) 13.1.1 20230614 (Red Hat 13.1.1-4), GNU ld version 2.39-12.rv64.fc38) #1 SMP Sun Aug  6 10:43:52 EDT 2023
+- <span id="fedora_ruby">**ruby**: Linux version 6.12.7-200.0.riscv64.fc41.riscv64 (mockbuild@b085e57e93af4f97a92adef0cd6a5f7b) (gcc (GCC) 14.2.1 20240912 (Red Hat 14.2.1-3), GNU ld version 2.43.1-5.fc41) #1 SMP PREEMPT_DYNAMIC Sat Dec 28 10:55:11 EST 2024
 </span>
 
-- <span id="fedora_runc">**runc**: Linux version 6.5.0-0.rc4.30.5.riscv64.fc38.riscv64 (mockbuild@fedora-riscv) (gcc (GCC) 13.1.1 20230614 (Red Hat 13.1.1-4), GNU ld version 2.39-12.rv64.fc38) #1 SMP Sun Aug  6 10:43:52 EDT 2023
+  - ruby 未通过的测试 Unpassed tests
+
+  - test.sh
+
+```shell
+Nothing to do.
+Testing Redis on Fedora...
+Redis is not installed. Attempting to install...
+Ensuring required repositories are enabled...
+Installing EPEL repository...
+Repository status:
+Attempting to install redis...
+Failed to install Redis. Trying with --allowerasing flag...
+Failed to install Redis.
+
+```
+
+- <span id="fedora_runc">**runc**: Linux version 6.12.7-200.0.riscv64.fc41.riscv64 (mockbuild@b085e57e93af4f97a92adef0cd6a5f7b) (gcc (GCC) 14.2.1 20240912 (Red Hat 14.2.1-3), GNU ld version 2.43.1-5.fc41) #1 SMP PREEMPT_DYNAMIC Sat Dec 28 10:55:11 EST 2024
 </span>
 
-- <span id="fedora_rust">**rust**: Linux version 6.5.0-0.rc4.30.5.riscv64.fc38.riscv64 (mockbuild@fedora-riscv) (gcc (GCC) 13.1.1 20230614 (Red Hat 13.1.1-4), GNU ld version 2.39-12.rv64.fc38) #1 SMP Sun Aug  6 10:43:52 EDT 2023
+- <span id="fedora_rust">**rust**: Linux version 6.12.7-200.0.riscv64.fc41.riscv64 (mockbuild@b085e57e93af4f97a92adef0cd6a5f7b) (gcc (GCC) 14.2.1 20240912 (Red Hat 14.2.1-3), GNU ld version 2.43.1-5.fc41) #1 SMP PREEMPT_DYNAMIC Sat Dec 28 10:55:11 EST 2024
 </span>
 
-- <span id="fedora_scipy">**scipy**: Linux version 6.5.0-0.rc4.30.5.riscv64.fc38.riscv64 (mockbuild@fedora-riscv) (gcc (GCC) 13.1.1 20230614 (Red Hat 13.1.1-4), GNU ld version 2.39-12.rv64.fc38) #1 SMP Sun Aug  6 10:43:52 EDT 2023
+- <span id="fedora_scipy">**scipy**: Linux version 6.12.7-200.0.riscv64.fc41.riscv64 (mockbuild@b085e57e93af4f97a92adef0cd6a5f7b) (gcc (GCC) 14.2.1 20240912 (Red Hat 14.2.1-3), GNU ld version 2.43.1-5.fc41) #1 SMP PREEMPT_DYNAMIC Sat Dec 28 10:55:11 EST 2024
 </span>
 
-- <span id="fedora_sqlite">**sqlite**: Linux version 6.5.0-0.rc4.30.5.riscv64.fc38.riscv64 (mockbuild@fedora-riscv) (gcc (GCC) 13.1.1 20230614 (Red Hat 13.1.1-4), GNU ld version 2.39-12.rv64.fc38) #1 SMP Sun Aug  6 10:43:52 EDT 2023
+  - scipy 未通过的测试 Unpassed tests
+
+  - test.sh
+
+```shell
+Nothing to do.
+[2025-03-01 22:28:22] Current directory: /tmp/lintestor/fedora/rust
+[2025-03-01 22:28:22] Created temporary directory: /tmp/tmp.lQ2b7lhFgx
+[2025-03-01 22:28:22] Starting Rust test script...
+[2025-03-01 22:28:22] Checking system prerequisites...
+[2025-03-01 22:28:22] System prerequisites check passed.
+[2025-03-01 22:28:22] Rust is installed.
+[2025-03-01 22:28:23] Rust version:  ()
+[2025-03-01 22:28:23] Created test directory: /tmp/tmp.lAUPKiD838
+[2025-03-01 22:28:23] Creating a new Rust project...
+[2025-03-01 22:28:23] Failed to create Rust project. Cargo output:
+[2025-03-01 22:28:23] Rust is not functioning correctly.
+
+```
+
+- <span id="fedora_sqlite">**sqlite**: Linux version 6.12.7-200.0.riscv64.fc41.riscv64 (mockbuild@b085e57e93af4f97a92adef0cd6a5f7b) (gcc (GCC) 14.2.1 20240912 (Red Hat 14.2.1-3), GNU ld version 2.43.1-5.fc41) #1 SMP PREEMPT_DYNAMIC Sat Dec 28 10:55:11 EST 2024
 </span>
 
-- <span id="fedora_squid">**squid**: Linux version 6.5.0-0.rc4.30.5.riscv64.fc38.riscv64 (mockbuild@fedora-riscv) (gcc (GCC) 13.1.1 20230614 (Red Hat 13.1.1-4), GNU ld version 2.39-12.rv64.fc38) #1 SMP Sun Aug  6 10:43:52 EDT 2023
+- <span id="fedora_squid">**squid**: Linux version 6.12.7-200.0.riscv64.fc41.riscv64 (mockbuild@b085e57e93af4f97a92adef0cd6a5f7b) (gcc (GCC) 14.2.1 20240912 (Red Hat 14.2.1-3), GNU ld version 2.43.1-5.fc41) #1 SMP PREEMPT_DYNAMIC Sat Dec 28 10:55:11 EST 2024
 </span>
 
-- <span id="fedora_varnish">**varnish**: Linux version 6.5.0-0.rc4.30.5.riscv64.fc38.riscv64 (mockbuild@fedora-riscv) (gcc (GCC) 13.1.1 20230614 (Red Hat 13.1.1-4), GNU ld version 2.39-12.rv64.fc38) #1 SMP Sun Aug  6 10:43:52 EDT 2023
+- <span id="fedora_varnish">**varnish**: Linux version 6.12.7-200.0.riscv64.fc41.riscv64 (mockbuild@b085e57e93af4f97a92adef0cd6a5f7b) (gcc (GCC) 14.2.1 20240912 (Red Hat 14.2.1-3), GNU ld version 2.43.1-5.fc41) #1 SMP PREEMPT_DYNAMIC Sat Dec 28 10:55:11 EST 2024
 </span>
 
-- <span id="fedora_zookeeper">**zookeeper**: Linux version 6.5.0-0.rc4.30.5.riscv64.fc38.riscv64 (mockbuild@fedora-riscv) (gcc (GCC) 13.1.1 20230614 (Red Hat 13.1.1-4), GNU ld version 2.39-12.rv64.fc38) #1 SMP Sun Aug  6 10:43:52 EDT 2023
+- <span id="fedora_zookeeper">**zookeeper**: Linux version 6.12.7-200.0.riscv64.fc41.riscv64 (mockbuild@b085e57e93af4f97a92adef0cd6a5f7b) (gcc (GCC) 14.2.1 20240912 (Red Hat 14.2.1-3), GNU ld version 2.43.1-5.fc41) #1 SMP PREEMPT_DYNAMIC Sat Dec 28 10:55:11 EST 2024
 </span>
 
