@@ -1,6 +1,6 @@
 # 软件包测试结果矩阵 Software package test results
 
-测试时间 Testing time: 2025-03-01 22:28:53 UTC
+测试时间 Testing time: 2025-03-01 22:46:23 UTC
 
 > 图标说明 Legend: ✅ = 通过 Passed; ⚠️ = 部分测试不通过 Not all tests passed; ❌ = 全部测试不通过 All tests failed; ❓ = 未知 Unknown
 
@@ -11,12 +11,12 @@
 | CMake | Build System | ✅ cmake=3.31.5 | ✅ cmake=3.31.5 | ✅ cmake=3.31.5 |
 | Docker | Containerization Platform | ✅ docker=5:27.1.1-1~debian.12~bookworm | ❓ | ✅ docker=5:27.1.1-1~debian.12~bookworm |
 | Erlang Programming Language | Programming Language | ✅ erlang=1:27.2.2+dfsg-1 | ✅ erlang=1:27.2.2+dfsg-1 | ✅ erlang=1:27.2.2+dfsg-1 |
-| example | package | ✅ example=Unknown | ✅ example=Unknown | ❓ |
+| example | package | ✅ example=Unknown | ✅ example=Unknown | ✅ example=Unknown |
 | GNU Compiler Collection | Compiler Toolchain | ✅ gcc=14.2.0 | ✅ gcc=14.2.0 | ✅ gcc=14.2.0 |
 | GNU Debugger | Debugging Tool | ✅ gdb=GNU gdb (Debian 16.2-1) 16.2 | ✅ gdb=GNU gdb (Debian 16.2-1) 16.2 | ✅ gdb=GNU gdb (Debian 16.2-1) 16.2 |
 | Go Programming Language | Programming Language | ✅ golang=2:1.24~2 | ✅ golang=2:1.24~2 | ✅ golang=2:1.24~2 |
 | HAProxy | Load Balancer | ✅ haproxy=3.0.8-1 | ✅ haproxy=3.0.8-1 | ✅ haproxy=3.0.8-1 |
-| libmemcached | Caching Library | ✅ libmemcached=1.1.4-1.1+b2 | ✅ libmemcached=1.1.4-1.1+b2 | ❌ libmemcached=1.1.4-1.1+b2 |
+| libmemcached | Caching Library | ✅ libmemcached=1.1.4-1.1+b2 | ✅ libmemcached=1.1.4-1.1+b2 | ✅ libmemcached=1.1.4-1.1+b2 |
 | Lighttpd | Web Server | ✅ lighttpd=1.4.77-1 | ✅ lighttpd=1.4.77-1 | ✅ lighttpd=1.4.77-1 |
 | LLVM Compiler Infrastructure | Compiler Toolchain | ✅ llvm=1:19.1.7-1+b1 | ✅ llvm=1:19.1.7-1+b1 | ✅ llvm=1:19.1.7-1+b1 |
 | MariaDB database server | Database | ✅ mariadb=1:11.4.4-3 | ✅ mariadb=1:11.4.4-3 | ✅ mariadb=1:11.4.4-3 |
@@ -36,143 +36,214 @@
 | SciPy | Python Library | ✅ scipy=1.14.1 (python 3.13.2) | ✅ scipy=1.14.1 (python 3.13.2) | ✅ scipy=1.14.1 (python 3.13.2) |
 | SQLite 3 | Database | ✅ sqlite=3.46.1 | ✅ sqlite=3.46.1 | ✅ sqlite=3.46.1 |
 | Squid | Proxy Server | ✅ squid=6.13 | ✅ squid=6.13 | ✅ squid=6.13 |
-| Varnish Cache | Caching Server | ✅ varnish=7.6.1 | ✅ varnish=7.6.1 | ✅ varnish=7.6.1 |
-| ZooKeeper | Distributed Coordination Service | ❌ zookeeper=3.9.3 | ❌ zookeeper=3.9.3 | ✅ zookeeper=3.9.3 |
+| Varnish Cache | Caching Server | ✅ varnish=7.6.1 | ✅ varnish=7.6.1 | ❌ varnish=7.6.1 |
+| ZooKeeper | Distributed Coordination Service | ❌ zookeeper=3.9.3 | ❌ zookeeper=3.9.3 | ❌ zookeeper=3.9.3 |
 
 # 测试环境信息 Environment info
 
 ## <span id="bianbu">bianbu</span>
 
-- <span id="bianbu_apache">**apache**: Linux version 6.1.15 (root@bianbu-build-deb-37zn1-v692p) (gcc (Ubuntu 13.2.0-4ubuntu3-bb2) 13.2.0, GNU ld (GNU Binutils for Ubuntu) 2.41) #1.0 SMP PREEMPT Thu May 30 13:16:13 UTC 2024
+- <span id="bianbu_apache">**apache**: Linux version 6.6.63 (root@bianbu-24.04-build-bsp-tw4rs-7m0l0) (gcc (Bianbu 13.2.0-23ubuntu4bb3) 13.2.0, GNU ld (GNU Binutils for Ubuntu) 2.42) #2.1.0.2 SMP PREEMPT Fri Jan 24 03:39:48 UTC 2025
 </span>
 
-- <span id="bianbu_clang">**clang**: Linux version 6.1.15 (root@bianbu-build-deb-37zn1-v692p) (gcc (Ubuntu 13.2.0-4ubuntu3-bb2) 13.2.0, GNU ld (GNU Binutils for Ubuntu) 2.41) #1.0 SMP PREEMPT Thu May 30 13:16:13 UTC 2024
+- <span id="bianbu_clang">**clang**: Linux version 6.6.63 (root@bianbu-24.04-build-bsp-tw4rs-7m0l0) (gcc (Bianbu 13.2.0-23ubuntu4bb3) 13.2.0, GNU ld (GNU Binutils for Ubuntu) 2.42) #2.1.0.2 SMP PREEMPT Fri Jan 24 03:39:48 UTC 2025
 </span>
 
-- <span id="bianbu_cmake">**cmake**: Linux version 6.1.15 (root@bianbu-build-deb-37zn1-v692p) (gcc (Ubuntu 13.2.0-4ubuntu3-bb2) 13.2.0, GNU ld (GNU Binutils for Ubuntu) 2.41) #1.0 SMP PREEMPT Thu May 30 13:16:13 UTC 2024
+- <span id="bianbu_cmake">**cmake**: Linux version 6.6.63 (root@bianbu-24.04-build-bsp-tw4rs-7m0l0) (gcc (Bianbu 13.2.0-23ubuntu4bb3) 13.2.0, GNU ld (GNU Binutils for Ubuntu) 2.42) #2.1.0.2 SMP PREEMPT Fri Jan 24 03:39:48 UTC 2025
 </span>
 
-- <span id="bianbu_docker">**docker**: Linux version 6.1.15 (root@bianbu-build-deb-37zn1-v692p) (gcc (Ubuntu 13.2.0-4ubuntu3-bb2) 13.2.0, GNU ld (GNU Binutils for Ubuntu) 2.41) #1.0 SMP PREEMPT Thu May 30 13:16:13 UTC 2024
+- <span id="bianbu_docker">**docker**: Linux version 6.6.63 (root@bianbu-24.04-build-bsp-tw4rs-7m0l0) (gcc (Bianbu 13.2.0-23ubuntu4bb3) 13.2.0, GNU ld (GNU Binutils for Ubuntu) 2.42) #2.1.0.2 SMP PREEMPT Fri Jan 24 03:39:48 UTC 2025
 </span>
 
-- <span id="bianbu_erlang">**erlang**: Linux version 6.1.15 (root@bianbu-build-deb-37zn1-v692p) (gcc (Ubuntu 13.2.0-4ubuntu3-bb2) 13.2.0, GNU ld (GNU Binutils for Ubuntu) 2.41) #1.0 SMP PREEMPT Thu May 30 13:16:13 UTC 2024
+- <span id="bianbu_erlang">**erlang**: Linux version 6.6.63 (root@bianbu-24.04-build-bsp-tw4rs-7m0l0) (gcc (Bianbu 13.2.0-23ubuntu4bb3) 13.2.0, GNU ld (GNU Binutils for Ubuntu) 2.42) #2.1.0.2 SMP PREEMPT Fri Jan 24 03:39:48 UTC 2025
 </span>
 
-- <span id="bianbu_gcc">**gcc**: Linux version 6.1.15 (root@bianbu-build-deb-37zn1-v692p) (gcc (Ubuntu 13.2.0-4ubuntu3-bb2) 13.2.0, GNU ld (GNU Binutils for Ubuntu) 2.41) #1.0 SMP PREEMPT Thu May 30 13:16:13 UTC 2024
+- <span id="bianbu_example">**example**: Linux version 6.6.63 (root@bianbu-24.04-build-bsp-tw4rs-7m0l0) (gcc (Bianbu 13.2.0-23ubuntu4bb3) 13.2.0, GNU ld (GNU Binutils for Ubuntu) 2.42) #2.1.0.2 SMP PREEMPT Fri Jan 24 03:39:48 UTC 2025
 </span>
 
-- <span id="bianbu_gdb">**gdb**: Linux version 6.1.15 (root@bianbu-build-deb-37zn1-v692p) (gcc (Ubuntu 13.2.0-4ubuntu3-bb2) 13.2.0, GNU ld (GNU Binutils for Ubuntu) 2.41) #1.0 SMP PREEMPT Thu May 30 13:16:13 UTC 2024
+- <span id="bianbu_gcc">**gcc**: Linux version 6.6.63 (root@bianbu-24.04-build-bsp-tw4rs-7m0l0) (gcc (Bianbu 13.2.0-23ubuntu4bb3) 13.2.0, GNU ld (GNU Binutils for Ubuntu) 2.42) #2.1.0.2 SMP PREEMPT Fri Jan 24 03:39:48 UTC 2025
 </span>
 
-- <span id="bianbu_golang">**golang**: Linux version 6.1.15 (root@bianbu-build-deb-37zn1-v692p) (gcc (Ubuntu 13.2.0-4ubuntu3-bb2) 13.2.0, GNU ld (GNU Binutils for Ubuntu) 2.41) #1.0 SMP PREEMPT Thu May 30 13:16:13 UTC 2024
+- <span id="bianbu_gdb">**gdb**: Linux version 6.6.63 (root@bianbu-24.04-build-bsp-tw4rs-7m0l0) (gcc (Bianbu 13.2.0-23ubuntu4bb3) 13.2.0, GNU ld (GNU Binutils for Ubuntu) 2.42) #2.1.0.2 SMP PREEMPT Fri Jan 24 03:39:48 UTC 2025
 </span>
 
-- <span id="bianbu_haproxy">**haproxy**: Linux version 6.1.15 (root@bianbu-build-deb-37zn1-v692p) (gcc (Ubuntu 13.2.0-4ubuntu3-bb2) 13.2.0, GNU ld (GNU Binutils for Ubuntu) 2.41) #1.0 SMP PREEMPT Thu May 30 13:16:13 UTC 2024
+- <span id="bianbu_golang">**golang**: Linux version 6.6.63 (root@bianbu-24.04-build-bsp-tw4rs-7m0l0) (gcc (Bianbu 13.2.0-23ubuntu4bb3) 13.2.0, GNU ld (GNU Binutils for Ubuntu) 2.42) #2.1.0.2 SMP PREEMPT Fri Jan 24 03:39:48 UTC 2025
 </span>
 
-- <span id="bianbu_libmemcached">**libmemcached**: Linux version 6.1.15 (root@bianbu-build-deb-37zn1-v692p) (gcc (Ubuntu 13.2.0-4ubuntu3-bb2) 13.2.0, GNU ld (GNU Binutils for Ubuntu) 2.41) #1.0 SMP PREEMPT Thu May 30 13:16:13 UTC 2024
+- <span id="bianbu_haproxy">**haproxy**: Linux version 6.6.63 (root@bianbu-24.04-build-bsp-tw4rs-7m0l0) (gcc (Bianbu 13.2.0-23ubuntu4bb3) 13.2.0, GNU ld (GNU Binutils for Ubuntu) 2.42) #2.1.0.2 SMP PREEMPT Fri Jan 24 03:39:48 UTC 2025
 </span>
 
-- <span id="bianbu_lighttpd">**lighttpd**: Linux version 6.1.15 (root@bianbu-build-deb-37zn1-v692p) (gcc (Ubuntu 13.2.0-4ubuntu3-bb2) 13.2.0, GNU ld (GNU Binutils for Ubuntu) 2.41) #1.0 SMP PREEMPT Thu May 30 13:16:13 UTC 2024
+- <span id="bianbu_libmemcached">**libmemcached**: Linux version 6.6.63 (root@bianbu-24.04-build-bsp-tw4rs-7m0l0) (gcc (Bianbu 13.2.0-23ubuntu4bb3) 13.2.0, GNU ld (GNU Binutils for Ubuntu) 2.42) #2.1.0.2 SMP PREEMPT Fri Jan 24 03:39:48 UTC 2025
 </span>
 
-  - lighttpd 未通过的测试 Unpassed tests
+- <span id="bianbu_lighttpd">**lighttpd**: Linux version 6.6.63 (root@bianbu-24.04-build-bsp-tw4rs-7m0l0) (gcc (Bianbu 13.2.0-23ubuntu4bb3) 13.2.0, GNU ld (GNU Binutils for Ubuntu) 2.42) #2.1.0.2 SMP PREEMPT Fri Jan 24 03:39:48 UTC 2025
+</span>
+
+- <span id="bianbu_llvm">**llvm**: Linux version 6.6.63 (root@bianbu-24.04-build-bsp-tw4rs-7m0l0) (gcc (Bianbu 13.2.0-23ubuntu4bb3) 13.2.0, GNU ld (GNU Binutils for Ubuntu) 2.42) #2.1.0.2 SMP PREEMPT Fri Jan 24 03:39:48 UTC 2025
+</span>
+
+- <span id="bianbu_mariadb">**mariadb**: Linux version 6.6.63 (root@bianbu-24.04-build-bsp-tw4rs-7m0l0) (gcc (Bianbu 13.2.0-23ubuntu4bb3) 13.2.0, GNU ld (GNU Binutils for Ubuntu) 2.42) #2.1.0.2 SMP PREEMPT Fri Jan 24 03:39:48 UTC 2025
+</span>
+
+- <span id="bianbu_nginx">**nginx**: Linux version 6.6.63 (root@bianbu-24.04-build-bsp-tw4rs-7m0l0) (gcc (Bianbu 13.2.0-23ubuntu4bb3) 13.2.0, GNU ld (GNU Binutils for Ubuntu) 2.42) #2.1.0.2 SMP PREEMPT Fri Jan 24 03:39:48 UTC 2025
+</span>
+
+- <span id="bianbu_nodejs">**nodejs**: Linux version 6.6.63 (root@bianbu-24.04-build-bsp-tw4rs-7m0l0) (gcc (Bianbu 13.2.0-23ubuntu4bb3) 13.2.0, GNU ld (GNU Binutils for Ubuntu) 2.42) #2.1.0.2 SMP PREEMPT Fri Jan 24 03:39:48 UTC 2025
+</span>
+
+- <span id="bianbu_numpy">**numpy**: Linux version 6.6.63 (root@bianbu-24.04-build-bsp-tw4rs-7m0l0) (gcc (Bianbu 13.2.0-23ubuntu4bb3) 13.2.0, GNU ld (GNU Binutils for Ubuntu) 2.42) #2.1.0.2 SMP PREEMPT Fri Jan 24 03:39:48 UTC 2025
+</span>
+
+- <span id="bianbu_ocaml">**ocaml**: Linux version 6.6.63 (root@bianbu-24.04-build-bsp-tw4rs-7m0l0) (gcc (Bianbu 13.2.0-23ubuntu4bb3) 13.2.0, GNU ld (GNU Binutils for Ubuntu) 2.42) #2.1.0.2 SMP PREEMPT Fri Jan 24 03:39:48 UTC 2025
+</span>
+
+- <span id="bianbu_openjdk">**openjdk**: Linux version 6.6.63 (root@bianbu-24.04-build-bsp-tw4rs-7m0l0) (gcc (Bianbu 13.2.0-23ubuntu4bb3) 13.2.0, GNU ld (GNU Binutils for Ubuntu) 2.42) #2.1.0.2 SMP PREEMPT Fri Jan 24 03:39:48 UTC 2025
+</span>
+
+- <span id="bianbu_openssl">**openssl**: Linux version 6.6.63 (root@bianbu-24.04-build-bsp-tw4rs-7m0l0) (gcc (Bianbu 13.2.0-23ubuntu4bb3) 13.2.0, GNU ld (GNU Binutils for Ubuntu) 2.42) #2.1.0.2 SMP PREEMPT Fri Jan 24 03:39:48 UTC 2025
+</span>
+
+- <span id="bianbu_perl">**perl**: Linux version 6.6.63 (root@bianbu-24.04-build-bsp-tw4rs-7m0l0) (gcc (Bianbu 13.2.0-23ubuntu4bb3) 13.2.0, GNU ld (GNU Binutils for Ubuntu) 2.42) #2.1.0.2 SMP PREEMPT Fri Jan 24 03:39:48 UTC 2025
+</span>
+
+- <span id="bianbu_postgresql">**postgresql**: Linux version 6.6.63 (root@bianbu-24.04-build-bsp-tw4rs-7m0l0) (gcc (Bianbu 13.2.0-23ubuntu4bb3) 13.2.0, GNU ld (GNU Binutils for Ubuntu) 2.42) #2.1.0.2 SMP PREEMPT Fri Jan 24 03:39:48 UTC 2025
+</span>
+
+- <span id="bianbu_python">**python**: Linux version 6.6.63 (root@bianbu-24.04-build-bsp-tw4rs-7m0l0) (gcc (Bianbu 13.2.0-23ubuntu4bb3) 13.2.0, GNU ld (GNU Binutils for Ubuntu) 2.42) #2.1.0.2 SMP PREEMPT Fri Jan 24 03:39:48 UTC 2025
+</span>
+
+- <span id="bianbu_redis">**redis**: Linux version 6.6.63 (root@bianbu-24.04-build-bsp-tw4rs-7m0l0) (gcc (Bianbu 13.2.0-23ubuntu4bb3) 13.2.0, GNU ld (GNU Binutils for Ubuntu) 2.42) #2.1.0.2 SMP PREEMPT Fri Jan 24 03:39:48 UTC 2025
+</span>
+
+- <span id="bianbu_ruby">**ruby**: Linux version 6.6.63 (root@bianbu-24.04-build-bsp-tw4rs-7m0l0) (gcc (Bianbu 13.2.0-23ubuntu4bb3) 13.2.0, GNU ld (GNU Binutils for Ubuntu) 2.42) #2.1.0.2 SMP PREEMPT Fri Jan 24 03:39:48 UTC 2025
+</span>
+
+- <span id="bianbu_runc">**runc**: Linux version 6.6.63 (root@bianbu-24.04-build-bsp-tw4rs-7m0l0) (gcc (Bianbu 13.2.0-23ubuntu4bb3) 13.2.0, GNU ld (GNU Binutils for Ubuntu) 2.42) #2.1.0.2 SMP PREEMPT Fri Jan 24 03:39:48 UTC 2025
+</span>
+
+  - runc 未通过的测试 Unpassed tests
 
   - test.sh
 
 ```shell
-Package libmemcached11t64 is not installed. Attempting to install...
-命中:1 http://archive.spacemit.com/bianbu-ports mantic/snapshots/v1.0 InRelease
-命中:2 http://archive.spacemit.com/bianbu-ports mantic-security/snapshots/v1.0 InRelease
-命中:3 http://archive.spacemit.com/bianbu-ports mantic-spacemit/snapshots/v1.0 InRelease
-命中:4 http://archive.spacemit.com/bianbu-ports mantic-porting/snapshots/v1.0 InRelease
-命中:5 http://archive.spacemit.com/bianbu-ports mantic-customization/snapshots/v1.0 InRelease
+[2025-02-28 05:11:04] Starting runC test script...
+[2025-02-28 05:11:04] Checking system prerequisites...
+[2025-02-28 05:11:04] Kernel version: 6.6.63
+[2025-02-28 05:11:05] System prerequisites check completed.
+[2025-02-28 05:11:05] runC is not installed.
+[2025-02-28 05:11:05] Attempting to install runC...
+命中:1 http://archive.spacemit.com/bianbu noble/snapshots/v2.1 InRelease
+命中:2 http://archive.spacemit.com/bianbu noble-security/snapshots/v2.1 InRelease
+命中:3 http://archive.spacemit.com/bianbu noble-porting/snapshots/v2.1 InRelease
+命中:4 http://archive.spacemit.com/bianbu noble-customization/snapshots/v2.1 InRelease
+命中:5 http://archive.spacemit.com/bianbu noble-updates/snapshots/v2.1 InRelease
 正在读取软件包列表...
 正在读取软件包列表...
 正在分析软件包的依赖关系树...
 正在读取状态信息...
-Failed to install package libmemcached11t64.
+下列【新】软件包将被安装：
+  runc
+升级了 0 个软件包，新安装了 1 个软件包，要卸载 0 个软件包，有 0 个软件包未被升级。
+需要下载 8,060 kB 的归档。
+解压缩后会消耗 37.2 MB 的额外空间。
+获取:1 http://archive.spacemit.com/bianbu noble-updates/snapshots/v2.1/main riscv64 runc riscv64 1.1.12-0ubuntu3.1 [8,060 kB]
+已下载 8,060 kB，耗时 1秒 (9,022 kB/s)
+正在选中未选择的软件包 runc。
+(正在读取数据库 ... (正在读取数据库 ... 5%(正在读取数据库 ... 10%(正在读取数据库 ... 15%(正在读取数据库 ... 20%(正在读取数据库 ... 25%(正在读取数据库 ... 30%(正在读取数据库 ... 35%(正在读取数据库 ... 40%(正在读取数据库 ... 45%(正在读取数据库 ... 50%(正在读取数据库 ... 55%(正在读取数据库 ... 60%(正在读取数据库 ... 65%(正在读取数据库 ... 70%(正在读取数据库 ... 75%(正在读取数据库 ... 80%(正在读取数据库 ... 85%(正在读取数据库 ... 90%(正在读取数据库 ... 95%(正在读取数据库 ... 100%(正在读取数据库 ... 系统当前共安装有 105847 个文件和目录。)
+准备解压 .../runc_1.1.12-0ubuntu3.1_riscv64.deb  ...
+正在解压 runc (1.1.12-0ubuntu3.1) ...
+正在设置 runc (1.1.12-0ubuntu3.1) ...
+[2025-02-28 05:11:23] runC installed successfully.
+[2025-02-28 05:11:23] Created temporary directory: /tmp/tmp.k1pT8P08KG
+[2025-02-28 05:11:23] Created config.json in /tmp/tmp.k1pT8P08KG/bundle
+[2025-02-28 05:11:23] Attempting to run runc container...
+[2025-02-28 05:11:23] Failed to run runc container. Output:
+[2025-02-28 05:11:23] time="2025-02-28T05:11:23+08:00" level=error msg="runc run failed: unable to start container process: error closing exec fds: open /proc/self/fd: no such file or directory"
+[2025-02-28 05:11:23] runC is not functioning correctly.
 
 ```
 
-- <span id="bianbu_llvm">**llvm**: Linux version 6.1.15 (root@bianbu-build-deb-37zn1-v692p) (gcc (Ubuntu 13.2.0-4ubuntu3-bb2) 13.2.0, GNU ld (GNU Binutils for Ubuntu) 2.41) #1.0 SMP PREEMPT Thu May 30 13:16:13 UTC 2024
+- <span id="bianbu_rust">**rust**: Linux version 6.6.63 (root@bianbu-24.04-build-bsp-tw4rs-7m0l0) (gcc (Bianbu 13.2.0-23ubuntu4bb3) 13.2.0, GNU ld (GNU Binutils for Ubuntu) 2.42) #2.1.0.2 SMP PREEMPT Fri Jan 24 03:39:48 UTC 2025
 </span>
 
-- <span id="bianbu_mariadb">**mariadb**: Linux version 6.1.15 (root@bianbu-build-deb-37zn1-v692p) (gcc (Ubuntu 13.2.0-4ubuntu3-bb2) 13.2.0, GNU ld (GNU Binutils for Ubuntu) 2.41) #1.0 SMP PREEMPT Thu May 30 13:16:13 UTC 2024
+- <span id="bianbu_scipy">**scipy**: Linux version 6.6.63 (root@bianbu-24.04-build-bsp-tw4rs-7m0l0) (gcc (Bianbu 13.2.0-23ubuntu4bb3) 13.2.0, GNU ld (GNU Binutils for Ubuntu) 2.42) #2.1.0.2 SMP PREEMPT Fri Jan 24 03:39:48 UTC 2025
 </span>
 
-- <span id="bianbu_nginx">**nginx**: Linux version 6.1.15 (root@bianbu-build-deb-37zn1-v692p) (gcc (Ubuntu 13.2.0-4ubuntu3-bb2) 13.2.0, GNU ld (GNU Binutils for Ubuntu) 2.41) #1.0 SMP PREEMPT Thu May 30 13:16:13 UTC 2024
+- <span id="bianbu_sqlite">**sqlite**: Linux version 6.6.63 (root@bianbu-24.04-build-bsp-tw4rs-7m0l0) (gcc (Bianbu 13.2.0-23ubuntu4bb3) 13.2.0, GNU ld (GNU Binutils for Ubuntu) 2.42) #2.1.0.2 SMP PREEMPT Fri Jan 24 03:39:48 UTC 2025
 </span>
 
-- <span id="bianbu_nodejs">**nodejs**: Linux version 6.1.15 (root@bianbu-build-deb-37zn1-v692p) (gcc (Ubuntu 13.2.0-4ubuntu3-bb2) 13.2.0, GNU ld (GNU Binutils for Ubuntu) 2.41) #1.0 SMP PREEMPT Thu May 30 13:16:13 UTC 2024
+- <span id="bianbu_squid">**squid**: Linux version 6.6.63 (root@bianbu-24.04-build-bsp-tw4rs-7m0l0) (gcc (Bianbu 13.2.0-23ubuntu4bb3) 13.2.0, GNU ld (GNU Binutils for Ubuntu) 2.42) #2.1.0.2 SMP PREEMPT Fri Jan 24 03:39:48 UTC 2025
 </span>
 
-- <span id="bianbu_numpy">**numpy**: Linux version 6.1.15 (root@bianbu-build-deb-37zn1-v692p) (gcc (Ubuntu 13.2.0-4ubuntu3-bb2) 13.2.0, GNU ld (GNU Binutils for Ubuntu) 2.41) #1.0 SMP PREEMPT Thu May 30 13:16:13 UTC 2024
+- <span id="bianbu_varnish">**varnish**: Linux version 6.6.63 (root@bianbu-24.04-build-bsp-tw4rs-7m0l0) (gcc (Bianbu 13.2.0-23ubuntu4bb3) 13.2.0, GNU ld (GNU Binutils for Ubuntu) 2.42) #2.1.0.2 SMP PREEMPT Fri Jan 24 03:39:48 UTC 2025
 </span>
 
-- <span id="bianbu_ocaml">**ocaml**: Linux version 6.1.15 (root@bianbu-build-deb-37zn1-v692p) (gcc (Ubuntu 13.2.0-4ubuntu3-bb2) 13.2.0, GNU ld (GNU Binutils for Ubuntu) 2.41) #1.0 SMP PREEMPT Thu May 30 13:16:13 UTC 2024
-</span>
-
-- <span id="bianbu_openjdk">**openjdk**: Linux version 6.1.15 (root@bianbu-build-deb-37zn1-v692p) (gcc (Ubuntu 13.2.0-4ubuntu3-bb2) 13.2.0, GNU ld (GNU Binutils for Ubuntu) 2.41) #1.0 SMP PREEMPT Thu May 30 13:16:13 UTC 2024
-</span>
-
-- <span id="bianbu_openssl">**openssl**: Linux version 6.1.15 (root@bianbu-build-deb-37zn1-v692p) (gcc (Ubuntu 13.2.0-4ubuntu3-bb2) 13.2.0, GNU ld (GNU Binutils for Ubuntu) 2.41) #1.0 SMP PREEMPT Thu May 30 13:16:13 UTC 2024
-</span>
-
-- <span id="bianbu_perl">**perl**: Linux version 6.1.15 (root@bianbu-build-deb-37zn1-v692p) (gcc (Ubuntu 13.2.0-4ubuntu3-bb2) 13.2.0, GNU ld (GNU Binutils for Ubuntu) 2.41) #1.0 SMP PREEMPT Thu May 30 13:16:13 UTC 2024
-</span>
-
-- <span id="bianbu_postgresql">**postgresql**: Linux version 6.1.15 (root@bianbu-build-deb-37zn1-v692p) (gcc (Ubuntu 13.2.0-4ubuntu3-bb2) 13.2.0, GNU ld (GNU Binutils for Ubuntu) 2.41) #1.0 SMP PREEMPT Thu May 30 13:16:13 UTC 2024
-</span>
-
-- <span id="bianbu_python">**python**: Linux version 6.1.15 (root@bianbu-build-deb-37zn1-v692p) (gcc (Ubuntu 13.2.0-4ubuntu3-bb2) 13.2.0, GNU ld (GNU Binutils for Ubuntu) 2.41) #1.0 SMP PREEMPT Thu May 30 13:16:13 UTC 2024
-</span>
-
-- <span id="bianbu_redis">**redis**: Linux version 6.1.15 (root@bianbu-build-deb-37zn1-v692p) (gcc (Ubuntu 13.2.0-4ubuntu3-bb2) 13.2.0, GNU ld (GNU Binutils for Ubuntu) 2.41) #1.0 SMP PREEMPT Thu May 30 13:16:13 UTC 2024
-</span>
-
-- <span id="bianbu_ruby">**ruby**: Linux version 6.1.15 (root@bianbu-build-deb-37zn1-v692p) (gcc (Ubuntu 13.2.0-4ubuntu3-bb2) 13.2.0, GNU ld (GNU Binutils for Ubuntu) 2.41) #1.0 SMP PREEMPT Thu May 30 13:16:13 UTC 2024
-</span>
-
-- <span id="bianbu_runc">**runc**: Linux version 6.1.15 (root@bianbu-build-deb-37zn1-v692p) (gcc (Ubuntu 13.2.0-4ubuntu3-bb2) 13.2.0, GNU ld (GNU Binutils for Ubuntu) 2.41) #1.0 SMP PREEMPT Thu May 30 13:16:13 UTC 2024
-</span>
-
-- <span id="bianbu_rust">**rust**: Linux version 6.1.15 (root@bianbu-build-deb-37zn1-v692p) (gcc (Ubuntu 13.2.0-4ubuntu3-bb2) 13.2.0, GNU ld (GNU Binutils for Ubuntu) 2.41) #1.0 SMP PREEMPT Thu May 30 13:16:13 UTC 2024
-</span>
-
-  - rust 未通过的测试 Unpassed tests
+  - varnish 未通过的测试 Unpassed tests
 
   - test.sh
 
 ```shell
-[2024-10-15 17:23:10] Starting runC test script...
-[2024-10-15 17:23:10] Checking system prerequisites...
-[2024-10-15 17:23:10] Kernel version: 6.1.15
-[2024-10-15 17:23:11] System prerequisites check completed.
-[2024-10-15 17:23:11] runC is installed.
-[2024-10-15 17:23:11] Created temporary directory: /tmp/tmp.lD9WAZQUAL
-[2024-10-15 17:23:11] Created config.json in /tmp/tmp.lD9WAZQUAL/bundle
-[2024-10-15 17:23:11] Attempting to run runc container...
-[2024-10-15 17:23:11] Failed to run runc container. Output:
-[2024-10-15 17:23:11] time="2024-10-15T17:23:11+08:00" level=error msg="runc run failed: unable to start container process: error closing exec fds: open /proc/self/fd: no such file or directory"
-[2024-10-15 17:23:11] runC is not functioning correctly.
+[2025-02-28 05:14:59] Current directory: /tmp/lintestor/bianbu/varnish
+[2025-02-28 05:14:59] Created temporary directory: /tmp/tmp.DhZvN5gn63
+[2025-02-28 05:14:59] Starting Varnish test script...
+[2025-02-28 05:14:59] Checking system prerequisites...
+[2025-02-28 05:14:59] System prerequisites check passed.
+[2025-02-28 05:14:59] Varnish is not installed.
+[2025-02-28 05:14:59] Attempting to install Varnish...
+命中:1 http://archive.spacemit.com/bianbu noble/snapshots/v2.1 InRelease
+命中:2 http://archive.spacemit.com/bianbu noble-security/snapshots/v2.1 InRelease
+命中:3 http://archive.spacemit.com/bianbu noble-porting/snapshots/v2.1 InRelease
+命中:4 http://archive.spacemit.com/bianbu noble-customization/snapshots/v2.1 InRelease
+命中:5 http://archive.spacemit.com/bianbu noble-updates/snapshots/v2.1 InRelease
+正在读取软件包列表...
+正在读取软件包列表...
+正在分析软件包的依赖关系树...
+正在读取状态信息...
+将会同时安装下列软件：
+  libvarnishapi3
+建议安装：
+  varnish-doc
+下列【新】软件包将被安装：
+  libvarnishapi3 varnish
+升级了 0 个软件包，新安装了 2 个软件包，要卸载 0 个软件包，有 0 个软件包未被升级。
+需要下载 1,335 kB 的归档。
+解压缩后会消耗 3,125 kB 的额外空间。
+获取:1 http://archive.spacemit.com/bianbu noble/snapshots/v2.1/universe riscv64 libvarnishapi3 riscv64 7.1.1-1.1ubuntu1 [186 kB]
+获取:2 http://archive.spacemit.com/bianbu noble/snapshots/v2.1/universe riscv64 varnish riscv64 7.1.1-1.1ubuntu1 [1,149 kB]
+已下载 1,335 kB，耗时 0秒 (2,774 kB/s)
+正在选中未选择的软件包 libvarnishapi3:riscv64。
+(正在读取数据库 ... (正在读取数据库 ... 5%(正在读取数据库 ... 10%(正在读取数据库 ... 15%(正在读取数据库 ... 20%(正在读取数据库 ... 25%(正在读取数据库 ... 30%(正在读取数据库 ... 35%(正在读取数据库 ... 40%(正在读取数据库 ... 45%(正在读取数据库 ... 50%(正在读取数据库 ... 55%(正在读取数据库 ... 60%(正在读取数据库 ... 65%(正在读取数据库 ... 70%(正在读取数据库 ... 75%(正在读取数据库 ... 80%(正在读取数据库 ... 85%(正在读取数据库 ... 90%(正在读取数据库 ... 95%(正在读取数据库 ... 100%(正在读取数据库 ... 系统当前共安装有 109765 个文件和目录。)
+准备解压 .../libvarnishapi3_7.1.1-1.1ubuntu1_riscv64.deb  ...
+正在解压 libvarnishapi3:riscv64 (7.1.1-1.1ubuntu1) ...
+正在选中未选择的软件包 varnish。
+准备解压 .../varnish_7.1.1-1.1ubuntu1_riscv64.deb  ...
+正在解压 varnish (7.1.1-1.1ubuntu1) ...
+dpkg: 处理归档 /var/cache/apt/archives/varnish_7.1.1-1.1ubuntu1_riscv64.deb (--unpack)时出错：
+ 无法打开 /usr/lib/systemd/system/varnish.service.dpkg-new: No such file or directory
+在处理时有错误发生：
+ /var/cache/apt/archives/varnish_7.1.1-1.1ubuntu1_riscv64.deb
+Failed to install Varnish.
 
 ```
 
-- <span id="bianbu_scipy">**scipy**: Linux version 6.1.15 (root@bianbu-build-deb-37zn1-v692p) (gcc (Ubuntu 13.2.0-4ubuntu3-bb2) 13.2.0, GNU ld (GNU Binutils for Ubuntu) 2.41) #1.0 SMP PREEMPT Thu May 30 13:16:13 UTC 2024
+- <span id="bianbu_zookeeper">**zookeeper**: Linux version 6.6.63 (root@bianbu-24.04-build-bsp-tw4rs-7m0l0) (gcc (Bianbu 13.2.0-23ubuntu4bb3) 13.2.0, GNU ld (GNU Binutils for Ubuntu) 2.42) #2.1.0.2 SMP PREEMPT Fri Jan 24 03:39:48 UTC 2025
 </span>
 
-- <span id="bianbu_sqlite">**sqlite**: Linux version 6.1.15 (root@bianbu-build-deb-37zn1-v692p) (gcc (Ubuntu 13.2.0-4ubuntu3-bb2) 13.2.0, GNU ld (GNU Binutils for Ubuntu) 2.41) #1.0 SMP PREEMPT Thu May 30 13:16:13 UTC 2024
-</span>
+  - zookeeper 未通过的测试 Unpassed tests
 
-- <span id="bianbu_squid">**squid**: Linux version 6.1.15 (root@bianbu-build-deb-37zn1-v692p) (gcc (Ubuntu 13.2.0-4ubuntu3-bb2) 13.2.0, GNU ld (GNU Binutils for Ubuntu) 2.41) #1.0 SMP PREEMPT Thu May 30 13:16:13 UTC 2024
-</span>
+  - test.sh
 
-- <span id="bianbu_varnish">**varnish**: Linux version 6.1.15 (root@bianbu-build-deb-37zn1-v692p) (gcc (Ubuntu 13.2.0-4ubuntu3-bb2) 13.2.0, GNU ld (GNU Binutils for Ubuntu) 2.41) #1.0 SMP PREEMPT Thu May 30 13:16:13 UTC 2024
-</span>
+```shell
+[2025-02-28 05:15:18] Current directory: /tmp/lintestor/bianbu/zookeeper
+[2025-02-28 05:15:18] Created temporary directory: /tmp/tmp.6EMFXf2Gd6
+[2025-02-28 05:15:18] Starting ZooKeeper test script...
+[2025-02-28 05:15:18] Checking system prerequisites...
+[2025-02-28 05:15:18] System prerequisites check passed.
+[2025-02-28 05:15:18] ZooKeeper is not installed.
+[2025-02-28 05:15:18] Attempting to install ZooKeeper...
+Failed to extract ZooKeeper.
 
-- <span id="bianbu_zookeeper">**zookeeper**: Linux version 6.1.15 (root@bianbu-build-deb-37zn1-v692p) (gcc (Ubuntu 13.2.0-4ubuntu3-bb2) 13.2.0, GNU ld (GNU Binutils for Ubuntu) 2.41) #1.0 SMP PREEMPT Thu May 30 13:16:13 UTC 2024
-</span>
+```
 
 ## <span id="debian">debian</span>
 
@@ -510,10 +581,7 @@ Starting zookeeper ... STARTED
 - <span id="fedora_redis">**redis**: Linux version 6.12.7-200.0.riscv64.fc41.riscv64 (mockbuild@b085e57e93af4f97a92adef0cd6a5f7b) (gcc (GCC) 14.2.1 20240912 (Red Hat 14.2.1-3), GNU ld version 2.43.1-5.fc41) #1 SMP PREEMPT_DYNAMIC Sat Dec 28 10:55:11 EST 2024
 </span>
 
-- <span id="fedora_ruby">**ruby**: Linux version 6.12.7-200.0.riscv64.fc41.riscv64 (mockbuild@b085e57e93af4f97a92adef0cd6a5f7b) (gcc (GCC) 14.2.1 20240912 (Red Hat 14.2.1-3), GNU ld version 2.43.1-5.fc41) #1 SMP PREEMPT_DYNAMIC Sat Dec 28 10:55:11 EST 2024
-</span>
-
-  - ruby 未通过的测试 Unpassed tests
+  - redis 未通过的测试 Unpassed tests
 
   - test.sh
 
@@ -530,16 +598,16 @@ Failed to install Redis.
 
 ```
 
+- <span id="fedora_ruby">**ruby**: Linux version 6.12.7-200.0.riscv64.fc41.riscv64 (mockbuild@b085e57e93af4f97a92adef0cd6a5f7b) (gcc (GCC) 14.2.1 20240912 (Red Hat 14.2.1-3), GNU ld version 2.43.1-5.fc41) #1 SMP PREEMPT_DYNAMIC Sat Dec 28 10:55:11 EST 2024
+</span>
+
 - <span id="fedora_runc">**runc**: Linux version 6.12.7-200.0.riscv64.fc41.riscv64 (mockbuild@b085e57e93af4f97a92adef0cd6a5f7b) (gcc (GCC) 14.2.1 20240912 (Red Hat 14.2.1-3), GNU ld version 2.43.1-5.fc41) #1 SMP PREEMPT_DYNAMIC Sat Dec 28 10:55:11 EST 2024
 </span>
 
 - <span id="fedora_rust">**rust**: Linux version 6.12.7-200.0.riscv64.fc41.riscv64 (mockbuild@b085e57e93af4f97a92adef0cd6a5f7b) (gcc (GCC) 14.2.1 20240912 (Red Hat 14.2.1-3), GNU ld version 2.43.1-5.fc41) #1 SMP PREEMPT_DYNAMIC Sat Dec 28 10:55:11 EST 2024
 </span>
 
-- <span id="fedora_scipy">**scipy**: Linux version 6.12.7-200.0.riscv64.fc41.riscv64 (mockbuild@b085e57e93af4f97a92adef0cd6a5f7b) (gcc (GCC) 14.2.1 20240912 (Red Hat 14.2.1-3), GNU ld version 2.43.1-5.fc41) #1 SMP PREEMPT_DYNAMIC Sat Dec 28 10:55:11 EST 2024
-</span>
-
-  - scipy 未通过的测试 Unpassed tests
+  - rust 未通过的测试 Unpassed tests
 
   - test.sh
 
@@ -559,6 +627,9 @@ Nothing to do.
 
 ```
 
+- <span id="fedora_scipy">**scipy**: Linux version 6.12.7-200.0.riscv64.fc41.riscv64 (mockbuild@b085e57e93af4f97a92adef0cd6a5f7b) (gcc (GCC) 14.2.1 20240912 (Red Hat 14.2.1-3), GNU ld version 2.43.1-5.fc41) #1 SMP PREEMPT_DYNAMIC Sat Dec 28 10:55:11 EST 2024
+</span>
+
 - <span id="fedora_sqlite">**sqlite**: Linux version 6.12.7-200.0.riscv64.fc41.riscv64 (mockbuild@b085e57e93af4f97a92adef0cd6a5f7b) (gcc (GCC) 14.2.1 20240912 (Red Hat 14.2.1-3), GNU ld version 2.43.1-5.fc41) #1 SMP PREEMPT_DYNAMIC Sat Dec 28 10:55:11 EST 2024
 </span>
 
@@ -570,4 +641,15 @@ Nothing to do.
 
 - <span id="fedora_zookeeper">**zookeeper**: Linux version 6.12.7-200.0.riscv64.fc41.riscv64 (mockbuild@b085e57e93af4f97a92adef0cd6a5f7b) (gcc (GCC) 14.2.1 20240912 (Red Hat 14.2.1-3), GNU ld version 2.43.1-5.fc41) #1 SMP PREEMPT_DYNAMIC Sat Dec 28 10:55:11 EST 2024
 </span>
+
+  - zookeeper 未通过的测试 Unpassed tests
+
+  - test.sh
+
+```shell
+Nothing to do.
+[2025-03-01 22:28:45] Current directory: /tmp/lintestor/fedora/zookeeper
+[2025-03-01 22:28:45] Created temporary directory: /tmp/tmp.3RD4Yvlkhy
+
+```
 
