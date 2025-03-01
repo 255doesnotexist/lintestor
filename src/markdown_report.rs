@@ -41,6 +41,20 @@ pub fn generate_markdown_report(
             }
         }
 
+        let mut report_matrix_by_distro_name_and_package_name: BTreeMap<String, BTreeMap<String, &Report>> = BTreeMap::new();
+        for report in &reports {
+            if let (Some(pkg_idx), Some(distro_idx)) = (
+                packages.iter().position(|&pkg| pkg == report.package_name),
+                distros.iter().position(|&distro| distro == report.distro),
+            ) {
+                report_matrix[pkg_idx][distro_idx] = Some(report);
+                report_matrix_by_distro_name_and_package_name
+                    .entry(report.distro.clone())
+                    .or_default()
+                    .insert(report.package_name.clone(), report);
+            }
+        }
+
         let mut markdown = String::new();
         markdown.push_str("# 软件包测试结果矩阵 Software package test results\n\n");
         /// 测试时间的标准格式：YYYY-MM-DD HH:mm:ss
@@ -125,10 +139,10 @@ pub fn generate_markdown_report(
                 ));
 
                 // check if all tests passed, or else append the test details
-                let pkg_idx = packages.iter().position(|(p, _)| p == package).unwrap();
-                let distro_idx = distros.iter().position(|d| d == distro).unwrap();
-
-                if let Some(report) = report_matrix[pkg_idx][distro_idx] {
+                if let Some(report) = report_matrix_by_distro_name_and_package_name
+                    .get(distro)
+                    .and_then(|packages_map| packages_map.get(package))
+                {
                     if !report.all_tests_passed {
                         appending_details
                             .push_str(&format!("  - {} 未通过的测试 Unpassed tests\n\n", package));
