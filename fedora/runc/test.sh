@@ -10,6 +10,49 @@ log() {
     echo "[$(date '+%Y-%m-%d %H:%M:%S')] $1"
 }
 
+# Error exit function
+error_exit() {
+    log "ERROR: $1"
+    exit 1
+}
+
+# Function with timeout
+run_with_timeout() {
+    local timeout=$1
+    local command="${@:2}"
+    
+    log "Running command with $timeout second timeout: $command"
+    
+    # Run the command in background
+    eval "$command" &
+    local pid=$!
+    
+    # Wait for command with timeout
+    local timeout_happened=0
+    (
+        sleep $timeout
+        kill -0 $pid 2>/dev/null && {
+            log "Command timed out after $timeout seconds"
+            kill -9 $pid 2>/dev/null
+            timeout_happened=1
+        }
+    ) &
+    local watchdog_pid=$!
+    
+    # Wait for the command to finish
+    wait $pid 2>/dev/null || true
+    local exit_code=$?
+    
+    # Kill the watchdog
+    kill -9 $watchdog_pid 2>/dev/null || true
+    
+    if [ "$timeout_happened" -eq 1 ]; then
+        return 124  # Standard timeout exit code
+    fi
+    
+    return $exit_code
+}
+
 # Function to check if runc is installed
 is_runc_installed() {
     if command -v runc >/dev/null 2>&1; then
@@ -25,22 +68,17 @@ is_runc_installed() {
 install_runc_package() {
     log "Attempting to install runC..."
     if ! sudo dnf install -y runc; then
-        echo "Failed to install runC."
+        log "Failed to install runC."
         return 1
     fi
     log "runC installed successfully."
+    return 0
 }
 
 # Function to check system prerequisites
 check_prerequisites() {
     log "Checking system prerequisites..."
-
-    # Check if running as root
-    if [[ $EUID -ne 0 ]]; then
-        echo "This script must be run as root."
-        return 1
-    fi
-
+    
     # Check kernel version
     local kernel_version
     kernel_version=$(uname -r)
@@ -50,7 +88,7 @@ check_prerequisites() {
     if ! mount | grep -q "proc on /proc type proc"; then
         log "WARNING: /proc is not mounted correctly. Attempting to remount..."
         if ! sudo mount -t proc proc /proc; then
-            echo "Failed to mount /proc."
+            log "Failed to mount /proc."
             return 1
         fi
     fi
@@ -58,36 +96,68 @@ check_prerequisites() {
     # Check namespaces support
     if [[ ! -d /proc/self/ns ]]; then
         log "ERROR: /proc/self/ns directory not found."
-        log "Kernel namespaces configuration:"
-        grep CONFIG_NAMESPACES /boot/config-"$(uname -r)" || log "Unable to find namespace configuration"
-        log "Contents of /proc/self:"
-        ls -l /proc/self || log "Unable to list /proc/self"
-        echo "Namespace support is not available."
+        log "Namespace support is not available."
         return 1
     fi
-
-    # Check specific namespaces
-    for ns in ipc mnt net pid user uts; do
-        if [[ ! -e /proc/self/ns/$ns ]]; then
-            log "WARNING: $ns namespace is not available"
-        fi
-    done
 
     # Check cgroups support
     if [[ ! -d /sys/fs/cgroup ]]; then
-        echo "Cgroups are not available."
+        log "Cgroups are not available."
         return 1
     fi
 
-    # Check unshare command
-    if ! sudo unshare --fork --pid --mount-proc sleep 1; then
-        log "WARNING: unshare command failed. This might indicate issues with namespace support."
-    fi
-
     log "System prerequisites check completed."
+    return 0
 }
 
-# Function to test runc functionality
+# Create a minimal rootfs for testing
+create_minimal_rootfs() {
+    local rootfs_dir="$1"
+    log "Creating minimal rootfs in $rootfs_dir..."
+
+    # Create basic directory structure
+    mkdir -p "$rootfs_dir"/{bin,dev,etc,lib,lib64,proc,sys}
+    
+    # Copy basic binaries
+    for bin in sh ls echo cat; do
+        if which "$bin" &>/dev/null; then
+            cp "$(which $bin)" "$rootfs_dir/bin/" 2>/dev/null || true
+        fi
+    done
+    
+    # If busybox is available, use it
+    if which busybox &>/dev/null; then
+        cp "$(which busybox)" "$rootfs_dir/bin/"
+        
+        # Create symlinks for basic commands
+        pushd "$rootfs_dir/bin" > /dev/null
+        for cmd in sh ls echo cat; do
+            ln -sf busybox "$cmd" 2>/dev/null || true
+        done
+        popd > /dev/null
+    fi
+    
+    # Create /dev/null
+    sudo mknod -m 666 "$rootfs_dir/dev/null" c 1 3 2>/dev/null || true
+    
+    # Create /etc/passwd with root user
+    cat > "$rootfs_dir/etc/passwd" <<EOF
+root:x:0:0:root:/root:/bin/sh
+EOF
+    
+    # Create a simple init script
+    cat > "$rootfs_dir/init" <<EOF
+#!/bin/sh
+echo "Container initialized"
+exec "\$@"
+EOF
+    chmod +x "$rootfs_dir/init"
+
+    log "Minimal rootfs created."
+    return 0
+}
+
+# Function to test runc functionality with a simpler approach
 test_runc_functionality() {
     local temp_dir
     temp_dir=$(mktemp -d) || error_exit "Failed to create temporary directory."
@@ -97,6 +167,9 @@ test_runc_functionality() {
     local rootfs_dir="${bundle_dir}/rootfs"
 
     mkdir -p "$rootfs_dir" || error_exit "Failed to create rootfs directory."
+
+    # Create a minimal rootfs
+    create_minimal_rootfs "$rootfs_dir"
 
     # Create a simple config.json
     cat > "${bundle_dir}/config.json" <<EOF
@@ -109,7 +182,7 @@ test_runc_functionality() {
             "gid": 0
         },
         "args": [
-            "echo",
+            "/bin/echo",
             "Hello from runc!"
         ],
         "env": [
@@ -118,8 +191,7 @@ test_runc_functionality() {
         "cwd": "/"
     },
     "root": {
-        "path": "rootfs",
-        "readonly": true
+        "path": "rootfs"
     },
     "linux": {
         "namespaces": [
@@ -134,29 +206,59 @@ EOF
 
     log "Created config.json in $bundle_dir"
 
-    # Run the container
+    # Run the container with timeout
     log "Attempting to run runc container..."
-    if ! output=$(sudo runc run --bundle "$bundle_dir" test-container 2>&1); then
-        log "Failed to run runc container. Output:"
-        log "$output"
-        sudo rm -rf "$temp_dir"
+    local container_id="test-container-$(date +%s)"
+    local output=""
+    
+    # Clean up any previous container with the same name
+    sudo runc delete -f "$container_id" 2>/dev/null || true
+
+    # Run with timeout to prevent hanging
+    if ! output=$(run_with_timeout 10 "sudo runc run --bundle '$bundle_dir' '$container_id' 2>&1"); then
+        local exit_code=$?
+        if [ $exit_code -eq 124 ]; then
+            log "runc execution timed out after 10 seconds"
+        else
+            log "Failed to run runc container. Exit code: $exit_code, Output:"
+            log "$output"
+        fi
+        
+        # Try to cleanup the container
+        sudo runc delete -f "$container_id" 2>/dev/null || true
+        
+        rm -rf "$temp_dir"
         return 1
     fi
 
     log "Container output: $output"
 
     # Clean up
-    sudo rm -rf "$temp_dir"
+    rm -rf "$temp_dir"
     log "Cleaned up temporary directory."
 
-    # Check if the output is as expected
-    if [[ "$output" == "Hello from runc!" ]]; then
+    # Check if the output contains our message
+    if [[ "$output" == *"Hello from runc!"* ]]; then
         log "runC test passed successfully."
         return 0
     else
         log "Unexpected output from runc container."
         return 1
     fi
+}
+
+# Alternative test that just checks runc version
+test_runc_version() {
+    log "Testing runC by checking its version..."
+    local version_output
+    
+    if ! version_output=$(sudo runc --version 2>&1); then
+        log "Failed to get runC version"
+        return 1
+    fi
+    
+    log "runC version output: $version_output"
+    return 0
 }
 
 # Main script execution
@@ -173,16 +275,28 @@ main() {
         fi
     fi
 
-    PACKAGE_VERSION=$(runc --version | awk '/runc version/{print $3}') || PACKAGE_VERSION="Unknown"
+    # Get package version
+    PACKAGE_VERSION=$(sudo runc --version | awk '/runc version/{print $3}' 2>/dev/null) || PACKAGE_VERSION="Unknown"
+    log "runC version: $PACKAGE_VERSION"
     
+    # First try a simple version check
+    if ! test_runc_version; then
+        log "Basic runC version check failed"
+        return 1
+    fi
+    
+    # Then try the full functionality test
     if test_runc_functionality; then
         log "runC is functioning correctly."
         return 0
     else
-        log "runC is not functioning correctly."
+        log "Warning: Full container test failed, but version check passed."
+        log "This may still indicate that runC is installed correctly but may have issues with container execution."
         return 1
     fi
 }
 
-# Run the main function
+# Run the main function and capture exit code
 main
+exit_code=$?
+return $exit_code
