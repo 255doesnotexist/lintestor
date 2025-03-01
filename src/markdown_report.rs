@@ -41,7 +41,10 @@ pub fn generate_markdown_report(
             }
         }
 
-        let mut report_matrix_by_distro_name_and_package_name: BTreeMap<String, BTreeMap<String, &Report>> = BTreeMap::new();
+        let mut report_matrix_by_distro_name_and_package_name: BTreeMap<
+            String,
+            BTreeMap<String, &Report>,
+        > = BTreeMap::new();
         for report in &reports {
             if let (Some(pkg_idx), Some(distro_idx)) = (
                 packages.iter().position(|&pkg| pkg == report.package_name),

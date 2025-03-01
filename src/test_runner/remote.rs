@@ -266,18 +266,15 @@ impl TestRunner for RemoteTestRunner {
         }
 
         // Clean up previous probably existing report.json after extracting the remote tar file
-        match self.run_command(
-            &sess,
-            &format!(
-                "rm -rf {}/report.json",
-                remote_dir
-            )
-        ) {
+        match self.run_command(&sess, &format!("rm -rf {}/report.json", remote_dir)) {
             Ok(_) => {
                 self.print_ssh_msg("Removed report.json on remote server");
             }
             Err(e) => {
-                self.print_ssh_msg(&format!("Failed to remove report.json on remote server: {}", e));
+                self.print_ssh_msg(&format!(
+                    "Failed to remove report.json on remote server: {}",
+                    e
+                ));
             }
         };
 
