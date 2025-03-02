@@ -87,14 +87,14 @@ METADATA
     echo "Creating cloud-init ISO..."
     cloud-localds cloud-init.iso user-data meta-data
 
-    # Create initialization boot script
+    # Create initialization boot script with fixed QEMU parameters
     cat > init_boot.sh << 'INITBOOT'
 #!/bin/bash
 qemu-system-riscv64 -nographic \
-    -machine virt,pflash0=pflash0,pflash1=pflash1,acpi=off \
+    -machine virt,acpi=off \
     -smp 4 -m 8G \
-    -blockdev node-name=pflash0,driver=file,read-only=on,filename=RISCV_VIRT_CODE.fd \
-    -blockdev node-name=pflash1,driver=file,filename=RISCV_VIRT_VARS.fd \
+    -drive file=RISCV_VIRT_CODE.fd,if=pflash,format=raw,readonly=on \
+    -drive file=RISCV_VIRT_VARS.fd,if=pflash,format=raw \
     -drive file=fedora-riscv64.qcow2,format=qcow2,if=virtio \
     -drive file=cloud-init.iso,format=raw,if=virtio \
     -object rng-random,filename=/dev/urandom,id=rng0 \
@@ -128,14 +128,14 @@ else
     echo "VM has already been initialized."
 fi
 
-# Create normal boot script for future use
+# Create normal boot script for future use with fixed QEMU parameters
 cat > boot.sh << 'BOOT'
 #!/bin/bash
 qemu-system-riscv64 -nographic \
-    -machine virt,pflash0=pflash0,pflash1=pflash1,acpi=off \
+    -machine virt,acpi=off \
     -smp 4 -m 8G \
-    -blockdev node-name=pflash0,driver=file,read-only=on,filename=RISCV_VIRT_CODE.fd \
-    -blockdev node-name=pflash1,driver=file,filename=RISCV_VIRT_VARS.fd \
+    -drive file=RISCV_VIRT_CODE.fd,if=pflash,format=raw,readonly=on \
+    -drive file=RISCV_VIRT_VARS.fd,if=pflash,format=raw \
     -drive file=fedora-riscv64.qcow2,format=qcow2,if=virtio \
     -object rng-random,filename=/dev/urandom,id=rng0 \
     -device virtio-rng-device,rng=rng0 \
