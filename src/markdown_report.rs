@@ -106,7 +106,7 @@ pub fn generate_markdown_report(
                         .or_default()
                         .push((packages[pkg_idx].to_string(), report.os_version.clone()));
                     markdown.push_str(&format!(
-                        "| {} {}{} ",
+                        "| {} [{}{}]({}) ",
                         if report.all_tests_passed {
                             "✅"
                         } else if report.test_results.iter().any(|r| r.passed) {
@@ -119,7 +119,8 @@ pub fn generate_markdown_report(
                         } else {
                             String::from("")
                         },
-                        package_metadata.package_version
+                        package_metadata.package_version,
+                        format!("#{}_{}", distros[distro_idx], packages[pkg_idx])
                     ));
                 } else {
                     markdown.push_str("| ❓ ");
