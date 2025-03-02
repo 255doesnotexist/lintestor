@@ -91,7 +91,7 @@ METADATA
     cat > init_boot.sh << 'INITBOOT'
 #!/bin/bash
 qemu-system-riscv64 -nographic \
-    -machine virt,acpi=off \
+    -machine virt \
     -smp 4 -m 8G \
     -drive file=RISCV_VIRT_CODE.fd,if=pflash,format=raw,readonly=on \
     -drive file=RISCV_VIRT_VARS.fd,if=pflash,format=raw \
@@ -132,7 +132,7 @@ fi
 cat > boot.sh << 'BOOT'
 #!/bin/bash
 qemu-system-riscv64 -nographic \
-    -machine virt,acpi=off \
+    -machine virt \
     -smp 4 -m 8G \
     -drive file=RISCV_VIRT_CODE.fd,if=pflash,format=raw,readonly=on \
     -drive file=RISCV_VIRT_VARS.fd,if=pflash,format=raw \
