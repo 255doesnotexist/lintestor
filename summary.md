@@ -1,43 +1,43 @@
 # 软件包测试结果矩阵 Software package test results
 
-测试时间 Testing time: 2025-03-01 22:46:23 UTC
+测试时间 Testing time: 2025-03-02 10:58:23 UTC
 
 > 图标说明 Legend: ✅ = 通过 Passed; ⚠️ = 部分测试不通过 Not all tests passed; ❌ = 全部测试不通过 All tests failed; ❓ = 未知 Unknown
 
 | 软件包 Package | 种类 Type | [debian](#debian) | [fedora](#fedora) | [bianbu](#bianbu) |
 |:------|:------| :-------| :-------| :-------|
-| Apache HTTP Server | Web Server | ✅ apache=2.4.63-1 | ✅ apache=2.4.63-1 | ✅ apache=2.4.63-1 |
-| Clang C/C++ Compiler | Compiler Toolchain | ✅ clang=19.1.7 (1+b1) | ✅ clang=19.1.7 (1+b1) | ✅ clang=19.1.7 (1+b1) |
-| CMake | Build System | ✅ cmake=3.31.5 | ✅ cmake=3.31.5 | ✅ cmake=3.31.5 |
-| Docker | Containerization Platform | ✅ docker=5:27.1.1-1~debian.12~bookworm | ❓ | ✅ docker=5:27.1.1-1~debian.12~bookworm |
-| Erlang Programming Language | Programming Language | ✅ erlang=1:27.2.2+dfsg-1 | ✅ erlang=1:27.2.2+dfsg-1 | ✅ erlang=1:27.2.2+dfsg-1 |
-| example | package | ✅ example=Unknown | ✅ example=Unknown | ✅ example=Unknown |
-| GNU Compiler Collection | Compiler Toolchain | ✅ gcc=14.2.0 | ✅ gcc=14.2.0 | ✅ gcc=14.2.0 |
-| GNU Debugger | Debugging Tool | ✅ gdb=GNU gdb (Debian 16.2-1) 16.2 | ✅ gdb=GNU gdb (Debian 16.2-1) 16.2 | ✅ gdb=GNU gdb (Debian 16.2-1) 16.2 |
-| Go Programming Language | Programming Language | ✅ golang=2:1.24~2 | ✅ golang=2:1.24~2 | ✅ golang=2:1.24~2 |
-| HAProxy | Load Balancer | ✅ haproxy=3.0.8-1 | ✅ haproxy=3.0.8-1 | ✅ haproxy=3.0.8-1 |
-| libmemcached | Caching Library | ✅ libmemcached=1.1.4-1.1+b2 | ✅ libmemcached=1.1.4-1.1+b2 | ✅ libmemcached=1.1.4-1.1+b2 |
-| Lighttpd | Web Server | ✅ lighttpd=1.4.77-1 | ✅ lighttpd=1.4.77-1 | ✅ lighttpd=1.4.77-1 |
-| LLVM Compiler Infrastructure | Compiler Toolchain | ✅ llvm=1:19.1.7-1+b1 | ✅ llvm=1:19.1.7-1+b1 | ✅ llvm=1:19.1.7-1+b1 |
-| MariaDB database server | Database | ✅ mariadb=1:11.4.4-3 | ✅ mariadb=1:11.4.4-3 | ✅ mariadb=1:11.4.4-3 |
-| Nginx | Web Server | ✅ nginx=1.26.3-2 | ✅ nginx=1.26.3-2 | ✅ nginx=1.26.3-2 |
-| Node.js | Javascript Runtime | ✅ nodejs=20.18.3+dfsg-1 | ✅ nodejs=20.18.3+dfsg-1 | ✅ nodejs=20.18.3+dfsg-1 |
-| NumPy | Python Library | ✅ numpy=Python 3.13.2 (2.2.2) | ✅ numpy=Python 3.13.2 (2.2.2) | ✅ numpy=Python 3.13.2 (2.2.2) |
-| Objective Caml | Programming Language | ✅ ocaml=5.0.1-3+b4 | ✅ ocaml=5.0.1-3+b4 | ✅ ocaml=5.0.1-3+b4 |
-| OpenJDK Development Kit (JDK) | Java Development Kit | ✅ openjdk=21.0.6 | ✅ openjdk=21.0.6 | ✅ openjdk=21.0.6 |
-| OpenSSL | Cryptography Library | ✅ openssl=3.4.1 | ✅ openssl=3.4.1 | ✅ openssl=3.4.1 |
-| Perl | Programming Language | ✅ perl=5.40.1 | ✅ perl=5.40.1 | ✅ perl=5.40.1 |
-| PostgreSQL | Database | ✅ postgresql=17.3 | ✅ postgresql=17.3 | ✅ postgresql=17.3 |
-| Python 3 | Programming Language | ✅ python=3.13.2 | ✅ python=3.13.2 | ✅ python=3.13.2 |
-| Redis | Database | ✅ redis=7.0.15 | ❌ redis=7.0.15 | ✅ redis=7.0.15 |
-| Ruby | Programming Language | ✅ ruby=3.3.7 | ✅ ruby=3.3.7 | ✅ ruby=3.3.7 |
-| runc | Container Runtime | ❌ runc=1.1.15+ds1 | ✅ runc=1.1.15+ds1 | ❌ runc=1.1.15+ds1 |
-| Rust | Programming Language | ✅ rust=1.85.0 | ❌ rust=1.85.0 | ✅ rust=1.85.0 |
-| SciPy | Python Library | ✅ scipy=1.14.1 (python 3.13.2) | ✅ scipy=1.14.1 (python 3.13.2) | ✅ scipy=1.14.1 (python 3.13.2) |
-| SQLite 3 | Database | ✅ sqlite=3.46.1 | ✅ sqlite=3.46.1 | ✅ sqlite=3.46.1 |
-| Squid | Proxy Server | ✅ squid=6.13 | ✅ squid=6.13 | ✅ squid=6.13 |
-| Varnish Cache | Caching Server | ✅ varnish=7.6.1 | ✅ varnish=7.6.1 | ❌ varnish=7.6.1 |
-| ZooKeeper | Distributed Coordination Service | ❌ zookeeper=3.9.3 | ❌ zookeeper=3.9.3 | ❌ zookeeper=3.9.3 |
+| Apache HTTP Server | Web Server | ✅ [apache=2.4.63-1](#debian_apache) | ✅ [apache=2.4.63-1](#fedora_apache) | ✅ [apache=2.4.63-1](#bianbu_apache) |
+| Clang C/C++ Compiler | Compiler Toolchain | ✅ [clang=19.1.7 (1+b1)](#debian_clang) | ✅ [clang=19.1.7 (1+b1)](#fedora_clang) | ✅ [clang=19.1.7 (1+b1)](#bianbu_clang) |
+| CMake | Build System | ✅ [cmake=3.31.5](#debian_cmake) | ✅ [cmake=3.31.5](#fedora_cmake) | ✅ [cmake=3.31.5](#bianbu_cmake) |
+| Docker | Containerization Platform | ✅ [docker=5:27.1.1-1~debian.12~bookworm](#debian_docker) | ❓ | ✅ [docker=5:27.1.1-1~debian.12~bookworm](#bianbu_docker) |
+| Erlang Programming Language | Programming Language | ✅ [erlang=1:27.2.2+dfsg-1](#debian_erlang) | ✅ [erlang=1:27.2.2+dfsg-1](#fedora_erlang) | ✅ [erlang=1:27.2.2+dfsg-1](#bianbu_erlang) |
+| example | package | ✅ [example=Unknown](#debian_example) | ✅ [example=Unknown](#fedora_example) | ✅ [example=Unknown](#bianbu_example) |
+| GNU Compiler Collection | Compiler Toolchain | ✅ [gcc=14.2.0](#debian_gcc) | ✅ [gcc=14.2.0](#fedora_gcc) | ✅ [gcc=14.2.0](#bianbu_gcc) |
+| GNU Debugger | Debugging Tool | ✅ [gdb=GNU gdb (Debian 16.2-1) 16.2](#debian_gdb) | ✅ [gdb=GNU gdb (Debian 16.2-1) 16.2](#fedora_gdb) | ✅ [gdb=GNU gdb (Debian 16.2-1) 16.2](#bianbu_gdb) |
+| Go Programming Language | Programming Language | ✅ [golang=2:1.24~2](#debian_golang) | ✅ [golang=2:1.24~2](#fedora_golang) | ✅ [golang=2:1.24~2](#bianbu_golang) |
+| HAProxy | Load Balancer | ✅ [haproxy=3.0.8-1](#debian_haproxy) | ✅ [haproxy=3.0.8-1](#fedora_haproxy) | ✅ [haproxy=3.0.8-1](#bianbu_haproxy) |
+| libmemcached | Caching Library | ✅ [libmemcached=1.1.4-1.1+b2](#debian_libmemcached) | ✅ [libmemcached=1.1.4-1.1+b2](#fedora_libmemcached) | ✅ [libmemcached=1.1.4-1.1+b2](#bianbu_libmemcached) |
+| Lighttpd | Web Server | ✅ [lighttpd=1.4.77-1](#debian_lighttpd) | ✅ [lighttpd=1.4.77-1](#fedora_lighttpd) | ✅ [lighttpd=1.4.77-1](#bianbu_lighttpd) |
+| LLVM Compiler Infrastructure | Compiler Toolchain | ✅ [llvm=1:19.1.7-1+b1](#debian_llvm) | ✅ [llvm=1:19.1.7-1+b1](#fedora_llvm) | ✅ [llvm=1:19.1.7-1+b1](#bianbu_llvm) |
+| MariaDB database server | Database | ✅ [mariadb=1:11.4.4-3](#debian_mariadb) | ✅ [mariadb=1:11.4.4-3](#fedora_mariadb) | ✅ [mariadb=1:11.4.4-3](#bianbu_mariadb) |
+| Nginx | Web Server | ✅ [nginx=1.26.3-2](#debian_nginx) | ✅ [nginx=1.26.3-2](#fedora_nginx) | ✅ [nginx=1.26.3-2](#bianbu_nginx) |
+| Node.js | Javascript Runtime | ✅ [nodejs=20.18.3+dfsg-1](#debian_nodejs) | ✅ [nodejs=20.18.3+dfsg-1](#fedora_nodejs) | ✅ [nodejs=20.18.3+dfsg-1](#bianbu_nodejs) |
+| NumPy | Python Library | ✅ [numpy=Python 3.13.2 (2.2.2)](#debian_numpy) | ✅ [numpy=Python 3.13.2 (2.2.2)](#fedora_numpy) | ✅ [numpy=Python 3.13.2 (2.2.2)](#bianbu_numpy) |
+| Objective Caml | Programming Language | ✅ [ocaml=5.0.1-3+b4](#debian_ocaml) | ✅ [ocaml=5.0.1-3+b4](#fedora_ocaml) | ✅ [ocaml=5.0.1-3+b4](#bianbu_ocaml) |
+| OpenJDK Development Kit (JDK) | Java Development Kit | ✅ [openjdk=21.0.6](#debian_openjdk) | ✅ [openjdk=21.0.6](#fedora_openjdk) | ✅ [openjdk=21.0.6](#bianbu_openjdk) |
+| OpenSSL | Cryptography Library | ✅ [openssl=3.4.1](#debian_openssl) | ✅ [openssl=3.4.1](#fedora_openssl) | ✅ [openssl=3.4.1](#bianbu_openssl) |
+| Perl | Programming Language | ✅ [perl=5.40.1](#debian_perl) | ✅ [perl=5.40.1](#fedora_perl) | ✅ [perl=5.40.1](#bianbu_perl) |
+| PostgreSQL | Database | ✅ [postgresql=17.3](#debian_postgresql) | ✅ [postgresql=17.3](#fedora_postgresql) | ✅ [postgresql=17.3](#bianbu_postgresql) |
+| Python 3 | Programming Language | ✅ [python=3.13.2](#debian_python) | ✅ [python=3.13.2](#fedora_python) | ✅ [python=3.13.2](#bianbu_python) |
+| Redis | Database | ✅ [redis=7.0.15](#debian_redis) | ❌ [redis=7.0.15](#fedora_redis) | ✅ [redis=7.0.15](#bianbu_redis) |
+| Ruby | Programming Language | ✅ [ruby=3.3.7](#debian_ruby) | ✅ [ruby=3.3.7](#fedora_ruby) | ✅ [ruby=3.3.7](#bianbu_ruby) |
+| runc | Container Runtime | ❌ [runc=1.1.15+ds1](#debian_runc) | ✅ [runc=1.1.15+ds1](#fedora_runc) | ❌ [runc=1.1.15+ds1](#bianbu_runc) |
+| Rust | Programming Language | ✅ [rust=1.85.0](#debian_rust) | ❌ [rust=1.85.0](#fedora_rust) | ✅ [rust=1.85.0](#bianbu_rust) |
+| SciPy | Python Library | ✅ [scipy=1.14.1 (python 3.13.2)](#debian_scipy) | ✅ [scipy=1.14.1 (python 3.13.2)](#fedora_scipy) | ✅ [scipy=1.14.1 (python 3.13.2)](#bianbu_scipy) |
+| SQLite 3 | Database | ✅ [sqlite=3.46.1](#debian_sqlite) | ✅ [sqlite=3.46.1](#fedora_sqlite) | ✅ [sqlite=3.46.1](#bianbu_sqlite) |
+| Squid | Proxy Server | ✅ [squid=6.13](#debian_squid) | ✅ [squid=6.13](#fedora_squid) | ✅ [squid=6.13](#bianbu_squid) |
+| Varnish Cache | Caching Server | ✅ [varnish=7.6.1](#debian_varnish) | ✅ [varnish=7.6.1](#fedora_varnish) | ❌ [varnish=7.6.1](#bianbu_varnish) |
+| ZooKeeper | Distributed Coordination Service | ❌ [zookeeper=3.9.3](#debian_zookeeper) | ❌ [zookeeper=3.9.3](#fedora_zookeeper) | ❌ [zookeeper=3.9.3](#bianbu_zookeeper) |
 
 # 测试环境信息 Environment info
 
@@ -149,7 +149,28 @@
 获取:1 http://archive.spacemit.com/bianbu noble-updates/snapshots/v2.1/main riscv64 runc riscv64 1.1.12-0ubuntu3.1 [8,060 kB]
 已下载 8,060 kB，耗时 1秒 (9,022 kB/s)
 正在选中未选择的软件包 runc。
-(正在读取数据库 ... (正在读取数据库 ... 5%(正在读取数据库 ... 10%(正在读取数据库 ... 15%(正在读取数据库 ... 20%(正在读取数据库 ... 25%(正在读取数据库 ... 30%(正在读取数据库 ... 35%(正在读取数据库 ... 40%(正在读取数据库 ... 45%(正在读取数据库 ... 50%(正在读取数据库 ... 55%(正在读取数据库 ... 60%(正在读取数据库 ... 65%(正在读取数据库 ... 70%(正在读取数据库 ... 75%(正在读取数据库 ... 80%(正在读取数据库 ... 85%(正在读取数据库 ... 90%(正在读取数据库 ... 95%(正在读取数据库 ... 100%(正在读取数据库 ... 系统当前共安装有 105847 个文件和目录。)
+(正在读取数据库 ... 
+(正在读取数据库 ... 5%
+(正在读取数据库 ... 10%
+(正在读取数据库 ... 15%
+(正在读取数据库 ... 20%
+(正在读取数据库 ... 25%
+(正在读取数据库 ... 30%
+(正在读取数据库 ... 35%
+(正在读取数据库 ... 40%
+(正在读取数据库 ... 45%
+(正在读取数据库 ... 50%
+(正在读取数据库 ... 55%
+(正在读取数据库 ... 60%
+(正在读取数据库 ... 65%
+(正在读取数据库 ... 70%
+(正在读取数据库 ... 75%
+(正在读取数据库 ... 80%
+(正在读取数据库 ... 85%
+(正在读取数据库 ... 90%
+(正在读取数据库 ... 95%
+(正在读取数据库 ... 100%
+(正在读取数据库 ... 系统当前共安装有 105847 个文件和目录。)
 准备解压 .../runc_1.1.12-0ubuntu3.1_riscv64.deb  ...
 正在解压 runc (1.1.12-0ubuntu3.1) ...
 正在设置 runc (1.1.12-0ubuntu3.1) ...
@@ -212,7 +233,28 @@
 获取:2 http://archive.spacemit.com/bianbu noble/snapshots/v2.1/universe riscv64 varnish riscv64 7.1.1-1.1ubuntu1 [1,149 kB]
 已下载 1,335 kB，耗时 0秒 (2,774 kB/s)
 正在选中未选择的软件包 libvarnishapi3:riscv64。
-(正在读取数据库 ... (正在读取数据库 ... 5%(正在读取数据库 ... 10%(正在读取数据库 ... 15%(正在读取数据库 ... 20%(正在读取数据库 ... 25%(正在读取数据库 ... 30%(正在读取数据库 ... 35%(正在读取数据库 ... 40%(正在读取数据库 ... 45%(正在读取数据库 ... 50%(正在读取数据库 ... 55%(正在读取数据库 ... 60%(正在读取数据库 ... 65%(正在读取数据库 ... 70%(正在读取数据库 ... 75%(正在读取数据库 ... 80%(正在读取数据库 ... 85%(正在读取数据库 ... 90%(正在读取数据库 ... 95%(正在读取数据库 ... 100%(正在读取数据库 ... 系统当前共安装有 109765 个文件和目录。)
+(正在读取数据库 ... 
+(正在读取数据库 ... 5%
+(正在读取数据库 ... 10%
+(正在读取数据库 ... 15%
+(正在读取数据库 ... 20%
+(正在读取数据库 ... 25%
+(正在读取数据库 ... 30%
+(正在读取数据库 ... 35%
+(正在读取数据库 ... 40%
+(正在读取数据库 ... 45%
+(正在读取数据库 ... 50%
+(正在读取数据库 ... 55%
+(正在读取数据库 ... 60%
+(正在读取数据库 ... 65%
+(正在读取数据库 ... 70%
+(正在读取数据库 ... 75%
+(正在读取数据库 ... 80%
+(正在读取数据库 ... 85%
+(正在读取数据库 ... 90%
+(正在读取数据库 ... 95%
+(正在读取数据库 ... 100%
+(正在读取数据库 ... 系统当前共安装有 109765 个文件和目录。)
 准备解压 .../libvarnishapi3_7.1.1-1.1ubuntu1_riscv64.deb  ...
 正在解压 libvarnishapi3:riscv64 (7.1.1-1.1ubuntu1) ...
 正在选中未选择的软件包 varnish。
