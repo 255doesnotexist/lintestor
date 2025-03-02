@@ -7,7 +7,7 @@ on:
 
 jobs:
   test:
-    runs-on: [self-hosted, linux]
+    runs-on: ubuntu-latest
     env:
       PRINT_SSH_MSG: 1
       RUST_LOG: debug
@@ -19,18 +19,93 @@ jobs:
       with:
         ref: 'dirty'
     
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y curl wget git
+        sudo apt-get install -y libssl-dev # lintestor build dependencies
+        sudo apt-get install -y qemu-utils qemu-system-x86 qemu-system-misc opensbi u-boot-qemu
+        sudo apt-get install -y sshpass # for sshpass
+    
     - name: Set up Rust
       uses: actions-rs/toolchain@v1
       with:
         profile: minimal
         toolchain: stable
-    
-    - name: Install dependencies
+
+    - name: Build and Install QEMU RISC-V (v9.2.2)
+      shell: bash
       run: |
+        echo "Installing system dependencies..."
         sudo apt-get update
-        sudo apt-get install -y libssl-dev # lintestor build dependencies
-        sudo apt-get install -y qemu-utils qemu-system-x86 qemu-system-misc opensbi u-boot-qemu
-        sudo apt-get install -y sshpass
+        sudo apt-get install -y \
+          git \
+          wget \
+          curl \
+          build-essential \
+          ninja-build \
+          pkg-config \
+          python3 \
+          python3-pip \
+          python3-venv \
+          libglib2.0-dev \
+          libpixman-1-dev \
+          libslirp-dev \
+          zlib1g \
+          zlib1g-dev \
+          libfdt-dev \
+          libcap-ng-dev \
+          libattr1-dev \
+          libnfs-dev \
+          libseccomp-dev
+
+        echo "Setting up Python virtual environment..."
+        python3 -m venv qemu-venv
+        source qemu-venv/bin/activate
+        pip install --upgrade pip
+        pip install tomli tomli-w ninja meson
+
+        echo "Downloading QEMU source (v9.2.2)..."
+        mkdir -p qemu-source
+        wget -q https://download.qemu.org/qemu-9.2.2.tar.xz
+        tar xf qemu-9.2.2.tar.xz -C qemu-source --strip-components=1
+        rm qemu-9.2.2.tar.xz
+
+        echo "Configuring QEMU..."
+        mkdir -p qemu-source/build
+        cd qemu-source/build
+        ../configure \
+          --target-list=riscv64-softmmu \
+          --disable-docs \
+          --prefix=${{ github.workspace }}/qemu-install
+
+        if [ $? -ne 0 ]; then
+          echo "Configure failed. Checking for config.log..."
+          if [ -f config.log ]; then
+            cat config.log
+          fi
+          exit 1
+        fi
+
+        echo "Building QEMU..."
+        make -j$(nproc) qemu-system-riscv64
+
+        echo "Installing QEMU..."
+        make install
+
+        echo "Verifying installation..."
+        ${{ github.workspace }}/qemu-install/bin/qemu-system-riscv64 --version
+        echo "✅ QEMU installed successfully!"
+
+    - name: Test QEMU Installation
+      run: |
+        ${{ github.workspace }}/qemu-install/bin/qemu-system-riscv64 --version
+        whereis qemu-system-riscv64
+      
+    - name: Test QEMU Installation Path
+      run: |
+        ${{ github.workspace }}/qemu-install/bin/qemu-system-riscv64 --version
+        whereis qemu-system-riscv64
 
     - name: Restore QEMU image cache
       id: cache-qemu-restore
@@ -45,6 +120,8 @@ jobs:
     - name: Setup Fedora QEMU env for RISC-V
       if: steps.cache-qemu-restore.outputs.cache-hit != 'true'
       run: |
+        PATH=${{ github.workspace }}/qemu-install/bin:$PATH
+        export PATH
         mkdir ../fedora
         cp ./fedora/init.sh ../fedora
         cd ../fedora
@@ -56,6 +133,8 @@ jobs:
     
     - name: Install & Run Lintestor
       run: |
+        PATH=${{ github.workspace }}/qemu-install/bin:$PATH
+        export PATH
         ls -l ../ # 展示上级文件结构
         ls -l ../fedora # 展示文件结构
         ls -l . # 展示本级结构
