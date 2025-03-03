@@ -3,3 +3,7 @@
 # *report.json
 # /reports.json
 # /summary.md
+
+# ignore qemu deployment related files in testing ci
+qemu-install/*
+qemu-source/*
