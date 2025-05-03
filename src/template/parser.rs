@@ -3,7 +3,7 @@
 //! 这个模块负责解析Markdown格式的测试模板内容，识别其中的元数据、可执行代码块和特殊属性。
 
 use std::collections::HashMap;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicU16, Ordering};
 use anyhow::{Result, Context, bail, anyhow};
 use regex::Regex;
@@ -45,11 +45,17 @@ pub fn parse_template(content: &str) -> Result<TestTemplate> {
                     AssertionType::StdoutContains(text) => {
                         debug!("  断言: stdout_contains=\"{}\"", text);
                     },
+                    AssertionType::StdoutNotContains(text) => {
+                        debug!("  断言: stdout_not_contains=\"{}\"", text);
+                    },
                     AssertionType::StdoutMatches(regex) => {
                         debug!("  断言: stdout_matches=/{}/", regex);
                     },
                     AssertionType::StderrContains(text) => {
                         debug!("  断言: stderr_contains=\"{}\"", text);
+                    },
+                    AssertionType::StderrNotContains(text) => {
+                        debug!("  断言: stderr_not_contains=\"{}\"", text);
                     },
                     AssertionType::StderrMatches(regex) => {
                         debug!("  断言: stderr_matches=/{}/", regex);
@@ -173,77 +179,281 @@ fn parse_steps(markdown: &str) -> Result<Vec<TestStep>> {
     debug!("开始解析Markdown内容中的测试步骤");
     let mut steps = Vec::new();
     
-    // 匹配标题块
-    let heading_re = Regex::new(r#"(?m)^(#+)\s+(.*?)(?:\s+[{]id="([^"]+)"(?:\s+depends_on=\["([^"]+)"(?:,\s*"([^"]+)")*\])?[}])?$"#)?;
+    // 匹配标题块 - 改进正则表达式，更好地处理ID和依赖属性
+    let heading_re = Regex::new(r#"(?m)^(#+)\s+(.*?)(?:\s+\{id="([^"]+)"(?:\s+depends_on=(\[[^\]]+\]))?\s*\})?$"#)?;
     
-    // 匹配代码块
-    // 支持语法: ```bash {id="my-id" exec=true description="My description" assert.exit_code=0 assert.stdout_contains="text" extract.var_name=/regex/}
-    let code_block_re = Regex::new(r"(?ms)```(\w+)\s+\{([^}]+)\}\n(.*?)```")?;
+    // 预扫描阶段：收集所有部分ID和代码块ID
+    let mut section_ids = HashMap::new();
+    let mut code_block_ids = HashMap::new();
     
-    // 匹配输出块
-    // 支持语法: ```output {ref="cmd-id"}
-    let output_block_re = Regex::new("(?ms)```output\\s+\\{ref=\"([^\"]+)\"\\}\\n(.*?)```")?;
-
-    // 遍历找到的块
-    let mut current_step_id = String::new();
-    let mut current_step_content = String::new();
-    
-    debug!("解析Markdown内容为步骤块");
-    
-    for line in markdown.lines() {
-        // 匹配标题
-        if let Some(captures) = heading_re.captures(line) {
-            // 保存之前的步骤（如果有）
-            if !current_step_id.is_empty() && !current_step_content.is_empty() {
-                // 解析之前收集的内容
-                let step_content = current_step_content.trim();
-                debug!("处理步骤内容: id={}, 内容长度={}", current_step_id, step_content.len());
-                
-                // 在内容中查找代码块和输出块
-                parse_blocks(step_content, &current_step_id, &mut steps)?;
-                
-                current_step_content.clear();
-            }
-            
-            // 开始新的步骤
-            current_step_id = captures.get(3)
-                .map_or_else(
-                    || format!("step-{}", steps.len() + 1),
-                    |m| m.as_str().to_string()
-                );
-            
-            let heading_level = captures.get(1).unwrap().as_str().len();
-            let heading_text = captures.get(2).unwrap().as_str();
-            debug!("找到新步骤: level={}, title=\"{}\", id=\"{}\"", heading_level, heading_text, current_step_id);
-            
-            // 添加标题作为步骤内容的开始
-            current_step_content = line.to_string() + "\n";
-            continue;
-        }
-        
-        // 添加到当前步骤的内容
-        if !current_step_id.is_empty() {
-            current_step_content.push_str(line);
-            current_step_content.push('\n');
+    // 1. 首先扫描所有标题节ID
+    for caps in heading_re.captures_iter(markdown) {
+        if let Some(id_match) = caps.get(3) {
+            let section_id = id_match.as_str().to_string();
+            let heading_text = caps.get(2).unwrap().as_str().to_string();
+            section_ids.insert(section_id.clone(), heading_text.clone());
+            debug!("预扫描到标题ID: {}, 标题: {}", section_id, heading_text);
         }
     }
     
-    // 处理最后一个步骤
-    if !current_step_id.is_empty() && !current_step_content.is_empty() {
-        // 解析之前收集的内容
-        let step_content = current_step_content.trim();
-        debug!("处理最后一个步骤内容: id={}, 内容长度={}", current_step_id, step_content.len());
+    // 2. 扫描所有代码块ID
+    let code_block_re = Regex::new(r#"(?ms)```\w+\s+\{id="([^"]+)"[^}]*\}\n.*?```"#)?;
+    for caps in code_block_re.captures_iter(markdown) {
+        let block_id = caps.get(1).unwrap().as_str().to_string();
+        code_block_ids.insert(block_id.clone(), true);
+        debug!("预扫描到代码块ID: {}", block_id);
+    }
+    
+    // 合并所有已知ID用于后续验证
+    let mut all_known_ids = HashMap::new();
+    for (id, title) in &section_ids {
+        all_known_ids.insert(id.clone(), format!("标题: {}", title));
+    }
+    for (id, _) in &code_block_ids {
+        all_known_ids.insert(id.clone(), "代码块".to_string());
+    }
+    
+    info!("预扫描ID完成，找到 {} 个标题ID和代码块ID", all_known_ids.len());
+    
+    // 构建标题嵌套结构以处理依赖关系
+    let mut heading_stack: Vec<(String, usize, Vec<String>)> = Vec::new(); // (id, level, depends_on)
+    
+    // 匹配代码块，扩展正则表达式支持依赖关系属性
+    let code_block_re = Regex::new(r"(?ms)```(\w+)\s+\{([^}]+)\}\n(.*?)```")?;
+    
+    // 匹配输出块
+    let output_block_re = Regex::new(r#"(?ms)```output\s+\{ref=(?:"([^"]+)"|'([^']+)')\}\n(.*?)```"#)?;
+
+    // 遍历Markdown内容的每一行
+    let mut lines = markdown.lines().peekable();
+    let mut current_content = String::new();
+
+    while let Some(line) = lines.next() {
+        // 检查是否是标题行
+        if let Some(captures) = heading_re.captures(line) {
+            // 处理之前收集的内容（如果有）
+            if !current_content.is_empty() {
+                // 确保有父标题
+                if !heading_stack.is_empty() {
+                    let (parent_id, _, parent_deps) = heading_stack.last().unwrap();
+                    debug!("处理标题 {} 下的内容，内容长度={}", parent_id, current_content.len());
+                    
+                    // 解析内容中的代码块
+                    parse_blocks(&current_content, parent_id, parent_deps, &all_known_ids, &mut steps)?;
+                }
+                current_content.clear();
+            }
+            
+            // 解析当前标题
+            let level = captures.get(1).unwrap().as_str().len();
+            let title = captures.get(2).unwrap().as_str();
+            let section_id = captures.get(3).map_or_else(
+                || format!("section-{}", steps.len() + 1),
+                |m| m.as_str().to_string()
+            );
+            
+            // 解析显式声明的依赖
+            let mut depends_on = Vec::new();
+            if let Some(deps_match) = captures.get(4) {
+                let deps_str = deps_match.as_str();
+                // 去掉方括号并解析依赖项
+                let inner = deps_str.trim_start_matches('[').trim_end_matches(']');
+                depends_on = inner.split(',')
+                    .map(|s| s.trim().trim_matches(|c| c == '"' || c == '\'')).filter(|s| !s.is_empty())
+                    .map(|s| s.to_string())
+                    .collect();
+                
+                debug!("标题 {} 显式依赖于: {:?}", section_id, depends_on);
+            }
+            
+            // 处理标题级别和嵌套依赖
+            // 移除比当前标题级别更低的标题
+            while !heading_stack.is_empty() && heading_stack.last().unwrap().1 >= level {
+                heading_stack.pop();
+            }
+            
+            // 自动添加对父标题的依赖
+            if !heading_stack.is_empty() {
+                let parent_id = heading_stack.last().unwrap().0.clone();
+                if !depends_on.contains(&parent_id) {
+                    debug!("标题 {} 自动依赖于父标题 {}", section_id, parent_id);
+                    depends_on.push(parent_id);
+                }
+            }
+            
+            // 验证依赖ID是否存在
+            for dep_id in &depends_on {
+                if !all_known_ids.contains_key(dep_id) {
+                    warn!("标题 {} 依赖于未知ID: {}", section_id, dep_id);
+                }
+            }
+            
+            debug!("解析标题: level={}, title=\"{}\", id=\"{}\", 依赖={:?}", 
+                level, title, section_id, depends_on);
+            
+            // 添加当前标题到栈中
+            heading_stack.push((section_id.clone(), level, depends_on.clone()));
+            
+            // 创建标题步骤
+            let step = TestStep {
+                id: section_id,
+                description: Some(title.to_string()),
+                command: None,
+                depends_on,
+                assertions: Vec::new(),
+                extractions: Vec::new(),
+                executable: false,
+                ref_command: None,
+                raw_content: line.to_string(),
+            };
+            
+            debug!("添加标题步骤: id={}", step.id);
+            steps.push(step);
+            
+            // 将当前行添加到内容中
+            current_content.push_str(line);
+            current_content.push('\n');
+            continue;
+        }
         
-        // 在内容中查找代码块和输出块
-        parse_blocks(step_content, &current_step_id, &mut steps)?;
+        // 检查是否是代码块的开始
+        if line.starts_with("```") {
+            // 收集整个代码块
+            let mut code_block = String::new();
+            code_block.push_str(line);
+            code_block.push('\n');
+            
+            // 继续读取直到代码块结束
+            let mut in_code_block = true;
+            while in_code_block {
+                if let Some(next_line) = lines.next() {
+                    code_block.push_str(next_line);
+                    code_block.push('\n');
+                    if next_line.starts_with("```") {
+                        in_code_block = false;
+                    }
+                } else {
+                    // 文件结束但代码块未关闭
+                    warn!("代码块未正确关闭");
+                    in_code_block = false;
+                }
+            }
+            
+            // 直接处理代码块
+            if !heading_stack.is_empty() {
+                let (parent_id, _, parent_deps) = heading_stack.last().unwrap();
+                
+                // 对代码块和输出块进行匹配
+                if let Some(cap) = code_block_re.captures(&code_block) {
+                    let language = cap.get(1).unwrap().as_str();
+                    let attributes = cap.get(2).unwrap().as_str();
+                    let code = cap.get(3).unwrap().as_str();
+                    
+                    debug!("找到代码块: language={}, attributes='{}'", language, attributes);
+                    
+                    // 解析属性
+                    let (block_id, description, executable, mut depends_on, assertions, extractions) = 
+                        parse_block_attributes(attributes, parent_id)?;
+                    
+                    // 合并从父标题继承的依赖关系
+                    if depends_on.is_empty() && !parent_deps.is_empty() {
+                        depends_on = parent_deps.clone();
+                        debug!("代码块 {} 继承父标题 {} 的依赖: {:?}", block_id, parent_id, depends_on);
+                    }
+                    
+                    // 创建测试步骤
+                    let step = TestStep {
+                        id: block_id,
+                        description: Some(description),
+                        command: if language == "bash" || language == "sh" { Some(code.to_string()) } else { None },
+                        depends_on,
+                        assertions,
+                        extractions,
+                        executable,
+                        ref_command: None,
+                        raw_content: format!("```{} {{{}}}\n{}\n```", language, attributes, code),
+                    };
+                    
+                    debug!("添加代码块步骤: id={}", step.id);
+                    steps.push(step);
+                } else if let Some(cap) = output_block_re.captures(&code_block) {
+                    // 处理输出引用块
+                    let ref_id = cap.get(1).or_else(|| cap.get(2)).map_or("unknown", |m| m.as_str());
+                    let placeholder = cap.get(3).unwrap().as_str();
+                    
+                    debug!("找到输出引用块: ref_id={}", ref_id);
+                    
+                    let step = TestStep {
+                        id: format!("{}-output", ref_id),
+                        description: None,
+                        command: None,
+                        depends_on: vec![ref_id.to_string()],
+                        assertions: Vec::new(),
+                        extractions: Vec::new(),
+                        executable: false,
+                        ref_command: Some(ref_id.to_string()),
+                        raw_content: format!("```output {{ref=\"{}\"}}\n{}\n```", ref_id, placeholder),
+                    };
+                    
+                    debug!("添加输出引用步骤: id={}", step.id);
+                    steps.push(step);
+                }
+            } else {
+                // 如果没有父标题，将代码块添加到当前内容中
+                current_content.push_str(&code_block);
+            }
+            continue;
+        }
+        
+        // 普通行，添加到当前内容
+        current_content.push_str(line);
+        current_content.push('\n');
+    }
+    
+    // 处理最后收集的内容
+    if !current_content.is_empty() && !heading_stack.is_empty() {
+        let (parent_id, _, parent_deps) = heading_stack.last().unwrap();
+        debug!("处理最后的内容块: parent_id={}, 内容长度={}", parent_id, current_content.len());
+        parse_blocks(&current_content, parent_id, parent_deps, &all_known_ids, &mut steps)?;
     }
     
     info!("共解析到 {} 个步骤", steps.len());
     Ok(steps)
 }
 
+/// 解析Markdown内容
+pub fn parse_markdown(content: &str, file_path: &Path) -> Result<TestTemplate> {
+    info!("开始解析Markdown内容");
+
+    // 分离YAML前置数据和Markdown内容
+    let (yaml_front_matter, markdown_content) = extract_front_matter(content)?;
+    debug!("YAML前置数据长度: {} 字节", yaml_front_matter.len());
+    debug!("Markdown内容长度: {} 字节", markdown_content.len());
+
+    // 解析元数据
+    let metadata = parse_metadata(&yaml_front_matter)?;
+    info!("模板元数据解析完成: title=\"{}\", unit=\"{}\"", metadata.title, metadata.unit_name);
+    debug!("目标配置: {}", metadata.target_config.display());
+    debug!("标签: {:?}", metadata.tags);
+
+    // 解析Markdown内容中的步骤
+    let steps = parse_steps(markdown_content)?;
+    info!("已解析 {} 个测试步骤", steps.len());
+
+    // 在返回前记录最终解析出的步骤 ID 列表
+    let final_step_ids: Vec<String> = steps.iter().map(|s| s.id.clone()).collect();
+    debug!("Parser finished for {}: Final parsed step IDs: {:?}", file_path.display(), final_step_ids);
+
+    Ok(TestTemplate {
+        metadata,
+        steps,
+        file_path: file_path.to_path_buf(),
+        raw_content: content.to_string(),
+    })
+}
+
 /// 解析步骤内容中的代码块和输出块
-fn parse_blocks(content: &str, step_id: &str, steps: &mut Vec<TestStep>) -> Result<()> {
+fn parse_blocks(content: &str, step_id: &str, header_depends_on: &Vec<String>, all_known_ids: &HashMap<String, String>, steps: &mut Vec<TestStep>) -> Result<()> {
     debug!("解析步骤 {} 中的代码块和输出块", step_id);
     
     // 识别代码块，支持不同的属性格式
@@ -260,21 +470,37 @@ fn parse_blocks(content: &str, step_id: &str, steps: &mut Vec<TestStep>) -> Resu
         
         debug!("找到代码块: language={}, attributes='{}'", language, attributes);
         
-        // 解析块属性
-        let (id, description, executable, depends_on, assertions, extractions) = 
+        // 先进行属性解析，以便正确获取ID和其他属性
+        let (block_id, description, executable, mut depends_on, assertions, extractions) = 
             parse_block_attributes(attributes, step_id)?;
         
+        debug!("解析代码块属性结果: id={}", block_id);
+        
+        // 合并从标题继承的依赖关系
+        // 如果代码块没有显式指定依赖，则继承标题的依赖
+        if depends_on.is_empty() && !header_depends_on.is_empty() {
+            debug!("代码块 {} 继承标题 {} 的依赖: {:?}", block_id, step_id, header_depends_on);
+            depends_on = header_depends_on.clone();
+        }
+        
         debug!("解析代码块属性: id={}, description=\"{}\", executable={}, 依赖数量={}, 断言数量={}, 提取数量={}",
-                id, description, executable, depends_on.len(), assertions.len(), extractions.len());
+                block_id, description, executable, depends_on.len(), assertions.len(), extractions.len());
+        
+        // 验证依赖ID是否存在
+        for dep_id in &depends_on {
+            if !all_known_ids.contains_key(dep_id) {
+                warn!("代码块 {} 依赖于未知ID: {}", block_id, dep_id);
+            }
+        }
         
         // 记录变量提取规则
         for extraction in &extractions {
-            info!("代码块 {} 包含变量提取: {}=/{}/", id, extraction.variable, extraction.regex);
+            info!("代码块 {} 包含变量提取: {}=/{}/", block_id, extraction.variable, extraction.regex);
         }
         
         // 创建测试步骤
         let step = TestStep {
-            id,
+            id: block_id.clone(),
             description: Some(description),
             command: if language == "bash" || language == "sh" { Some(code.to_string()) } else { None },
             depends_on,
@@ -285,6 +511,7 @@ fn parse_blocks(content: &str, step_id: &str, steps: &mut Vec<TestStep>) -> Resu
             raw_content: format!("```{} {{{}}}\n{}\n```", language, attributes, code),
         };
         
+        debug!("添加代码块步骤: id={}", step.id);
         steps.push(step);
     }
     
@@ -295,6 +522,11 @@ fn parse_blocks(content: &str, step_id: &str, steps: &mut Vec<TestStep>) -> Resu
         let placeholder = cap.get(3).unwrap().as_str();
         
         debug!("找到输出引用块: ref_id={}, placeholder内容长度={}", ref_id, placeholder.len());
+        
+        // 验证引用ID是否存在
+        if !all_known_ids.contains_key(ref_id) {
+            warn!("输出引用块依赖于未知ID: {}", ref_id);
+        }
         
         // 创建引用步骤
         let step = TestStep {
@@ -309,6 +541,7 @@ fn parse_blocks(content: &str, step_id: &str, steps: &mut Vec<TestStep>) -> Resu
             raw_content: format!("```output {{ref=\"{}\"}}\n{}\n```", ref_id, placeholder),
         };
         
+        debug!("添加输出引用步骤: id={}", step.id);
         steps.push(step);
     }
     
@@ -319,6 +552,7 @@ fn parse_blocks(content: &str, step_id: &str, steps: &mut Vec<TestStep>) -> Resu
 fn parse_block_attributes(attributes: &str, parent_id: &str) -> Result<(String, String, bool, Vec<String>, Vec<AssertionType>, Vec<DataExtraction>)> {
     debug!("解析代码块属性: {}", attributes);
     
+    // 初始化返回值
     let mut id = String::new();
     let mut description = String::new();
     let mut executable = false;
@@ -326,75 +560,67 @@ fn parse_block_attributes(attributes: &str, parent_id: &str) -> Result<(String, 
     let mut assertions = Vec::new();
     let mut extractions = Vec::new();
     
-    // 分割属性
-    for attr in attributes.split_whitespace() {
-        debug!("处理属性: {}", attr);
-        
-        if attr.starts_with("id=") {
-            // 提取ID属性，支持单引号或双引号
-            id = attr.trim_start_matches("id=")
-                .trim_matches(|c| c == '"' || c == '\'')
-                .to_string();
-            debug!("  解析id=\"{}\"", id);
-        } else if attr.starts_with("description=") {
-            // 提取描述属性，支持单引号或双引号
-            description = attr.trim_start_matches("description=")
-                .trim_matches(|c| c == '"' || c == '\'')
-                .to_string();
-            debug!("  解析description=\"{}\"", description);
-        } else if attr == "exec=true" {
-            executable = true;
-            debug!("  设置executable=true");
-        } else if attr.starts_with("depends_on=[") && attr.ends_with("]") {
-            // 解析依赖列表，支持各种引号样式
-            let deps_str = attr.trim_start_matches("depends_on=[").trim_end_matches("]");
-            depends_on = deps_str.split(',')
-                .map(|s| s.trim().trim_matches(|c| c == '"' || c == '\'').to_string())
-                .collect();
-            debug!("  解析depends_on={:?}", depends_on);
-        } else if attr.starts_with("assert.") {
-            // 解析断言
-            if attr.starts_with("assert.exit_code=") {
-                let code_str = attr.trim_start_matches("assert.exit_code=");
-                if let Ok(code) = code_str.parse::<i32>() {
-                    assertions.push(AssertionType::ExitCode(code));
-                    debug!("  解析断言: exit_code={}", code);
-                } else {
-                    warn!("  无效的exit_code值: {}", code_str);
-                }
-            } else if attr.starts_with("assert.stdout_contains=") {
-                let text = attr.trim_start_matches("assert.stdout_contains=").trim_matches('"').to_string();
-                assertions.push(AssertionType::StdoutContains(text.clone()));
-                debug!("  解析断言: stdout_contains=\"{}\"", text);
-            } else if attr.starts_with("assert.stdout_matches=") {
-                let regex = attr.trim_start_matches("assert.stdout_matches=").trim_matches('"').to_string();
-                assertions.push(AssertionType::StdoutMatches(regex.clone()));
-                debug!("  解析断言: stdout_matches=/{}/", regex);
-            } else if attr.starts_with("assert.stderr_contains=") {
-                let text = attr.trim_start_matches("assert.stderr_contains=").trim_matches('"').to_string();
-                assertions.push(AssertionType::StderrContains(text.clone()));
-                debug!("  解析断言: stderr_contains=\"{}\"", text);
-            } else if attr.starts_with("assert.stderr_matches=") {
-                let regex = attr.trim_start_matches("assert.stderr_matches=").trim_matches('"').to_string();
-                assertions.push(AssertionType::StderrMatches(regex.clone()));
-                debug!("  解析断言: stderr_matches=/{}/", regex);
-            } else {
-                warn!("  未知的断言类型: {}", attr);
+    // 提取所有属性键值对
+    let attributes_map = extract_attributes(attributes);
+    
+    // 记录找到的所有属性
+    debug!("提取到 {} 个属性:", attributes_map.len());
+    for (k, v) in &attributes_map {
+        debug!("  {}=\"{}\"", k, v);
+    }
+    
+    // 处理ID
+    if let Some(value) = attributes_map.get("id") {
+        id = value.clone();
+        debug!("找到ID: {}", id);
+    }
+    
+    // 处理描述
+    if let Some(value) = attributes_map.get("description") {
+        description = value.clone();
+        debug!("找到描述: {}", description);
+    }
+    
+    // 处理可执行标记
+    if let Some(value) = attributes_map.get("exec") {
+        executable = value == "true";
+        debug!("找到可执行标记: {}", executable);
+    }
+    
+    // 处理依赖关系
+    if let Some(value) = attributes_map.get("depends_on") {
+        let deps_str = value.trim().trim_matches(|c| c == '[' || c == ']');
+        depends_on = deps_str.split(',')
+            .map(|s| s.trim().trim_matches(|c| c == '"' || c == '\'').to_string())
+            .filter(|s| !s.is_empty())
+            .collect();
+        debug!("找到依赖: {:?}", depends_on);
+    }
+    
+    // 处理断言和提取 - 需要扫描所有以assert.和extract.开头的键
+    for (key, value) in &attributes_map {
+        if key.starts_with("assert.") {
+            let assertion_type = key.trim_start_matches("assert.");
+            let assertion = parse_assertion(assertion_type, value);
+            if let Some(a) = assertion {
+                debug!("找到断言: {:?}", a);
+                assertions.push(a);
             }
-        } else if attr.starts_with("extract.") {
-            // 解析数据提取
-            let parts: Vec<&str> = attr.split('=').collect();
-            if parts.len() == 2 {
-                let var_name = parts[0].trim_start_matches("extract.").to_string();
-                let regex = parts[1].trim_matches('/').to_string();
-                extractions.push(DataExtraction {
-                    variable: var_name.clone(),
-                    regex: regex.clone(),
-                });
-                info!("  解析变量提取: {}=/{}/", var_name, regex);
+        } else if key.starts_with("extract.") {
+            let var_name = key.trim_start_matches("extract.");
+            
+            // 处理正则表达式格式，可能被/包裹
+            let regex_str = if value.starts_with('/') && value.ends_with('/') {
+                value[1..value.len()-1].to_string()
             } else {
-                warn!("  无效的extract语法: {}", attr);
-            }
+                value.clone()
+            };
+            
+            extractions.push(DataExtraction {
+                variable: var_name.to_string(),
+                regex: regex_str.clone(),
+            });
+            debug!("找到提取规则: {}=/{}/", var_name, regex_str);
         }
     }
     
@@ -407,7 +633,147 @@ fn parse_block_attributes(attributes: &str, parent_id: &str) -> Result<(String, 
         debug!("自动生成ID: {}", id);
     }
     
+    // 最终日志输出
+    debug!("解析代码块属性完成: id={}, description=\"{}\", executable={}, 依赖数量={}, 断言数量={}, 提取数量={}",
+            id, description, executable, depends_on.len(), assertions.len(), extractions.len());
+    
     Ok((id, description, executable, depends_on, assertions, extractions))
+}
+
+/// 从属性字符串中提取所有键值对
+fn extract_attributes(attributes: &str) -> HashMap<String, String> {
+    let mut result = HashMap::new();
+    
+    // 移除可能的大括号
+    let attr_str = attributes.trim_start_matches('{').trim_end_matches('}');
+    
+    debug!("解析代码块属性: {}", attr_str);
+    
+    // 状态机变量
+    enum ParseState {
+        Key,        // 解析键
+        Equal,      // 等号后
+        Value,      // 解析没有引号的值
+        QuoteValue, // 解析有引号的值
+    }
+    
+    let mut state = ParseState::Key;
+    let mut current_key = String::new();
+    let mut current_value = String::new();
+    let mut quote_char = ' '; // 当前引号类型 ' 或 "
+    
+    // 遍历字符
+    let mut chars = attr_str.chars().peekable();
+    while let Some(c) = chars.next() {
+        match state {
+            ParseState::Key => {
+                if c == '=' {
+                    // 遇到等号，切换到等号后状态
+                    state = ParseState::Equal;
+                } else if c.is_whitespace() {
+                    // 键名后遇到空格
+                    if !current_key.is_empty() {
+                        // 视为无值的布尔属性
+                        result.insert(current_key.trim().to_string(), "true".to_string());
+                        current_key = String::new();
+                    }
+                } else {
+                    // 继续收集键名
+                    current_key.push(c);
+                }
+            },
+            ParseState::Equal => {
+                if c == '"' || c == '\'' {
+                    // 等号后遇到引号，开始解析引号内的值
+                    quote_char = c;
+                    state = ParseState::QuoteValue;
+                } else if c.is_whitespace() {
+                    // 等号后的空格，忽略
+                } else {
+                    // 等号后开始收集非引号值
+                    current_value.push(c);
+                    state = ParseState::Value;
+                }
+            },
+            ParseState::Value => {
+                if c.is_whitespace() {
+                    // 值后面遇到空格，表示值结束
+                    result.insert(current_key.trim().to_string(), current_value.trim().to_string());
+                    current_key = String::new();
+                    current_value = String::new();
+                    state = ParseState::Key;
+                } else {
+                    // 继续收集非引号值
+                    current_value.push(c);
+                }
+            },
+            ParseState::QuoteValue => {
+                if c == quote_char {
+                    // 遇到匹配的引号，引号值结束
+                    result.insert(current_key.trim().to_string(), current_value.clone());
+                    current_key = String::new();
+                    current_value = String::new();
+                    state = ParseState::Key;
+                } else {
+                    // 继续收集引号内的值
+                    current_value.push(c);
+                }
+            }
+        }
+    }
+    
+    // 处理最后可能未完成的键值对
+    if !current_key.is_empty() {
+        if !current_value.is_empty() {
+            result.insert(current_key.trim().to_string(), current_value.trim().to_string());
+        } else {
+            result.insert(current_key.trim().to_string(), "true".to_string());
+        }
+    }
+    
+    // 记录解析结果
+    debug!("提取到 {} 个属性:", result.len());
+    for (k, v) in &result {
+        debug!("  {}=\"{}\"", k, v);
+    }
+    
+    result
+}
+
+/// 解析断言
+fn parse_assertion(assertion_type: &str, value: &str) -> Option<AssertionType> {
+    match assertion_type {
+        "exit_code" => {
+            if let Ok(code) = value.parse::<i32>() {
+                Some(AssertionType::ExitCode(code))
+            } else {
+                warn!("无效的exit_code值: {}", value);
+                None
+            }
+        },
+        "stdout_contains" => {
+            Some(AssertionType::StdoutContains(value.to_string()))
+        },
+        "stdout_not_contains" => {
+            Some(AssertionType::StdoutNotContains(value.to_string()))
+        },
+        "stdout_matches" => {
+            Some(AssertionType::StdoutMatches(value.to_string()))
+        },
+        "stderr_contains" => {
+            Some(AssertionType::StderrContains(value.to_string()))
+        },
+        "stderr_not_contains" => {
+            Some(AssertionType::StderrNotContains(value.to_string()))
+        },
+        "stderr_matches" => {
+            Some(AssertionType::StderrMatches(value.to_string()))
+        },
+        _ => {
+            warn!("未知的断言类型: {}", assertion_type);
+            None
+        }
+    }
 }
 
 /// 从文本中提取变量值

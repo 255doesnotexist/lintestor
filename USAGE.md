@@ -14,7 +14,7 @@
     *   **可执行命令块:** 标记需要在 Target 上执行的 Shell 命令。
     *   **断言 (Assertions):** 定义检查点，用于判断命令执行是否成功（例如，检查退出码、输出内容）。
     *   **数据提取 (Data Extraction):** 从命令输出中提取特定信息（如版本号、性能指标）到变量中。
-    *   **依赖关系 (Dependencies):** 定义命令块之间的执行顺序。
+    *   **依赖关系 (Dependencies):** 定义执行顺序依赖，可以依赖于标题节ID或代码块ID。
     *   **报告占位符:** 指定命令输出、提取的变量和状态信息应插入到最终报告的哪个位置。
 *   **测试报告 (`.report.md`):** 执行测试模板后生成的最终 Markdown 文件，包含了所有执行细节、输出和结果状态。
 
@@ -156,9 +156,19 @@ serial = "device_serial_123"
     *   `description="简短描述"`: 用于摘要表格。
     *   `assert.exit_code=0`: 断言命令退出码为 0。
     *   `assert.stdout_contains="文本"`: 断言标准输出包含指定文本。
+    *   `assert.stdout_not_contains="文本"`: 断言标准输出不包含指定文本。
+    *   `assert.stderr_contains="文本"`: 断言标准错误包含指定文本。 
+    *   `assert.stderr_not_contains="文本"`: 断言标准错误不包含指定文本。
     *   `assert.stderr_matches=/regex/`: 断言标准错误匹配正则表达式。
     *   `extract.变量名=/regex/`: 从标准输出提取匹配正则表达式捕获组 1 的内容到 `变量名`。
     *   `depends_on=["id1", "id2"]`: 声明此块依赖于 ID 为 `id1` 和 `id2` 的块成功完成。
+*   **依赖关系 (`depends_on`)**:
+    *   在**标题节**上声明: `## 测试步骤 {id="step-id" depends_on=["other-step"]}` - 该部分下的所有代码块都将继承此依赖关系。
+    *   在**代码块**上声明: ```bash {id="block-id" depends_on=["other-block"]}``` - 只影响该特定代码块。
+    *   **依赖类型**:
+        *   可以依赖于**标题节ID**: 意味着依赖该标题下的所有代码块执行成功。
+        *   可以依赖于**代码块ID**: 只依赖特定代码块执行成功。
+        *   **继承机制**: 如果代码块没有显式指定依赖关系，但所在标题节有依赖，则代码块会继承标题的依赖关系。
 *   **占位符:**
     *   `output {ref="command-id"}`: 标记此处插入 ID 为 `command-id` 的命令的输出。
     *   `{{ variable_name }}`: 插入提取的变量或特殊变量的值。

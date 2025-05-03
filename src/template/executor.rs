@@ -104,6 +104,23 @@ impl<'a> TemplateExecutor<'a> {
         // 3. 构建依赖图并生成执行顺序
         let execution_order = self.build_execution_order(&template)?;
         
+        // 打印所有步骤ID，帮助诊断
+        let step_ids: Vec<String> = template.steps.iter().map(|s| s.id.clone()).collect();
+        debug!("所有定义的步骤ID: {:?}", step_ids);
+        
+        // 记录所有可执行步骤
+        let executable_step_ids: Vec<String> = template.steps.iter()
+            .filter(|s| s.executable)
+            .map(|s| s.id.clone())
+            .collect();
+        debug!("可执行的步骤ID: {:?}", executable_step_ids);
+        
+        // 记录所有引用命令的步骤
+        let ref_step_ids: Vec<(String, String)> = template.steps.iter()
+            .filter_map(|s| s.ref_command.clone().map(|ref_id| (s.id.clone(), ref_id)))
+            .collect();
+        debug!("引用命令的步骤ID: {:?}", ref_step_ids);
+        
         // 4. 按执行顺序执行步骤
         for step_id in &execution_order {
             // 查找步骤
@@ -128,6 +145,10 @@ impl<'a> TemplateExecutor<'a> {
             
             // 执行步骤
             let result = self.execute_step(&mut context, step, &target_config)?;
+            
+            // 记录步骤执行结果
+            debug!("步骤 {} 执行完成: 状态={:?}, stdout长度={}, stderr长度={}",
+                   step.id, result.status, result.stdout.len(), result.stderr.len());
             
             // 存储结果
             context.results.insert(step.id.clone(), result);
@@ -191,34 +212,93 @@ impl<'a> TemplateExecutor<'a> {
     /// 构建依赖图并生成执行顺序
     fn build_execution_order(&self, template: &TestTemplate) -> Result<Vec<String>> {
         // 使用拓扑排序生成执行顺序
+        debug!("开始构建执行顺序");
         
         // 1. 构建依赖图
         let mut graph: HashMap<&str, Vec<&str>> = HashMap::new();
         let mut in_degree: HashMap<&str, usize> = HashMap::new();
         
-        // 所有步骤ID
-        let mut all_steps: HashSet<&str> = template.steps.iter()
+        // 收集所有步骤ID (无论是显式定义还是被引用的)
+        let mut all_steps: HashSet<&str> = HashSet::new();
+        
+        // 先收集所有显式定义的步骤ID
+        let existing_steps: HashSet<&str> = template.steps.iter()
             .map(|s| s.id.as_str())
             .collect();
         
-        // 初始化图和入度
+        // 记录所有步骤ID和它们的依赖关系
         for step in &template.steps {
+            // 将当前步骤添加到全部步骤集合中
+            all_steps.insert(step.id.as_str());
+            
+            // 初始化图和入度
             graph.entry(step.id.as_str()).or_insert_with(Vec::new);
             in_degree.entry(step.id.as_str()).or_insert(0);
             
             // 更新依赖关系
             for dep in &step.depends_on {
+                debug!("步骤 {} 依赖于 {}", step.id, dep);
+                all_steps.insert(dep.as_str()); // 确保所有被依赖的步骤也在集合中
                 graph.entry(dep.as_str()).or_insert_with(Vec::new).push(step.id.as_str());
                 *in_degree.entry(step.id.as_str()).or_insert(0) += 1;
-                all_steps.insert(dep.as_str()); // 确保所有被依赖的步骤也在集合中
             }
         }
         
+        // 记录被引用但未定义的步骤
+        let mut undefined_steps = HashSet::new();
+        for step_id in &all_steps {
+            if !existing_steps.contains(step_id) {
+                undefined_steps.insert(*step_id);
+            }
+        }
+        
+        debug!("步骤总数: {}, 已定义步骤数: {}, 未定义步骤数: {}", 
+               all_steps.len(), existing_steps.len(), undefined_steps.len());
+        
+        debug!("All steps considered during dependency check: {:?}", all_steps);
+        debug!("Defined steps: {:?}", existing_steps);
+        if !undefined_steps.is_empty() {
+            debug!("Undefined steps: {:?}", undefined_steps);
+        }
+        
+        // 检查步骤依赖关系
+        debug!("依赖关系图构建完成，检查依赖项");
+        
         // 检查是否有引用了不存在的步骤
         for step_id in &all_steps {
-            let exists = template.steps.iter().any(|s| &s.id == step_id);
+            let exists = template.steps.iter().any(|s| s.id.as_str() == *step_id);
             if !exists {
-                bail!("模板中引用了不存在的步骤ID: {}", step_id);
+                // 找出引用了此步骤的其他步骤，提供更详细的错误信息
+                let mut referencing_steps = Vec::new();
+                for step in &template.steps {
+                    if step.depends_on.iter().any(|dep| dep.as_str() == *step_id) {
+                        referencing_steps.push(&step.id);
+                    }
+                    if let Some(ref_cmd) = &step.ref_command {
+                        if ref_cmd.as_str() == *step_id {
+                            referencing_steps.push(&step.id);
+                        }
+                    }
+                }
+                
+                // 获取文件名信息
+                let file_info = if let Some(path) = template.file_path.file_name() {
+                    path.to_string_lossy().to_string()
+                } else {
+                    "未知文件".to_string()
+                };
+                
+                // 给出详细错误信息，包括引用关系
+                let error_detail = if !referencing_steps.is_empty() {
+                    let referencing_steps_str: Vec<&str> = referencing_steps.iter().map(|s| s.as_str()).collect();
+                    format!("模板中引用了不存在的步骤ID: `{}` (在文件 {} 中). 此ID被以下步骤引用: {}", 
+                            step_id, file_info, referencing_steps_str.join(", "))
+                } else {
+                    format!("模板中引用了不存在的步骤ID: `{}` (在文件 {} 中)", step_id, file_info)
+                };
+
+                warn!("{}", error_detail);
+                bail!("{}", error_detail);
             }
         }
         
@@ -229,27 +309,43 @@ impl<'a> TemplateExecutor<'a> {
         // 加入所有入度为0的节点
         for (step_id, degree) in &in_degree {
             if *degree == 0 {
+                debug!("入度为0的节点: {}", step_id);
                 queue.push_back(*step_id);
             }
         }
         
+        debug!("初始队列大小: {}", queue.len());
+        
         // 执行拓扑排序
         while let Some(step_id) = queue.pop_front() {
             result.push(step_id.to_string());
+            debug!("处理节点: {}, 当前结果大小: {}", step_id, result.len());
             
             if let Some(deps) = graph.get(step_id) {
                 for &dep in deps {
                     *in_degree.get_mut(dep).unwrap() -= 1;
+                    debug!("  更新依赖节点 {} 的入度为 {}", dep, in_degree[dep]);
                     if in_degree[dep] == 0 {
                         queue.push_back(dep);
+                        debug!("  入度为0，加入队列: {}", dep);
                     }
                 }
             }
         }
         
+        debug!("拓扑排序结果大小: {}, 总步骤数: {}", result.len(), all_steps.len());
+        
         // 检查是否有循环依赖
         if result.len() != all_steps.len() {
-            bail!("测试模板中存在循环依赖");
+            // 找出潜在的循环依赖
+            let mut unprocessed = all_steps.iter()
+                .filter(|&id| !result.contains(&id.to_string()))
+                .map(|&id| id.to_string())
+                .collect::<Vec<_>>();
+            
+            let error_msg = format!("测试模板中存在循环依赖，无法确定执行顺序。可能涉及的步骤: {}", 
+                                   unprocessed.join(", "));
+            bail!(error_msg);
         }
         
         Ok(result)
@@ -294,8 +390,12 @@ impl<'a> TemplateExecutor<'a> {
         if !step.executable {
             // 处理引用命令的输出块
             if let Some(ref_id) = &step.ref_command {
+                // 记录正在处理的引用命令
+                debug!("处理引用命令步骤: {} -> 引用 {}", step.id, ref_id);
+                
                 // 创建一个引用结果
                 if let Some(ref_result) = context.results.get(ref_id) {
+                    debug!("找到引用的命令结果: {} (输出长度: {}字节)", ref_id, ref_result.stdout.len());
                     return Ok(StepResult {
                         id: step.id.clone(),
                         status: StepStatus::Pass,
@@ -305,11 +405,20 @@ impl<'a> TemplateExecutor<'a> {
                         extracted_vars: HashMap::new(),
                     });
                 } else {
+                    // 如果引用的命令不存在，提供更有帮助的错误信息
+                    let error_msg = format!("引用的命令结果不存在: {}。这可能是因为该命令未定义或者执行顺序有问题。", ref_id);
+                    warn!("{}", error_msg);
+                    
+                    // 显示所有已有的命令结果ID，帮助诊断
+                    let available_ids: Vec<&String> = context.results.keys().collect();
+                    debug!("当前可用的命令结果ID: {:?}", available_ids);
+                    
+                    // 返回一个包含明确错误信息的结果，而不是空输出
                     return Ok(StepResult {
                         id: step.id.clone(),
                         status: StepStatus::Fail,
-                        stdout: String::new(),
-                        stderr: format!("引用的命令结果不存在: {}", ref_id),
+                        stdout: format!("错误: {}\n可用的命令ID: {:?}", error_msg, available_ids),
+                        stderr: error_msg,
                         exit_code: -1,
                         extracted_vars: HashMap::new(),
                     });
@@ -387,6 +496,11 @@ impl<'a> TemplateExecutor<'a> {
     }
     
     /// 评估断言
+    /// 
+    /// 此函数根据用户定义的断言来评估命令执行结果是否通过。
+    /// 注意：测试步骤的通过与否完全取决于用户定义的断言，而不是stderr是否有内容。
+    /// 即使stderr有错误信息，只要断言全部通过，步骤仍然被视为通过。
+    /// 如果用户期望检查stderr，应该使用`assert.stderr_contains`等断言。
     fn evaluate_assertions(
         &self,
         output: &crate::connection::CommandOutput,
@@ -406,41 +520,65 @@ impl<'a> TemplateExecutor<'a> {
             match assertion {
                 AssertionType::ExitCode(expected) => {
                     if output.exit_code != *expected {
+                        debug!("断言失败: exit_code={}, expected={}", output.exit_code, expected);
                         return StepStatus::Fail;
                     }
+                    debug!("断言通过: exit_code={}", expected);
                 },
                 AssertionType::StdoutContains(text) => {
                     if !output.stdout.contains(text) {
+                        debug!("断言失败: stdout不包含'{}'", text);
                         return StepStatus::Fail;
                     }
+                    debug!("断言通过: stdout包含'{}'", text);
+                },
+                AssertionType::StdoutNotContains(text) => {
+                    if output.stdout.contains(text) {
+                        debug!("断言失败: stdout包含'{}'，但期望不包含", text);
+                        return StepStatus::Fail;
+                    }
+                    debug!("断言通过: stdout不包含'{}'", text);
                 },
                 AssertionType::StdoutMatches(regex_str) => {
                     match Regex::new(regex_str) {
                         Ok(re) => {
                             if !re.is_match(&output.stdout) {
+                                debug!("断言失败: stdout不匹配正则表达式'{}'", regex_str);
                                 return StepStatus::Fail;
                             }
+                            debug!("断言通过: stdout匹配正则表达式'{}'", regex_str);
                         },
-                        Err(_) => {
-                            warn!("无效的正则表达式: {}", regex_str);
+                        Err(e) => {
+                            warn!("无效的正则表达式: {}, 错误: {}", regex_str, e);
                             return StepStatus::Fail;
                         }
                     }
                 },
                 AssertionType::StderrContains(text) => {
                     if !output.stderr.contains(text) {
+                        debug!("断言失败: stderr不包含'{}'", text);
                         return StepStatus::Fail;
                     }
+                    debug!("断言通过: stderr包含'{}'", text);
+                },
+                AssertionType::StderrNotContains(text) => {
+                    if output.stderr.contains(text) {
+                        debug!("断言失败: stderr包含'{}'，但期望不包含", text);
+                        return StepStatus::Fail;
+                    }
+                    debug!("断言通过: stderr不包含'{}'", text);
                 },
                 AssertionType::StderrMatches(regex_str) => {
                     match Regex::new(regex_str) {
                         Ok(re) => {
                             if !re.is_match(&output.stderr) {
+                                debug!("断言失败: stderr不匹配正则表达式'{}'", regex_str);
                                 return StepStatus::Fail;
                             }
+                            debug!("断言通过: stderr匹配正则表达式'{}'", regex_str);
                         },
-                        Err(_) => {
-                            warn!("无效的正则表达式: {}", regex_str);
+                        Err(e) => {
+                            warn!("无效的正则表达式: {}, 错误: {}", regex_str, e);
                             return StepStatus::Fail;
                         }
                     }
@@ -449,6 +587,7 @@ impl<'a> TemplateExecutor<'a> {
         }
         
         // 所有断言都通过
+        debug!("所有断言都通过");
         StepStatus::Pass
     }
     

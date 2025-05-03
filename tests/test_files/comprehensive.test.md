@@ -79,9 +79,9 @@ echo "File updated successfully"
 
 测试多种断言类型：
 
-```bash {id="complex-assert" exec=true description="复杂断言" assert.exit_code=0 assert.stdout_contains="pass" assert.stderr_not_contains="error"}
+```bash {id="complex-assert" exec=true description="复杂断言" assert.exit_code=0 assert.stdout_contains="pass" assert.stderr_contains="Error" assert.stderr_not_contains="Error" assert.stderr_not_contains="pass"}
 echo "This test should pass"
-echo "No errors should be present" >&2
+echo "Errors should be present here, expected" >&2
 ```
 
 **命令输出:**

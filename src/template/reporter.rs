@@ -218,17 +218,56 @@ impl Reporter {
             match result.step_results.get(cmd_id) {
                 Some(step_result) => {
                     info!("找到命令结果: {} (输出长度: {} 字节)", cmd_id, step_result.stdout.len());
+                    // 打印命令输出的内容预览，帮助诊断
+                    // 修复：安全地处理UTF-8字符边界
+                    let preview = if !step_result.stdout.is_empty() {
+                        let char_count = step_result.stdout.chars().take(50).count();
+                        let safe_index = step_result.stdout.char_indices()
+                            .map(|(i, _)| i)
+                            .nth(char_count)
+                            .unwrap_or(step_result.stdout.len());
+                            
+                        let truncated = &step_result.stdout[..safe_index];
+                        if safe_index < step_result.stdout.len() {
+                            format!("{}...", truncated.replace('\n', "\\n"))
+                        } else {
+                            truncated.replace('\n', "\\n")
+                        }
+                    } else {
+                        "<空输出>".to_string()
+                    };
+                    info!("输出内容预览: {}", preview);
+                    
+                    // 检查输出是否为空
+                    if step_result.stdout.is_empty() {
+                        // 检查stderr是否有内容
+                        if !step_result.stderr.is_empty() {
+                            warn!("命令 {} 的stdout为空，但stderr有内容: {}", cmd_id, step_result.stderr);
+                        }
+                        
+                        // 检查退出码
+                        info!("命令 {} 的退出码: {}", cmd_id, step_result.exit_code);
+                    }
+                    
+                    // 检查命令是否有数据提取结果
+                    if !step_result.extracted_vars.is_empty() {
+                        info!("命令 {} 提取的变量: {:?}", cmd_id, step_result.extracted_vars);
+                    }
+                    
                     // 别改这三个 {} 因为这是原样字符串，你直接打 \n 在里面不是换行
                     format!(r#"```output {{ref="{}"}}{}{}{}```"#, cmd_id, "\n", &step_result.stdout, "\n")
                 },
                 None => {
                     warn!("未找到命令结果: {}", cmd_id);
+                    // 显示所有可用的命令ID，帮助诊断
+                    let available_ids: Vec<&String> = result.step_results.keys().collect();
+                    warn!("可用的命令结果ID: {:?}", available_ids);
                     format!(r#"```output {{ref="{}"}}\n命令结果不可用\n```"#, cmd_id)
                 }
             }
         }).to_string();
         
-        // 5. 处理自动生成总结表 - 修复重复和格式问题
+        // 5. 处理自动生成总结表 - 改进显示更多有用信息
         // 只在标记为generate_summary=true的节中生成摘要表
         let summary_block_pattern = Regex::new(r#"(?ms)^##\s+.*?\s+\{id=(?:"([^"]+)"|'([^']+)').*?generate_summary=true.*?\}\s*$"#)?;
         let mut processed_summary = false;  // 记录是否已生成摘要表
@@ -248,9 +287,9 @@ impl Reporter {
             let mut summary = caps[0].to_string(); // 保留原始标题行
             summary.push_str("\n\n");  // 确保有足够的换行
 
-            // 添加表头
-            summary.push_str("| 步骤描述 | 状态 |\n");
-            summary.push_str("|---------|------|\n");
+            // 添加表头 - 更丰富的列信息
+            summary.push_str("| 步骤ID | 描述 | 状态 | 退出码 | 输出摘要 | 错误信息 |\n");
+            summary.push_str("|--------|------|------|--------|----------|----------|\n");
 
             // 收集所有有效的执行步骤（排除输出引用步骤）
             let mut valid_steps = Vec::new();
@@ -263,6 +302,7 @@ impl Reporter {
                 
                 // 找到步骤结果
                 if let Some(step_result) = result.step_results.get(&step.id) {
+                    // 获取描述，如果没有则使用ID
                     let description = step.description.clone().unwrap_or_else(|| step.id.clone());
                     
                     // 获取状态
@@ -274,21 +314,82 @@ impl Reporter {
                         StepStatus::NotRun => "❓ Not Run",
                     };
                     
-                    info!("添加摘要项: {} = {}", description, status);
-                    valid_steps.push((description, status.to_string()));
+                    // 获取输出和错误信息摘要
+                    let stdout_summary = if !step_result.stdout.is_empty() {
+                        // 获取第一行或前50个字符（以实际内容结构为准）
+                        let first_line = step_result.stdout
+                            .lines()
+                            .next()
+                            .unwrap_or("")
+                            .trim();
+                            
+                        let char_count = first_line.chars().take(50).count();
+                        let safe_index = first_line.char_indices()
+                            .map(|(i, _)| i)
+                            .nth(char_count)
+                            .unwrap_or_else(|| first_line.len());
+                            
+                        if safe_index < first_line.len() {
+                            format!("{}...", &first_line[..safe_index])
+                        } else {
+                            first_line.to_string()
+                        }
+                    } else {
+                        "-".to_string()
+                    };
+                    
+                    let stderr_summary = if !step_result.stderr.is_empty() {
+                        // 获取第一行或前30个字符
+                        let first_line = step_result.stderr
+                            .lines()
+                            .next()
+                            .unwrap_or("")
+                            .trim();
+                            
+                        let char_count = first_line.chars().take(30).count();
+                        let safe_index = first_line.char_indices()
+                            .map(|(i, _)| i)
+                            .nth(char_count)
+                            .unwrap_or_else(|| first_line.len());
+                            
+                        if safe_index < first_line.len() {
+                            format!("{}...", &first_line[..safe_index])
+                        } else {
+                            first_line.to_string()
+                        }
+                    } else {
+                        "-".to_string()
+                    };
+                    
+                    // 准备退出码显示
+                    let exit_code = format!("{}", step_result.exit_code);
+                    
+                    info!("添加摘要项: {} = {}", step.id, status);
+                    valid_steps.push((
+                        step.id.clone(),
+                        description,
+                        status.to_string(),
+                        exit_code,
+                        stdout_summary,
+                        stderr_summary
+                    ));
                 }
             }
             
             // 如果没有找到有效步骤，添加一个提示
             if valid_steps.is_empty() {
-                summary.push_str("| 未找到可执行步骤 | ❓ |\n");
+                summary.push_str("| - | 未找到可执行步骤 | ❓ | - | - | - |\n");
             } else {
                 // 添加步骤到表格
-                for (description, status) in valid_steps {
-                    summary.push_str(&format!("| {} | {} |\n", description, status));
+                for (id, description, status, exit_code, stdout, stderr) in valid_steps {
+                    summary.push_str(&format!(
+                        "| {} | {} | {} | {} | {} | {} |\n",
+                        id, description, status, exit_code, stdout, stderr
+                    ));
                 }
             }
 
+            summary.push_str("\n");
             summary
         }).to_string();
         

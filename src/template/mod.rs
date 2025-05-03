@@ -41,10 +41,14 @@ pub enum AssertionType {
     ExitCode(i32),
     /// 检查标准输出是否包含特定文本
     StdoutContains(String),
+    /// 检查标准输出是否不包含特定文本
+    StdoutNotContains(String),
     /// 检查标准输出是否匹配正则表达式
     StdoutMatches(String),
     /// 检查标准错误是否包含特定文本
     StderrContains(String),
+    /// 检查标准错误是否不包含特定文本
+    StderrNotContains(String),
     /// 检查标准错误是否匹配正则表达式
     StderrMatches(String),
 }
