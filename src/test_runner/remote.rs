@@ -1,29 +1,20 @@
-//! Test runner for remote test environments.
-//!
-//! This module implements the `TestRunner` trait for the `RemoteTestRunner` struct.
-use crate::aggregator::generate_report;
-use crate::test_runner::TestRunner;
-use crate::testscript_manager::TestScriptManager;
-use crate::utils::{CommandOutput, PackageMetadata, Report, TestResult, REMOTE_TMP_DIR};
-use log::{debug, log_enabled, Level};
-use ssh2::Session;
-use std::{
-    fs::File,
-    io::{Read, Write},
-    net::TcpStream,
-    path::Path,
-    process::Command,
-};
+//! 远程 SSH 测试运行器的实现
 
+use crate::aggregator::generate_report;
+use crate::test_environment::remote::RemoteEnvironment;
+use crate::test_executor::TestExecutor;
+use crate::test_runner::TestRunner;
+use crate::test_environment::TestEnvironment;
+use std::error::Error;
+use std::path::Path;
+
+/// 远程 SSH 测试运行器，使用远程 SSH 环境执行测试
 pub struct RemoteTestRunner {
-    remote_ip: String,
-    port: u16,
-    username: String,
-    password: Option<String>,
-    private_key_path: Option<String>,
+    environment: RemoteEnvironment,
 }
 
 impl RemoteTestRunner {
+    /// 创建一个新的远程测试运行器
     pub fn new(
         remote_ip: String,
         port: u16,
@@ -32,396 +23,51 @@ impl RemoteTestRunner {
         private_key_path: Option<String>,
     ) -> Self {
         RemoteTestRunner {
-            remote_ip,
-            port,
-            username,
-            password,
-            private_key_path,
+            environment: RemoteEnvironment::new(remote_ip, port, username, password, private_key_path),
         }
-    }
-
-    /// Prints an SSH message. (maybe remove later)
-    fn print_ssh_msg(&self, msg: &str) {
-        // PRINT_SSH_MSG is deprecated, use RUST_LOG=debug
-        if std::env::var("PRINT_SSH_MSG").is_ok() || log_enabled!(Level::Debug) {
-            debug!("{}", msg);
-        }
-    }
-
-    /// Runs a command on the remote server.
-    /// # Arguments
-    ///
-    /// * `sess` - The SSH session.
-    /// * `command` - The command to run.
-    ///
-    /// # Errors
-    ///
-    /// Returns an error if the command fails or encounters any issues.
-    /// # Returns
-    ///
-    /// A `CommandOutput` struct containing the command, exit status, and output.
-    ///
-    fn run_command(
-        &self,
-        sess: &Session,
-        command: &str,
-    ) -> Result<CommandOutput, Box<dyn std::error::Error>> {
-        let mut channel = sess.channel_session()?;
-        channel.exec(command)?;
-
-        let mut s = String::new();
-        channel.read_to_string(&mut s)?;
-        channel.send_eof()?;
-        channel.wait_close()?;
-        let command_output = CommandOutput {
-            command: command.to_string(),
-            exit_status: channel.exit_status()?,
-            output: s,
-        };
-        self.print_ssh_msg(&format!("{:?}", command_output));
-        Ok(command_output)
     }
 }
 
-/// Implements the `TestRunner` trait for the `RemoteTestRunner` struct.
-///
-/// This struct allows running tests on a remote server using SSH.
 impl TestRunner for RemoteTestRunner {
-    /// Runs a test on a remote server.
+    fn environment(&self) -> &dyn TestEnvironment {
+        &self.environment
+    }
+
+    /// 在远程 SSH 环境中运行测试
     ///
-    /// # Arguments
+    /// # 参数
     ///
-    /// * `target` - The name of the distribution.
-    /// * `unit` - The name of the unit.
-    /// * `skip_scripts` - Some scripts skiped by use --skip-successful
-    /// * `dir` - Working directory which contains the test folders and files, defaults to env::current_dir()
+    /// * `target` - 分发版本/目标的名称
+    /// * `unit` - 测试单元的名称
+    /// * `skip_scripts` - 要跳过的脚本名称列表
+    /// * `dir` - 包含测试文件的基础目录
     ///
-    /// # Errors
+    /// # 错误
     ///
-    /// Returns an error if the test fails or encounters any issues.
+    /// 如果测试执行失败则返回错误
     fn run_test(
-        &self,
+        &mut self,
         target: &str,
         unit: &str,
         skip_scripts: Vec<String>,
         dir: &Path,
-    ) -> Result<(), Box<dyn std::error::Error>> {
-        // Create SSH session
-        let tcp = TcpStream::connect((self.remote_ip.as_str(), self.port))?;
-        let mut sess = Session::new()?;
-        sess.set_tcp_stream(tcp);
-        sess.handshake()?;
-        self.print_ssh_msg("SSH handshake completed");
+    ) -> Result<(), Box<dyn Error>> {
+        // 创建测试执行器
+        let mut executor = TestExecutor::new(&mut self.environment);
+        
+        // 执行测试并获取报告
+        let report = executor.execute_remote_test(target, unit, skip_scripts, dir)?;
+        let all_passed = report.all_tests_passed;
 
-        // Authentication
-        if !sess.authenticated() {
-            if let Some(password) = &self.password {
-                match sess.userauth_password(&self.username, password) {
-                    Ok(_) => {
-                        self.print_ssh_msg("SSH password authentication completed");
-                    }
-                    Err(e) => {
-                        self.print_ssh_msg(
-                            format!("SSH password authentication failed: {:?}", e).as_str(),
-                        );
-                    }
-                }
-            }
+        // 生成报告文件
+        let report_path = dir.join(format!("{}/{}/report.json", target, unit));
+        generate_report(&report_path, report)?;
+        
+        // 检查是否所有测试都通过
+        if !all_passed{
+            return Err(format!("{}/{} 的测试未全部通过", target, unit).into());
         }
-        self.print_ssh_msg(&format!(
-            "SSH private key path: {:?}",
-            self.private_key_path
-        ));
-        if !sess.authenticated() {
-            if let Some(private_key_path) = &self.private_key_path {
-                let private_key_path = if private_key_path.starts_with("~") {
-                    // expand home directory path
-                    let home_dir = std::env::var("HOME").unwrap();
-                    let _private_key_path = private_key_path.trim_start_matches("~/");
-                    std::path::PathBuf::from(format!("{}/{}", home_dir, _private_key_path))
-                } else {
-                    std::path::PathBuf::from(private_key_path)
-                };
-
-                match sess.userauth_pubkey_file(
-                    &self.username,
-                    None,
-                    private_key_path.as_path(),
-                    None,
-                ) {
-                    Ok(_) => {
-                        self.print_ssh_msg("SSH public key authentication completed");
-                    }
-                    Err(e) => {
-                        self.print_ssh_msg(
-                            format!("SSH public key authentication failed: {:?}", e).as_str(),
-                        );
-                    }
-                }
-            }
-        }
-        if !sess.authenticated() {
-            match sess.userauth_agent(&self.username) {
-                Ok(_) => {
-                    self.print_ssh_msg("SSH agent authentication completed");
-                }
-                Err(e) => {
-                    self.print_ssh_msg(
-                        format!("SSH agent authentication failed: {:?}", e).as_str(),
-                    );
-                }
-            }
-        }
-        if !sess.authenticated() {
-            return Err("Authentication failed".into());
-        }
-
-        // Compress local test directory
-        let local_dir = Path::new(dir).join(format!("{}/{}", target, unit));
-        let tar_file_path_relative = format!("{}.tar.gz", unit);
-        let tar_file = Path::new(dir).join(tar_file_path_relative.clone());
-        // let _temp_tar = TempFile::new(tar_file.clone());
-        Command::new("tar")
-            .arg("czf")
-            .arg(&tar_file)
-            .arg("-C")
-            .arg(&local_dir)
-            .arg(".")
-            .output()?;
-        self.print_ssh_msg(&format!(
-            "Local directory {} compressed into {}",
-            local_dir.display(),
-            tar_file.display()
-        ));
-
-        // Make preparations on the remote server
-        self.run_command(&sess, &format!("mkdir -p {}", REMOTE_TMP_DIR))?;
-
-        // Upload compressed file to remote server
-        let remote_tar_path = format!("{}/{}", REMOTE_TMP_DIR, tar_file_path_relative);
-        self.print_ssh_msg(&format!(
-            "Ready to upload {} to {} on the remote server",
-            tar_file_path_relative, remote_tar_path
-        ));
-        let mut remote_file = sess.scp_send(
-            Path::new(&remote_tar_path),
-            0o644,
-            std::fs::metadata(&tar_file)?.len(),
-            None,
-        )?;
-        let mut local_file = File::open(&tar_file)?;
-        let mut buffer = Vec::new();
-        local_file.read_to_end(&mut buffer)?;
-        remote_file.write_all(&buffer)?;
-        self.print_ssh_msg(&format!(
-            "File {} uploaded to remote server",
-            tar_file_path_relative
-        ));
-
-        // Upload prerequisite.sh (optional) to remote server
-        let prerequisite_path = Path::new(dir).join(format!("{}/prerequisite.sh", target));
-        if Path::new(&prerequisite_path).exists() {
-            let remote_prerequisite_path = "/tmp/prerequisite.sh";
-            let mut remote_file = sess.scp_send(
-                Path::new(remote_prerequisite_path),
-                0o644,
-                std::fs::metadata(&prerequisite_path)?.len(),
-                None,
-            )?;
-            let mut local_file = File::open(&prerequisite_path)?;
-            let mut buffer = Vec::new();
-            local_file.read_to_end(&mut buffer)?;
-            remote_file.write_all(&buffer)?;
-            self.print_ssh_msg(&format!(
-                "File {} uploaded to remote server",
-                prerequisite_path.display()
-            ));
-        }
-        // Ensure remote file is closed before proceeding
-        drop(remote_file);
-
-        // Clean up remote directory, extract files, and run tests on remote server
-        let remote_dir = format!("{}/{}/{}", REMOTE_TMP_DIR, target, unit);
-        self.print_ssh_msg(&format!(
-            "Extracting file {} on remote server at {}",
-            tar_file_path_relative, remote_dir
-        ));
-        if let Ok(CommandOutput {
-            exit_status: 0,
-            output: _,
-            ..
-        }) = self.run_command(
-            &sess,
-            &format!(
-                "rm -rf {}; mkdir -p {} && tar xzf {} -C {} --overwrite",
-                remote_dir, remote_dir, remote_tar_path, remote_dir
-            ),
-        ) {
-            self.print_ssh_msg(&format!(
-                "Successfully extracted file {} on remote server at {}",
-                tar_file_path_relative, remote_dir
-            ));
-        } else {
-            return Err("Failed to extract test files on remote server".into());
-        }
-
-        // Clean up previous probably existing report.json after extracting the remote tar file
-        match self.run_command(&sess, &format!("rm -rf {}/report.json", remote_dir)) {
-            Ok(_) => {
-                self.print_ssh_msg("Removed report.json on remote server");
-            }
-            Err(e) => {
-                self.print_ssh_msg(&format!(
-                    "Failed to remove report.json on remote server: {}",
-                    e
-                ));
-            }
-        };
-
-        // Run test commands
-        self.print_ssh_msg(&format!("Running tests in directory {}", remote_dir));
-
-        let script_manager = TestScriptManager::new(target, unit, skip_scripts, dir)?;
-        let mut all_tests_passed = true;
-        let mut test_results = Vec::new();
-        for script in script_manager.get_test_script_names() {
-            let remote_prerequisite_path = "/tmp/prerequisite.sh";
-            let result = self.run_command(
-                &sess,
-                &format!(
-                    "cd {}; {} source {}",
-                    remote_dir,
-                    if Path::new(&prerequisite_path).exists() {
-                        format!("source {};", remote_prerequisite_path)
-                    } else {
-                        String::from("")
-                    },
-                    script
-                ),
-            )?;
-
-            let test_passed = result.exit_status == 0;
-            all_tests_passed &= test_passed;
-
-            debug!("Command: {}", result.command);
-            debug!("{:?}", &result);
-            test_results.push(TestResult {
-                test_name: script,
-                output: result.output,
-                passed: test_passed,
-            });
-        }
-
-        if all_tests_passed {
-            self.print_ssh_msg(&format!("Test successful for {}/{}", target, unit));
-        } else {
-            self.print_ssh_msg(&format!("Test failed for {}/{}", target, unit));
-        }
-
-        // Get OS version and unit metadata
-        let os_version = self.run_command(&sess, "cat /proc/version")?;
-        let kernel_version = self.run_command(&sess, "uname -r")?;
-
-        let unit_metadata =
-            if let Some(metadata_script_name) = script_manager.get_metadata_script_name() {
-                let metadata_command = format!("source {}/{}", remote_dir, metadata_script_name);
-                let metadata_output = self.run_command(&sess, &metadata_command)?;
-                let metadata_vec: Vec<String> = metadata_output
-                    .output
-                    .lines()
-                    .map(|line| line.to_string())
-                    .collect();
-                debug!(
-                    "Collected metadata for {}/{} from remote stream: {:?}",
-                    target, unit, metadata_vec
-                );
-                if let [version, pretty_name, unit_type, description] = &metadata_vec[..] {
-                    PackageMetadata {
-                        unit_version: version.to_owned(),
-                        unit_pretty_name: pretty_name.to_owned(),
-                        unit_type: unit_type.to_owned(),
-                        unit_description: description.to_owned(),
-                    }
-                } else {
-                    // 处理错误情况，如果 metadata_vec 不包含四个元素
-                    panic!("Unexpected metadata format: not enough elements in metadata_vec");
-                }
-            } else {
-                PackageMetadata {
-                    unit_pretty_name: unit.to_string(),
-                    ..Default::default()
-                }
-            };
-
-        let report = Report {
-            target: target.to_string(),
-            os_version: os_version.output,
-            kernel_version: kernel_version.output,
-            unit_name: unit.to_string(),
-            unit_metadata,
-            test_results,
-            all_tests_passed,
-        };
-
-        // Compress remote test directory
-        let remote_tar_file = format!("{}/../{}_result.tar.gz", remote_dir, unit);
-        self.print_ssh_msg(&format!(
-            "Compressing remote directory {} into {}",
-            remote_dir, remote_tar_file
-        ));
-        if let Ok(CommandOutput {
-            exit_status: 0,
-            output: _,
-            ..
-        }) = self.run_command(
-            &sess,
-            &format!(
-                "cd {}/.. && tar czf {} -C {} . --overwrite",
-                remote_dir, remote_tar_file, unit
-            ),
-        ) {
-            self.print_ssh_msg(&format!(
-                "Successfully compressed remote test result at {} into {}",
-                remote_dir, remote_tar_file
-            ));
-        } else {
-            return Err("Failed to compress test results on remote server".into());
-        }
-
-        // Download compressed test directory
-        let local_result_tar_file = local_dir.join(format!("{}_result.tar.gz", unit));
-        // let _temp_result_tar = TempFile::new(local_result_tar_file.clone());
-        let (mut remote_file, _) = sess.scp_recv(Path::new(&remote_tar_file))?;
-        let mut local_file = File::create(&local_result_tar_file)?;
-        let mut buffer = Vec::new();
-        remote_file.read_to_end(&mut buffer)?;
-        local_file.write_all(&buffer)?;
-        self.print_ssh_msg(&format!(
-            "Downloaded test results to local file {}",
-            local_result_tar_file.display()
-        ));
-
-        // Extract downloaded test results
-        Command::new("tar")
-            .arg("xzf")
-            .arg(&local_result_tar_file)
-            .arg("-C")
-            .arg(&local_dir)
-            .output()?;
-        self.print_ssh_msg(&format!(
-            "Extracted test results into local directory {}",
-            local_dir.display()
-        ));
-
-        // Generate report locally
-
-        let report_path = local_dir.join("report.json");
-        generate_report(&report_path, report.clone())?;
-        debug!("{}-{} report:\n {:?}", target, unit, report);
-
-        if !all_tests_passed {
-            return Err(format!("Not all tests passed for {}/{}", target, unit).into());
-        }
+        
         Ok(())
     }
 }

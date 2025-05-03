@@ -3,6 +3,8 @@ mod aggregator;
 mod config;
 mod markdown_report;
 mod test_runner;
+mod test_environment;
+mod test_executor;
 mod testenv_manager;
 mod testscript_manager;
 mod utils;
@@ -15,7 +17,6 @@ use log::{debug, error, info, warn};
 use std::{env, fs::File, path::Path};
 use test_runner::boardtest::BoardtestRunner;
 
-#[macro_use]
 extern crate anyhow;
 
 /// The version of the application.
@@ -287,8 +288,8 @@ fn run_tests(
             );
 
             // TODO: refactor to matching-case and runner_manager
-            let test_runner: Box<dyn TestRunner> = if run_locally {
-                Box::new(LocalTestRunner::new(target, unit))
+            let mut test_runner: Box<dyn TestRunner> = if run_locally {
+                Box::new(LocalTestRunner::new())
             } else if via_boardtest {
                 if let Some(ref boardtest_config) = target_config.boardtest {
                     Box::new(BoardtestRunner::new(boardtest_config))
