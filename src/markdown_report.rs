@@ -1,8 +1,9 @@
 //! Generates markdown reports summarizing test results for various units across different distributions.
 use crate::utils::{PackageMetadata, Report};
-use chrono::Utc;
-use log::info;
-use std::{collections::BTreeMap, fs::File, io::prelude::*, path::Path};
+use chrono::{Local, Utc};
+use log::{info, warn};
+use std::{collections::BTreeMap, fs::File, io::prelude::*, path::{Path, PathBuf}};
+use anyhow::Result;
 
 /// Generates a markdown report summarizing the test results for various units across different distributions.
 /// Warning: hard coded for specific report markdown file XD
@@ -175,4 +176,60 @@ pub fn generate_markdown_report(
         )
         .into())
     }
+}
+
+/// 从聚合的reports.json文件生成Markdown格式的摘要报告
+/// 
+/// # Arguments
+/// 
+/// * `reports_json` - reports.json文件的路径（可选）
+/// * `summary_path` - 摘要报告输出路径（可选）
+/// 
+/// # Returns
+/// 
+/// 如果成功，返回 `Ok(())`
+pub fn generate_markdown_summary_from_json(reports_json: Option<&Path>, summary_path: Option<&Path>) -> Result<()> {
+    // 使用默认值或提供的参数
+    let reports_json = reports_json.unwrap_or_else(|| Path::new("reports.json"));
+    let summary_path = summary_path.unwrap_or_else(|| Path::new("summary.md"));
+    
+    info!("Generating summary from: {}", reports_json.display());
+    info!("Summary will be written to: {}", summary_path.display());
+    
+    // TODO: 实现实际的摘要生成逻辑
+    // 1. 读取reports.json文件
+    // 2. 分析每个测试的结果
+    // 3. 生成Markdown格式的摘要表格
+    // 4. 写入summary_path
+    
+    // 生成一个简单的模板摘要确保编译通过
+    let now = Local::now();
+    let date_str = now.format("%Y-%m-%d %H:%M:%S").to_string();
+    
+    let summary_content = format!(r#"# 测试摘要报告
+
+*生成时间: {}*
+
+## 测试结果矩阵
+
+| 单元 | 目标 | 状态 | 报告链接 |
+|------|-----|------|---------|
+| *待实现* | *待实现* | *待实现* | *待实现* |
+
+## 摘要统计
+
+- **总测试数**: 0
+- **通过测试**: 0
+- **失败测试**: 0
+- **通过率**: 0%
+
+*注意: 此报告是自动生成的占位符，实际实现尚未完成。*
+"#, date_str);
+
+    // 写入摘要文件
+    let mut file = File::create(summary_path)?;
+    file.write_all(summary_content.as_bytes())?;
+    
+    warn!("Summary generation is not fully implemented yet");
+    Ok(())
 }

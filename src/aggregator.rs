@@ -1,11 +1,12 @@
 //! Aggregates multiple test reports into a single report.
 use crate::utils::{get_units, Report};
-use log::{error, info};
+use log::{error, info, warn};
 use std::{
     fs::File,
     io::{prelude::*, BufWriter},
-    path::Path,
+    path::{Path, PathBuf},
 };
+use anyhow::Result;
 
 /// Generates a report and writes it to the specified file path.
 ///
@@ -78,5 +79,34 @@ pub fn aggregate_reports(
     let mut file = File::create(&file_path)?;
     file.write_all(consolidated_json.as_bytes())?;
     info!("Aggregated report generated at {}", file_path.display());
+    Ok(())
+}
+
+/// 从目录中聚合报告
+/// 
+/// # Arguments
+/// 
+/// * `reports_dir` - 包含报告文件的目录路径（可选）
+/// * `output_path` - 聚合结果输出路径（可选）
+/// 
+/// # Returns
+/// 
+/// 如果成功，返回 `Ok(())`
+pub fn aggregate_reports_from_dir(reports_dir: Option<&Path>, output_path: Option<&Path>) -> Result<()> {
+    // 使用默认值或提供的参数
+    let reports_dir = reports_dir.unwrap_or_else(|| Path::new("reports"));
+    let output_path = output_path.unwrap_or_else(|| Path::new("reports.json"));
+    
+    info!("Aggregating reports from directory: {}", reports_dir.display());
+    info!("Output will be written to: {}", output_path.display());
+    
+    // TODO: 实现实际的聚合逻辑
+    // 1. 扫描reports_dir中的所有.report.md文件
+    // 2. 从每个文件中提取元数据和结果
+    // 3. 合并为一个JSON结构
+    // 4. 写入output_path
+    
+    // 占位实现，确保编译通过
+    warn!("Report aggregation is not fully implemented yet");
     Ok(())
 }

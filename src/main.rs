@@ -11,6 +11,7 @@ mod test_template_manager;
 mod utils;
 
 use crate::config::target_config::TargetConfig;
+use crate::config::cli_args::CliArgs;
 use crate::template::{TemplateFilter, discover_templates, filter_templates, TemplateExecutor, Reporter};
 use crate::connection::ConnectionFactory;
 use crate::test_runner::{local::LocalTestRunner, remote::RemoteTestRunner, qemu::QemuTestRunner, TestRunner};
@@ -18,10 +19,8 @@ use crate::utils::Report;
 use clap::{Arg, ArgAction, ArgMatches, Command};
 use env_logger::Env;
 use log::{debug, error, info, warn};
-use std::{env, fs::File, path::Path};
+use std::{env, fs::File, path::{Path, PathBuf}};
 use test_runner::boardtest::BoardtestRunner;
-
-extern crate anyhow;
 
 /// The version of the application.
 const VERSION: &str = env!("CARGO_PKG_VERSION");
@@ -34,157 +33,85 @@ const DESCRIPTION: &str = env!("CARGO_PKG_DESCRIPTION");
 
 /// The main function of the application.
 fn main() {
-    env_logger::Builder::from_env(Env::default().default_filter_or("info")).init();
-    let matches = parse_args();
-
-    let test = matches.get_flag("test");
-    let test_template = matches.get_flag("test-template");
-    let aggr = matches.get_flag("aggr");
-    let summ = matches.get_flag("summ");
-    let skip_successful = matches.get_flag("skip-successful");
-    let allow_interactive_prompts = matches.get_flag("interactive");
-    let cwd = env::current_dir().unwrap_or(".".into()); // is "." viable?
-    let working_dir = matches
-        .get_one::<String>("directory")
-        .map(|s| cwd.join(s))
+    // 解析命令行参数
+    let cli_args = parse_args();
+    
+    // 设置日志级别
+    env_logger::Builder::from_env(Env::default().default_filter_or(cli_args.get_log_level())).init();
+    
+    // 获取工作目录
+    let cwd = env::current_dir().unwrap_or_else(|_| PathBuf::from("."));
+    let working_dir = cli_args.test_dir
+        .as_ref()
+        .map(|dir| cwd.join(dir))
         .unwrap_or(cwd);
     debug!("Working directory: {}", working_dir.display());
-
-    let discovered_targets = utils::get_targets(&working_dir).unwrap_or_default();
-    let targets: Vec<&str> = matches
-        .get_one::<String>("target")
-        .map(|s| s.as_str().split(',').collect::<Vec<&str>>())
-        .unwrap_or(discovered_targets.iter().map(|s| s.as_str()).collect());
-    info!("targets: {:?}", targets);
-    let discovered_units = utils::get_all_units(&targets, &working_dir).unwrap_or_default();
-    let units: Vec<&str> = matches
-        .get_one::<String>("unit")
-        .map(|s| s.as_str().split(',').collect::<Vec<&str>>())
-        .unwrap_or(discovered_units.iter().map(|s| s.as_str()).collect());
-    info!("Packages: {:?}", units);
     
-    if test_template {
-        info!("Running tests using Markdown templates");
-        
-        // 获取标签过滤条件
-        let tags: Vec<String> = matches
-            .get_one::<String>("tag")
-            .map(|s| s.split(',').map(|tag| tag.trim().to_string()).collect())
-            .unwrap_or_default();
+    // 获取目标列表
+    let discovered_targets = utils::get_targets(&working_dir).unwrap_or_default();
+    
+    // 如果指定了单元过滤，则解析单元名称列表
+    let (unit_filter, tag_filter) = cli_args.get_filters();
+    
+    // 获取是否有环境类型设置
+    let environment_type = cli_args.get_environment_type();
+    
+    // 执行测试、聚合或汇总操作
+    if cli_args.should_test() {
+        // 检查是否有指定单个模板文件
+        if let Some(template_file) = &cli_args.template {
+            info!("Running test for single template file: {}", template_file.display());
+            // 实现单个模板文件的测试逻辑
+            run_single_template_test(template_file, &environment_type, &working_dir, cli_args.is_parse_only());
+        } else {
+            // 正常的测试模板处理流程
+            info!("Running tests using Markdown templates");
             
-        run_template_tests(
-            targets.iter().map(|&s| s.to_string()).collect(),
-            units.iter().map(|&s| s.to_string()).collect(),
-            tags,
-            &working_dir,
-        );
-    } else if test {
-        info!("Running tests with legacy .sh scripts");
-        run_tests(
-            &targets,
-            &units,
-            skip_successful,
-            &working_dir,
-            &allow_interactive_prompts,
-        );
+            // 提取单元和标签过滤条件
+            let units = match unit_filter {
+                Some(unit) => vec![unit.to_string()],
+                None => utils::get_all_units(&discovered_targets.iter().map(|s| s.as_str()).collect::<Vec<&str>>(), &working_dir).unwrap_or_default()
+            };
+            
+            let tags = tag_filter.map(|tag| vec![tag.to_string()]).unwrap_or_default();
+            
+            run_template_tests(
+                discovered_targets,
+                units,
+                tags,
+                &working_dir,
+                cli_args.is_parse_only(),
+                environment_type,
+                cli_args.report_path.as_deref(),
+            );
+        }
     }
 
-    if aggr {
+    if cli_args.should_aggregate() {
         info!("Aggregating reports");
-        if let Err(e) = aggregator::aggregate_reports(&targets, &units, &working_dir) {
+        let reports_dir = cli_args.reports_dir.as_deref();
+        let output_path = cli_args.output.as_deref();
+        
+        if let Err(e) = aggregator::aggregate_reports_from_dir(reports_dir, output_path) {
             error!("Failed to aggregate reports: {}", e);
         }
     }
 
-    if summ {
+    if cli_args.should_summarize() {
         info!("Generating summary report");
-        if let Err(e) = markdown_report::generate_markdown_report(&targets, &units, &working_dir)
-        {
+        let reports_json = cli_args.reports_json.as_deref();
+        let summary_path = cli_args.summary_path.as_deref();
+        
+        if let Err(e) = markdown_report::generate_markdown_summary_from_json(reports_json, summary_path) {
             error!("Failed to generate markdown report: {}", e);
         }
     }
 }
 
-/// Parses command line arguments.
-/// Returns the parsed `ArgMatches` object.
-fn parse_args() -> ArgMatches {
-    Command::new(NAME)
-        .version(VERSION)
-        .author(AUTHORS)
-        .about(DESCRIPTION)
-        .arg(
-            Arg::new("test")
-                .short('t')
-                .long("test")
-                .action(ArgAction::SetTrue)
-                .conflicts_with("test-template")
-                .help("Run tests using legacy .sh scripts (for all distributions by default)"),
-        )
-        .arg(
-            Arg::new("test-template")
-                .long("test-template")
-                .action(ArgAction::SetTrue)
-                .conflicts_with("test")
-                .help("Run tests using Markdown templates (.test.md files)"),
-        )
-        .arg(
-            Arg::new("aggr")
-                .short('a')
-                .long("aggr")
-                .action(ArgAction::SetTrue)
-                .help("Aggregate multiple report.json files into a single reports.json"),
-        )
-        .arg(
-            Arg::new("summ")
-                .short('s')
-                .long("summ")
-                .action(ArgAction::SetTrue)
-                .help("Generate a summary report"),
-        )
-        .arg(
-            Arg::new("directory")
-                .short('D')
-                .long("directory")
-                .value_name("working_directory")
-                .help("Specify working directory with preconfigured test files"),
-        )
-        .arg(
-            Arg::new("target")
-                .short('d')
-                .long("target")
-                .help("Specify targets to test (comma separated)")
-                .action(ArgAction::Set)
-                .num_args(1),
-        )
-        .arg(
-            Arg::new("unit")
-                .short('u')
-                .long("unit")
-                .help("Specify units to test (comma separated)")
-                .action(ArgAction::Set)
-                .num_args(1),
-        )
-        .arg(
-            Arg::new("tag")
-                .long("tag")
-                .help("Filter templates by tags (comma separated)")
-                .action(ArgAction::Set)
-                .num_args(1),
-        )
-        .arg(
-            Arg::new("skip-successful")
-                .long("skip-successful")
-                .action(ArgAction::SetTrue)
-                .help("Skip previous successful tests (instead of overwriting their results)"),
-        )
-        .arg(
-            Arg::new("interactive")
-                .short('i')
-                .long("interactive")
-                .action(ArgAction::SetTrue)
-                .help("Run lintestor in interactive mode. Possibly require user input which may pause the test."),
-        )
-        .get_matches()
+/// 解析命令行参数
+/// 返回解析后的`CliArgs`对象
+fn parse_args() -> CliArgs {
+    CliArgs::parse_args()
 }
 
 /// Run tests using Markdown templates
@@ -195,11 +122,17 @@ fn parse_args() -> ArgMatches {
 /// * `units` - Unit names to filter templates by
 /// * `tags` - Tags to filter templates by
 /// * `working_dir` - Working directory containing templates and target configs
+/// * `parse_only` - If true, only parse templates without executing commands
+/// * `environment_type` - Optional environment type override
+/// * `report_path` - Optional custom report output path
 fn run_template_tests(
     targets: Vec<String>,
     units: Vec<String>,
     tags: Vec<String>,
     working_dir: &Path,
+    parse_only: bool,
+    environment_type: Option<String>,
+    report_path: Option<&Path>,
 ) {
     info!("Discovering Markdown test templates...");
     
@@ -497,6 +430,97 @@ fn run_tests(
                     }
                 }
             }
+        }
+    }
+}
+
+/// 运行单个测试模板文件
+/// 
+/// # Arguments
+/// 
+/// * `template_file` - 模板文件路径
+/// * `environment_type` - 可选的环境类型
+/// * `working_dir` - 工作目录
+/// * `parse_only` - 是否为仅解析模式
+fn run_single_template_test(
+    template_file: &Path,
+    environment_type: &Option<String>,
+    working_dir: &Path,
+    parse_only: bool,
+) {
+    info!("Processing single template: {}", template_file.display());
+    
+    // 解析模板
+    let template = match template::TestTemplate::from_file(template_file) {
+        Ok(t) => t,
+        Err(e) => {
+            error!("Failed to load template from file: {}", e);
+            return;
+        }
+    };
+    
+    // 如果是仅解析模式，则只验证模板格式并显示信息
+    if parse_only {
+        info!("Template parsed successfully:");
+        info!("  Title: {}", template.metadata.title);
+        info!("  Unit: {}", template.metadata.unit_name);
+        info!("  Target config: {}", template.metadata.target_config.display());
+        info!("  Total steps: {}", template.steps.len());
+        return;
+    }
+    
+    // 加载目标配置
+    let target_config_path = working_dir.join(&template.metadata.target_config);
+    info!("Loading target config: {}", target_config_path.display());
+    
+    let mut target_config: TargetConfig = match utils::read_toml_from_file(&target_config_path) {
+        Ok(config) => config,
+        Err(e) => {
+            error!("Failed to load target config: {}", e);
+            return;
+        }
+    };
+    
+    // 如果有环境类型覆盖，则更新目标配置
+    if let Some(env_type) = environment_type {
+        info!("Overriding environment type to: {}", env_type);
+        target_config.testing_type = env_type.clone();
+    }
+    
+    // 创建连接管理器
+    let mut connection_manager = match ConnectionFactory::create_manager(&target_config) {
+        Ok(manager) => manager,
+        Err(e) => {
+            error!("Failed to create connection manager: {}", e);
+            return;
+        }
+    };
+    
+    // 创建模板执行器
+    let mut executor = TemplateExecutor::new(
+        working_dir.to_path_buf(),
+        connection_manager.as_mut(),
+        None,
+    );
+    
+    // 执行模板
+    match executor.execute_template(template.clone(), target_config) {
+        Ok(result) => {
+            info!("Template execution completed with status: {:?}", result.overall_status);
+            
+            // 生成报告
+            let reporter = Reporter::new(working_dir.to_path_buf(), None);
+            match reporter.generate_report(&template, &result) {
+                Ok(report_path) => {
+                    info!("Report generated: {}", report_path.display());
+                }
+                Err(e) => {
+                    error!("Failed to generate report: {}", e);
+                }
+            }
+        }
+        Err(e) => {
+            error!("Failed to execute template: {}", e);
         }
     }
 }
