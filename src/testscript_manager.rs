@@ -1,4 +1,4 @@
-//! Manages test scripts for a specific distribution and package.
+//! Manages test scripts for a specific distribution and unit.
 
 use std::path::Path;
 ///
@@ -15,15 +15,15 @@ const METADATA_SCRIPT_NAME: &str = "metadata.sh";
 impl TestScriptManager {
     /// Creates a new `TestScriptManager` instance.
     ///
-    /// This method scans the directory `./{distro}/{package}` for `.sh` files
+    /// This method scans the directory `./{target}/{unit}` for `.sh` files
     /// and stores their paths. Note that `metadata.sh` files does not count as test scripts
     /// and would be treated specially, as these scripts are for storing the metadata variables
-    /// of the package rather than for testing purposes.
+    /// of the unit rather than for testing purposes.
     ///
     /// # Arguments
     ///
-    /// * `distro` - The name of the distribution.
-    /// * `package` - The name of the package.
+    /// * `target` - The name of the distribution.
+    /// * `unit` - The name of the unit.
     /// * `dir` - Working directory which contains the test folders and files, defaults to env::current_dir()
     ///
     /// # Returns
@@ -47,12 +47,12 @@ impl TestScriptManager {
     /// let manager = TestScriptManager::new("ubuntu", "nginx", skip_scripts).expect("Failed to create TestScriptManager");
     /// ```
     pub fn new(
-        distro: &str,
-        package: &str,
+        target: &str,
+        unit: &str,
         skip_scripts: Vec<String>,
         working_dir: &Path,
     ) -> Result<Self, Box<dyn std::error::Error>> {
-        let directory = working_dir.join(format!("{}/{}", distro, package));
+        let directory = working_dir.join(format!("{}/{}", target, unit));
         let mut test_scripts = Vec::new();
         let mut metadata_script = None;
 
@@ -82,8 +82,8 @@ impl TestScriptManager {
         if metadata_script.is_none() {
             log::warn!(
                 "Missing metadata.sh for {}/{}, its metadata will not be recorded",
-                distro,
-                package
+                target,
+                unit
             );
         }
         Ok(TestScriptManager {

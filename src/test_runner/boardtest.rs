@@ -80,7 +80,7 @@ impl BoardtestRunner {
             .post(format!("{}/write_test", self.config.api_url))
             .json(&json!({
                 "token": self.config.token,
-                "test_name": "package_test",
+                "test_name": "unit_test",
                 "test_content": test_config
             }))
             .send()
@@ -191,12 +191,12 @@ impl BoardtestRunner {
 impl TestRunner for BoardtestRunner {
     fn run_test(
         &self,
-        distro: &str,
-        package: &str,
+        target: &str,
+        unit: &str,
         skip_scripts: Vec<String>,
         dir: &Path,
     ) -> Result<(), Box<(dyn StdError + 'static)>> {
-        info!("Starting boardtest for {}/{}", distro, package);
+        info!("Starting boardtest for {}/{}", target, unit);
         warn!(
             "Those scripts should be skipped: {:?}, but this functionality is not implemented yet.",
             skip_scripts
@@ -206,7 +206,7 @@ impl TestRunner for BoardtestRunner {
         let client = self.create_test_client()?;
 
         // Compress local test directory
-        let local_dir = Path::new(dir).join(format!("{}/{}", distro, package));
+        let local_dir = Path::new(dir).join(format!("{}/{}", target, unit));
         let mut tar_buffer = Vec::new();
 
         Command::new("tar")
@@ -245,19 +245,19 @@ impl TestRunner for BoardtestRunner {
 
         // Create test result
         let test_results = vec![TestResult {
-            test_name: format!("{}/{}", distro, package),
+            test_name: format!("{}/{}", target, unit),
             output: test_output,
             passed: test_passed,
         }];
 
         // Generate report
         let report = Report {
-            distro: distro.to_string(),
+            target: target.to_string(),
             os_version: String::new(), // Could be fetched from board if needed
             kernel_version: String::new(), // Could be fetched from board if needed
-            package_name: package.to_string(),
-            package_metadata: PackageMetadata {
-                package_pretty_name: package.to_string(),
+            unit_name: unit.to_string(),
+            unit_metadata: PackageMetadata {
+                unit_pretty_name: unit.to_string(),
                 ..Default::default()
             },
             test_results,
@@ -269,7 +269,7 @@ impl TestRunner for BoardtestRunner {
         crate::aggregator::generate_report(&report_path, report)?;
 
         if !test_passed {
-            return Err(anyhow!("Not all tests passed for {}/{}", distro, package).into());
+            return Err(anyhow!("Not all tests passed for {}/{}", target, unit).into());
         }
 
         Ok(())

@@ -1,4 +1,4 @@
-//! Represents the configuration for each distro.
+//! Represents the configuration for each target.
 use crate::config::boardtest_config::BoardtestConfig;
 use crate::config::connection_config::ConnectionConfig;
 /// This struct is used to deserialize the configuration from a file using the `utils::read_toml_from_file` method.
@@ -8,7 +8,7 @@ use crate::config::connection_config::ConnectionConfig;
 /// - `stop_script`: A string representing the stop script.
 /// - `connection`: An instance of `ConnectionConfig` struct representing the connection configuration.
 /// - `boardtest`: An instance of `BoardtestConfig` struct representing the boardtest configuration.
-/// - `skip_packages`: An optional vector of strings representing the packages to be skipped.
+/// - `skip_units`: An optional vector of strings representing the units to be skipped.
 ///
 use serde::Deserialize;
 
@@ -31,7 +31,7 @@ fn is_not_boardtest(value: &String) -> bool {
 }
 
 #[derive(Debug, Deserialize)]
-pub struct DistroConfig {
+pub struct TargetConfig {
     pub enabled: bool,
     pub testing_type: String, // 'locally' or 'remote' or 'qemu-based-remote' or 'boardtest'
     #[serde(rename = "startup_script")]
@@ -50,5 +50,5 @@ pub struct DistroConfig {
     #[serde(default, skip_serializing_if = "is_not_boardtest")]
     pub boardtest: Option<BoardtestConfig>,
 
-    pub skip_packages: Option<Vec<String>>,
+    pub skip_units: Option<Vec<String>>,
 }

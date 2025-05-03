@@ -1,5 +1,5 @@
 //! Aggregates multiple test reports into a single report.
-use crate::utils::{get_packages, Report};
+use crate::utils::{get_units, Report};
 use log::{error, info};
 use std::{
     fs::File,
@@ -29,12 +29,12 @@ pub fn generate_report(file_path: &Path, report: Report) -> Result<(), Box<dyn s
     Ok(())
 }
 
-/// Aggregates reports from multiple distributions and packages, and generates a consolidated report file.
+/// Aggregates reports from multiple distributions and units, and generates a consolidated report file.
 ///
 /// # Parameters
 ///
-/// - `distros`: Array of distribution names.
-/// - `packages`: Array of package names.
+/// - `targets`: Array of distribution names.
+/// - `units`: Array of unit names.
 /// - `dir`: The path of the program's working directory.
 ///
 /// # Returns
@@ -45,24 +45,24 @@ pub fn generate_report(file_path: &Path, report: Report) -> Result<(), Box<dyn s
 ///
 /// Returns an error if file opening or reading fails.
 pub fn aggregate_reports(
-    distros: &[&str],
-    packages: &[&str],
+    targets: &[&str],
+    units: &[&str],
     dir: &Path,
 ) -> Result<(), Box<dyn std::error::Error>> {
     let mut consolidated_report = vec![];
 
-    for &distro in distros {
-        let packages_of_distro = get_packages(distro, dir).unwrap_or_default();
+    for &target in targets {
+        let units_of_target = get_units(target, dir).unwrap_or_default();
 
-        for &package in packages
+        for &unit in units
             .iter()
-            .filter(|p| packages_of_distro.iter().any(|pkg| p == &pkg))
+            .filter(|p| units_of_target.iter().any(|pkg| p == &pkg))
         {
-            let report_path = dir.join(format!("{}/{}/report.json", distro, package));
+            let report_path = dir.join(format!("{}/{}/report.json", target, unit));
             if let Ok(file) = File::open(&report_path) {
                 info!("Aggregating {}", report_path.display());
                 let mut report: Report = serde_json::from_reader(file)?;
-                report.distro = distro.to_string();
+                report.target = target.to_string();
                 consolidated_report.push(report);
             } else {
                 error!(

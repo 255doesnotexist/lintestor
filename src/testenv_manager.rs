@@ -1,5 +1,5 @@
 //! Manages the test environment for a distribution.
-use crate::config::{connection_config::ConnectionConfig, distro_config::DistroConfig};
+use crate::config::{connection_config::ConnectionConfig, target_config::TargetConfig};
 use log::info;
 use std::io::Error;
 use std::path::Path;
@@ -21,12 +21,12 @@ impl TestEnvManager {
     ///
     /// # Arguments
     ///
-    /// * `config` - A reference to a `DistroConfig` containing the necessary configuration.
+    /// * `config` - A reference to a `TargetConfig` containing the necessary configuration.
     ///
     /// # Returns
     ///
     /// A new `TestEnvManager` instance initialized with the provided configuration.
-    pub fn new(config: &DistroConfig, dir: &Path) -> Self {
+    pub fn new(config: &TargetConfig, dir: &Path) -> Self {
         TestEnvManager {
             startup_script: config.startup_script.clone(),
             stop_script: config.stop_script.clone(),

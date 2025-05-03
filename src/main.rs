@@ -6,7 +6,7 @@ mod test_runner;
 mod testenv_manager;
 mod testscript_manager;
 mod utils;
-use crate::config::distro_config::DistroConfig;
+use crate::config::target_config::TargetConfig;
 use crate::test_runner::{local::LocalTestRunner, remote::RemoteTestRunner, TestRunner};
 use crate::utils::Report;
 use clap::{Arg, ArgAction, ArgMatches, Command};
@@ -44,24 +44,24 @@ fn main() {
         .unwrap_or(cwd);
     debug!("Working directory: {}", working_dir.display());
 
-    let discovered_distros = utils::get_distros(&working_dir).unwrap_or_default();
-    let distros: Vec<&str> = matches
-        .get_one::<String>("distro")
+    let discovered_targets = utils::get_targets(&working_dir).unwrap_or_default();
+    let targets: Vec<&str> = matches
+        .get_one::<String>("target")
         .map(|s| s.as_str().split(',').collect::<Vec<&str>>())
-        .unwrap_or(discovered_distros.iter().map(|s| s.as_str()).collect());
-    info!("Distros: {:?}", distros);
-    let discovered_packages = utils::get_all_packages(&distros, &working_dir).unwrap_or_default();
-    let packages: Vec<&str> = matches
-        .get_one::<String>("package")
+        .unwrap_or(discovered_targets.iter().map(|s| s.as_str()).collect());
+    info!("targets: {:?}", targets);
+    let discovered_units = utils::get_all_units(&targets, &working_dir).unwrap_or_default();
+    let units: Vec<&str> = matches
+        .get_one::<String>("unit")
         .map(|s| s.as_str().split(',').collect::<Vec<&str>>())
-        .unwrap_or(discovered_packages.iter().map(|s| s.as_str()).collect());
-    info!("Packages: {:?}", packages);
+        .unwrap_or(discovered_units.iter().map(|s| s.as_str()).collect());
+    info!("Packages: {:?}", units);
 
     if test {
         info!("Running tests");
         run_tests(
-            &distros,
-            &packages,
+            &targets,
+            &units,
             skip_successful,
             &working_dir,
             &allow_interactive_prompts,
@@ -70,14 +70,14 @@ fn main() {
 
     if aggr {
         info!("Aggregating reports");
-        if let Err(e) = aggregator::aggregate_reports(&distros, &packages, &working_dir) {
+        if let Err(e) = aggregator::aggregate_reports(&targets, &units, &working_dir) {
             error!("Failed to aggregate reports: {}", e);
         }
     }
 
     if summ {
         info!("Generating summary report");
-        if let Err(e) = markdown_report::generate_markdown_report(&distros, &packages, &working_dir)
+        if let Err(e) = markdown_report::generate_markdown_report(&targets, &units, &working_dir)
         {
             error!("Failed to generate markdown report: {}", e);
         }
@@ -120,18 +120,18 @@ fn parse_args() -> ArgMatches {
                 .help("Specify working directory with preconfigured test files"),
         )
         .arg(
-            Arg::new("distro")
+            Arg::new("target")
                 .short('d')
-                .long("distro")
+                .long("target")
                 .help("Specify distributions to test")
                 .action(ArgAction::Set)
                 .num_args(1),
         )
         .arg(
-            Arg::new("package")
+            Arg::new("unit")
                 .short('p')
-                .long("package")
-                .help("Specify packages to test")
+                .long("unit")
+                .help("Specify units to test")
                 .action(ArgAction::Set)
                 .num_args(1),
         )
@@ -153,8 +153,8 @@ fn parse_args() -> ArgMatches {
 
 /// Run tests (for all distributions by default)
 /// # Arguments
-/// - `distros`: Array of distribution names.
-/// - `packages`: Array of package names.
+/// - `targets`: Array of distribution names.
+/// - `units`: Array of unit names.
 /// - `skip_successful`: Skip previous successful tests (instead of overwriting their results).
 /// - `dir`: Working directory which contains the test folders and files, defaults to env::current_dir()
 ///
@@ -162,38 +162,38 @@ fn parse_args() -> ArgMatches {
 /// Returns `Ok(())` if successful, otherwise returns an error.
 ///
 fn run_tests(
-    distros: &[&str],
-    packages: &[&str],
+    targets: &[&str],
+    units: &[&str],
     skip_successful: bool,
     dir: &Path,
     allow_interactive_prompts: &bool,
 ) {
-    for distro in distros {
-        let distro_directory = dir.join(distro);
-        if !distro_directory.exists() {
+    for target in targets {
+        let target_directory = dir.join(target);
+        if !target_directory.exists() {
             warn!(
-                "Distro directory '{}' not found, skipping",
-                distro_directory.display()
+                "target directory '{}' not found, skipping",
+                target_directory.display()
             );
             continue;
         }
-        let distro_config_path = distro_directory.join("config.toml");
-        let distro_config: DistroConfig = match utils::read_toml_from_file(&distro_config_path) {
+        let target_config_path = target_directory.join("config.toml");
+        let target_config: TargetConfig = match utils::read_toml_from_file(&target_config_path) {
             Ok(config) => config,
             Err(e) => {
-                error!("Failed to load config for {}: {}", distro, e);
+                error!("Failed to load config for {}: {}", target, e);
                 continue;
             }
         };
 
-        let run_locally = distro_config.testing_type == "locally";
-        let via_boardtest = distro_config.testing_type == "boardtest";
-        let purely_remote = distro_config.testing_type != "qemu-based-remote";
-        let testenv_manager = crate::testenv_manager::TestEnvManager::new(&distro_config, dir);
+        let run_locally = target_config.testing_type == "locally";
+        let via_boardtest = target_config.testing_type == "boardtest";
+        let purely_remote = target_config.testing_type != "qemu-based-remote";
+        let testenv_manager = crate::testenv_manager::TestEnvManager::new(&target_config, dir);
 
         info!(
             "Connection method: {}",
-            if let Some(connection) = &distro_config.connection {
+            if let Some(connection) = &target_config.connection {
                 &connection.method
             } else {
                 "None (Locally)"
@@ -206,42 +206,42 @@ fn run_tests(
             if let Err(e) = testenv_manager.start() {
                 error!(
                     "Failed to initialize test environment for {}: {}",
-                    distro, e
+                    target, e
                 );
                 continue;
             }
         }
 
-        let packages_of_distro = utils::get_packages(distro, dir).unwrap_or_default();
-        for package in packages
+        let units_of_target = utils::get_units(target, dir).unwrap_or_default();
+        for unit in units
             .iter()
-            .filter(|p| packages_of_distro.iter().any(|pkg| p == &pkg))
+            .filter(|p| units_of_target.iter().any(|pkg| p == &pkg))
         {
             let mut skipped_scripts = Vec::new();
 
-            let package_directory = distro_directory.join(package);
-            if !package_directory.exists() {
+            let unit_directory = target_directory.join(unit);
+            if !unit_directory.exists() {
                 warn!(
                     "Package testing directory '{}' not found, skipping",
-                    package_directory.display()
+                    unit_directory.display()
                 );
                 continue;
             }
             if skip_successful {
-                let report_path = package_directory.join("report.json");
+                let report_path = unit_directory.join("report.json");
                 if let Ok(file) = File::open(&report_path) {
                     let report: Result<Report, serde_json::Error> = serde_json::from_reader(file);
                     match report {
                         Ok(r) => {
                             if r.all_tests_passed {
-                                info!("Skipping previous successful test {}/{}", distro, package);
+                                info!("Skipping previous successful test {}/{}", target, unit);
                                 continue;
                             } else {
                                 for result in r.test_results {
                                     if result.passed {
                                         info!(
                                             "Skipping previous successful test {}/{}: {}",
-                                            distro, package, result.test_name
+                                            target, unit, result.test_name
                                         );
 
                                         skipped_scripts.push(result.test_name);
@@ -252,29 +252,29 @@ fn run_tests(
                         Err(_) => {
                             warn!(
                                 "Failed to parse test report for {}/{}, test will run anyway",
-                                distro, package
+                                target, unit
                             )
                         }
                     }
                 } else {
                     warn!(
                         "Failed to open test report for {}/{}, test will run anyway",
-                        distro, package
+                        target, unit
                     );
                 }
             }
 
-            if let Some(skip_packages) = &distro_config.skip_packages {
-                if skip_packages.iter().any(|pkg| pkg == package) {
-                    info!("Skipping test for {}/{}", distro, package);
+            if let Some(skip_units) = &target_config.skip_units {
+                if skip_units.iter().any(|pkg| pkg == unit) {
+                    info!("Skipping test for {}/{}", target, unit);
                     continue;
                 }
             }
 
             info!(
                 "Running test for {}/{}, {}.",
-                distro,
-                package,
+                target,
+                unit,
                 if run_locally {
                     "locally"
                 } else if purely_remote {
@@ -288,21 +288,21 @@ fn run_tests(
 
             // TODO: refactor to matching-case and runner_manager
             let test_runner: Box<dyn TestRunner> = if run_locally {
-                Box::new(LocalTestRunner::new(distro, package))
+                Box::new(LocalTestRunner::new(target, unit))
             } else if via_boardtest {
-                if let Some(ref boardtest_config) = distro_config.boardtest {
+                if let Some(ref boardtest_config) = target_config.boardtest {
                     Box::new(BoardtestRunner::new(boardtest_config))
                 } else {
-                    error!("No boardtest config found for {}", distro);
+                    error!("No boardtest config found for {}", target);
                     continue;
                 }
             } else {
-                // assert!(distro_config.connection.method == "ssh");
+                // assert!(target_config.connection.method == "ssh");
 
-                let _connection_config = match &distro_config.connection {
+                let _connection_config = match &target_config.connection {
                     Some(c) => c,
                     None => {
-                        error!("No connection config found for {}", distro);
+                        error!("No connection config found for {}", target);
                         continue;
                     }
                 };
@@ -321,19 +321,19 @@ fn run_tests(
                 ))
             };
 
-            match test_runner.run_test(distro, package, skipped_scripts, dir) {
-                Ok(_) => info!("Test passed for {}/{}", distro, package),
+            match test_runner.run_test(target, unit, skipped_scripts, dir) {
+                Ok(_) => info!("Test passed for {}/{}", target, unit),
                 Err(e) => {
-                    error!("Test failed for {}/{}: {}", distro, package, e); // error or warn?
+                    error!("Test failed for {}/{}: {}", target, unit, e); // error or warn?
                     if *allow_interactive_prompts {
                         use dialoguer::Confirm;
                         let resume = Confirm::new()
-                            .with_prompt(format!("An previous test was failed for {}/{}. Do you want to continue the test?", distro, package))
+                            .with_prompt(format!("An previous test was failed for {}/{}. Do you want to continue the test?", target, unit))
                             .default(true)
                             .interact()
                             .unwrap();
                         if !resume {
-                            info!("Skipping the test for {}/{}", distro, package);
+                            info!("Skipping the test for {}/{}", target, unit);
                             break;
                         }
                     }
@@ -343,7 +343,7 @@ fn run_tests(
 
         if !run_locally {
             if let Err(e) = testenv_manager.stop() {
-                error!("Failed to stop environment for {}: {}", distro, e);
+                error!("Failed to stop environment for {}: {}", target, e);
             }
         }
     }

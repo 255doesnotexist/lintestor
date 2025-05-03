@@ -12,51 +12,51 @@ use std::{
     path::{Path, PathBuf},
 };
 
-use crate::config::distro_config::DistroConfig;
+use crate::config::target_config::TargetConfig;
 
 /// The remote temporary directory used for operations.
 pub static REMOTE_TMP_DIR: &str = "/tmp/lintestor";
 
-/// Represents a complete test report for a package on a specific distribution.
+/// Represents a complete test report for a unit on a specific distribution.
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Report {
     /// The name of the distribution being tested.
-    pub distro: String,
+    pub target: String,
     /// The version of the operating system.
     pub os_version: String,
     /// The version of the kernel (deprecated).
     pub kernel_version: String,
-    /// The name of the package being tested.
-    pub package_name: String,
-    /// A collection of extra metadata for the package,
-    /// defined by `metadata.sh` in the package's subdirectory.
-    pub package_metadata: PackageMetadata,
+    /// The name of the unit being tested.
+    pub unit_name: String,
+    /// A collection of extra metadata for the unit,
+    /// defined by `metadata.sh` in the unit's subdirectory.
+    pub unit_metadata: PackageMetadata,
     /// A collection of individual test results.
     pub test_results: Vec<TestResult>,
     /// Indicates whether all tests passed.
     pub all_tests_passed: bool,
 }
 
-/// Represents package specific extra metadata information to be used in test reports
+/// Represents unit specific extra metadata information to be used in test reports
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct PackageMetadata {
-    /// The version of the package being tested.
-    pub package_version: String,
-    /// The pretty (formal) name of the package.
-    pub package_pretty_name: String,
-    /// The type of the package (temporarily deprecated).
-    pub package_type: String,
-    /// Brief description of the package (optional).
-    pub package_description: String,
+    /// The version of the unit being tested.
+    pub unit_version: String,
+    /// The pretty (formal) name of the unit.
+    pub unit_pretty_name: String,
+    /// The type of the unit (temporarily deprecated).
+    pub unit_type: String,
+    /// Brief description of the unit (optional).
+    pub unit_description: String,
 }
 
 impl Default for PackageMetadata {
     fn default() -> PackageMetadata {
         PackageMetadata {
-            package_pretty_name: String::new(),
-            package_type: String::from("package"),
-            package_version: String::from("Unknown"),
-            package_description: String::new(),
+            unit_pretty_name: String::new(),
+            unit_type: String::from("unit"),
+            unit_version: String::from("Unknown"),
+            unit_description: String::new(),
         }
     }
 }
@@ -157,96 +157,96 @@ where
 /// # Errors
 ///
 /// Returns an error if directory traversal fails.
-pub fn get_distros(dir: &Path) -> Result<Vec<String>, Box<dyn Error>> {
-    let mut distros = Vec::new();
-    debug!("Scanning distros in directory {}", dir.display());
+pub fn get_targets(dir: &Path) -> Result<Vec<String>, Box<dyn Error>> {
+    let mut targets = Vec::new();
+    debug!("Scanning targets in directory {}", dir.display());
     for subdir in dir.read_dir()? {
-        let distro = subdir?;
-        debug!("Scanning subdirectory {}", distro.path().display());
-        let distro_dir_path = distro.path();
-        if distro_dir_path.is_dir() {
-            debug!("Discovered distro directory {}", distro_dir_path.display());
-            let distro_dir_name = distro.file_name().into_string().unwrap();
-            let distro_config_path = distro_dir_path.join("config.toml");
-            let distro_config: DistroConfig = match read_toml_from_file(&distro_config_path) {
+        let target = subdir?;
+        debug!("Scanning subdirectory {}", target.path().display());
+        let target_dir_path = target.path();
+        if target_dir_path.is_dir() {
+            debug!("Discovered target directory {}", target_dir_path.display());
+            let target_dir_name = target.file_name().into_string().unwrap();
+            let target_config_path = target_dir_path.join("config.toml");
+            let target_config: TargetConfig = match read_toml_from_file(&target_config_path) {
                 Ok(config) => {
                     debug!(
-                        "Loaded config for distro directory {}",
-                        distro_dir_path.display()
+                        "Loaded config for target directory {}",
+                        target_dir_path.display()
                     );
                     config
                 }
                 Err(_) => {
                     debug!(
-                        "Cannot load config for distro directory {}",
-                        distro_dir_path.display()
+                        "Cannot load config for target directory {}",
+                        target_dir_path.display()
                     );
                     continue;
                 }
             };
             debug!(
-                "Loaded config for distro {}: \n{:?}",
-                distro_dir_name, distro_config
+                "Loaded config for target {}: \n{:?}",
+                target_dir_name, target_config
             );
-            if distro_config.enabled {
-                distros.push(distro_dir_name);
+            if target_config.enabled {
+                targets.push(target_dir_name);
             }
         }
     }
-    Ok(distros)
+    Ok(targets)
 }
 
-/// Discover available package tests of the given distribution.
+/// Discover available unit tests of the given distribution.
 ///
 /// # Parameters
 ///
-/// - `distro`: The name of the distribution.
+/// - `target`: The name of the distribution.
 /// - `dir`: The path of the program's working directory.
 ///
 /// # Returns
 ///
-/// Returns a vector of strings containing the paths of the discovered package
+/// Returns a vector of strings containing the paths of the discovered unit
 /// test directories under the given distribution's directory if successful, otherwise returns an error.
 ///
 /// # Errors
 ///
 /// Returns an error if directory traversal fails.
-pub fn get_packages(distro: &str, dir: &Path) -> Result<Vec<String>, Box<dyn Error>> {
-    let directory = dir.join(distro);
-    let mut packages = Vec::new();
+pub fn get_units(target: &str, dir: &Path) -> Result<Vec<String>, Box<dyn Error>> {
+    let directory = dir.join(target);
+    let mut units = Vec::new();
     for subdir in directory.read_dir()? {
-        let package = subdir?;
-        let package_dir_path = package.path();
-        if package_dir_path.is_dir() {
-            let package_dir_name = package.file_name().into_string().unwrap();
-            packages.push(package_dir_name);
+        let unit = subdir?;
+        let unit_dir_path = unit.path();
+        if unit_dir_path.is_dir() {
+            let unit_dir_name = unit.file_name().into_string().unwrap();
+            units.push(unit_dir_name);
         }
     }
-    Ok(packages)
+    Ok(units)
 }
 
-/// Discover available package test directories under the given distribution directory.
+/// Discover available unit test directories under the given distribution directory.
 ///
 /// # Parameters
 ///
-/// - `distros`: Array of distribution names.
+/// - `targets`: Array of distribution names.
 /// - `dir`: The path of the program's working directory.
 ///
 /// # Returns
 ///
-/// Returns a vector of strings containing the names of all the package tests discovered,
+/// Returns a vector of strings containing the names of all the unit tests discovered,
 /// otherwise returns an error. Note that duplicates would be removed from the list beforehand.
 ///
 /// # Errors
 ///
 /// Returns an error if the process fails.
-pub fn get_all_packages(distros: &[&str], dir: &Path) -> Result<Vec<String>, Box<dyn Error>> {
-    let mut packages = HashSet::new();
-    for distro in distros {
-        let current_packages = get_packages(distro, dir).unwrap_or_default();
-        packages.extend(current_packages);
+pub fn get_all_units(targets: &[&str], dir: &Path) -> Result<Vec<String>, Box<dyn Error>> {
+    let mut units = HashSet::new();
+    for target in targets {
+        let current_units = get_units(target, dir).unwrap_or_default();
+        units.extend(current_units);
     }
-    let mut packages_vec: Vec<String> = packages.into_iter().collect();
-    packages_vec.sort(); // do we really need sorting?
-    Ok(packages_vec)
+    let mut units_vec: Vec<String> = units.into_iter().collect();
+    units_vec.sort(); // do we really need sorting?
+    Ok(units_vec)
 }

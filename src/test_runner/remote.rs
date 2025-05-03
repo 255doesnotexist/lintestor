@@ -91,8 +91,8 @@ impl TestRunner for RemoteTestRunner {
     ///
     /// # Arguments
     ///
-    /// * `distro` - The name of the distribution.
-    /// * `package` - The name of the package.
+    /// * `target` - The name of the distribution.
+    /// * `unit` - The name of the unit.
     /// * `skip_scripts` - Some scripts skiped by use --skip-successful
     /// * `dir` - Working directory which contains the test folders and files, defaults to env::current_dir()
     ///
@@ -101,8 +101,8 @@ impl TestRunner for RemoteTestRunner {
     /// Returns an error if the test fails or encounters any issues.
     fn run_test(
         &self,
-        distro: &str,
-        package: &str,
+        target: &str,
+        unit: &str,
         skip_scripts: Vec<String>,
         dir: &Path,
     ) -> Result<(), Box<dyn std::error::Error>> {
@@ -177,8 +177,8 @@ impl TestRunner for RemoteTestRunner {
         }
 
         // Compress local test directory
-        let local_dir = Path::new(dir).join(format!("{}/{}", distro, package));
-        let tar_file_path_relative = format!("{}.tar.gz", package);
+        let local_dir = Path::new(dir).join(format!("{}/{}", target, unit));
+        let tar_file_path_relative = format!("{}.tar.gz", unit);
         let tar_file = Path::new(dir).join(tar_file_path_relative.clone());
         // let _temp_tar = TempFile::new(tar_file.clone());
         Command::new("tar")
@@ -219,7 +219,7 @@ impl TestRunner for RemoteTestRunner {
         ));
 
         // Upload prerequisite.sh (optional) to remote server
-        let prerequisite_path = Path::new(dir).join(format!("{}/prerequisite.sh", distro));
+        let prerequisite_path = Path::new(dir).join(format!("{}/prerequisite.sh", target));
         if Path::new(&prerequisite_path).exists() {
             let remote_prerequisite_path = "/tmp/prerequisite.sh";
             let mut remote_file = sess.scp_send(
@@ -241,7 +241,7 @@ impl TestRunner for RemoteTestRunner {
         drop(remote_file);
 
         // Clean up remote directory, extract files, and run tests on remote server
-        let remote_dir = format!("{}/{}/{}", REMOTE_TMP_DIR, distro, package);
+        let remote_dir = format!("{}/{}/{}", REMOTE_TMP_DIR, target, unit);
         self.print_ssh_msg(&format!(
             "Extracting file {} on remote server at {}",
             tar_file_path_relative, remote_dir
@@ -281,7 +281,7 @@ impl TestRunner for RemoteTestRunner {
         // Run test commands
         self.print_ssh_msg(&format!("Running tests in directory {}", remote_dir));
 
-        let script_manager = TestScriptManager::new(distro, package, skip_scripts, dir)?;
+        let script_manager = TestScriptManager::new(target, unit, skip_scripts, dir)?;
         let mut all_tests_passed = true;
         let mut test_results = Vec::new();
         for script in script_manager.get_test_script_names() {
@@ -313,16 +313,16 @@ impl TestRunner for RemoteTestRunner {
         }
 
         if all_tests_passed {
-            self.print_ssh_msg(&format!("Test successful for {}/{}", distro, package));
+            self.print_ssh_msg(&format!("Test successful for {}/{}", target, unit));
         } else {
-            self.print_ssh_msg(&format!("Test failed for {}/{}", distro, package));
+            self.print_ssh_msg(&format!("Test failed for {}/{}", target, unit));
         }
 
-        // Get OS version and package metadata
+        // Get OS version and unit metadata
         let os_version = self.run_command(&sess, "cat /proc/version")?;
         let kernel_version = self.run_command(&sess, "uname -r")?;
 
-        let package_metadata =
+        let unit_metadata =
             if let Some(metadata_script_name) = script_manager.get_metadata_script_name() {
                 let metadata_command = format!("source {}/{}", remote_dir, metadata_script_name);
                 let metadata_output = self.run_command(&sess, &metadata_command)?;
@@ -333,14 +333,14 @@ impl TestRunner for RemoteTestRunner {
                     .collect();
                 debug!(
                     "Collected metadata for {}/{} from remote stream: {:?}",
-                    distro, package, metadata_vec
+                    target, unit, metadata_vec
                 );
-                if let [version, pretty_name, package_type, description] = &metadata_vec[..] {
+                if let [version, pretty_name, unit_type, description] = &metadata_vec[..] {
                     PackageMetadata {
-                        package_version: version.to_owned(),
-                        package_pretty_name: pretty_name.to_owned(),
-                        package_type: package_type.to_owned(),
-                        package_description: description.to_owned(),
+                        unit_version: version.to_owned(),
+                        unit_pretty_name: pretty_name.to_owned(),
+                        unit_type: unit_type.to_owned(),
+                        unit_description: description.to_owned(),
                     }
                 } else {
                     // 处理错误情况，如果 metadata_vec 不包含四个元素
@@ -348,23 +348,23 @@ impl TestRunner for RemoteTestRunner {
                 }
             } else {
                 PackageMetadata {
-                    package_pretty_name: package.to_string(),
+                    unit_pretty_name: unit.to_string(),
                     ..Default::default()
                 }
             };
 
         let report = Report {
-            distro: distro.to_string(),
+            target: target.to_string(),
             os_version: os_version.output,
             kernel_version: kernel_version.output,
-            package_name: package.to_string(),
-            package_metadata,
+            unit_name: unit.to_string(),
+            unit_metadata,
             test_results,
             all_tests_passed,
         };
 
         // Compress remote test directory
-        let remote_tar_file = format!("{}/../{}_result.tar.gz", remote_dir, package);
+        let remote_tar_file = format!("{}/../{}_result.tar.gz", remote_dir, unit);
         self.print_ssh_msg(&format!(
             "Compressing remote directory {} into {}",
             remote_dir, remote_tar_file
@@ -377,7 +377,7 @@ impl TestRunner for RemoteTestRunner {
             &sess,
             &format!(
                 "cd {}/.. && tar czf {} -C {} . --overwrite",
-                remote_dir, remote_tar_file, package
+                remote_dir, remote_tar_file, unit
             ),
         ) {
             self.print_ssh_msg(&format!(
@@ -389,7 +389,7 @@ impl TestRunner for RemoteTestRunner {
         }
 
         // Download compressed test directory
-        let local_result_tar_file = local_dir.join(format!("{}_result.tar.gz", package));
+        let local_result_tar_file = local_dir.join(format!("{}_result.tar.gz", unit));
         // let _temp_result_tar = TempFile::new(local_result_tar_file.clone());
         let (mut remote_file, _) = sess.scp_recv(Path::new(&remote_tar_file))?;
         let mut local_file = File::create(&local_result_tar_file)?;
@@ -417,10 +417,10 @@ impl TestRunner for RemoteTestRunner {
 
         let report_path = local_dir.join("report.json");
         generate_report(&report_path, report.clone())?;
-        debug!("{}-{} report:\n {:?}", distro, package, report);
+        debug!("{}-{} report:\n {:?}", target, unit, report);
 
         if !all_tests_passed {
-            return Err(format!("Not all tests passed for {}/{}", distro, package).into());
+            return Err(format!("Not all tests passed for {}/{}", target, unit).into());
         }
         Ok(())
     }
