@@ -65,10 +65,49 @@ impl Reporter {
         // 获取原始模板内容
         let mut content = template.raw_content.clone();
         
-        // 替换YAML前置数据中的变量
-        // 注：这里我们不修改前置数据，保持原样
+        // 确保YAML前置数据和正文之间有正确的换行
+        let re = Regex::new(r"(?s)^---\s*\n(.*?)\n---\s*\n")?;
+        if let Some(captures) = re.captures(&content) {
+            let yaml_part = captures.get(0).unwrap().as_str();
+            content = content.replacen(yaml_part, &format!("{}\n", yaml_part), 1);
+        }
         
         // 替换正文中的变量
+        
+        // 0. 替换元数据变量（模板中的title, unit_name等）
+        let pattern_title = "{{ title }}";
+        content = content.replace(pattern_title, &template.metadata.title);
+        
+        let pattern_unit_name = "{{ unit_name }}";
+        content = content.replace(pattern_unit_name, &template.metadata.unit_name);
+        
+        // 从target_config路径中提取目标名称
+        if let Some(target_name) = template.metadata.target_config
+            .components()
+            .filter_map(|comp| match comp {
+                std::path::Component::Normal(s) => Some(s.to_string_lossy().to_string()),
+                _ => None,
+            })
+            .find(|s| s == "targets") 
+            .and_then(|_| {
+                template.metadata.target_config
+                    .components()
+                    .filter_map(|comp| match comp {
+                        std::path::Component::Normal(s) => Some(s.to_string_lossy().to_string()),
+                        _ => None,
+                    })
+                    .nth(1)
+            }) 
+        {
+            let pattern_target = "{{ target_name }}";
+            content = content.replace(pattern_target, &target_name);
+        }
+        
+        // 处理自定义元数据
+        for (key, value) in &template.metadata.custom {
+            let pattern = format!("{{{{ {} }}}}", key);
+            content = content.replace(&pattern, value);
+        }
         
         // 1. 替换特殊变量
         for (name, value) in &result.special_vars {
@@ -76,9 +115,10 @@ impl Reporter {
             content = content.replace(&pattern, value);
         }
         
-        // 2. 替换提取的变量
+        // 2. 替换提取的变量 - 修复此部分
         for (name, value) in &result.variables {
             let pattern = format!("{{{{ {} }}}}", name);
+            // 使用全局替换，确保所有出现的变量都被替换
             content = content.replace(&pattern, value);
         }
         
@@ -101,9 +141,6 @@ impl Reporter {
         }).to_string();
         
         // 4. 替换命令输出
-        // ```output {ref="cmd-id"}
-        // placeholder
-        // ```
         // 支持双引号或单引号形式的引用
         let output_block_pattern = Regex::new(r#"(?ms)```output\s+\{ref=(?:"([^"]+)"|'([^']+)')\}\n.*?```"#)?;
         content = output_block_pattern.replace_all(&content, |caps: &regex::Captures| {
@@ -121,11 +158,6 @@ impl Reporter {
         }).to_string();
         
         // 5. 处理自动生成总结表
-        // ## 总结表 {id="summary" generate_summary=true}
-        //
-        // | 步骤描述 | 状态 |
-        // |---------|------|
-        // | ... | ... |
         // 支持双引号或单引号形式的ID
         let summary_block_pattern = Regex::new(r#"(?ms)^##\s+.*?\s+\{id=(?:"([^"]+)"|'([^']+)').*?generate_summary=true.*?\}\s*$"#)?;
         content = summary_block_pattern.replace_all(&content, |caps: &regex::Captures| {
@@ -163,6 +195,41 @@ impl Reporter {
         }).to_string();
         
         // 6. 处理自动生成对比表格（未实现，可根据需要添加）
+        
+        // 7. 清理Markdown特殊标记
+        // 清理 {id="xxx"} 标记
+        let id_pattern = Regex::new(r#"\{id=(?:"[^"]+"|'[^']+')\}"#)?;
+        content = id_pattern.replace_all(&content, "").to_string();
+
+        // 清理 {exec=xxx} 标记
+        let exec_pattern = Regex::new(r"\{exec=(?:true|false)\}")?;
+        content = exec_pattern.replace_all(&content, "").to_string();
+        
+        // 清理 {description="xxx"} 标记
+        let desc_pattern = Regex::new(r#"\{description=(?:"[^"]+"|'[^']+')\}"#)?;
+        content = desc_pattern.replace_all(&content, "").to_string();
+        
+        // 清理 {assert.xxx=yyy} 标记
+        let assert_pattern = Regex::new(r"\{assert\.[a-zA-Z_]+=[^\}]+\}")?;
+        content = assert_pattern.replace_all(&content, "").to_string();
+        
+        // 清理 {extract.xxx=/yyy/} 标记
+        let extract_pattern = Regex::new(r"\{extract\.[a-zA-Z_]+=/.*/\}")?;
+        content = extract_pattern.replace_all(&content, "").to_string();
+        
+        // 清理 {depends_on=["xxx", "yyy"]} 标记
+        let depends_pattern = Regex::new(r#"\{depends_on=\[(?:\"[^\"]*\"|'[^']*')(?:\s*,\s*(?:\"[^\"]*\"|'[^']*'))*\]\}"#)?;
+        content = depends_pattern.replace_all(&content, "").to_string();
+        
+        // 清理所有其他花括号属性（捕获任何剩余的 {xxx=yyy} 格式）
+        let misc_pattern = Regex::new(r"\{[a-zA-Z_][a-zA-Z0-9_]*=.*?\}")?;
+        content = misc_pattern.replace_all(&content, "").to_string();
+        
+        // 清理连续的多余空格，但不清理换行符
+        content = Regex::new(r"[^\S\r\n]{2,}")?.replace_all(&content, " ").to_string();
+        
+        // 清理行尾空格，但保留换行符
+        content = Regex::new(r"[^\S\r\n]+\n")?.replace_all(&content, "\n").to_string();
         
         Ok(content)
     }

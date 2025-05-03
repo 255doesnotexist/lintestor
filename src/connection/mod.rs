@@ -54,11 +54,11 @@ impl ConnectionFactory {
                     private_key_path
                 )?))
             },
-            "locally" => {
+            "local" | "locally" => {
                 // 创建本地执行环境
                 Ok(Box::new(LocalConnectionManager::new()))
             },
-            "qemu-based-remote" => {
+            "qemu" | "qemu-based-remote" => {
                 // 创建QEMU连接（实际上也是SSH）
                 let connection = match &config.connection {
                     Some(conn) => conn,

@@ -1,0 +1,14 @@
+# 本地测试环境配置
+enabled = true
+# 测试类型 - 指定测试环境类型
+testing_type = "local"
+
+# 启动模板 - 在本地环境中不需要，但为了结构完整性保留
+startup_template = ""
+
+# 停止模板 - 在本地环境中不需要，但为了结构完整性保留
+stop_template = ""
+
+# 其他配置选项
+[custom_options]
+timeout = 30  # 命令超时时间（秒）
