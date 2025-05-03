@@ -1,13 +1,18 @@
 //! Entry point of whole application
 mod aggregator;
 mod config;
+mod connection;
 mod markdown_report;
+mod template;
 mod test_runner;
 mod test_environment;
 mod test_executor;
 mod test_template_manager;
 mod utils;
+
 use crate::config::target_config::TargetConfig;
+use crate::template::{TemplateFilter, discover_templates, filter_templates, TemplateExecutor, Reporter};
+use crate::connection::ConnectionFactory;
 use crate::test_runner::{local::LocalTestRunner, remote::RemoteTestRunner, qemu::QemuTestRunner, TestRunner};
 use crate::utils::Report;
 use clap::{Arg, ArgAction, ArgMatches, Command};
@@ -24,7 +29,7 @@ const VERSION: &str = env!("CARGO_PKG_VERSION");
 const NAME: &str = env!("CARGO_PKG_NAME");
 /// The authors of the application.
 const AUTHORS: &str = env!("CARGO_PKG_AUTHORS");
-/// The detemplateion of the application.
+/// The description of the application.
 const DESCRIPTION: &str = env!("CARGO_PKG_DESCRIPTION");
 
 /// The main function of the application.
@@ -33,6 +38,7 @@ fn main() {
     let matches = parse_args();
 
     let test = matches.get_flag("test");
+    let test_template = matches.get_flag("test-template");
     let aggr = matches.get_flag("aggr");
     let summ = matches.get_flag("summ");
     let skip_successful = matches.get_flag("skip-successful");
@@ -56,9 +62,24 @@ fn main() {
         .map(|s| s.as_str().split(',').collect::<Vec<&str>>())
         .unwrap_or(discovered_units.iter().map(|s| s.as_str()).collect());
     info!("Packages: {:?}", units);
-
-    if test {
-        info!("Running tests");
+    
+    if test_template {
+        info!("Running tests using Markdown templates");
+        
+        // 获取标签过滤条件
+        let tags: Vec<String> = matches
+            .get_one::<String>("tag")
+            .map(|s| s.split(',').map(|tag| tag.trim().to_string()).collect())
+            .unwrap_or_default();
+            
+        run_template_tests(
+            targets.iter().map(|&s| s.to_string()).collect(),
+            units.iter().map(|&s| s.to_string()).collect(),
+            tags,
+            &working_dir,
+        );
+    } else if test {
+        info!("Running tests with legacy .sh scripts");
         run_tests(
             &targets,
             &units,
@@ -96,7 +117,15 @@ fn parse_args() -> ArgMatches {
                 .short('t')
                 .long("test")
                 .action(ArgAction::SetTrue)
-                .help("Run tests (for all distributions by default)"),
+                .conflicts_with("test-template")
+                .help("Run tests using legacy .sh scripts (for all distributions by default)"),
+        )
+        .arg(
+            Arg::new("test-template")
+                .long("test-template")
+                .action(ArgAction::SetTrue)
+                .conflicts_with("test")
+                .help("Run tests using Markdown templates (.test.md files)"),
         )
         .arg(
             Arg::new("aggr")
@@ -123,15 +152,22 @@ fn parse_args() -> ArgMatches {
             Arg::new("target")
                 .short('d')
                 .long("target")
-                .help("Specify distributions to test")
+                .help("Specify targets to test (comma separated)")
                 .action(ArgAction::Set)
                 .num_args(1),
         )
         .arg(
             Arg::new("unit")
-                .short('p')
+                .short('u')
                 .long("unit")
-                .help("Specify units to test")
+                .help("Specify units to test (comma separated)")
+                .action(ArgAction::Set)
+                .num_args(1),
+        )
+        .arg(
+            Arg::new("tag")
+                .long("tag")
+                .help("Filter templates by tags (comma separated)")
                 .action(ArgAction::Set)
                 .num_args(1),
         )
@@ -149,6 +185,128 @@ fn parse_args() -> ArgMatches {
                 .help("Run lintestor in interactive mode. Possibly require user input which may pause the test."),
         )
         .get_matches()
+}
+
+/// Run tests using Markdown templates
+/// 
+/// # Arguments
+/// 
+/// * `targets` - Target names to filter templates by
+/// * `units` - Unit names to filter templates by
+/// * `tags` - Tags to filter templates by
+/// * `working_dir` - Working directory containing templates and target configs
+fn run_template_tests(
+    targets: Vec<String>,
+    units: Vec<String>,
+    tags: Vec<String>,
+    working_dir: &Path,
+) {
+    info!("Discovering Markdown test templates...");
+    
+    // 搜索工作目录下的测试模板
+    let template_dirs = vec![
+        working_dir.join("tests"),
+        working_dir.join("templates"),
+    ];
+    
+    let mut all_template_paths = Vec::new();
+    for dir in &template_dirs {
+        if let Ok(paths) = discover_templates(dir, true) {
+            all_template_paths.extend(paths);
+        }
+    }
+    
+    info!("Found {} template files", all_template_paths.len());
+    
+    // 根据参数过滤模板
+    let filter = TemplateFilter {
+        target: if targets.len() == 1 { Some(targets[0].clone()) } else { None },
+        unit: if units.len() == 1 { Some(units[0].clone()) } else { None },
+        tags,
+    };
+    
+    let templates = match filter_templates(&all_template_paths, &filter) {
+        Ok(t) => t,
+        Err(e) => {
+            error!("Failed to filter templates: {}", e);
+            return;
+        }
+    };
+    
+    if templates.is_empty() {
+        warn!("No templates found matching the criteria");
+        return;
+    }
+    
+    info!("Running {} filtered templates", templates.len());
+    
+    let mut results = Vec::new();
+    let reporter = Reporter::new(working_dir.to_path_buf(), None);
+    
+    // 执行每个模板
+    for template in templates {
+        info!("Processing template: {}", template.file_path.display());
+        
+        // 加载目标配置
+        let target_config_path = working_dir.join(&template.metadata.target_config);
+        info!("Loading target config: {}", target_config_path.display());
+        
+        let target_config: TargetConfig = match utils::read_toml_from_file(&target_config_path) {
+            Ok(config) => config,
+            Err(e) => {
+                error!("Failed to load target config: {}", e);
+                continue;
+            }
+        };
+        
+        // 创建连接管理器
+        let mut connection_manager = match ConnectionFactory::create_manager(&target_config) {
+            Ok(manager) => manager,
+            Err(e) => {
+                error!("Failed to create connection manager: {}", e);
+                continue;
+            }
+        };
+        
+        // 创建模板执行器
+        let mut executor = TemplateExecutor::new(
+            working_dir.to_path_buf(),
+            connection_manager.as_mut(),
+            None,
+        );
+        
+        // 执行模板
+        match executor.execute_template(template.clone(), target_config) {
+            Ok(result) => {
+                info!("Template execution completed with status: {:?}", result.overall_status);
+                
+                // 生成报告
+                match reporter.generate_report(&template, &result) {
+                    Ok(report_path) => {
+                        let mut result_with_path = result;
+                        result_with_path.report_path = Some(report_path);
+                        results.push(result_with_path);
+                    }
+                    Err(e) => {
+                        error!("Failed to generate report: {}", e);
+                        results.push(result);
+                    }
+                }
+            }
+            Err(e) => {
+                error!("Failed to execute template: {}", e);
+            }
+        }
+    }
+    
+    // 生成总结报告
+    if !results.is_empty() {
+        info!("Generating summary report");
+        match reporter.generate_summary_report(&results, None) {
+            Ok(path) => info!("Summary report generated: {}", path.display()),
+            Err(e) => error!("Failed to generate summary report: {}", e),
+        }
+    }
 }
 
 /// Run tests (for all distributions by default)
