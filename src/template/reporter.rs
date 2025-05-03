@@ -149,7 +149,8 @@ impl Reporter {
             
             match result.step_results.get(cmd_id) {
                 Some(step_result) => {
-                    format!(r#"```output {{ref="{}"}}\n{}\n```"#, cmd_id, step_result.stdout)
+                    // 别改这三个 {} 因为这是原样字符串，你直接打 \n 在里面不是换行
+                    format!(r#"```output {{ref="{}"}}{}{}{}```"#, cmd_id, "\n", &step_result.stdout, "\n")
                 },
                 None => {
                     format!(r#"```output {{ref="{}"}}\n命令结果不可用\n```"#, cmd_id)
