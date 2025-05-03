@@ -11,7 +11,7 @@ custom_field: "自定义字段值"
 # 综合功能测试模板
 
 **测试标题:** 综合功能测试
-**执行时间:** 2025-05-04 06:46:47
+**执行时间:** 2025-05-04 06:53:28
 **单元名称:** ComprehensiveTest
 **单元版本:** v1.0.0-test
 **目标环境:** local
@@ -43,10 +43,10 @@ cat version.env
 **命令输出:**
 ```output
 total 8
-drwxrwxr-x 2 ezra ezra 80 May 4 06:46 .
-drwxrwxrwt 145 root root 3460 May 4 06:46 ..
--rw-rw-r-- 1 ezra ezra 20 May 4 06:46 test.txt
--rw-rw-r-- 1 ezra ezra 48 May 4 06:46 version.env
+drwxrwxr-x 2 ezra ezra 80 May 4 06:53 .
+drwxrwxrwt 145 root root 3460 May 4 06:53 ..
+-rw-rw-r-- 1 ezra ezra 20 May 4 06:53 test.txt
+-rw-rw-r-- 1 ezra ezra 48 May 4 06:53 version.env
 This is a test file
 VERSION=1.2.3
 CONFIG=production
@@ -187,7 +187,7 @@ echo "测试环境已清理"
 
 | 变量名 | 值 |
 |-------|-----|
-| execution_date | 2025-05-04 06:46:47 |
+| execution_date | 2025-05-04 06:53:28 |
 | target_info | 测试类型: local |
 | unit_version | v1.0.0-test |
 
@@ -207,7 +207,7 @@ echo "测试环境已清理"
 | file-operations | 文件操作 | ✅ Pass | 0 | 2 test.txt | - |
 | file-ops-block-2 | | ✅ Pass | 0 | - | - |
 | assertions | 复杂断言测试 | ✅ Pass | 0 | - | - |
-| complex-assert | 复杂断言 | ✅ Pass | 0 | This test should pass | Errors should be present here,... |
+| complex-assert | 复杂断言 | ❌ Fail | 0 | This test should pass | Errors should be present here,... |
 | assertions-block-3 | | ✅ Pass | 0 | - | - |
 | use-vars | 使用提取的变量 | ✅ Pass | 0 | - | - |
 | use-variables | 使用变量 | ✅ Pass | 0 | 软件版本: 1.2.3 | - |
@@ -229,7 +229,7 @@ echo "测试环境已清理"
 | 环境准备 | ✅ Pass |
 | 提取版本 | ✅ Pass |
 | 文件操作 | ✅ Pass |
-| 复杂断言 | ✅ Pass |
+| 复杂断言 | ❌ Fail |
 | 使用变量 | ✅ Pass |
 | 组合测试 | ✅ Pass |
 | 清理环境 | ✅ Pass |

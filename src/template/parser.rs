@@ -560,13 +560,21 @@ fn parse_block_attributes(attributes: &str, parent_id: &str) -> Result<(String, 
     let mut assertions = Vec::new();
     let mut extractions = Vec::new();
     
-    // 提取所有属性键值对
-    let attributes_map = extract_attributes(attributes);
+    // 获取原始属性列表，不使用HashMap以防止同名属性覆盖
+    let attributes_list = extract_attributes_as_list(attributes);
     
     // 记录找到的所有属性
-    debug!("提取到 {} 个属性:", attributes_map.len());
-    for (k, v) in &attributes_map {
+    debug!("提取到 {} 个属性:", attributes_list.len());
+    for (k, v) in &attributes_list {
         debug!("  {}=\"{}\"", k, v);
+    }
+    
+    // 使用HashMap处理非断言属性
+    let mut attributes_map = HashMap::new();
+    for (k, v) in &attributes_list {
+        if !k.starts_with("assert.") {
+            attributes_map.insert(k.clone(), v.clone());
+        }
     }
     
     // 处理ID
@@ -597,8 +605,8 @@ fn parse_block_attributes(attributes: &str, parent_id: &str) -> Result<(String, 
         debug!("找到依赖: {:?}", depends_on);
     }
     
-    // 处理断言和提取 - 需要扫描所有以assert.和extract.开头的键
-    for (key, value) in &attributes_map {
+    // 处理断言和提取 - 直接从原始属性列表中处理，支持同名断言属性
+    for (key, value) in &attributes_list {
         if key.starts_with("assert.") {
             let assertion_type = key.trim_start_matches("assert.");
             let assertion = parse_assertion(assertion_type, value);
@@ -640,14 +648,14 @@ fn parse_block_attributes(attributes: &str, parent_id: &str) -> Result<(String, 
     Ok((id, description, executable, depends_on, assertions, extractions))
 }
 
-/// 从属性字符串中提取所有键值对
-fn extract_attributes(attributes: &str) -> HashMap<String, String> {
-    let mut result = HashMap::new();
+/// 从属性字符串中提取所有键值对，保留所有属性（包括重复键）
+fn extract_attributes_as_list(attributes: &str) -> Vec<(String, String)> {
+    let mut result = Vec::new();
     
     // 移除可能的大括号
     let attr_str = attributes.trim_start_matches('{').trim_end_matches('}');
     
-    debug!("解析代码块属性: {}", attr_str);
+    debug!("解析代码块属性列表: {}", attr_str);
     
     // 状态机变量
     enum ParseState {
@@ -674,7 +682,7 @@ fn extract_attributes(attributes: &str) -> HashMap<String, String> {
                     // 键名后遇到空格
                     if !current_key.is_empty() {
                         // 视为无值的布尔属性
-                        result.insert(current_key.trim().to_string(), "true".to_string());
+                        result.push((current_key.trim().to_string(), "true".to_string()));
                         current_key = String::new();
                     }
                 } else {
@@ -698,7 +706,7 @@ fn extract_attributes(attributes: &str) -> HashMap<String, String> {
             ParseState::Value => {
                 if c.is_whitespace() {
                     // 值后面遇到空格，表示值结束
-                    result.insert(current_key.trim().to_string(), current_value.trim().to_string());
+                    result.push((current_key.trim().to_string(), current_value.trim().to_string()));
                     current_key = String::new();
                     current_value = String::new();
                     state = ParseState::Key;
@@ -710,7 +718,7 @@ fn extract_attributes(attributes: &str) -> HashMap<String, String> {
             ParseState::QuoteValue => {
                 if c == quote_char {
                     // 遇到匹配的引号，引号值结束
-                    result.insert(current_key.trim().to_string(), current_value.clone());
+                    result.push((current_key.trim().to_string(), current_value.clone()));
                     current_key = String::new();
                     current_value = String::new();
                     state = ParseState::Key;
@@ -725,16 +733,16 @@ fn extract_attributes(attributes: &str) -> HashMap<String, String> {
     // 处理最后可能未完成的键值对
     if !current_key.is_empty() {
         if !current_value.is_empty() {
-            result.insert(current_key.trim().to_string(), current_value.trim().to_string());
+            result.push((current_key.trim().to_string(), current_value.trim().to_string()));
         } else {
-            result.insert(current_key.trim().to_string(), "true".to_string());
+            result.push((current_key.trim().to_string(), "true".to_string()));
         }
     }
     
     // 记录解析结果
-    debug!("提取到 {} 个属性:", result.len());
-    for (k, v) in &result {
-        debug!("  {}=\"{}\"", k, v);
+    debug!("提取到 {} 个属性 (列表形式):", result.len());
+    for (i, (k, v)) in result.iter().enumerate() {
+        debug!("  {}. {}=\"{}\"", i+1, k, v);
     }
     
     result

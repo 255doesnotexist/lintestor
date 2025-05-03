@@ -162,6 +162,7 @@ serial = "device_serial_123"
     *   `assert.stderr_matches=/regex/`: 断言标准错误匹配正则表达式。
     *   `extract.变量名=/regex/`: 从标准输出提取匹配正则表达式捕获组 1 的内容到 `变量名`。
     *   `depends_on=["id1", "id2"]`: 声明此块依赖于 ID 为 `id1` 和 `id2` 的块成功完成。
+    *   **多断言支持:** 可以使用多个相同类型的断言（例如 `assert.stderr_not_contains="Error" assert.stderr_not_contains="Failed"`），系统将正确处理所有断言，所有条件必须同时满足才能通过测试。
 *   **依赖关系 (`depends_on`)**:
     *   在**标题节**上声明: `## 测试步骤 {id="step-id" depends_on=["other-step"]}` - 该部分下的所有代码块都将继承此依赖关系。
     *   在**代码块**上声明: ```bash {id="block-id" depends_on=["other-block"]}``` - 只影响该特定代码块。
@@ -179,6 +180,22 @@ serial = "device_serial_123"
     *   `{{ unit_version }}`: 由 `unit_version_command` 获取的单元版本。
 *   **自动摘要:**
     *   `{generate_summary=true}`: 标记一个（通常是表格）区域，`lintestor` 将根据已执行步骤的状态自动填充。
+    *   摘要表格现在包含步骤ID、描述、状态、退出码、输出摘要、错误信息等丰富信息，提供更全面的测试执行概览。
+    *   即使步骤没有描述，摘要表格也会显示步骤ID作为标识。
+
+测试总结区域会被自动填充为包含更多详细信息的表格：
+
+```markdown
+| 步骤ID | 描述 | 状态 | 退出码 | 输出摘要 | 错误信息 |
+|--------|------|------|--------|----------|----------|
+| install-deps | 安装依赖 | ✅ Pass | 0 | 依赖安装完成。 | - |
+| run-core | 运行核心测试 | ✅ Pass | 0 | Pass Rate: 100% | - |
+| run-perf | 运行性能测试 | ✅ Pass | 0 | Score: 1234.56 | - |
+```
+
+注意：
+1. **UTF-8安全处理:** 所有输出处理均支持中文等UTF-8字符，确保不会因字符边界问题发生错误。
+2. **断言评估:** 测试步骤的通过与否完全取决于用户定义的断言，而不是stderr是否有内容。即使stderr有错误信息，只要断言全部通过，步骤仍被视为通过。
 
 ## 运行测试
 
