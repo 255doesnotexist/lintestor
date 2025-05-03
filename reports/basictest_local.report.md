@@ -8,7 +8,7 @@ tags: ["basic", "example"]
 
 # 基本功能测试
 
-*测试执行于: 2025-05-04 03:17:24*
+*测试执行于: 2025-05-04 04:01:46*
 
 这是一个最基本的测试模板示例，演示以下功能：
 - 基本命令执行
@@ -27,7 +27,7 @@ echo "当前日期: $(date)"
 **命令输出:**
 ```output
 Hello, Lintestor!
-当前日期: Sun May 4 03:17:24 AM CST 2025
+当前日期: Sun May 4 04:01:46 AM CST 2025
 
 ```
 
@@ -48,7 +48,7 @@ Linux debian 6.11.10-amd64 #1 SMP PREEMPT_DYNAMIC Debian 6.11.10-1 (2024-11-23) 
 ----------------
 内存信息:
  total used free shared buff/cache available
-Mem: 15Gi 8.7Gi 5.0Gi 78Mi 2.6Gi 6.9Gi
+Mem: 15Gi 9.3Gi 4.2Gi 78Mi 2.8Gi 6.4Gi
 Swap: 0B 0B 0B
 
 ```
@@ -58,12 +58,12 @@ Swap: 0B 0B 0B
 
 | 步骤描述 | 状态 |
 |---------|------|
+| sys-info-output | ✅ Pass |
 | echo-cmd-output | ✅ Pass |
 | Echo | ✅ Pass |
-| sys-info-output | ✅ Pass |
+| | ✅ Pass |
+| | ✅ Pass |
 | 系统信息 | ✅ Pass |
-| | ✅ Pass |
-| | ✅ Pass |
 
 | 步骤描述 | 状态 |
 |---------|------|

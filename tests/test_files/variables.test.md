@@ -15,7 +15,7 @@ tags: ["variables", "extraction", "example"]
 
 生成一些包含可提取数据的输出：
 
-```bash {id="generate" exec=true description="生成测试数据" assert.exit_code=0 extract.memory_total=/^内存总量:\s+(\d+)MB/ extract.kernel_version=/^内核版本:\s+(.+)$/}
+```bash {id="generate" exec=true description="生成测试数据" assert.exit_code=0 extract.memory_total=/内存总量:\s+(\d+)MB/ extract.kernel_version=/内核版本:\s+(.+)/}
 echo "内存总量: 8192MB"
 echo "内核版本: $(uname -r)"
 echo "主机名: $(hostname)"
@@ -86,7 +86,7 @@ echo "----------------------------------------"
 - 可用内存: {{ free_memory }}KB
 - 系统负载: {{ load_avg }}
 
-## 测试结果摘要 {id="summary" generate_summary=true}
+## 测试结果摘要 {id="summary" generate_summary=false}
 
 | 步骤描述 | 状态 |
 |---------|------|

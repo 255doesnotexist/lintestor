@@ -74,6 +74,18 @@ impl Reporter {
         
         // 替换正文中的变量
         
+        // 打印所有收集到的特殊变量
+        info!("处理特殊变量 - 共 {} 个", result.special_vars.len());
+        for (name, value) in &result.special_vars {
+            info!("特殊变量: {} = {}", name, value);
+        }
+        
+        // 打印所有提取的变量
+        info!("处理提取的变量 - 共 {} 个", result.variables.len());
+        for (name, value) in &result.variables {
+            info!("提取的变量: {} = {}", name, value);
+        }
+        
         // 0. 替换元数据变量（模板中的title, unit_name等）
         let pattern_title = "{{ title }}";
         content = content.replace(pattern_title, &template.metadata.title);
@@ -112,14 +124,66 @@ impl Reporter {
         // 1. 替换特殊变量
         for (name, value) in &result.special_vars {
             let pattern = format!("{{{{ {} }}}}", name);
+            let old_content = content.clone();
             content = content.replace(&pattern, value);
+            
+            // 检查是否发生了替换，并记录日志
+            if old_content != content {
+                info!("特殊变量替换成功: {} = {}", name, value);
+            } else {
+                warn!("特殊变量未找到匹配: {} = {}", name, value);
+            }
         }
         
-        // 2. 替换提取的变量 - 修复此部分
+        // 2. 替换提取的变量 - 增强日志和替换逻辑
         for (name, value) in &result.variables {
-            let pattern = format!("{{{{ {} }}}}", name);
-            // 使用全局替换，确保所有出现的变量都被替换
-            content = content.replace(&pattern, value);
+            // 变量名前后可能有空格，使用更宽松的正则表达式
+            let pattern_strict = format!("{{{{ {} }}}}", name); // 严格匹配，无空格
+            
+            // 修复：正确转义花括号，避免正则表达式错误
+            let pattern_loose = format!(r"\{{\s*{}\s*\}}", name); // 宽松匹配，允许空格
+            
+            info!("尝试替换变量: {} = {}", name, value);
+            info!("严格匹配模式: {}", pattern_strict);
+            info!("宽松匹配模式: {}", pattern_loose);
+            
+            // 计算变量出现次数
+            let occurrences = content.matches(&pattern_strict).count();
+            info!("变量 {} 在内容中出现 {} 次 (严格匹配)", name, occurrences);
+            
+            // 使用正则表达式查找所有匹配
+            let re_var = Regex::new(&pattern_loose)?;
+            let matches = re_var.find_iter(&content).count();
+            info!("变量 {} 在内容中找到 {} 个正则匹配", name, matches);
+            
+            // 首先尝试严格匹配替换
+            let old_content = content.clone();
+            content = content.replace(&pattern_strict, value);
+            
+            if old_content != content {
+                info!("变量 {} 替换成功 (严格匹配)", name);
+            } else {
+                // 如果严格匹配失败，尝试正则替换
+                info!("尝试使用正则表达式替换变量: {}", name);
+                content = re_var.replace_all(&content, value).to_string();
+                
+                if old_content != content {
+                    info!("变量 {} 替换成功 (正则匹配)", name);
+                } else {
+                    warn!("变量 {} 未能替换，在内容中未找到匹配", name);
+                    
+                    // 查找相似的变量模式
+                    let var_pattern = Regex::new(r"\{\{\s*([a-zA-Z0-9_]+)\s*\}\}")?;
+                    let mut found_vars = Vec::new();
+                    for cap in var_pattern.captures_iter(&content) {
+                        found_vars.push(cap[1].to_string());
+                    }
+                    
+                    if !found_vars.is_empty() {
+                        info!("在内容中发现其他变量占位符: {:?}", found_vars);
+                    }
+                }
+            }
         }
         
         // 3. 替换状态变量
@@ -127,7 +191,7 @@ impl Reporter {
         let status_pattern = Regex::new(r"\{\{\s*status\.([a-zA-Z0-9_-]+)\s*\}\}")?;
         content = status_pattern.replace_all(&content, |caps: &regex::Captures| {
             let step_id = &caps[1];
-            match result.step_results.get(step_id) {
+            let status_value = match result.step_results.get(step_id) {
                 Some(step_result) => match step_result.status {
                     StepStatus::Pass => "✅ Pass",
                     StepStatus::Fail => "❌ Fail",
@@ -136,8 +200,10 @@ impl Reporter {
                     StepStatus::NotRun => "❓ Not Run",
                 },
                 None => "❓ Unknown",
-            }
-            .to_string()
+            };
+            
+            info!("替换状态变量: status.{} = {}", step_id, status_value);
+            status_value.to_string()
         }).to_string();
         
         // 4. 替换命令输出
@@ -147,49 +213,80 @@ impl Reporter {
             // 获取引用ID（可能在第一个或第二个捕获组）
             let cmd_id = caps.get(1).or_else(|| caps.get(2)).map_or("unknown", |m| m.as_str());
             
+            info!("替换命令输出块: ref={}", cmd_id);
+            
             match result.step_results.get(cmd_id) {
                 Some(step_result) => {
+                    info!("找到命令结果: {} (输出长度: {} 字节)", cmd_id, step_result.stdout.len());
                     // 别改这三个 {} 因为这是原样字符串，你直接打 \n 在里面不是换行
                     format!(r#"```output {{ref="{}"}}{}{}{}```"#, cmd_id, "\n", &step_result.stdout, "\n")
                 },
                 None => {
+                    warn!("未找到命令结果: {}", cmd_id);
                     format!(r#"```output {{ref="{}"}}\n命令结果不可用\n```"#, cmd_id)
                 }
             }
         }).to_string();
         
-        // 5. 处理自动生成总结表
-        // 支持双引号或单引号形式的ID
+        // 5. 处理自动生成总结表 - 修复重复和格式问题
+        // 只在标记为generate_summary=true的节中生成摘要表
         let summary_block_pattern = Regex::new(r#"(?ms)^##\s+.*?\s+\{id=(?:"([^"]+)"|'([^']+)').*?generate_summary=true.*?\}\s*$"#)?;
+        let mut processed_summary = false;  // 记录是否已生成摘要表
+        
         content = summary_block_pattern.replace_all(&content, |caps: &regex::Captures| {
             let section_id = caps.get(1).or_else(|| caps.get(2)).map_or("unknown", |m| m.as_str());
+            
+            // 如果已经处理过摘要，跳过后续的摘要生成
+            if processed_summary {
+                warn!("检测到多个摘要标记(generate_summary=true)，忽略额外摘要: {}", section_id);
+                return caps[0].to_string();  // 返回原始标题行，不生成表格
+            }
+            
+            info!("生成测试结果摘要表: section_id={}", section_id);
+            processed_summary = true;
+            
             let mut summary = caps[0].to_string(); // 保留原始标题行
+            summary.push_str("\n\n");  // 确保有足够的换行
 
             // 添加表头
-            summary.push_str("\n\n| 步骤描述 | 状态 |\n");
+            summary.push_str("| 步骤描述 | 状态 |\n");
             summary.push_str("|---------|------|\n");
 
-            // 添加每个步骤的状态
-            for (step_id, step_result) in &result.step_results {
-                // 获取步骤描述
-                let step = template.steps.iter()
-                    .find(|s| &s.id == step_id);
-
-                let description = step
-                    .and_then(|s| s.description.clone())
-                    .unwrap_or_else(|| step_id.clone());
-
-                // 获取状态
-                let status = match step_result.status {
-                    StepStatus::Pass => "✅ Pass",
-                    StepStatus::Fail => "❌ Fail",
-                    StepStatus::Skipped => "⚠️ Skipped",
-                    StepStatus::Blocked => "❓ Blocked",
-                    StepStatus::NotRun => "❓ Not Run",
-                };
-
-                // 添加行
-                summary.push_str(&format!("| {} | {} |\n", description, status));
+            // 收集所有有效的执行步骤（排除输出引用步骤）
+            let mut valid_steps = Vec::new();
+            
+            for step in &template.steps {
+                // 跳过输出引用步骤（以-output结尾的步骤ID通常是输出引用）
+                if step.id.ends_with("-output") || step.ref_command.is_some() {
+                    continue;
+                }
+                
+                // 找到步骤结果
+                if let Some(step_result) = result.step_results.get(&step.id) {
+                    let description = step.description.clone().unwrap_or_else(|| step.id.clone());
+                    
+                    // 获取状态
+                    let status = match step_result.status {
+                        StepStatus::Pass => "✅ Pass",
+                        StepStatus::Fail => "❌ Fail",
+                        StepStatus::Skipped => "⚠️ Skipped",
+                        StepStatus::Blocked => "❓ Blocked",
+                        StepStatus::NotRun => "❓ Not Run",
+                    };
+                    
+                    info!("添加摘要项: {} = {}", description, status);
+                    valid_steps.push((description, status.to_string()));
+                }
+            }
+            
+            // 如果没有找到有效步骤，添加一个提示
+            if valid_steps.is_empty() {
+                summary.push_str("| 未找到可执行步骤 | ❓ |\n");
+            } else {
+                // 添加步骤到表格
+                for (description, status) in valid_steps {
+                    summary.push_str(&format!("| {} | {} |\n", description, status));
+                }
             }
 
             summary
@@ -231,6 +328,20 @@ impl Reporter {
         
         // 清理行尾空格，但保留换行符
         content = Regex::new(r"[^\S\r\n]+\n")?.replace_all(&content, "\n").to_string();
+        
+        // 检查是否仍有未替换的变量占位符
+        let remaining_vars = Regex::new(r"\{\{\s*([a-zA-Z0-9_]+)\s*\}\}")?;
+        let mut remaining_list = Vec::new();
+        for cap in remaining_vars.captures_iter(&content) {
+            let var_name = cap.get(1).unwrap().as_str();
+            remaining_list.push(var_name.to_string());
+        }
+        
+        if !remaining_list.is_empty() {
+            warn!("报告中仍有未替换的变量: {:?}", remaining_list);
+        } else {
+            info!("所有变量都已成功替换");
+        }
         
         Ok(content)
     }

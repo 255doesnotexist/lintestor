@@ -68,77 +68,77 @@ serial = "device_serial_123"
 模板示例 (`tests/my_package/my_qemu_vm.test.md`):
 
 ```markdown
----
-title: "My Package 功能测试 (在 My QEMU VM 上)"
-target_config: "targets/my_qemu_vm/config.toml" # 关联的目标配置文件路径
-unit_name: "my_package"
-unit_version_command: "my_package --version" # 获取 Unit 版本的命令
-tags: ["core", "regression"]
----
+    ---
+    title: "My Package 功能测试 (在 My QEMU VM 上)"
+    target_config: "targets/my_qemu_vm/config.toml" # 关联的目标配置文件路径
+    unit_name: "my_package"
+    unit_version_command: "my_package --version" # 获取 Unit 版本的命令
+    tags: ["core", "regression"]
+    ---
 
-# {{ title }}
+    # {{ title }}
 
-*   **测试日期:** `{{ execution_date }}`
-*   **目标信息:** `{{ target_info }}` {# 由 target_config 中的 info_command 获取 #}
-*   **单元版本:** `{{ unit_version }}` {# 由 unit_version_command 获取 #}
+    *   **测试日期:** `{{ execution_date }}`
+    *   **目标信息:** `{{ target_info }}` {# 由 target_config 中的 info_command 获取 #}
+    *   **单元版本:** `{{ unit_version }}` {# 由 unit_version_command 获取 #}
 
-## 1. 安装依赖 {id="install"}
+    ## 1. 安装依赖 {id="install"}
 
-安装必要的依赖包。
+    安装必要的依赖包。
 
-```bash {id="install-deps" exec=true description="安装依赖" assert.exit_code=0}
-sudo apt-get update
-sudo apt-get install -y libdependency1
-echo "依赖安装完成。"
-```
+    ```bash {id="install-deps" exec=true description="安装依赖" assert.exit_code=0}
+    sudo apt-get update
+    sudo apt-get install -y libdependency1
+    echo "依赖安装完成。"
+    ```
 
-**结果:**
-```output {ref="install-deps"}
-# lintestor 将在此处插入 install-deps 命令的输出
-```
+    **结果:**
+    ```output {ref="install-deps"}
+    # lintestor 将在此处插入 install-deps 命令的输出
+    ```
 
-## 2. 执行核心功能测试 {id="core-test" depends_on=["install"]}
+    ## 2. 执行核心功能测试 {id="core-test" depends_on=["install"]}
 
-运行核心功能测试脚本。
+    运行核心功能测试脚本。
 
-```bash {id="run-core" exec=true description="运行核心测试" assert.stdout_contains="All tests passed" extract.pass_rate=/Pass Rate: (\d+)%/}
-echo "正在运行核心测试..."
-sleep 2
-echo "Pass Rate: 100%"
-echo "All tests passed."
-```
+    ```bash {id="run-core" exec=true description="运行核心测试" assert.stdout_contains="All tests passed" extract.pass_rate=/Pass Rate: (\d+)%/}
+    echo "正在运行核心测试..."
+    sleep 2
+    echo "Pass Rate: 100%"
+    echo "All tests passed."
+    ```
 
-**结果:**
-```output {ref="run-core"}
-# lintestor 将在此处插入 run-core 命令的输出
-```
+    **结果:**
+    ```output {ref="run-core"}
+    # lintestor 将在此处插入 run-core 命令的输出
+    ```
 
-测试通过率: {{ pass_rate }}%
+    测试通过率: {{ pass_rate }}%
 
-## 3. 性能测试 {id="perf-test" depends_on=["install"]}
+    ## 3. 性能测试 {id="perf-test" depends_on=["install"]}
 
-运行性能基准测试。
+    运行性能基准测试。
 
-```bash {id="run-perf" exec=true description="运行性能测试" assert.exit_code=0 extract.score=/Score: (\d+\.\d+)/}
-echo "正在运行性能测试..."
-sleep 3
-echo "Score: 1234.56"
-```
+    ```bash {id="run-perf" exec=true description="运行性能测试" assert.exit_code=0 extract.score=/Score: (\d+\.\d+)/}
+    echo "正在运行性能测试..."
+    sleep 3
+    echo "Score: 1234.56"
+    ```
 
-**结果:**
-```output {ref="run-perf"}
-# lintestor 将在此处插入 run-perf 命令的输出
-```
+    **结果:**
+    ```output {ref="run-perf"}
+    # lintestor 将在此处插入 run-perf 命令的输出
+    ```
 
-性能得分: {{ score }}
+    性能得分: {{ score }}
 
-## 4. 测试总结 {id="summary" generate_summary=true}
+    ## 4. 测试总结 {id="summary" generate_summary=true}
 
-| 测试步骤描述     | 状态                     |
-|-----------------|--------------------------|
-| 安装依赖        | {{ status.install-deps }} |
-| 运行核心测试    | {{ status.run-core }}     |
-| 运行性能测试    | {{ status.run-perf }}     |
+    | 测试步骤描述     | 状态                     |
+    |-----------------|--------------------------|
+    | 安装依赖        | {{ status.install-deps }} |
+    | 运行核心测试    | {{ status.run-core }}     |
+    | 运行性能测试    | {{ status.run-perf }}     |
 
 ```
 
