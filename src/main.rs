@@ -5,11 +5,10 @@ mod markdown_report;
 mod test_runner;
 mod test_environment;
 mod test_executor;
-mod testenv_manager;
-mod testscript_manager;
+mod test_template_manager;
 mod utils;
 use crate::config::target_config::TargetConfig;
-use crate::test_runner::{local::LocalTestRunner, remote::RemoteTestRunner, TestRunner};
+use crate::test_runner::{local::LocalTestRunner, remote::RemoteTestRunner, qemu::QemuTestRunner, TestRunner};
 use crate::utils::Report;
 use clap::{Arg, ArgAction, ArgMatches, Command};
 use env_logger::Env;
@@ -25,7 +24,7 @@ const VERSION: &str = env!("CARGO_PKG_VERSION");
 const NAME: &str = env!("CARGO_PKG_NAME");
 /// The authors of the application.
 const AUTHORS: &str = env!("CARGO_PKG_AUTHORS");
-/// The description of the application.
+/// The detemplateion of the application.
 const DESCRIPTION: &str = env!("CARGO_PKG_DESCRIPTION");
 
 /// The main function of the application.
@@ -189,36 +188,73 @@ fn run_tests(
 
         let run_locally = target_config.testing_type == "locally";
         let via_boardtest = target_config.testing_type == "boardtest";
-        let purely_remote = target_config.testing_type != "qemu-based-remote";
-        let testenv_manager = crate::testenv_manager::TestEnvManager::new(&target_config, dir);
+        let is_qemu = target_config.testing_type == "qemu-based-remote";
 
         info!(
-            "Connection method: {}",
-            if let Some(connection) = &target_config.connection {
-                &connection.method
-            } else {
-                "None (Locally)"
-            }
+            "Testing type: {}",
+            &target_config.testing_type
         );
 
-        let qemu_needed = !run_locally && !purely_remote;
-
-        if qemu_needed {
-            if let Err(e) = testenv_manager.start() {
-                error!(
-                    "Failed to initialize test environment for {}: {}",
-                    target, e
-                );
+        // 基于测试环境类型选择适当的测试运行器
+        let mut test_runner: Box<dyn TestRunner> = if run_locally {
+            // 本地测试环境
+            Box::new(LocalTestRunner::new())
+        } else if via_boardtest {
+            // Boardtest测试环境
+            if let Some(ref boardtest_config) = target_config.boardtest {
+                Box::new(BoardtestRunner::new(boardtest_config))
+            } else {
+                error!("No boardtest config found for {}", target);
                 continue;
             }
-        }
+        } else {
+            // QEMU或远程SSH环境
+            let connection_config = match &target_config.connection {
+                Some(c) => c,
+                None => {
+                    error!("No connection config found for {}", target);
+                    continue;
+                }
+            };
+            
+            let ip = connection_config.ip.as_deref().unwrap_or("localhost");
+            let port = connection_config.port.unwrap_or(2222);
+            let username = connection_config.username.as_deref().unwrap_or("root");
+            let password = connection_config.password.as_deref();
+            let private_key_path = connection_config.private_key_path.as_deref();
+            
+            if is_qemu {
+                // QEMU虚拟机环境
+                Box::new(QemuTestRunner::new(
+                    ip.to_string(),
+                    port,
+                    username.to_string(),
+                    password.map(|p| p.to_string()),
+                    private_key_path.map(|p| p.to_string()),
+                    target_config.startup_template.clone(),
+                    target_config.stop_template.clone(),
+                    dir,
+                ))
+            } else {
+                // 普通远程SSH环境
+                debug!("Connecting to remote environment: IP={}, Port={}, Username={}", ip, port, username);
+                Box::new(RemoteTestRunner::new(
+                    ip.to_string(),
+                    port,
+                    username.to_string(),
+                    password.map(|p| p.to_string()),
+                    private_key_path.map(|p| p.to_string()),
+                ))
+            }
+        };
 
+        // 获取目标下的所有测试单元
         let units_of_target = utils::get_units(target, dir).unwrap_or_default();
         for unit in units
             .iter()
             .filter(|p| units_of_target.iter().any(|pkg| p == &pkg))
         {
-            let mut skipped_scripts = Vec::new();
+            let mut skipped_templates = Vec::new();
 
             let unit_directory = target_directory.join(unit);
             if !unit_directory.exists() {
@@ -228,6 +264,8 @@ fn run_tests(
                 );
                 continue;
             }
+            
+            // 处理跳过已成功的测试逻辑
             if skip_successful {
                 let report_path = unit_directory.join("report.json");
                 if let Ok(file) = File::open(&report_path) {
@@ -245,7 +283,7 @@ fn run_tests(
                                             target, unit, result.test_name
                                         );
 
-                                        skipped_scripts.push(result.test_name);
+                                        skipped_templates.push(result.test_name);
                                     }
                                 }
                             }
@@ -265,86 +303,41 @@ fn run_tests(
                 }
             }
 
+            // 检查是否应该跳过该单元
             if let Some(skip_units) = &target_config.skip_units {
                 if skip_units.iter().any(|pkg| pkg == unit) {
-                    info!("Skipping test for {}/{}", target, unit);
+                    info!("Skipping test for {}/{} as configured in config.toml", target, unit);
                     continue;
                 }
             }
 
+            // 输出测试信息
             info!(
-                "Running test for {}/{}, {}.",
+                "Running test for {}/{}, using {} environment",
                 target,
                 unit,
-                if run_locally {
-                    "locally"
-                } else if purely_remote {
-                    "remotely"
-                } else if via_boardtest {
-                    "via Boardtest Server"
-                } else {
-                    "with QEMU"
-                }
+                &target_config.testing_type
             );
 
-            // TODO: refactor to matching-case and runner_manager
-            let mut test_runner: Box<dyn TestRunner> = if run_locally {
-                Box::new(LocalTestRunner::new())
-            } else if via_boardtest {
-                if let Some(ref boardtest_config) = target_config.boardtest {
-                    Box::new(BoardtestRunner::new(boardtest_config))
-                } else {
-                    error!("No boardtest config found for {}", target);
-                    continue;
-                }
-            } else {
-                // assert!(target_config.connection.method == "ssh");
-
-                let _connection_config = match &target_config.connection {
-                    Some(c) => c,
-                    None => {
-                        error!("No connection config found for {}", target);
-                        continue;
-                    }
-                };
-                let ip = _connection_config.ip.as_deref().unwrap_or("localhost");
-                let port = _connection_config.port.unwrap_or(2222);
-                let username = _connection_config.username.as_deref().unwrap_or("root");
-                let password = _connection_config.password.as_deref();
-                let private_key_path = _connection_config.private_key_path.as_deref();
-                debug!("Connecting to environment with credentials: IP={}, Port={}, Username={}, Password={}",ip,port,username,password.unwrap_or("None"));
-                Box::new(RemoteTestRunner::new(
-                    ip.to_string(),
-                    port,
-                    username.to_string(),
-                    password.map(|p| p.to_string()),
-                    private_key_path.map(|p| p.to_string()),
-                ))
-            };
-
-            match test_runner.run_test(target, unit, skipped_scripts, dir) {
+            // 执行测试并处理结果
+            match test_runner.run_test(target, unit, skipped_templates, dir) {
                 Ok(_) => info!("Test passed for {}/{}", target, unit),
                 Err(e) => {
-                    error!("Test failed for {}/{}: {}", target, unit, e); // error or warn?
+                    error!("Test failed for {}/{}: {}", target, unit, e);
+                    // 交互式提示是否继续
                     if *allow_interactive_prompts {
                         use dialoguer::Confirm;
                         let resume = Confirm::new()
-                            .with_prompt(format!("An previous test was failed for {}/{}. Do you want to continue the test?", target, unit))
+                            .with_prompt(format!("Test failed for {}/{}. Do you want to continue testing?", target, unit))
                             .default(true)
                             .interact()
                             .unwrap();
                         if !resume {
-                            info!("Skipping the test for {}/{}", target, unit);
+                            info!("Stopping tests for {}", target);
                             break;
                         }
                     }
                 }
-            }
-        }
-
-        if !run_locally {
-            if let Err(e) = testenv_manager.stop() {
-                error!("Failed to stop environment for {}: {}", target, e);
             }
         }
     }

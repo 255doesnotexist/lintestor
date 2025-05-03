@@ -1,5 +1,5 @@
 enabled = true
 testing_type = "locally"
-# startup_script = "prerequisite.sh"
-# stop_script = "prerequisite.sh"
+# startup_template = "prerequisite.sh"
+# stop_template = "prerequisite.sh"
 skip_units = ["docker"]

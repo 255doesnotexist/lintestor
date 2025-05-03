@@ -2,7 +2,7 @@
 
 use crate::aggregator::generate_report;
 use crate::test_environment::TestEnvironment;
-use crate::testscript_manager::TestScriptManager;
+use crate::test_template_manager::TestTemplateManager;
 use crate::utils::{PackageMetadata, Report, TestResult, REMOTE_TMP_DIR};
 use log::{debug, info};
 use std::error::Error;
@@ -25,14 +25,14 @@ impl<'a> TestExecutor<'a> {
         &mut self,
         target: &str,
         unit: &str,
-        skip_scripts: Vec<String>,
+        skip_templates: Vec<String>,
         dir: &Path,
     ) -> Result<Report, Box<dyn Error>> {
         info!("在本地环境中执行测试：{}/{}", target, unit);
         // 设置环境
         self.environment.setup()?;
 
-        let script_manager = TestScriptManager::new(target, unit, skip_scripts, dir)?;
+        let template_manager = TestTemplateManager::new(target, unit, skip_templates, dir)?;
         let (os_version, kernel_version) = self.environment.get_os_info()?;
         let mut all_tests_passed = true;
         let mut test_results = Vec::new();
@@ -43,9 +43,9 @@ impl<'a> TestExecutor<'a> {
         // 确保临时目录存在
         self.environment.mkdir(REMOTE_TMP_DIR)?;
 
-        for script_path in script_manager.get_test_scripts() {
+        for template_path in template_manager.get_test_templates() {
             // 构造要在单元目录上下文中运行的命令
-            let script_name = PathBuf::from(script_path)
+            let template_name = PathBuf::from(template_path)
                 .file_name()
                 .unwrap_or_default()
                 .to_string_lossy()
@@ -59,7 +59,7 @@ impl<'a> TestExecutor<'a> {
                 } else {
                     String::from("")
                 },
-                script_path
+                template_path
             );
 
             let result = self.environment.run_command(&command)?;
@@ -67,17 +67,17 @@ impl<'a> TestExecutor<'a> {
             all_tests_passed &= test_passed;
 
             test_results.push(TestResult {
-                test_name: script_name,
+                test_name: template_name,
                 output: result.output,
                 passed: test_passed,
             });
         }
 
-        let unit_metadata = if let Some(metadata_script) = script_manager.get_metadata_script() {
+        let unit_metadata = if let Some(metadata_template) = template_manager.get_metadata_template() {
             // 构造元数据命令
             let metadata_command = format!(
                 "source {} && echo $PACKAGE_VERSION && echo $PACKAGE_PRETTY_NAME && echo $PACKAGE_TYPE && echo $PACKAGE_DESCRIPTION",
-                metadata_script
+                metadata_template
             );
             
             let metadata_output = self.environment.run_command(&metadata_command)?;
@@ -86,7 +86,7 @@ impl<'a> TestExecutor<'a> {
             let mut version = String::new();
             let mut pretty_name = String::new();
             let mut unit_type = String::new();
-            let mut description = String::new();
+            let mut detemplateion = String::new();
             
             let mut lines = metadata_output.output.lines();
             if let Some(stdout_line) = lines.find(|l| l.starts_with("stdout:")) {
@@ -94,7 +94,7 @@ impl<'a> TestExecutor<'a> {
                 version = data_lines.next().unwrap_or("").trim().to_string();
                 pretty_name = data_lines.next().unwrap_or("").trim().to_string();
                 unit_type = data_lines.next().unwrap_or("").trim().to_string();
-                description = data_lines.next().unwrap_or("").trim().to_string();
+                detemplateion = data_lines.next().unwrap_or("").trim().to_string();
             }
 
             if version.is_empty() && pretty_name.is_empty() {
@@ -108,7 +108,7 @@ impl<'a> TestExecutor<'a> {
                     unit_version: version,
                     unit_pretty_name: pretty_name,
                     unit_type,
-                    unit_description: description,
+                    unit_detemplateion: detemplateion,
                 }
             }
         } else {
@@ -139,7 +139,7 @@ impl<'a> TestExecutor<'a> {
         &mut self,
         target: &str,
         unit: &str,
-        skip_scripts: Vec<String>,
+        skip_templates: Vec<String>,
         dir: &Path,
     ) -> Result<Report, Box<dyn Error>> {
         info!("在远程环境中执行测试：{}/{}", target, unit);
@@ -150,7 +150,7 @@ impl<'a> TestExecutor<'a> {
         let local_unit_dir = dir.join(format!("{}/{}", target, unit));
         let tar_filename = format!("{}.tar.gz", unit);
         let local_tar_path = dir.join(&tar_filename);
-        let prerequisite_script_local_path = dir.join(format!("{}/prerequisite.sh", target));
+        let prerequisite_template_local_path = dir.join(format!("{}/prerequisite.sh", target));
 
         // --- 压缩本地目录 ---
         info!("压缩本地目录: {}", local_unit_dir.display());
@@ -203,13 +203,13 @@ impl<'a> TestExecutor<'a> {
         info!("上传 {} 到 {}", tar_filename, remote_tar_path);
         self.environment.upload_file(&local_tar_path, &remote_tar_path, 0o644)?;
 
-        if prerequisite_script_local_path.exists() {
+        if prerequisite_template_local_path.exists() {
             info!(
                 "上传前提条件脚本到 {}",
                 remote_prerequisite_path
             );
             self.environment.upload_file(
-                &prerequisite_script_local_path,
+                &prerequisite_template_local_path,
                 remote_prerequisite_path,
                 0o755, // 设为可执行
             )?;
@@ -235,30 +235,30 @@ impl<'a> TestExecutor<'a> {
 
         // --- 执行测试 ---
         info!("在远程目录中执行测试: {}", remote_unit_dir);
-        let script_manager = TestScriptManager::new(target, unit, skip_scripts, &local_unit_dir)?; // 使用本地目录来发现脚本
+        let template_manager = TestTemplateManager::new(target, unit, skip_templates, &local_unit_dir)?; // 使用本地目录来发现脚本
         let mut all_tests_passed = true;
         let mut test_results = Vec::new();
 
-        for script_name in script_manager.get_test_script_names() {
+        for template_name in template_manager.get_test_template_names() {
             // 构造命令在远程单元目录内运行
             let command = format!(
                 "cd {} && {} source {}",
                 remote_unit_dir,
-                if prerequisite_script_local_path.exists() {
+                if prerequisite_template_local_path.exists() {
                     format!("source {} &&", remote_prerequisite_path)
                 } else {
                     String::from("")
                 },
-                script_name // 脚本名称已经是相对路径
+                template_name // 脚本名称已经是相对路径
             );
 
-            info!("执行远程测试脚本: {}", script_name);
+            info!("执行远程测试脚本: {}", template_name);
             let result = self.environment.run_command(&command)?;
             let test_passed = result.exit_status == 0;
             all_tests_passed &= test_passed;
 
             test_results.push(TestResult {
-                test_name: script_name,
+                test_name: template_name,
                 output: result.output,
                 passed: test_passed,
             });
@@ -267,10 +267,10 @@ impl<'a> TestExecutor<'a> {
         // --- 获取元数据 ---
         info!("从远程环境收集元数据");
         let (os_version, kernel_version) = self.environment.get_os_info()?;
-        let unit_metadata = if let Some(metadata_script_name) = script_manager.get_metadata_script_name() {
+        let unit_metadata = if let Some(metadata_template_name) = template_manager.get_metadata_template_name() {
             let metadata_command = format!(
                 "cd {} && source {} && echo $PACKAGE_VERSION && echo $PACKAGE_PRETTY_NAME && echo $PACKAGE_TYPE && echo $PACKAGE_DESCRIPTION",
-                remote_unit_dir, metadata_script_name
+                remote_unit_dir, metadata_template_name
             );
             
             let metadata_output = self.environment.run_command(&metadata_command)?;
@@ -279,7 +279,7 @@ impl<'a> TestExecutor<'a> {
             let mut version = String::new();
             let mut pretty_name = String::new();
             let mut unit_type = String::new();
-            let mut description = String::new();
+            let mut detemplateion = String::new();
             
             let mut lines = metadata_output.output.lines();
             if let Some(stdout_line) = lines.find(|l| l.starts_with("stdout:")) {
@@ -287,7 +287,7 @@ impl<'a> TestExecutor<'a> {
                 version = data_lines.next().unwrap_or("").trim().to_string();
                 pretty_name = data_lines.next().unwrap_or("").trim().to_string();
                 unit_type = data_lines.next().unwrap_or("").trim().to_string();
-                description = data_lines.next().unwrap_or("").trim().to_string();
+                detemplateion = data_lines.next().unwrap_or("").trim().to_string();
             }
 
             if version.is_empty() && pretty_name.is_empty() && metadata_output.exit_status != 0 {
@@ -301,7 +301,7 @@ impl<'a> TestExecutor<'a> {
                     unit_version: version,
                     unit_pretty_name: pretty_name,
                     unit_type,
-                    unit_description: description,
+                    unit_detemplateion: detemplateion,
                 }
             }
         } else {

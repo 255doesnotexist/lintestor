@@ -5,7 +5,7 @@ use crate::config::boardtest_config::BoardtestConfig;
 use crate::test_environment::boardtest::BoardtestEnvironment;
 use crate::test_environment::TestEnvironment;
 use crate::test_runner::TestRunner;
-use crate::testscript_manager::TestScriptManager;
+use crate::test_template_manager::TestTemplateManager;
 use crate::utils::{PackageMetadata, Report, TestResult, REMOTE_TMP_DIR};
 use base64::{engine::general_purpose::STANDARD as BASE64, Engine as _};
 use log::{debug, info, warn};
@@ -38,7 +38,7 @@ impl TestRunner for BoardtestRunner {
     ///
     /// * `target` - 分发版本/目标名称
     /// * `unit` - 测试单元名称
-    /// * `skip_scripts` - 要跳过的脚本列表
+    /// * `skip_templates` - 要跳过的脚本列表
     /// * `dir` - 包含测试文件的基础目录
     ///
     /// # 错误
@@ -48,17 +48,17 @@ impl TestRunner for BoardtestRunner {
         &mut self,
         target: &str,
         unit: &str,
-        skip_scripts: Vec<String>,
+        skip_templates: Vec<String>,
         dir: &Path,
     ) -> Result<(), Box<dyn Error>> {
         info!("开始在 Boardtest 上为 {}/{} 执行测试", target, unit);
         
-        // 注意：在 Boardtest 环境中，skip_scripts 实际上无法直接使用
+        // 注意：在 Boardtest 环境中，skip_templates 实际上无法直接使用
         // 因为所有测试脚本都打包到一个命令中执行
-        if !skip_scripts.is_empty() {
+        if !skip_templates.is_empty() {
             warn!(
                 "应跳过的脚本: {:?}，但这个功能在 Boardtest 环境中尚未实现。",
-                skip_scripts
+                skip_templates
             );
         }
 
@@ -92,7 +92,7 @@ impl TestRunner for BoardtestRunner {
         let base64_content = BASE64.encode(&tar_buffer);
         
         // 创建测试脚本
-        let test_script = format!(
+        let test_template = format!(
             "cd {} && \
              mkdir -p test && \
              echo '{}' | base64 -d | tar xzf - -C test && \
@@ -103,7 +103,7 @@ impl TestRunner for BoardtestRunner {
 
         // 执行测试命令
         info!("在 Boardtest 上执行测试脚本");
-        let result = self.environment.execute_command(&test_script)?;
+        let result = self.environment.execute_command(&test_template)?;
         let test_passed = result.exit_status == 0;
 
         // 创建测试结果

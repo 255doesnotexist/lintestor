@@ -39,7 +39,7 @@ impl TestRunner for LocalTestRunner {
     ///
     /// * `target` - 分发版本/目标的名称
     /// * `unit` - 测试单元的名称
-    /// * `skip_scripts` - 要跳过的脚本名称列表
+    /// * `skip_templates` - 要跳过的脚本名称列表
     /// * `dir` - 包含测试文件的基础目录
     ///
     /// # 错误
@@ -49,14 +49,14 @@ impl TestRunner for LocalTestRunner {
         &mut self,
         target: &str,
         unit: &str,
-        skip_scripts: Vec<String>,
+        skip_templates: Vec<String>,
         dir: &Path,
     ) -> Result<(), Box<dyn Error>> {
         // 创建测试执行器
         let mut executor = TestExecutor::new(&mut self.environment);
         
         // 执行测试并获取报告
-        let report = executor.execute_local_test(target, unit, skip_scripts, dir)?;
+        let report = executor.execute_local_test(target, unit, skip_templates, dir)?;
         
         // 生成报告文件
         let report_path = dir.join(format!("{}/{}/report.json", target, unit));

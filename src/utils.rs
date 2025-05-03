@@ -46,8 +46,8 @@ pub struct PackageMetadata {
     pub unit_pretty_name: String,
     /// The type of the unit (temporarily deprecated).
     pub unit_type: String,
-    /// Brief description of the unit (optional).
-    pub unit_description: String,
+    /// Brief detemplateion of the unit (optional).
+    pub unit_detemplateion: String,
 }
 
 impl Default for PackageMetadata {
@@ -56,7 +56,7 @@ impl Default for PackageMetadata {
             unit_pretty_name: String::new(),
             unit_type: String::from("unit"),
             unit_version: String::from("Unknown"),
-            unit_description: String::new(),
+            unit_detemplateion: String::new(),
         }
     }
 }

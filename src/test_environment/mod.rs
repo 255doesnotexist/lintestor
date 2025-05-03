@@ -3,6 +3,7 @@
 pub mod local;
 pub mod remote;
 pub mod boardtest;
+pub mod qemu;
 
 use crate::utils::CommandOutput;
 use std::error::Error;

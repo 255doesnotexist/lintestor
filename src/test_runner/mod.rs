@@ -7,6 +7,7 @@ use std::path::Path;
 pub mod boardtest;
 pub mod local;
 pub mod remote;
+pub mod qemu;
 
 /// 测试执行器 trait，负责使用特定的 TestEnvironment 协调测试执行。
 pub trait TestRunner {
@@ -19,7 +20,7 @@ pub trait TestRunner {
     ///
     /// * `target` - 分发版本/目标的名称。
     /// * `unit` - 测试单元的名称。
-    /// * `skip_scripts` - 要跳过的脚本名称列表。
+    /// * `skip_templates` - 要跳过的脚本名称列表。
     /// * `dir` - 包含测试文件的基础目录。
     ///
     /// # 错误
@@ -29,7 +30,7 @@ pub trait TestRunner {
         &mut self,
         target: &str,
         unit: &str,
-        skip_scripts: Vec<String>,
+        skip_templates: Vec<String>,
         dir: &Path,
     ) -> Result<(), Box<dyn Error>>;
 }

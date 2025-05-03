@@ -70,7 +70,7 @@ pub fn generate_markdown_report(
         ));
 
         markdown.push_str("> 图标说明 Legend: ✅ = 通过 Passed; ⚠️ = 部分测试不通过 Not all tests passed; ❌ = 全部测试不通过 All tests failed; ❓ = 未知 Unknown\n\n");
-        markdown.push_str("| 软件包 Package | 种类 Type | "); // TODO: add field for description
+        markdown.push_str("| 软件包 Package | 种类 Type | "); // TODO: add field for detemplateion
         for target in targets {
             markdown.push_str(&format!("[{}](#{}) | ", target, target));
         }
