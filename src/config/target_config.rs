@@ -1,4 +1,7 @@
 //! Represents the configuration for each target.
+use std::error::Error;
+use std::path::Path;
+
 use crate::config::boardtest_config::BoardtestConfig;
 use crate::config::connection_config::ConnectionConfig;
 /// This struct is used to deserialize the configuration from a file using the `utils::read_toml_from_file` method.
@@ -30,7 +33,7 @@ fn is_not_boardtest(value: &String) -> bool {
     value != "boardtest"
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Clone)]
 pub struct TargetConfig {
     pub enabled: bool,
     pub testing_type: String, // 'locally' or 'remote' or 'qemu-based-remote' or 'boardtest'
@@ -51,4 +54,11 @@ pub struct TargetConfig {
     pub boardtest: Option<BoardtestConfig>,
 
     pub skip_units: Option<Vec<String>>,
+}
+
+impl TargetConfig {
+    /// 
+    pub fn from_file(path: &Path) -> Result<Self, Box<dyn Error>> {
+        crate::utils::read_toml_from_file(&path.to_path_buf())
+    }
 }

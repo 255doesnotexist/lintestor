@@ -80,6 +80,22 @@ pub struct CliArgs {
     /// 标签 - 通过标签筛选测试
     #[clap(long = "tag")]
     pub tag: Option<String>,
+
+    /// 目标配置文件 - 指定目标配置文件路径
+    #[clap(long = "target")]
+    pub target: Option<PathBuf>,
+
+    /// 出错继续 - 即使测试失败也继续执行其余测试
+    #[clap(long = "continue-on-error")]
+    pub continue_on_error: bool,
+
+    /// 执行命令超时时间（秒）
+    #[clap(long = "timeout", default_value = "300")]
+    pub timeout: u64,
+
+    /// 命令失败后重试次数
+    #[clap(long = "retry", default_value = "3")]
+    pub retry: u32,
 }
 
 impl CliArgs {

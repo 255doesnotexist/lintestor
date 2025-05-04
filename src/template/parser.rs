@@ -10,7 +10,7 @@ use regex::Regex;
 use log::{debug, info, warn, error};
 
 use crate::template::{
-    TestTemplate, TemplateMetadata, TestStep, AssertionType, DataExtraction
+    TestTemplate, TemplateMetadata, TestStep, AssertionType, DataExtraction, TemplateReference
 };
 
 /// 解析Markdown测试模板内容
@@ -145,13 +145,45 @@ fn parse_metadata(yaml: &str) -> Result<TemplateMetadata> {
         _ => Vec::new(),
     };
     
+    // 提取外部模板引用
+    let references = match yaml_value["references"] {
+        serde_yaml::Value::Sequence(ref seq) => {
+            let mut refs = Vec::new();
+            for ref_value in seq {
+                if let serde_yaml::Value::Mapping(ref mapping) = ref_value {
+                    let template_path = mapping.get(&serde_yaml::Value::String("template".to_string()))
+                        .and_then(|v| v.as_str())
+                        .ok_or_else(|| anyhow!("references中的项缺少'template'字段"))?
+                        .to_string();
+                        
+                    let namespace = mapping.get(&serde_yaml::Value::String("as".to_string()))
+                        .and_then(|v| v.as_str())
+                        .ok_or_else(|| anyhow!("references中的项缺少'as'字段"))?
+                        .to_string();
+                        
+                    debug!("提取模板引用: template={}, as={}", template_path, namespace);
+                    refs.push(TemplateReference {
+                        template_path,
+                        namespace,
+                    });
+                }
+            }
+            refs
+        },
+        _ => Vec::new(),
+    };
+    
+    if !references.is_empty() {
+        debug!("共提取到 {} 个外部模板引用", references.len());
+    }
+    
     // 收集其他自定义字段
     let mut custom = HashMap::new();
     if let serde_yaml::Value::Mapping(mapping) = &yaml_value {
         for (key, value) in mapping {
             // 跳过已处理的标准字段
             if let Some(key_str) = key.as_str() {
-                if ["title", "target_config", "unit_name", "unit_version_command", "tags"]
+                if ["title", "target_config", "unit_name", "unit_version_command", "tags", "references"]
                     .contains(&key_str) {
                     continue;
                 }
@@ -170,6 +202,7 @@ fn parse_metadata(yaml: &str) -> Result<TemplateMetadata> {
         unit_name,
         unit_version_command,
         tags,
+        references,
         custom,
     })
 }
@@ -863,6 +896,11 @@ unit_version_command: "myunit --version"
 tags:
   - core
   - feature-abc
+references:
+  - template: "external_template_1.md"
+    as: "namespace1"
+  - template: "external_template_2.md"
+    as: "namespace2"
 custom_field: "custom value"
 "#;
         
@@ -872,6 +910,11 @@ custom_field: "custom value"
         assert_eq!(metadata.unit_name, "MyUnit");
         assert_eq!(metadata.unit_version_command, Some("myunit --version".to_string()));
         assert_eq!(metadata.tags, vec!["core".to_string(), "feature-abc".to_string()]);
+        assert_eq!(metadata.references.len(), 2);
+        assert_eq!(metadata.references[0].template_path, "external_template_1.md");
+        assert_eq!(metadata.references[0].namespace, "namespace1");
+        assert_eq!(metadata.references[1].template_path, "external_template_2.md");
+        assert_eq!(metadata.references[1].namespace, "namespace2");
         assert_eq!(metadata.custom.get("custom_field"), Some(&"custom value".to_string()));
     }
     

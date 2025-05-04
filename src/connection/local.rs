@@ -84,6 +84,18 @@ impl ConnectionManager for LocalConnectionManager {
         })
     }
     
+    /// 设置连接（本地连接无需设置）
+    fn setup(&mut self) -> Result<()> {
+        // 本地连接不需要额外设置
+        Ok(())
+    }
+    
+    /// 清理连接（本地连接无需清理）
+    fn teardown(&mut self) -> Result<()> {
+        // 本地连接不需要额外清理
+        Ok(())
+    }
+    
     /// 关闭连接（本地连接无需关闭）
     fn close(&mut self) -> Result<()> {
         // 本地连接不需要显式关闭

@@ -24,6 +24,12 @@ pub trait ConnectionManager {
     
     /// 关闭连接
     fn close(&mut self) -> Result<()>;
+    
+    /// 设置连接
+    fn setup(&mut self) -> Result<()>;
+    
+    /// 清理连接
+    fn teardown(&mut self) -> Result<()>;
 }
 
 /// 连接工厂，用于创建适合指定配置的连接管理器

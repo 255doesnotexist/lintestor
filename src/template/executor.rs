@@ -101,6 +101,9 @@ impl<'a> TemplateExecutor<'a> {
         // 2. 填充特殊变量
         self.populate_special_vars(&mut context, &target_config)?;
         
+        // 2.1 加载外部引用模板的变量（新增功能）
+        self.load_external_references(&mut context)?;
+        
         // 3. 构建依赖图并生成执行顺序
         let execution_order = self.build_execution_order(&template)?;
         
@@ -181,6 +184,440 @@ impl<'a> TemplateExecutor<'a> {
         
         Ok(execution_result)
     }
+    
+    /// 加载外部引用模板的变量
+    fn load_external_references(&mut self, context: &mut TemplateContext) -> Result<()> {
+        // 检查是否有外部引用
+        if context.template.metadata.references.is_empty() {
+            debug!("没有外部引用模板需要加载");
+            return Ok(());
+        }
+        
+        debug!("开始加载 {} 个外部引用模板的变量", context.template.metadata.references.len());
+        
+        // Clone the references to avoid borrowing context immutably inside the loop
+        let references = context.template.metadata.references.clone();
+        
+        for reference in &references { // Iterate over the cloned vector
+            // Assume the referenced template path is relative to the './' directory in work_dir
+            // If reference.template_path is absolute, join typically does nothing useful unless it's relative to root.
+            // Consider adding logic here to check if reference.template_path is already absolute.
+            let tests_dir = self.work_dir.clone();
+            let full_template_path = tests_dir.join(&reference.template_path);
+            // Convert the resolved path to a string for use in the rest of the function
+            let template_path = full_template_path.to_string_lossy().to_string();
+            let namespace = reference.namespace.clone();
+            
+            debug!("尝试加载外部模板: {}, 命名空间: {}", template_path, namespace);
+            
+            // 可能的报告目录路径列表
+            let mut possible_report_paths = Vec::new();
+            
+            // 1. reports目录 (默认)
+            let mut report_path = self.work_dir.clone();
+            report_path.push("reports");
+            possible_report_paths.push(report_path.clone());
+            debug!("搜索路径1 (reports目录): {}", report_path.display());
+            
+            // 2. 与当前测试模板相同目录下的reports子目录
+            if let Some(parent) = context.template.file_path.parent() {
+                let mut local_report_path = parent.to_path_buf();
+                local_report_path.push("reports");
+                possible_report_paths.push(local_report_path.clone());
+                debug!("搜索路径2 (模板目录下的reports): {}", local_report_path.display());
+            }
+            
+            // 3. 模板所在的父目录
+            if let Some(parent) = context.template.file_path.parent() {
+                possible_report_paths.push(parent.to_path_buf());
+                debug!("搜索路径3 (模板所在目录): {}", parent.display());
+            }
+            
+            // 4. 工作目录的根目录
+            possible_report_paths.push(self.work_dir.clone());
+            debug!("搜索路径4 (工作目录): {}", self.work_dir.display());
+            
+            // 如果命名空间包含路径分隔符，进行分割处理
+            let components: Vec<&str> = template_path.split('/').collect();
+            let template_path_str = template_path.as_str(); // Create a longer-lived binding
+            let filename = components.last().unwrap_or(&template_path_str); // Use the binding
+            
+            // 根据约定，报告文件名是<template_name>_<target_name>.report.md
+            // 我们只取template_name部分，然后找到对应的报告文件
+            let report_file_prefix = if filename.ends_with(".test.md") {
+                filename[..filename.len() - 8].to_string() // 去掉 .test.md
+            } else if filename.ends_with(".md") {
+                filename[..filename.len() - 3].to_string() // 去掉 .md
+            } else {
+                filename.to_string()
+            };
+            
+            debug!("开始在多个可能位置查找以 {} 开头的报告文件", report_file_prefix);
+            
+            // 在所有可能路径中查找匹配的报告文件
+            let mut found_report = None;
+            
+            for path in &possible_report_paths {
+                debug!("在 {} 目录中查找报告文件", path.display());
+                
+                // 检查目录是否存在
+                if !path.exists() || !path.is_dir() {
+                    debug!("目录 {} 不存在或不是一个目录", path.display());
+                    continue;
+                }
+                
+                if let Ok(entries) = std::fs::read_dir(path) {
+                    for entry in entries {
+                        if let Ok(entry) = entry {
+                            let entry_path = entry.path();
+                            if entry_path.is_file() {
+                                if let Some(file_name) = entry_path.file_name() {
+                                    let file_name_str = file_name.to_string_lossy();
+                                    
+                                    // 支持多种命名格式:
+                                    // 1. [prefix]_*.report.md
+                                    // 2. [prefix].report.md
+                                    // 3. [prefix]*.md (如果在报告目录下)
+                                    if (file_name_str.starts_with(&report_file_prefix) && 
+                                       (file_name_str.ends_with(".report.md") || 
+                                        path.ends_with("reports") && file_name_str.ends_with(".md"))) ||
+                                       file_name_str == format!("{}.report.md", report_file_prefix) {
+                                        
+                                        debug!("找到匹配的报告文件: {}", entry_path.display());
+                                        found_report = Some(entry_path);
+                                        break;
+                                    } else {
+                                        // 记录所有检查过的文件名，方便调试
+                                        debug!("检查文件: {}, 但不匹配模式", file_name_str);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                } else {
+                    debug!("无法读取目录: {}", path.display());
+                }
+                
+                if found_report.is_some() {
+                    break;
+                }
+            }
+            
+            // 如果找到匹配的报告文件，提取其中的变量
+            if let Some(report_path) = found_report {
+                debug!("从报告文件 {} 中提取变量", report_path.display());
+                
+                // 读取报告文件内容
+                let content = std::fs::read_to_string(&report_path)
+                    .with_context(|| format!("无法读取报告文件: {}", report_path.display()))?;
+                
+                // 提取变量
+                self.extract_variables_from_report(&content, namespace, context)?;
+            } else {
+                warn!("未找到匹配的报告文件: {}*.report.md 或 {}.report.md", 
+                     report_file_prefix, report_file_prefix);
+                debug!("已尝试查找的目录: {}", possible_report_paths
+                      .iter()
+                      .map(|p| p.display().to_string())
+                      .collect::<Vec<_>>()
+                      .join(", "));
+                
+                // 找不到报告文件时，尝试直接加载并解析模板文件
+                debug!("尝试直接解析模板文件：{}", template_path);
+                self.extract_variables_from_template(&template_path, namespace, context)?;
+            }
+        }
+        
+        Ok(())
+    }
+    
+    /// 尝试从模板文件直接加载变量
+    fn extract_variables_from_template(
+        &mut self,
+        template_path: &str,
+        namespace: String,
+        context: &mut TemplateContext
+    ) -> Result<()> {
+        let mut possible_paths = Vec::new();
+        
+        debug!("尝试从模板文件加载变量: {}, 命名空间: {}", template_path, namespace);
+        
+        // 1. 相对于当前模板的路径
+        if let Some(parent) = context.template.file_path.parent() {
+            let mut relative_path = parent.to_path_buf();
+            relative_path.push(template_path);
+            debug!("搜索路径1 (相对于当前模板): {}", relative_path.display());
+            possible_paths.push(relative_path);
+        }
+        
+        // 2. 相对于工作目录的路径
+        let mut work_dir_path = self.work_dir.clone();
+        work_dir_path.push(template_path);
+        debug!("搜索路径2 (相对于工作目录): {}", work_dir_path.display());
+        possible_paths.push(work_dir_path);
+        
+        // 3. 如果路径中包含模板目录名，尝试在模板目录下查找
+        let mut test_dir_path = self.work_dir.clone();
+        test_dir_path.push("tests");
+        test_dir_path.push(template_path);
+        debug!("搜索路径3 (相对于测试目录): {}", test_dir_path.display());
+        possible_paths.push(test_dir_path);
+        
+        // 查找模板文件
+        let mut template_file = None;
+        
+        for path in &possible_paths {
+            debug!("检查路径: {}", path.display());
+            if path.exists() && path.is_file() {
+                template_file = Some(path.clone());
+                debug!("找到模板文件: {}", path.display());
+                break;
+            }
+        }
+        
+        if let Some(file_path) = template_file {
+            debug!("找到模板文件: {}", file_path.display());
+            
+            // 读取模板文件内容
+            let content = std::fs::read_to_string(&file_path)
+                .with_context(|| format!("无法读取模板文件: {}", file_path.display()))?;
+            
+            // 1. 首先，解析模板内容提取变量
+            // 提取YAML前置数据
+            if let Some(yaml_content) = Self::extract_front_matter_from_report(&content) {
+                debug!("从模板中提取YAML前置数据, 长度: {}字节", yaml_content.len());
+                
+                // 解析YAML内容
+                if let Ok(yaml_value) = serde_yaml::from_str::<serde_yaml::Value>(&yaml_content) {
+                    // 2. 检查该模板是否也有自己的引用（递归处理）
+                    if let Some(refs) = yaml_value.get("references") {
+                        if let Some(refs_array) = refs.as_sequence() {
+                            debug!("模板 {} 中找到 {} 个递归引用", file_path.display(), refs_array.len());
+                            
+                            // 处理每一个引用，采用递归方式
+                            for ref_item in refs_array {
+                                if let Some(ref_obj) = ref_item.as_mapping() {
+                                    // 提取模板路径和命名空间
+                                    let ref_template = ref_obj.get(&serde_yaml::Value::String("template".to_string()))
+                                        .and_then(|v| v.as_str());
+                                    let ref_namespace = ref_obj.get(&serde_yaml::Value::String("as".to_string()))
+                                        .and_then(|v| v.as_str());
+                                    
+                                    if let (Some(ref_path), Some(ref_ns)) = (ref_template, ref_namespace) {
+                                        // 构造完整命名空间路径：当前命名空间.引用命名空间
+                                        let nested_namespace = format!("{}.{}", namespace, ref_ns);
+                                        debug!("处理递归引用: {} 作为命名空间 {}", ref_path, nested_namespace);
+                                        
+                                        // 递归处理引用的模板
+                                        self.extract_variables_from_template(ref_path, nested_namespace, context)?;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    
+                    // 3. 从当前模板中提取变量
+                    if let Some(obj) = yaml_value.as_mapping() {
+                        let mut extracted = HashMap::new();
+                        
+                        // 提取所有字符串类型的字段作为变量
+                        for (key, value) in obj {
+                            if let (Some(key_str), Some(value_str)) = (key.as_str(), value.as_str()) {
+                                // 排除一些特殊字段
+                                if !["title", "target_config", "unit_name", "tags", "references"].contains(&key_str) {
+                                    extracted.insert(key_str.to_string(), value_str.to_string());
+                                    debug!("从模板YAML中提取变量: {}.{} = {}", namespace, key_str, value_str);
+                                }
+                            }
+                        }
+                        
+                        if !extracted.is_empty() {
+                            context.set_external_variables(&namespace, extracted);
+                        }
+                    }
+                }
+            }
+            
+            // 4. 尝试从模板正文中提取更多变量
+            self.extract_variables_from_content(&content, &namespace, context)?;
+        } else {
+            debug!("未找到模板文件: {}", template_path);
+            debug!("已尝试的路径: {}", possible_paths
+                   .iter()
+                   .map(|p| p.display().to_string())
+                   .collect::<Vec<_>>()
+                   .join(", "));
+        }
+        
+        Ok(())
+    }
+
+    /// 从文本内容中提取变量
+    fn extract_variables_from_content(
+        &self,
+        content: &str,
+        namespace: &str,
+        context: &mut TemplateContext
+    ) -> Result<()> {
+        // 从正文中提取显式声明的变量
+        // 例如：`变量名: value` 或 `Variable: value` 格式的行
+        let variable_patterns = [
+            r"^([a-zA-Z_][a-zA-Z0-9_]*)\s*:\s*(.+)$",
+            r"^([a-zA-Z_][a-zA-Z0-9_]*)值?\s*[:：]\s*(.+)$", // 支持中文冒号
+        ];
+        
+        let mut extracted = HashMap::new();
+        
+        for line in content.lines() {
+            let line = line.trim();
+            
+            for pattern in &variable_patterns {
+                if let Ok(re) = Regex::new(pattern) {
+                    if let Some(caps) = re.captures(line) {
+                        if caps.len() >= 3 {
+                            let key = caps.get(1).unwrap().as_str();
+                            let value = caps.get(2).unwrap().as_str().trim();
+                            
+                            // 排除明显的标题或其他非变量内容
+                            if !key.starts_with("#") && !key.contains(" ") && value.len() <= 100 {
+                                extracted.insert(key.to_string(), value.to_string());
+                                debug!("从模板正文中提取变量: {}.{} = {}", namespace, key, value);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        
+        // 合并到已有的外部变量中
+        if !extracted.is_empty() {
+            // 如果已经有该命名空间的变量，则合并；否则新建
+            if let Some(existing) = context.external_vars.get_mut(namespace) {
+                for (k, v) in extracted {
+                    existing.insert(k, v);
+                }
+            } else {
+                context.set_external_variables(namespace, extracted);
+            }
+        }
+        
+        Ok(())
+    }
+
+    /// 从报告内容中提取变量
+    fn extract_variables_from_report(
+        &self,
+        content: &str,
+        namespace: String,
+        context: &mut TemplateContext
+    ) -> Result<()> {
+        debug!("开始从报告内容中提取变量，长度: {}字节", content.len());
+        
+        // 提取YAML前置数据（可能包含变量）
+        if let Some(yaml_content) = Self::extract_front_matter_from_report(content) {
+            debug!("提取到YAML前置数据，长度: {}字节", yaml_content.len());
+            
+            // 解析YAML
+            if let Ok(yaml_value) = serde_yaml::from_str::<serde_yaml::Value>(&yaml_content) {
+                // 首先尝试从variables字段中提取变量
+                if let Some(variables) = yaml_value.get("variables") {
+                    if let Some(obj) = variables.as_mapping() {
+                        let mut extracted = HashMap::new();
+                        
+                        for (key, value) in obj {
+                            if let (Some(key_str), Some(value_str)) = (key.as_str(), value.as_str()) {
+                                extracted.insert(key_str.to_string(), value_str.to_string());
+                                debug!("从YAML中提取变量: {} = {}", key_str, value_str);
+                            }
+                        }
+                        
+                        // 将提取的变量添加到上下文中
+                        context.set_external_variables(&namespace, extracted);
+                    }
+                } else {
+                    debug!("YAML前置数据中没有找到variables字段");
+                    
+                    // 尝试从整个YAML中提取字符串值作为变量（备用方案）
+                    if let Some(obj) = yaml_value.as_mapping() {
+                        let mut extracted = HashMap::new();
+                        
+                        for (key, value) in obj {
+                            if let (Some(key_str), Some(value_str)) = (key.as_str(), value.as_str()) {
+                                // 只提取字符串类型的值
+                                extracted.insert(key_str.to_string(), value_str.to_string());
+                                debug!("从YAML中提取变量(备用方案): {} = {}", key_str, value_str);
+                            }
+                        }
+                        
+                        if !extracted.is_empty() {
+                            context.set_external_variables(&namespace, extracted);
+                        }
+                    }
+                }
+            } else {
+                warn!("无法解析YAML前置数据为有效的YAML");
+            }
+        } else {
+            debug!("未在报告内容中找到YAML前置数据");
+        }
+        
+        // 此外，从正文中提取显式声明的变量
+        // 例如：`变量名: value` 或 `Variable: value` 格式的行
+        let variable_patterns = [
+            r"^([a-zA-Z_][a-zA-Z0-9_]*)\s*:\s*(.+)$",
+            r"^([a-zA-Z_][a-zA-Z0-9_]*)值?\s*[:：]\s*(.+)$", // 支持中文冒号
+        ];
+        
+        let mut extracted = HashMap::new();
+        
+        for line in content.lines() {
+            let line = line.trim();
+            
+            for pattern in &variable_patterns {
+                if let Ok(re) = Regex::new(pattern) {
+                    if let Some(caps) = re.captures(line) {
+                        if caps.len() >= 3 {
+                            let key = caps.get(1).unwrap().as_str();
+                            let value = caps.get(2).unwrap().as_str().trim();
+                            
+                            // 排除明显的标题或其他非变量内容
+                            if !key.starts_with("#") && !key.contains(" ") && value.len() <= 100 {
+                                extracted.insert(key.to_string(), value.to_string());
+                                debug!("从正文中提取变量: {} = {}", key, value);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        
+        // 合并到已有的外部变量中
+        if !extracted.is_empty() {
+            // 如果已经有该命名空间的变量，则合并；否则新建
+            if let Some(existing) = context.external_vars.get_mut(&namespace) {
+                for (k, v) in extracted {
+                    existing.insert(k, v);
+                }
+            } else {
+                context.set_external_variables(&namespace, extracted);
+            }
+        }
+        
+        Ok(())
+    }
+
+/// 从报告内容中提取YAML前置数据
+fn extract_front_matter_from_report(content: &str) -> Option<String> {
+    let pattern = r"(?s)^---\s*\n(.*?)\n---\s*\n";
+    if let Ok(re) = Regex::new(pattern) {
+        if let Some(caps) = re.captures(content) {
+            if caps.len() >= 2 {
+                return Some(caps.get(1).unwrap().as_str().to_string());
+            }
+        }
+    }
+    None
+}
     
     /// 填充特殊变量
     fn populate_special_vars(
@@ -264,42 +701,44 @@ impl<'a> TemplateExecutor<'a> {
         // 检查步骤依赖关系
         debug!("依赖关系图构建完成，检查依赖项");
         
-        // 检查是否有引用了不存在的步骤
-        for step_id in &all_steps {
-            let exists = template.steps.iter().any(|s| s.id.as_str() == *step_id);
-            if !exists {
-                // 找出引用了此步骤的其他步骤，提供更详细的错误信息
-                let mut referencing_steps = Vec::new();
-                for step in &template.steps {
-                    if step.depends_on.iter().any(|dep| dep.as_str() == *step_id) {
+        // 过滤掉带有命名空间的未定义步骤（这些可能是跨模板引用）
+        let critical_undefined_steps: HashSet<_> = undefined_steps.iter()
+            .filter(|&&step_id| !step_id.contains("::"))
+            .collect();
+            
+        // 只检查不包含命名空间的未定义步骤
+        for &step_id in &critical_undefined_steps {
+            // 找出引用了此步骤的其他步骤，提供更详细的错误信息
+            let mut referencing_steps = Vec::new();
+            for step in &template.steps {
+                if step.depends_on.iter().any(|dep| dep.as_str() == *step_id) {
+                    referencing_steps.push(&step.id);
+                }
+                if let Some(ref_cmd) = &step.ref_command {
+                    if ref_cmd.as_str() == *step_id {
                         referencing_steps.push(&step.id);
                     }
-                    if let Some(ref_cmd) = &step.ref_command {
-                        if ref_cmd.as_str() == *step_id {
-                            referencing_steps.push(&step.id);
-                        }
-                    }
                 }
-                
-                // 获取文件名信息
-                let file_info = if let Some(path) = template.file_path.file_name() {
-                    path.to_string_lossy().to_string()
-                } else {
-                    "未知文件".to_string()
-                };
-                
-                // 给出详细错误信息，包括引用关系
-                let error_detail = if !referencing_steps.is_empty() {
-                    let referencing_steps_str: Vec<&str> = referencing_steps.iter().map(|s| s.as_str()).collect();
-                    format!("模板中引用了不存在的步骤ID: `{}` (在文件 {} 中). 此ID被以下步骤引用: {}", 
-                            step_id, file_info, referencing_steps_str.join(", "))
-                } else {
-                    format!("模板中引用了不存在的步骤ID: `{}` (在文件 {} 中)", step_id, file_info)
-                };
-
-                warn!("{}", error_detail);
-                bail!("{}", error_detail);
             }
+            
+            // 获取文件名信息
+            let file_info = if let Some(path) = template.file_path.file_name() {
+                path.to_string_lossy().to_string()
+            } else {
+                "未知文件".to_string()
+            };
+            
+            // 给出详细错误信息，包括引用关系
+            let error_detail = if !referencing_steps.is_empty() {
+                let referencing_steps_str: Vec<&str> = referencing_steps.iter().map(|s| s.as_str()).collect();
+                format!("模板中引用了不存在的步骤ID: `{}` (在文件 {} 中). 此ID被以下步骤引用: {}", 
+                        step_id, file_info, referencing_steps_str.join(", "))
+            } else {
+                format!("模板中引用了不存在的步骤ID: `{}` (在文件 {} 中)", step_id, file_info)
+            };
+
+            warn!("{}", error_detail);
+            bail!("{}", error_detail);
         }
         
         // 2. 拓扑排序

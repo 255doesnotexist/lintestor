@@ -17,9 +17,12 @@ use crate::connection::ConnectionFactory;
 use crate::test_runner::{local::LocalTestRunner, remote::RemoteTestRunner, qemu::QemuTestRunner, TestRunner};
 use crate::utils::Report;
 use clap::{Arg, ArgAction, ArgMatches, Command};
+use connection::ConnectionManager;
 use env_logger::Env;
 use log::{debug, error, info, warn};
-use std::{env, fs::File, path::{Path, PathBuf}};
+use template::ExecutorOptions;
+use test_executor::BatchExecutor;
+use std::{env, error::Error, fs::File, path::{Path, PathBuf}};
 use test_runner::boardtest::BoardtestRunner;
 
 /// The version of the application.
@@ -523,4 +526,163 @@ fn run_single_template_test(
             error!("Failed to execute template: {}", e);
         }
     }
+}
+
+/// 使用批量执行器运行Markdown测试
+/// 
+/// # Arguments
+/// 
+/// * `args` - 命令行参数
+fn run_markdown_tests(args: &CliArgs) -> Result<(), Box<dyn Error>> {
+    // 获取工作目录
+    let cwd = env::current_dir().unwrap_or_else(|_| PathBuf::from("."));
+    let work_dir = args.test_dir
+        .as_ref()
+        .map(|dir| cwd.join(dir))
+        .unwrap_or(cwd);
+    info!("使用工作目录: {}", work_dir.display());
+
+    // 查找所有测试模板文件
+    let template_dirs = vec![
+        work_dir.join("tests"),
+        work_dir.join("templates"),
+    ];
+    
+    let mut test_files = Vec::new();
+    for dir in &template_dirs {
+        if let Ok(paths) = discover_templates(dir, true) {
+            test_files.extend(paths);
+        }
+    }
+    info!("发现 {} 个测试模板文件", test_files.len());
+
+    // 应用过滤器（如果指定了）并解析模板
+    let filtered_templates = if args.tag.is_none() && args.unit.is_none() {
+        // 没有过滤器，解析所有找到的文件
+        let mut templates = Vec::new();
+        for file_path in &test_files {
+            match template::TestTemplate::from_file(file_path) {
+                Ok(template) => templates.push(template),
+                Err(e) => {
+                    error!("加载模板 {} 失败: {}", file_path.display(), e);
+                    if !args.continue_on_error {
+                        // Convert anyhow::Error to a type implementing std::error::Error
+                        let io_error = std::io::Error::new(std::io::ErrorKind::Other, e.to_string());
+                        return Err(Box::new(io_error));
+                    }
+                }
+            }
+        }
+        templates
+    } else {
+        // 获取过滤条件
+        let (unit_filter, tag_filter) = args.get_filters();
+        
+        filter_templates(
+            &test_files, 
+            &TemplateFilter {
+                tags: tag_filter.map(|t| vec![t.to_string()]).unwrap_or_default(),
+                unit: unit_filter.map(|u| u.to_string()),
+                target: None, // 不按目标过滤
+            }
+        )?
+    };
+    
+    info!("过滤后剩余 {} 个测试模板文件", filtered_templates.len());
+    
+    if filtered_templates.is_empty() {
+        warn!("没有符合条件的测试文件，退出");
+        return Ok(());
+    }
+    
+    // 准备目标配置
+    let target_config_path = match &args.target {
+        Some(path) => {
+            // If path exists as specified (absolute or relative to CWD), use it.
+            // Otherwise, assume it's relative to the work_dir.
+            if path.exists() {
+                path.clone()
+            } else {
+                work_dir.join(path)
+            }
+        }
+        None => {
+            // If --target is not provided, assume a default name in work_dir.
+            // Adjust "config.toml" if the default name is different.
+            work_dir.join("config.toml")
+        }
+    };
+    info!("使用目标配置: {}", target_config_path.display());
+    // Check if the resolved path actually exists before trying to load it.
+    if !target_config_path.exists() {
+        return Err(format!("Target configuration file not found: {}", target_config_path.display()).into());
+    }
+    let target_config = TargetConfig::from_file(&target_config_path)?;
+    
+    // 创建连接管理器
+    let mut connection_manager = ConnectionFactory::create_manager(&target_config)?;
+    
+    // 设置连接
+    connection_manager.setup()?;
+    
+    // 准备执行选项
+    let options = ExecutorOptions {
+        command_timeout: args.timeout,
+        retry_count: args.retry,
+        retry_interval: 5, // 默认5秒重试间隔
+        maintain_session: true,
+        continue_on_error: args.continue_on_error,
+    };
+    
+    // Define report directory path
+    let report_dir = work_dir.join("reports");
+
+    // 将所有操作封装在一个代码块中，确保BatchExecutor在使用结束后被释放
+    {
+        // 创建批量执行器
+        let mut batch_executor = BatchExecutor::new(
+            work_dir.clone(),
+            connection_manager.as_mut(),
+            target_config.clone(),
+            Some(options),
+        );
+
+        // 添加模板到执行器 (模板已在过滤/加载阶段解析)
+        info!("添加测试模板到执行器...");
+        batch_executor.add_templates(filtered_templates)?;
+
+        // 执行测试
+        info!("开始执行测试...");
+        let results = batch_executor.execute_all()?; // 现在返回拥有的值，而不是引用
+        info!("测试执行完成，共执行 {} 个模板", results.len());
+
+        // 生成报告
+        batch_executor.generate_reports(&report_dir)?;
+        info!("报告已生成到目录: {}", report_dir.display());
+
+        // 统计成功/失败数量
+        let mut success_count = 0;
+        let mut fail_count = 0;
+        
+        for (_path, result) in &results { // 加上引用操作符&，因为results现在是拥有的值
+            match result.overall_status {
+                template::StepStatus::Pass => success_count += 1,
+                template::StepStatus::Fail => fail_count += 1,
+                _ => {},
+            }
+        }
+        
+        info!("测试统计: {} 成功, {} 失败", success_count, fail_count);
+        
+        if fail_count > 0 && !args.continue_on_error {
+            // 在此处先关闭连接，再返回错误
+            connection_manager.teardown()?;
+            return Err(format!("{} 个测试失败", fail_count).into());
+        }
+    } // batch_executor在这里超出作用域并被释放，使得connection_manager的可变借用结束
+    
+    // 此时batch_executor已经被释放，connection_manager不再被借用，可以安全调用
+    connection_manager.teardown()?;
+    
+    Ok(())
 }

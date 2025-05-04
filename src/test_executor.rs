@@ -8,6 +8,15 @@ use log::{debug, info};
 use std::error::Error;
 use std::path::{Path, PathBuf};
 use std::process::Command;
+use std::collections::HashMap;
+use anyhow::{Result, Context, bail};
+use log::{warn, error};
+
+use crate::config::target_config::TargetConfig;
+use crate::connection::ConnectionManager;
+use crate::template::{
+    TestTemplate, TemplateExecutor, ExecutionResult, ExecutorOptions, TemplateDependencyManager
+};
 
 /// 通用测试执行器，实现与测试环境无关的测试逻辑
 pub struct TestExecutor<'a> {
@@ -326,5 +335,228 @@ impl<'a> TestExecutor<'a> {
         self.environment.teardown()?;
 
         Ok(report)
+    }
+}
+
+/// 批量测试执行器
+/// 
+/// 负责按照依赖关系顺序执行多个测试模板
+pub struct BatchExecutor<'a> {
+    /// 工作目录
+    work_dir: PathBuf,
+    /// 连接管理器
+    connection_manager: &'a mut dyn ConnectionManager,
+    /// 目标配置
+    target_config: TargetConfig,
+    /// 执行选项
+    options: ExecutorOptions,
+    /// 依赖管理器
+    dependency_manager: TemplateDependencyManager,
+    /// 执行结果
+    results: HashMap<PathBuf, ExecutionResult>,
+}
+
+impl<'a> BatchExecutor<'a> {
+    /// 创建新的批量测试执行器
+    pub fn new(
+        work_dir: PathBuf,
+        connection_manager: &'a mut dyn ConnectionManager,
+        target_config: TargetConfig,
+        options: Option<ExecutorOptions>,
+    ) -> Self {
+        Self {
+            work_dir: work_dir.clone(),
+            connection_manager,
+            target_config,
+            options: options.unwrap_or_default(),
+            dependency_manager: TemplateDependencyManager::new(work_dir),
+            results: HashMap::new(),
+        }
+    }
+
+    /// 添加测试模板
+    pub fn add_template(&mut self, template: TestTemplate) -> Result<()> {
+        self.dependency_manager.add_template(template)
+    }
+
+    /// 添加多个测试模板
+    pub fn add_templates<I>(&mut self, templates: I) -> Result<()>
+    where
+        I: IntoIterator<Item = TestTemplate>,
+    {
+        self.dependency_manager.add_templates(templates)
+    }
+
+    /// 执行所有测试模板
+    pub fn execute_all(&mut self) -> Result<HashMap<PathBuf, ExecutionResult>> {
+        info!("开始执行批量测试");
+        
+        // 构建依赖图并确定执行顺序
+        self.dependency_manager.build_dependency_graph()?;
+        let execution_order = self.dependency_manager.get_execution_order();
+        
+        info!("按照依赖顺序执行 {} 个测试模板", execution_order.len());
+        
+        // 按照排序后的顺序执行模板
+        for template_path in execution_order {
+            // 获取模板
+            let template = match self.dependency_manager.get_template(&template_path) {
+                Some(t) => t.clone(),
+                None => {
+                    warn!("找不到模板：{}", template_path.display());
+                    continue;
+                }
+            };
+            
+            info!("执行测试模板: {}", template_path.display());
+            
+            // 创建模板执行器
+            let mut executor = TemplateExecutor::new(
+                self.work_dir.clone(),
+                self.connection_manager,
+                Some(self.options.clone()),
+            );
+            
+            // 执行模板
+            match executor.execute_template(template.clone(), self.target_config.clone()) {
+                Ok(result) => {
+                    // 记录执行结果
+                    debug!("测试模板执行完成: {}, 状态: {:?}", template_path.display(), result.overall_status);
+                    self.results.insert(template_path.clone(), result);
+                }
+                Err(e) => {
+                    error!("执行模板失败: {}, 错误: {}", template_path.display(), e);
+                    // 如果不允许失败，中止执行
+                    if !self.options.continue_on_error {
+                        bail!("执行模板 {} 失败: {}", template_path.display(), e);
+                    }
+                }
+            }
+        }
+        
+        info!("批量测试执行完成，共完成 {} 个模板测试", self.results.len());
+        
+        // 返回结果的克隆，而不是引用
+        Ok(self.results.clone())
+    }
+
+    /// 获取所有执行结果
+    pub fn get_results(&self) -> &HashMap<PathBuf, ExecutionResult> {
+        &self.results
+    }
+
+    /// 获取特定模板的执行结果
+    pub fn get_result(&self, template_path: &Path) -> Option<&ExecutionResult> {
+        self.results.get(template_path)
+    }
+
+    /// 生成所有模板的报告
+    pub fn generate_reports(&self, report_dir: &Path) -> Result<()> {
+        info!("生成测试报告");
+        
+        // 确保报告目录存在
+        std::fs::create_dir_all(report_dir)?;
+        
+        let mut report_paths = HashMap::new();
+        
+        for (template_path, result) in &self.results {
+            // 获取模板
+            let template = match self.dependency_manager.get_template(&template_path) {
+                Some(t) => t.clone(),
+                None => {
+                    warn!("找不到模板：{}", template_path.display());
+                    continue;
+                }
+            };
+            
+            // 确定报告文件名
+            let file_stem = template_path
+                .file_stem()
+                .and_then(|s| s.to_str())
+                .unwrap_or("unknown");
+                
+            let target_name = &result.target_name;
+            let report_name = format!("{}_{}.report.md", file_stem, target_name);
+            let report_path = report_dir.join(report_name);
+            
+            // 生成报告
+            let mut reporter = crate::template::Reporter::new(report_path.clone(), None);
+            reporter.generate_report(&template, result)?;
+            
+            info!("生成报告: {}", report_path.display());
+            report_paths.insert(template_path.clone(), report_path);
+        }
+        
+        // 生成汇总报告
+        let summary_path = report_dir.join("summary.md");
+        self.generate_summary_report(&summary_path)?;
+        
+        Ok(())
+    }
+
+    /// 生成汇总报告
+    fn generate_summary_report(&self, path: &Path) -> Result<()> {
+        info!("生成汇总报告: {}", path.display());
+        
+        let mut content = String::new();
+        content.push_str("# 测试结果汇总\n\n");
+        content.push_str(&format!("执行时间: {}\n\n", chrono::Local::now().format("%Y-%m-%d %H:%M:%S")));
+        
+        // 汇总表格
+        content.push_str("| 测试模板 | 状态 | 单元名称 | 目标 |\n");
+        content.push_str("|---------|------|----------|------|\n");
+        
+        // 按照执行顺序排序结果
+        let mut sorted_results = Vec::new();
+        for path in self.dependency_manager.get_execution_order() {
+            if let Some(result) = self.results.get(path) {
+                sorted_results.push((path, result));
+            }
+        }
+        
+        for (path, result) in sorted_results {
+            let status_str = match result.overall_status {
+                crate::template::StepStatus::Pass => "✅ 通过",
+                crate::template::StepStatus::Fail => "❌ 失败",
+                crate::template::StepStatus::Skipped => "⏭️ 跳过",
+                _ => "❓ 未知",
+            };
+            
+            let template_name = path.file_name()
+                .and_then(|s| s.to_str())
+                .unwrap_or("unknown");
+                
+            content.push_str(&format!(
+                "| {} | {} | {} | {} |\n",
+                template_name, status_str, result.unit_name, result.target_name
+            ));
+        }
+        
+        // 依赖关系图
+        content.push_str("\n## 测试依赖关系\n\n");
+        content.push_str("```\n");
+        
+        for path in self.dependency_manager.get_execution_order() {
+            let template_name = path.file_name()
+                .and_then(|s| s.to_str())
+                .unwrap_or("unknown");
+                
+            let dependencies = self.dependency_manager.get_dependencies(path);
+            if dependencies.is_empty() {
+                content.push_str(&format!("{} (无依赖)\n", template_name));
+            } else {
+                let dep_names: Vec<_> = dependencies.iter()
+                    .filter_map(|p| p.file_name().and_then(|s| s.to_str()))
+                    .collect();
+                content.push_str(&format!("{} -> [{}]\n", template_name, dep_names.join(", ")));
+            }
+        }
+        
+        content.push_str("```\n");
+        
+        // 写入文件
+        std::fs::write(path, content)?;
+        
+        Ok(())
     }
 }

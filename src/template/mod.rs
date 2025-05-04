@@ -6,16 +6,29 @@
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use anyhow::{Result, Context, bail};
+use regex::Regex;
 
 mod parser;
 mod executor;
 mod reporter;
 mod discovery;
+mod template_dependency_manager;
 
+use log::{warn, debug};
 pub use parser::parse_template;
 pub use executor::{TemplateExecutor, ExecutionResult, ExecutorOptions};
 pub use reporter::Reporter;
 pub use discovery::{discover_templates, filter_templates, TemplateFilter};
+pub use template_dependency_manager::TemplateDependencyManager;
+
+/// 外部模板引用
+#[derive(Debug, Clone)]
+pub struct TemplateReference {
+    /// 引用的模板路径（相对于tests目录）
+    pub template_path: String,
+    /// 命名空间（用于变量引用）
+    pub namespace: String,
+}
 
 /// Markdown测试模板元数据（YAML前置数据）
 #[derive(Debug, Clone)]
@@ -30,6 +43,8 @@ pub struct TemplateMetadata {
     pub unit_version_command: Option<String>,
     /// 测试标签列表
     pub tags: Vec<String>,
+    /// 引用的外部模板列表
+    pub references: Vec<TemplateReference>,
     /// 其他自定义元数据
     pub custom: HashMap<String, String>,
 }
@@ -130,17 +145,19 @@ pub struct TestTemplate {
     pub raw_content: String,
 }
 
-/// 模板执行上下文
+/// 模板上下文，用于存储执行过程中的变量和结果
 #[derive(Debug, Clone)]
 pub struct TemplateContext {
-    /// 模板
+    /// 当前模板
     pub template: TestTemplate,
-    /// 步骤结果
-    pub results: HashMap<String, StepResult>,
-    /// 提取的变量
+    /// 变量表
     pub variables: HashMap<String, String>,
-    /// 特殊变量
+    /// 特殊变量表（不可被覆盖）
     pub special_vars: HashMap<String, String>,
+    /// 外部变量表（按命名空间分组）
+    pub external_vars: HashMap<String, HashMap<String, String>>,
+    /// 执行结果
+    pub results: HashMap<String, StepResult>,
 }
 
 impl TestTemplate {
@@ -168,50 +185,172 @@ impl TestTemplate {
 }
 
 impl TemplateContext {
-    /// 创建新的模板执行上下文
+    /// 创建新的模板上下文
     pub fn new(template: TestTemplate) -> Self {
-        let mut special_vars = HashMap::new();
-        // 添加执行日期
         let now = chrono::Local::now();
-        special_vars.insert("execution_date".to_string(), now.format("%Y-%m-%d %H:%M:%S").to_string());
+        
+        let mut special_vars = HashMap::new();
+        // 添加执行时间特殊变量
+        special_vars.insert("execution_date".to_string(), now.format("%Y-%m-%d").to_string());
+        special_vars.insert("execution_time".to_string(), now.format("%H:%M:%S").to_string());
+        special_vars.insert("execution_datetime".to_string(), now.format("%Y-%m-%d %H:%M:%S").to_string());
         
         Self {
             template,
-            results: HashMap::new(),
             variables: HashMap::new(),
             special_vars,
+            external_vars: HashMap::new(),
+            results: HashMap::new(),
         }
     }
     
-    /// 获取变量值（包括提取的变量和特殊变量）
-    pub fn get_variable(&self, name: &str) -> Option<&String> {
-        self.variables.get(name).or_else(|| self.special_vars.get(name))
+    /// 获取步骤执行状态
+    pub fn get_step_status(&self, step_id: &str) -> StepStatus {
+        // 检查是否包含命名空间引用（如 namespace::step_id）
+        if step_id.contains("::") {
+            // 不做任何特殊处理，直接按完整ID查找
+            match self.results.get(step_id) {
+                Some(result) => result.status.clone(),
+                None => StepStatus::NotRun,
+            }
+        } else {
+            // 原始逻辑，按本地ID查找
+            match self.results.get(step_id) {
+                Some(result) => result.status.clone(),
+                None => StepStatus::NotRun,
+            }
+        }
     }
     
-    /// 替换字符串中的变量引用
+    /// 设置外部变量（从外部引用模板中加载）
+    pub fn set_external_variables(&mut self, namespace: &str, variables: HashMap<String, String>) {
+        // 直接将变量添加到主变量表中，使用命名空间作为前缀
+        for (key, value) in variables.clone() {
+            let namespaced_key = format!("{}::{}", namespace, key);
+            self.variables.insert(namespaced_key, value);
+        }
+        
+        // 同时保留原有的命名空间分组存储，便于完整性和调试
+        self.external_vars.insert(namespace.to_string(), variables);
+    }
+    
+    /// 替换文本中的变量引用
+    ///
+    /// 支持多种变量引用格式:
+    /// - ${variable_name} - 标准变量引用
+    /// - ${namespace::variable_name} - 带命名空间的变量引用
+    /// - {{ variable_name }} - 模板风格的变量引用
+    /// - {{ namespace.variable_name }} - 带命名空间的模板风格变量引用
     pub fn replace_variables(&self, text: &str) -> String {
-        // 简单的实现，实际代码中可能需要更健壮的解析逻辑
         let mut result = text.to_string();
         
-        // 匹配 {{ variable_name }} 格式
-        for (name, value) in self.variables.iter() {
-            let pattern = format!("{{{{ {} }}}}", name);
-            result = result.replace(&pattern, value);
-        }
+        // 匹配所有标准变量引用 ${variable} 或 ${namespace::variable}
+        let var_pattern = r"\$\{([a-zA-Z0-9_.:]+)(?:\|([^}]+))?\}";
+        let re = Regex::new(var_pattern).unwrap();
         
-        for (name, value) in self.special_vars.iter() {
-            let pattern = format!("{{{{ {} }}}}", name);
-            result = result.replace(&pattern, value);
+        // 匹配模板风格变量引用 {{ variable }} 或 {{ namespace.variable }}
+        let template_pattern = r"\{\{\s*([a-zA-Z0-9_.]+)\s*\}\}";
+        let template_re = Regex::new(template_pattern).unwrap();
+        
+        // 使用循环而不是单次替换，以处理嵌套变量
+        let mut prev_result = String::new();
+        let mut iteration = 0;
+        let max_iterations = 10; // 防止无限循环
+        
+        while prev_result != result && iteration < max_iterations {
+            prev_result = result.clone();
+            iteration += 1;
+            
+            // 处理标准变量引用 ${variable} 或 ${namespace::variable}
+            result = re.replace_all(&prev_result, |caps: &regex::Captures| {
+                let var_name = &caps[1];
+                let default_value = caps.get(2).map(|m| m.as_str()).unwrap_or("");
+                
+                self.get_variable_value(var_name, default_value)
+            }).to_string();
+            
+            // 处理模板风格变量引用 {{ variable }} 或 {{ namespace.variable }}
+            result = template_re.replace_all(&result, |caps: &regex::Captures| {
+                let var_name = &caps[1];
+                
+                // 将 namespace.variable 格式转换为 namespace::variable
+                let normalized_name = var_name.replace('.', "::");
+                
+                self.get_variable_value(&normalized_name, "")
+            }).to_string();
         }
         
         result
     }
     
-    /// 获取步骤状态
-    pub fn get_step_status(&self, step_id: &str) -> StepStatus {
-        match self.results.get(step_id) {
-            Some(result) => result.status.clone(),
-            None => StepStatus::NotRun,
+    /// 获取变量值，支持命名空间
+    fn get_variable_value(&self, var_name: &str, default_value: &str) -> String {
+        debug!("尝试获取变量值: {}", var_name);
+        
+        // 首先检查特殊变量
+        if let Some(value) = self.special_vars.get(var_name) {
+            debug!("找到特殊变量: {} = {}", var_name, value);
+            return value.clone();
+        }
+        
+        // 然后检查普通变量（包括命名空间变量）
+        if let Some(value) = self.variables.get(var_name) {
+            debug!("找到普通变量: {} = {}", var_name, value);
+            return value.clone();
+        }
+        
+        // 如果包含::分隔符，可能是命名空间变量引用
+        if var_name.contains("::") {
+            let parts: Vec<&str> = var_name.splitn(2, "::").collect();
+            if parts.len() == 2 {
+                let namespace = parts[0];
+                let local_var = parts[1];
+                
+                debug!("尝试查找命名空间变量: {}::{}", namespace, local_var);
+                
+                if let Some(ns_vars) = self.external_vars.get(namespace) {
+                    if let Some(value) = ns_vars.get(local_var) {
+                        debug!("找到命名空间变量: {}::{} = {}", namespace, local_var, value);
+                        return value.clone();
+                    }
+                }
+            }
+        }
+        
+        // 尝试将点表示法转换为双冒号，再次查找
+        if var_name.contains('.') {
+            let normalized_name = var_name.replace('.', "::");
+            debug!("转换点表示法尝试查找: {} -> {}", var_name, normalized_name);
+            
+            if let Some(value) = self.variables.get(&normalized_name) {
+                debug!("找到通过点表示法转换的变量: {} = {}", normalized_name, value);
+                return value.clone();
+            }
+            
+            // 如果转换后包含::分隔符，尝试通过命名空间查找
+            if normalized_name.contains("::") {
+                let parts: Vec<&str> = normalized_name.splitn(2, "::").collect();
+                if parts.len() == 2 {
+                    let namespace = parts[0];
+                    let local_var = parts[1];
+                    
+                    if let Some(ns_vars) = self.external_vars.get(namespace) {
+                        if let Some(value) = ns_vars.get(local_var) {
+                            debug!("找到通过点表示法转换的命名空间变量: {}::{} = {}", namespace, local_var, value);
+                            return value.clone();
+                        }
+                    }
+                }
+            }
+        }
+        
+        // 使用默认值或保留原始引用
+        if default_value.is_empty() {
+            debug!("变量 {} 未找到，保留原始引用", var_name);
+            format!("${{{}}}", var_name) // 保留原始引用
+        } else {
+            debug!("变量 {} 未找到，使用默认值: {}", var_name, default_value);
+            default_value.to_string()
         }
     }
 }

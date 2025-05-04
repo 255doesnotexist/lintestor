@@ -101,6 +101,18 @@ impl SSHConnectionManager {
 }
 
 impl ConnectionManager for SSHConnectionManager {
+    /// 设置SSH连接
+    fn setup(&mut self) -> Result<()> {
+        // 如果连接已关闭，尝试重新连接（这里简化处理，实际可能需要存储重连信息）
+        if !self.connected {
+            debug!("SSH连接已关闭，需要重新连接");
+            return Err(anyhow::anyhow!("SSH连接已关闭，需要重新连接"));
+        }
+        
+        debug!("SSH连接设置完成");
+        Ok(())
+    }
+
     /// 执行远程命令
     fn execute_command(&mut self, command: &str, timeout: Option<Duration>) -> Result<CommandOutput> {
         if !self.connected {
@@ -159,6 +171,13 @@ impl ConnectionManager for SSHConnectionManager {
         })
     }
     
+    /// 清理SSH连接
+    fn teardown(&mut self) -> Result<()> {
+        // 在这里可以执行一些清理操作，比如发送特定命令
+        // 但通常我们只需要关闭连接
+        self.close()
+    }
+
     /// 关闭SSH连接
     fn close(&mut self) -> Result<()> {
         if self.connected {
