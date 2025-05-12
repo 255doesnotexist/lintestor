@@ -47,8 +47,10 @@ pub struct BatchOptions {
 #[derive(Debug, Clone)]
 pub struct TemplateReference {
     /// 引用的模板路径（相对于tests目录）
+    /// template_path 这里在实际的 metadata 中对应 "template" 键
     pub template_path: String,
     /// 命名空间（用于变量引用）
+    /// namespace 这里在实际的 metadata 中对应 "as" 键
     pub namespace: String,
 }
 

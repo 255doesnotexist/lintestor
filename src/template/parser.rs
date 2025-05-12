@@ -358,15 +358,18 @@ fn parse_metadata(yaml: &str) -> Result<TemplateMetadata> {
             let mut refs = Vec::new();
             for ref_value in seq {
                 if let serde_yaml::Value::Mapping(ref mapping) = ref_value {
-                    let template_path = mapping.get(&serde_yaml::Value::String("template_path".to_string()))
+                    // 为了在模板里看起来舒服，我们实际上的对应是按下面这样的
+                    // template -> template_path
+                    // as -> namespace
+                    let template_path = mapping.get(&serde_yaml::Value::String("template".to_string()))
                         .and_then(|v| v.as_str())
                         .map(|s| s.to_string())
-                        .ok_or_else(|| anyhow!("references中的项缺少'template_path'字段"))?;
+                        .ok_or_else(|| anyhow!("references中的项缺少'template(template_path)'字段"))?;
                     
-                    let namespace = mapping.get(&serde_yaml::Value::String("namespace".to_string()))
+                    let namespace = mapping.get(&serde_yaml::Value::String("as".to_string()))
                         .and_then(|v| v.as_str())
                         .map(|s| s.to_string())
-                        .ok_or_else(|| anyhow!("references中的项缺少'namespace'字段"))?;
+                        .ok_or_else(|| anyhow!("references中的项缺少'as(namespace)'字段"))?;
                     
                     debug!("提取模板引用: template_path={}, namespace={}", template_path, namespace);
                     refs.push(TemplateReference {

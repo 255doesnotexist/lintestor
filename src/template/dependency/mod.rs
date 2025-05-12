@@ -8,6 +8,7 @@ use std::path::{Path, PathBuf};
 use anyhow::{Result, bail};
 use log::{debug, info, warn};
 use regex::Regex;
+use serde::de;
 
 use crate::template::{TestTemplate, DataExtraction};
 use crate::template::step::{ExecutionStep, GlobalStepId, StepType};
@@ -508,20 +509,31 @@ impl StepDependencyManager {
         if let Some(command) = command_to_check {
             for caps in var_regex.captures_iter(command) {
                 if let Some(var_match) = caps.get(1) {
-                    let var_name = var_match.as_str();
-                    if let Some(potential_source_local_id_str) = var_name.split("::").next() {
-                        for (potential_source_global_id, source_step) in &self.nodes {
-                            if source_step.local_id == potential_source_local_id_str && source_step.template_id == step.template_id {
-                                let defines_var = if let Some(parsed_source) = &source_step.original_parsed_step {
-                                    parsed_source.extractions.iter().any(|ext| {
-                                        ext.variable == var_name || 
-                                        format!("{}::{}", source_step.local_id, ext.variable) == var_name || 
-                                        format!("{}::{}::{}", source_step.template_id, source_step.local_id, ext.variable) == var_name 
-                                    })
-                                } else { false };
+                    let var_name_in_command = var_match.as_str(); // Variable name as used in the command
 
-                                if defines_var {
-                                    debug!("Found implicit dependency: {} depends on {} due to variable {}", current_step_id, potential_source_global_id, var_name);
+                    for (potential_source_global_id, source_step) in &self.nodes {
+                        if source_step.template_id == step.template_id { // Implicit dependencies are within the same template
+                            let defines_var = if let Some(parsed_source) = &source_step.original_parsed_step {
+                                parsed_source.extractions.iter().any(|ext| {
+                                    // ext.variable is the actual name of the variable defined by source_step
+                                    // var_name_in_command is the name used in the current step's command
+                                    
+                                    // Case 1: Command uses a simple variable name (e.g., ${my_var})
+                                    (ext.variable == var_name_in_command) ||
+                                    // Case 2: Command uses a local_id qualified variable name (e.g., ${step_local_id::my_var})
+                                    (format!("{}::{}", source_step.local_id, ext.variable) == var_name_in_command) ||
+                                    // Case 3: Command uses a fully qualified variable name (e.g., ${template_id::step_local_id::my_var})
+                                    (format!("{}::{}::{}", source_step.template_id, source_step.local_id, ext.variable) == var_name_in_command)
+                                })
+                            } else { false };
+
+                            if defines_var {
+                                // Ensure a step does not depend on itself implicitly.
+                                if current_step_id != potential_source_global_id {
+                                    debug!(
+                                        "Found implicit dependency: {} depends on {} due to variable {}",
+                                        current_step_id, potential_source_global_id, var_name_in_command
+                                    );
                                     self.graph.entry(current_step_id.clone()).or_default().dependencies.insert(potential_source_global_id.clone());
                                     self.graph.entry(potential_source_global_id.clone()).or_default().dependents.insert(current_step_id.clone());
                                 }
@@ -712,7 +724,7 @@ mod tests {
         assert!(result.unwrap_err().to_lowercase().contains("circular dependency"));
     }
 
-    #[test]
+    #[test_log::test]
     fn test_implicit_dependency_from_variable() {
         let mut manager = StepDependencyManager::new();
 
@@ -736,6 +748,9 @@ mod tests {
         manager.build_graph();
         
         let order = manager.get_execution_order().unwrap_or_else(|e| panic!("Execution order failed: {}", e));
+        for step in &order {
+            debug!("Execution order: {}", step);
+        }
         
         assert_eq!(order.len(), 2);
         assert_eq!(order[0], step1.id);
