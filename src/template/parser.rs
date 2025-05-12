@@ -55,9 +55,13 @@ pub fn parse_template_into_content_blocks_and_steps(
 ) -> Result<(TemplateMetadata, Vec<ExecutionStep>, Vec<ContentBlock>)> {
     info!("开始解析测试模板 (结构化内容和步骤): {}", file_path.display());
     
+    let mut content_blocks = Vec::new();
+
     let (yaml_front_matter, markdown_content) = extract_front_matter(content)?;
     debug!("YAML前置数据长度: {} 字节", yaml_front_matter.len());
     debug!("Markdown内容长度: {} 字节", markdown_content.len());
+
+    content_blocks.push(ContentBlock::Metadata(yaml_front_matter.clone()));
     
     let metadata = parse_metadata(&yaml_front_matter)?;
     info!("模板元数据解析完成: title=\"{}\", unit=\"{}\"", metadata.title, metadata.unit_name);
@@ -66,7 +70,8 @@ pub fn parse_template_into_content_blocks_and_steps(
     debug!("生成的模板 ID: {}", template_id);
 
     // 同时解析步骤和内容块
-    let (execution_steps, content_blocks) = parse_markdown_to_steps_and_content_blocks(&markdown_content, &template_id, &metadata)?;
+    let (execution_steps, md_content_blocks) = parse_markdown_to_steps_and_content_blocks(&markdown_content, &template_id, &metadata)?;
+    content_blocks.extend(md_content_blocks);
     
     info!("已解析 {} 个执行步骤和 {} 个内容块", execution_steps.len(), content_blocks.len());
     

@@ -103,6 +103,8 @@ impl BatchExecutor {
         let continue_on_error = self.options.as_ref().map_or(false, |o| o.continue_on_error);
 
         for step_id in execution_order {
+
+
             let step_def = match self.step_dependency_manager.get_step(&step_id) {
                 Some(s) => s,
                 None => {

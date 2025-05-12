@@ -12,8 +12,6 @@ use crate::template::{
     StepStatus, AssertionType, TestTemplate
 };
 
-use super::VariableManager;
-
 /// 测试执行结果
 #[derive(Debug, Clone)]
 pub struct ExecutionResult {

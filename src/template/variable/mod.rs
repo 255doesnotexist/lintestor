@@ -6,6 +6,7 @@
 
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
+use std::sync::Arc;
 use log::{debug, info, warn};
 use regex::Regex;
 
@@ -54,7 +55,9 @@ impl VariableManager {
     /// 注册模板
     /// 
     /// 注册模板路径和对应的模板ID
-    pub fn register_template(&mut self, template_path: &Path, template_id: Option<&str>) {
+    pub fn register_template(&mut self, template: &Arc<super::TestTemplate>, template_id: Option<&str>) {
+        let template_path = template.file_path.clone();
+        
         let template_id = template_id.map(ToString::to_string).unwrap_or_else(|| {
             template_path.file_stem()
                 .and_then(|s| s.to_str())
@@ -62,7 +65,21 @@ impl VariableManager {
                 .to_string()
         });
         
+        self.initialize_system_variables(template, template_id.as_str());
         self.template_path_to_id.insert(template_path.to_path_buf(), template_id);
+    }
+
+    /// 注册时顺便初始化一些变量
+    /// 
+    /// 根据模板ID和步骤ID注册变量
+    #[allow(dead_code)] // register_template 里用过了，为什么说没用过
+    fn initialize_system_variables(&mut self, template: &Arc<super::TestTemplate>, template_id: &str) {
+        // 做一些基本变量的初始化
+        // 从这开始 metadata 组变量就可以被使用了
+        // 作用域：当前模板、任意步骤、[title, unit, target]
+        self.set_variable(template_id, "GLOBAL", "metadata.title", &template.metadata.title);
+        self.set_variable(template_id, "GLOBAL", "metadata.unit", &template.metadata.unit_name);
+        self.set_variable(template_id, "GLOBAL", "metadata.target", &template.metadata.target_config.file_name().and_then(|n| n.to_str()).unwrap_or("default").to_string());
     }
     
     /// 设置变量
@@ -176,6 +193,7 @@ impl VariableManager {
     /// 从提供的映射中为指定的 template_id 和 step_id 设置多个变量。
     /// template_id, step_id, 和映射中的每个键 (作为变量名) 
     /// 都将由内部调用的 `set_variable` 方法进行验证。
+    #[allow(dead_code)]
     pub fn set_variables_from_map(&mut self, template_id: &str, step_id: &str, variables_map: &HashMap<String, String>) -> Result<(), String> {
         for (key, value) in variables_map {
             // 'key' from variables_map is the 'name' part of the variable.
@@ -189,185 +207,89 @@ impl VariableManager {
     /// 
     /// 根据变量名、当前模板ID和步骤ID,按照优先级查找变量值
     pub fn get_variable(&self, var_name: &str, current_template_id: Option<&str>, current_step_id: Option<&str>) -> Option<String> {
-        debug!("变量查询: {} (当前模板: {:?}, 当前步骤: {:?})",
+        debug!("变量查询: '{}' (当前模板: {:?}, 当前步骤: {:?})",
             var_name, current_template_id, current_step_id);
-        
-        // 1. 尝试直接作为完全限定变量名查找
+
+        // 1. 尝试直接作为完全限定变量名查找 (e.g., "T1::S1::V1", "GLOBAL::GLOBAL::V1", "T1::GLOBAL::V1")
+        // 或简单名称（如果它们是这样存储的，例如旧版全局变量）
         if let Some(value) = self.variables.get(var_name) {
-            debug!("找到完全限定变量: {} = {}", var_name, value);
+            debug!("直接匹配找到变量 '{}': {}", var_name, value);
             return Some(value.clone());
         }
-        
-        // 2. 处理带命名空间分隔符的变量引用
-        if var_name.contains("::") || var_name.contains(".") {
-            if let Some(value) = self.resolve_namespaced_variable(var_name) {
-                return Some(value);
+
+        // 2. 处理带命名空间分隔符的变量引用 (e.g., "NS::V", "NS::S::V")
+        if var_name.contains("::") {
+            // 主动检查不允许的模式: GLOBAL::SpecificStep::Var from non-GLOBAL template context
+            let parts: Vec<&str> = var_name.splitn(3, "::").collect();
+            // 检查是否为 "GLOBAL::NotGlobalStep::VarName" 格式
+            if parts.len() == 3 && parts[0] == "GLOBAL" && parts[1] != "GLOBAL" {
+                if let Some(ctid) = current_template_id {
+                    if ctid != "GLOBAL" {
+                        warn!("不允许的变量查询: 从模板 '{}' 查询 '{}'。不允许从非全局模板通过 'GLOBAL::SpecificStep::VarName' 格式引用特定步骤变量。", ctid, var_name);
+                        return None; // 主动禁止
+                    }
+                }
             }
         }
-        
-        // 3. 尝试查找带当前上下文前缀的变量
+
+        // 3. 上下文查找 (此时 var_name 是简单的, 例如 "query", 不包含 "::")
         if let (Some(tid), Some(sid)) = (current_template_id, current_step_id) {
-            // 当前代码块的完全限定变量名
-            let fully_qualified_name = format!("{}::{}::{}", tid, sid, var_name);
-            if let Some(value) = self.variables.get(&fully_qualified_name) {
-                debug!("找到当前代码块变量: {} = {}", fully_qualified_name, value);
+            // a. tid::sid::var_name (例如 current_namespace::current_step::query)
+            let key1 = format!("{}::{}::{}", tid, sid, var_name);
+            if let Some(value) = self.variables.get(&key1) {
+                debug!("找到变量 ({}): {}", key1, value);
                 return Some(value.clone());
             }
-        }
-        
-        // 4. 尝试查找带当前模板前缀的变量
-        if let Some(tid) = current_template_id {
-            let template_qualified_name = format!("{}::{}", tid, var_name);
-            if let Some(value) = self.variables.get(&template_qualified_name) {
-                debug!("找到当前模板变量: {} = {}", template_qualified_name, value);
-                return Some(value.clone());
+
+            // b. tid::GLOBAL::var_name (例如 current_namespace::GLOBAL::query)
+            //    仅当 sid 不是 "GLOBAL" 时尝试，以避免与 key1 重复检查
+            if sid != "GLOBAL" {
+                let key2 = format!("{}::{}::{}", tid, "GLOBAL", var_name);
+                if let Some(value) = self.variables.get(&key2) {
+                    debug!("找到变量 ({}): {}", key2, value);
+                    return Some(value.clone());
+                }
             }
-        }
-        
-        // 5. 最后尝试无前缀变量
-        if let Some(value) = self.variables.get(var_name) {
-            debug!("找到无前缀全局变量: {} = {}", var_name, value);
-            return Some(value.clone());
-        }
-        
-        debug!("未找到变量: {}", var_name);
-        None
-    }
-    
-    /// 解析带命名空间的变量引用
-    fn resolve_namespaced_variable(&self, var_name: &str) -> Option<String> {
-        // 标准化变量名(将.转换为::)
-        let normalized_name = var_name.replace('.', "::");
-        
-        // 解析命名空间和变量名
-        let parts: Vec<&str> = normalized_name.splitn(2, "::").collect();
-        if parts.len() != 2 {
-            return None;
-        }
-        
-        let namespace = parts[0];
-        let local_var_name = parts[1];
-        
-        debug!("解析命名空间变量: 命名空间={}, 变量名={}", namespace, local_var_name);
-        
-        // 查找命名空间对应的模板ID
-        if let Some(template_id) = self.namespace_to_template_id.get(namespace) {
-            debug!("命名空间 {} 映射到模板ID {}", namespace, template_id);
-            
-            // 1. 首先尝试按 template_id::local_var_name 格式查找
-            let template_var_name = format!("{}::{}", template_id, local_var_name);
-            if let Some(value) = self.variables.get(&template_var_name) {
-                debug!("找到命名空间变量: {} = {}", template_var_name, value);
-                return Some(value.clone());
+            // 如果 sid == "GLOBAL", key1 已经是 tid::GLOBAL::var_name, 所以 key2 被跳过。
+
+            // c. GLOBAL::GLOBAL::var_name (例如 GLOBAL::GLOBAL::query)
+            let key3 = format!("{}::{}::{}", "GLOBAL", "GLOBAL", var_name);
+            let mut try_key3 = true;
+
+            // 如果 key1 已经是 GLOBAL::GLOBAL::var_name (当 tid="GLOBAL" 且 sid="GLOBAL")
+            if tid == "GLOBAL" && sid == "GLOBAL" {
+                try_key3 = false;
             }
-            
-            // 2. 如果local_var_name中还有::分隔符,说明可能是指向特定步骤的变量
-            if local_var_name.contains("::") {
-                let full_template_var_name = format!("{}::{}", template_id, local_var_name);
-                
-                if let Some(value) = self.variables.get(&full_template_var_name) {
-                    debug!("找到完全限定命名空间变量: {} = {}", full_template_var_name, value);
+            // 如果 key2 已经是 GLOBAL::GLOBAL::var_name (当 tid="GLOBAL" 且 sid!="GLOBAL", key2尝试了GLOBAL::GLOBAL::var_name)
+            if tid == "GLOBAL" && sid != "GLOBAL" { // key1 是 GLOBAL::sid::var_name, key2 是 GLOBAL::GLOBAL::var_name
+                try_key3 = false;
+            }
+            // 因此，仅当 tid 不是 "GLOBAL" 时，才需要独立尝试 key3
+
+            if try_key3 { // 这意味着 tid 不是 "GLOBAL"
+                if let Some(value) = self.variables.get(&key3) {
+                    debug!("找到变量 ({}): {}", key3, value);
                     return Some(value.clone());
                 }
             }
         } else {
-            // 可能命名空间本身就是一个模板ID,直接尝试查找
-            let direct_template_var_name = format!("{}::{}", namespace, local_var_name);
-            if let Some(value) = self.variables.get(&direct_template_var_name) {
-                debug!("直接找到模板变量: {} = {}", direct_template_var_name, value);
+            // 没有完整的 tid, sid 上下文。 var_name 是简单的。
+            // 尝试 GLOBAL::GLOBAL::var_name 作为简单名称在无上下文时的全局回退。
+            // (这是在 var_name 最初未通过直接匹配找到的情况)
+            let key_global_simple = format!("{}::{}::{}", "GLOBAL", "GLOBAL", var_name);
+            if let Some(value) = self.variables.get(&key_global_simple) {
+                debug!("找到无上下文全局变量 ({}): {}", key_global_simple, value);
                 return Some(value.clone());
             }
-            
-            warn!("找不到命名空间 {} 对应的模板ID", namespace);
         }
         
+        debug!("未找到变量 '{}'", var_name);
         None
     }
     
     /// 获取所有变量
     pub fn get_all_variables(&self) -> &HashMap<String, String> {
         &self.variables
-    }
-    
-    /// 合并另一个变量管理器中的变量
-    pub fn merge(&mut self, other: &VariableManager) {
-        // 合并变量，确保键名规范化
-        for (key, value) in &other.variables {
-            // 分析键名，确保不会导致循环嵌套
-            let normalized_key = self.normalize_key(key);
-            debug!("合并变量：原始键={}, 规范化键={}", key, normalized_key);
-            self.variables.insert(normalized_key, value.clone());
-        }
-        
-        // 合并命名空间映射
-        for (namespace, template_id) in &other.namespace_to_template_id {
-            // 确保模板ID不含分隔符
-            let clean_template_id = if template_id.contains("::") {
-                warn!("合并命名空间映射时发现模板ID包含'::'分隔符: {}, 进行清理", template_id);
-                template_id.split("::").next().unwrap_or(template_id).to_string()
-            } else {
-                template_id.clone()
-            };
-            
-            self.namespace_to_template_id.insert(namespace.clone(), clean_template_id);
-        }
-        
-        // 合并模板路径映射
-        for (path, id) in &other.template_path_to_id {
-            // 确保ID不含分隔符
-            let clean_id = if id.contains("::") {
-                warn!("合并模板路径映射时发现ID包含'::'分隔符: {}, 进行清理", id);
-                id.split("::").next().unwrap_or(id).to_string()
-            } else {
-                id.clone()
-            };
-            
-            self.template_path_to_id.insert(path.clone(), clean_id);
-        }
-    }
-    
-    /// 规范化变量键名，避免循环嵌套
-    /// 
-    /// 分析键名，确保它符合模板ID::步骤ID::变量名的格式，
-    /// 移除任何重复的部分(如README::README::var变为README::var)
-    pub fn normalize_key(&self, key: &str) -> String {
-        // 如果键不包含分隔符，直接返回
-        if !key.contains("::") {
-            return key.to_string();
-        }
-        
-        let parts: Vec<&str> = key.split("::").collect();
-        
-        // 如果只有一个或两个部分(如template::var或var)，直接返回
-        if parts.len() <= 2 {
-            return key.to_string();
-        }
-        
-        // 检查是否存在重复部分（如README::README::var）
-        let mut result_parts = Vec::new();
-        let mut seen_parts = std::collections::HashSet::new();
-        
-        // 处理模板ID和步骤ID部分(除了最后一个变量名)
-        for part in &parts[..parts.len()-1] {  
-            if !seen_parts.contains(*part) {
-                seen_parts.insert(*part);
-                result_parts.push(*part);
-            } else {
-                debug!("检测到重复部分在键名中: {}", part);
-                // 重复部分不添加
-            }
-        }
-        
-        // 添加变量名部分
-        result_parts.push(parts[parts.len()-1]);
-        
-        // 重新组装键名
-        let normalized = result_parts.join("::");
-        if normalized != key {
-            debug!("规范化键名: {} -> {}", key, normalized);
-        }
-        
-        normalized
     }
 
     /// 替换文本中的变量引用（包括条件表达式）
@@ -439,7 +361,7 @@ impl VariableManager {
                     None if !default_value.is_empty() => default_value.to_string(),
                     None => {
                         // 如果是命名空间变量且无法解析，尝试在日志中提供更多信息
-                        if var_name.contains("::") || var_name.contains(".") {
+                        if var_name.contains("::") /*|| var_name.contains(".")*/ {
                             let normalized_name = var_name.replace('.', "::");
                             let parts: Vec<&str> = normalized_name.splitn(2, "::").collect();
                             if parts.len() == 2 {
@@ -492,8 +414,8 @@ impl VariableManager {
                     Some(value) => value,
                     None => {
                         // 如果是命名空间变量且无法解析，尝试在日志中提供更多信息
-                        if var_name.contains(".") {
-                            let parts: Vec<&str> = var_name.splitn(2, ".").collect();
+                        if var_name.contains("::") {
+                            let parts: Vec<&str> = var_name.splitn(2, "::").collect();
                             if parts.len() == 2 {
                                 let namespace = parts[0];
                                 warn!("无法解析命名空间变量: {{ {} }}，命名空间 {} 未注册或变量不存在", var_name, namespace);
@@ -525,8 +447,8 @@ impl VariableManager {
                     Some(value) => value,
                     None => {
                         // 如果是命名空间变量且无法解析，尝试在日志中提供更多信息
-                        if var_name.contains(".") {
-                            let parts: Vec<&str> = var_name.splitn(2, ".").collect();
+                        if var_name.contains("::") {
+                            let parts: Vec<&str> = var_name.splitn(2, "::").collect();
                             if parts.len() == 2 {
                                 let namespace = parts[0];
                                 // Corrected warning line:
