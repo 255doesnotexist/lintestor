@@ -1,4 +1,4 @@
-use clap::{Parser, Subcommand, Args};
+use clap::Parser;
 use std::path::PathBuf;
 
 /// Lintestor - 一个用于执行和管理嵌入在Markdown中的测试的工具
@@ -151,7 +151,7 @@ impl CliArgs {
     }
 
     /// 获取筛选条件
-    pub fn get_filters(&self) -> (Option<&str>, Option<&str>) {
-        (self.unit.as_deref(), self.tag.as_deref())
+    pub fn get_filters(&self) -> (Option<&str>, Option<&str>, Option<&str>) {
+        (self.unit.as_deref(), self.tag.as_deref(), self.target.as_deref().and_then(|p| p.to_str()))
     }
 }

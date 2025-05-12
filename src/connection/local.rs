@@ -4,7 +4,7 @@
 
 use std::process::{Command, Stdio};
 use std::time::{Duration, Instant};
-use std::io::{Read, Write};
+use std::io::Read;
 use std::thread;
 use anyhow::{Result, Context};
 use log::{debug, warn};

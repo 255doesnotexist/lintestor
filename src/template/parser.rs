@@ -2,84 +2,294 @@
 //!
 //! 这个模块负责解析Markdown格式的测试模板内容，识别其中的元数据、可执行代码块和特殊属性。
 
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::path::{Path, PathBuf};
-use std::sync::atomic::{AtomicU16, Ordering};
 use anyhow::{Result, Context, bail, anyhow};
 use regex::Regex;
 use log::{debug, info, warn, error};
 
+// Import the new ExecutionStep related types
+use crate::template::step::{ExecutionStep, GlobalStepId, StepType};
+// Import ParsedTestStep directly, ContentBlock is defined in this file
 use crate::template::{
-    TestTemplate, TemplateMetadata, TestStep, AssertionType, DataExtraction, TemplateReference
+    TemplateMetadata, ParsedTestStep, AssertionType, DataExtraction, TemplateReference
 };
 
-/// 解析Markdown测试模板内容
-pub fn parse_template(content: &str) -> Result<TestTemplate> {
-    info!("开始解析测试模板");
+
+/// 表示模板文件内容的不同结构化块。
+/// 解析器 (Parser) 会将原始模板字符串转换为 `Vec<ContentBlock>`。
+#[derive(Debug, Clone, PartialEq)]
+pub enum ContentBlock {
+    /// YAML 前置元数据块。
+    /// 存储的是 `---` 分隔符内部的原始 YAML 字符串。
+    Metadata(String),
+
+    /// 通用 Markdown 文本块。
+    /// 这可以包含任何 Markdown内容，包括原始的步骤定义文本（如果它们不被特殊处理为其他类型的块）。
+    Text(String),
+
+    /// 代表一个旨在报告中显示的代码块。
+    /// 其可见性可能由其属性控制。
+    DisplayableCodeBlock {
+        /// 代码块的原始内容，包括 ```lang {attrs}...``` 和代码本身。
+        original_content: String,
+        /// 此代码块对应的步骤的本地ID (如果有)。
+        /// 用于查找 ExecutionStep 以获取属性 (例如可见性)。
+        local_step_id: Option<String>,
+    },
+
+    /// 代表一个步骤输出的占位符。
+    /// 例如 ` ```output {ref="step_id"} ... ``` `。
+    OutputBlock {
+        step_id: String,
+    },
+
+    /// 一个标记，指示在此处应插入自动生成的步骤摘要表。
+    SummaryTablePlaceholder,
+}
+
+/// 解析Markdown测试模板内容，返回元数据、执行步骤列表和内容块列表
+pub fn parse_template_into_content_blocks_and_steps(
+    content: &str, 
+    file_path: &Path
+) -> Result<(TemplateMetadata, Vec<ExecutionStep>, Vec<ContentBlock>)> {
+    info!("开始解析测试模板 (结构化内容和步骤): {}", file_path.display());
     
-    // 分离YAML前置数据和Markdown内容
     let (yaml_front_matter, markdown_content) = extract_front_matter(content)?;
     debug!("YAML前置数据长度: {} 字节", yaml_front_matter.len());
     debug!("Markdown内容长度: {} 字节", markdown_content.len());
     
-    // 解析元数据
     let metadata = parse_metadata(&yaml_front_matter)?;
     info!("模板元数据解析完成: title=\"{}\", unit=\"{}\"", metadata.title, metadata.unit_name);
-    debug!("目标配置: {}", metadata.target_config.display());
-    debug!("标签: {:?}", metadata.tags);
     
-    // 解析Markdown内容中的步骤
-    let steps = parse_steps(markdown_content)?;
-    info!("已解析 {} 个测试步骤", steps.len());
+    let template_id = file_path.file_stem().unwrap_or_default().to_str().unwrap_or("unknown_template").to_string();
+    debug!("生成的模板 ID: {}", template_id);
+
+    // 同时解析步骤和内容块
+    let (execution_steps, content_blocks) = parse_markdown_to_steps_and_content_blocks(&markdown_content, &template_id, &metadata)?;
     
-    for (idx, step) in steps.iter().enumerate() {
-        if step.executable {
-            debug!("步骤 #{}: id={}, 可执行=true, 依赖={:?}", idx+1, step.id, step.depends_on);
-            
-            // 记录断言
-            for assertion in &step.assertions {
-                match assertion {
-                    AssertionType::ExitCode(code) => {
-                        debug!("  断言: exit_code={}", code);
-                    },
-                    AssertionType::StdoutContains(text) => {
-                        debug!("  断言: stdout_contains=\"{}\"", text);
-                    },
-                    AssertionType::StdoutNotContains(text) => {
-                        debug!("  断言: stdout_not_contains=\"{}\"", text);
-                    },
-                    AssertionType::StdoutMatches(regex) => {
-                        debug!("  断言: stdout_matches=/{}/", regex);
-                    },
-                    AssertionType::StderrContains(text) => {
-                        debug!("  断言: stderr_contains=\"{}\"", text);
-                    },
-                    AssertionType::StderrNotContains(text) => {
-                        debug!("  断言: stderr_not_contains=\"{}\"", text);
-                    },
-                    AssertionType::StderrMatches(regex) => {
-                        debug!("  断言: stderr_matches=/{}/", regex);
-                    },
-                }
-            }
-            
-            // 记录变量提取
-            for extraction in &step.extractions {
-                info!("  变量提取: {}=/{}/", extraction.variable, extraction.regex);
-            }
-        } else if let Some(ref_id) = &step.ref_command {
-            debug!("步骤 #{}: id={}, 输出引用={}", idx+1, step.id, ref_id);
-        } else {
-            debug!("步骤 #{}: id={}, 非执行步骤", idx+1, step.id);
+    info!("已解析 {} 个执行步骤和 {} 个内容块", execution_steps.len(), content_blocks.len());
+    
+    for step in &execution_steps {
+        debug!("ExecutionStep: id={}, type={:?}, local_id={}, template_id={}, deps={:?}", 
+            step.id, step.step_type, step.local_id, step.template_id, step.dependencies);
+        if let Some(parsed_step) = &step.original_parsed_step {
+            debug!("  Original Parsed Step: id={}, exec={}, assertions={}, extractions={}", 
+                parsed_step.id, parsed_step.executable, parsed_step.assertions.len(), parsed_step.extractions.len());
         }
     }
     
-    Ok(TestTemplate {
-        metadata,
-        steps,
-        file_path: PathBuf::new(), // 在TestTemplate::from_file中设置
-        raw_content: content.to_string(),
-    })
+    Ok((metadata, execution_steps, content_blocks))
+}
+
+/// 从Markdown内容中解析出 ExecutionSteps 和 ContentBlocks
+fn parse_markdown_to_steps_and_content_blocks(
+    markdown: &str, 
+    template_id: &str, 
+    metadata: &TemplateMetadata
+) -> Result<(Vec<ExecutionStep>, Vec<ContentBlock>)> {
+    debug!("开始将Markdown内容解析为 ExecutionSteps 和 ContentBlocks (template_id: {})", template_id);
+    let mut execution_steps = Vec::new();
+    let mut content_blocks = Vec::new();
+    
+    let heading_re = Regex::new(r#"(?m)^(#+)\s+(.*?)(?:\s+(\{.*\})|\s*)$"#)?;
+    let code_block_re = Regex::new(r"(?ms)```(\w*)\s*(\{([^}]*)\})?\n(.*?)```")?;
+    let output_block_re = Regex::new(r#"(?ms)```output\s+\{ref=(?:"([^"]+)"|'([^']+)')\}\n(?:.*?)```"#)?;
+    let summary_table_re = Regex::new(r#"(?im)^\s*<!--\s*LINTESOR_SUMMARY_TABLE\s*-->\s*$"#)?;
+
+    let mut current_heading_stack: Vec<(GlobalStepId, u8)> = Vec::new();
+    let mut local_id_counter = 0;
+
+    let mut last_match_end = 0;
+
+    let combined_re_str = format!(
+        "(?P<heading>{})|(?P<output_block>{})|(?P<summary_table>{})|(?P<code_block>{})",
+        heading_re.as_str(),
+        output_block_re.as_str(),
+        summary_table_re.as_str(),
+        code_block_re.as_str()
+    );
+    let combined_re = Regex::new(&combined_re_str)?;
+
+    for captures in combined_re.captures_iter(markdown) {
+        let match_start = captures.get(0).unwrap().start();
+        let match_end = captures.get(0).unwrap().end();
+
+        if match_start > last_match_end {
+            let text_segment = &markdown[last_match_end..match_start];
+            if !text_segment.trim().is_empty() {
+                content_blocks.push(ContentBlock::Text(text_segment.to_string()));
+            }
+        }
+
+        if let Some(heading_match) = captures.name("heading") {
+            let line = heading_match.as_str();
+            content_blocks.push(ContentBlock::Text(line.to_string()));
+
+            if let Some(caps) = heading_re.captures(line) {
+                let level = caps.get(1).map_or(0, |m| m.as_str().len() as u8);
+                let text = caps.get(2).map_or("", |m| m.as_str()).trim().to_string();
+                let attributes_str = caps.get(3).map_or("", |m| m.as_str());
+                
+                let attributes = parse_inline_attributes(attributes_str);
+                let local_id = attributes.get("id").cloned().unwrap_or_else(|| {
+                    local_id_counter += 1;
+                    format!("heading_{}", local_id_counter)
+                });
+                let global_id = format!("{}::{}", template_id, local_id);
+
+                while let Some((_, last_level)) = current_heading_stack.last() {
+                    if *last_level >= level {
+                        current_heading_stack.pop();
+                    } else {
+                        break;
+                    }
+                }
+
+                let mut dependencies = HashSet::new();
+                if let Some(parent_heading_id) = current_heading_stack.last() {
+                    dependencies.insert(parent_heading_id.0.clone());
+                }
+                if let Some(deps_str) = attributes.get("depends_on") {
+                    parse_depends_on_str(deps_str, &mut dependencies, template_id, &metadata.references);
+                }
+
+                execution_steps.push(ExecutionStep {
+                    id: global_id.clone(),
+                    template_id: template_id.to_string(),
+                    local_id,
+                    step_type: StepType::Heading { level, text, attributes: attributes.clone() },
+                    dependencies,
+                    original_parsed_step: None,
+                });
+                current_heading_stack.push((global_id, level));
+            }
+        } else if let Some(output_match) = captures.name("output_block") {
+            if let Some(caps) = output_block_re.captures(output_match.as_str()) {
+                let ref_id_attr = caps.get(1).or_else(|| caps.get(2)).map_or("", |m| m.as_str()).to_string();
+                content_blocks.push(ContentBlock::OutputBlock { step_id: ref_id_attr.clone() });
+                
+                let local_id = format!("{}-outputplaceholder", ref_id_attr);
+                let global_id = format!("{}::{}", template_id, local_id);
+                let mut dependencies = HashSet::new();
+                let ref_global_id = resolve_dependency_ref(&ref_id_attr, template_id, &metadata.references);
+                dependencies.insert(ref_global_id.clone());
+
+                if let Some(parent_heading_id) = current_heading_stack.last() {
+                    dependencies.insert(parent_heading_id.0.clone());
+                }
+
+                let parsed_step_info = ParsedTestStep {
+                    id: local_id.clone(),
+                    description: Some(format!("Placeholder for output of step {}", ref_id_attr)),
+                    command: None, 
+                    depends_on: vec![ref_id_attr.to_string()],
+                    assertions: Vec::new(),
+                    extractions: Vec::new(),
+                    executable: false, // Not directly executable
+                    ref_command: Some(ref_id_attr.to_string()),
+                    raw_content: output_match.as_str().to_string(),
+                    active: Some(true), // Output blocks are typically always active if the ref step runs
+                    timeout_ms: None,
+                };
+
+                execution_steps.push(ExecutionStep {
+                    id: global_id,
+                    template_id: template_id.to_string(),
+                    local_id,
+                    step_type: StepType::OutputPlaceholder,
+                    dependencies,
+                    original_parsed_step: Some(parsed_step_info),
+                });
+            }
+        } else if captures.name("summary_table").is_some() {
+            content_blocks.push(ContentBlock::SummaryTablePlaceholder);
+        } else if let Some(code_match) = captures.name("code_block") {
+            // This is a general code block, which is an ExecutionStep 
+            // and potentially a DisplayableCodeBlock for the report.
+            let block_content = code_match.as_str();
+            
+            // Parse attributes to get local_id for DisplayableCodeBlock and ExecutionStep
+            let preliminary_caps = code_block_re.captures(block_content); // Re-capture to get groups
+            let lang_for_check = preliminary_caps.as_ref().and_then(|c| c.get(1)).map_or("", |m| m.as_str());
+            let attrs_str_for_check = preliminary_caps.as_ref().and_then(|c| c.get(3)).map_or("", |m| m.as_str());
+
+            // Avoid double-processing if it's an output block that was missed by the more specific output_block_re
+            // (though output_block_re should be preferred and capture it first)
+            if lang_for_check == "output" && attrs_str_for_check.contains("ref=") {
+                // This should have been caught by the OutputBlock regex. 
+                // If it reaches here, it implies a parsing logic subtlety or an edge case.
+                // For safety, we can push it as Text, or log a warning.
+                // However, the combined regex order should prevent this.
+                // If it does happen, pushing as Text is safer than creating a confusing DisplayableCodeBlock.
+                // For now, assume combined_re handles order correctly and this branch is less likely for true output blocks.
+                // Let's proceed to treat it as a potential DisplayableCodeBlock / ExecutionStep.
+            }
+
+            // Now parse it as an ExecutionStep::CodeBlock and get its local_id
+            if let Some(caps) = code_block_re.captures(block_content) { // Re-capture for full parsing
+                let lang = caps.get(1).map_or("", |m| m.as_str()).to_string();
+                let attributes_str = caps.get(3).map_or("", |m| m.as_str());
+                let command = caps.get(4).map_or("", |m| m.as_str()).trim().to_string();
+                
+                let attributes = parse_inline_attributes(attributes_str);
+                let local_id = attributes.get("id").cloned().unwrap_or_else(|| {
+                    local_id_counter += 1;
+                    format!("codeblock_{}", local_id_counter)
+                });
+
+                // Add as DisplayableCodeBlock for the report structure
+                content_blocks.push(ContentBlock::DisplayableCodeBlock {
+                    original_content: block_content.to_string(),
+                    local_step_id: Some(local_id.clone()),
+                });
+
+                // Create the ExecutionStep as before
+                let global_id = format!("{}::{}", template_id, local_id);
+                let mut dependencies = HashSet::new();
+                if let Some(parent_heading_id) = current_heading_stack.last() {
+                    dependencies.insert(parent_heading_id.0.clone());
+                }
+                if let Some(deps_str) = attributes.get("depends_on") {
+                    parse_depends_on_str(deps_str, &mut dependencies, template_id, &metadata.references);
+                }
+                
+                let parsed_step_info = ParsedTestStep {
+                    id: local_id.clone(),
+                    description: attributes.get("description").cloned(),
+                    command: Some(command.clone()),
+                    depends_on: dependencies.iter().map(|gsid| gsid.split("::").last().unwrap_or("").to_string()).collect(),
+                    assertions: parse_assertions_from_attributes(&attributes),
+                    extractions: parse_extractions_from_attributes(&attributes),
+                    executable: attributes.get("exec").and_then(|v_str| v_str.parse::<bool>().ok()).unwrap_or(true),
+                    ref_command: None,
+                    raw_content: block_content.to_string(), // raw_content in ParsedTestStep is the code itself, not the full block with ```
+                    active: attributes.get("active").and_then(|v_str| v_str.parse::<bool>().ok()),
+                    timeout_ms: attributes.get("timeout_ms").and_then(|v_str| v_str.parse::<u64>().ok()),
+                };
+
+                execution_steps.push(ExecutionStep {
+                    id: global_id,
+                    template_id: template_id.to_string(),
+                    local_id,
+                    step_type: StepType::CodeBlock { lang, command, attributes: attributes.clone() },
+                    dependencies,
+                    original_parsed_step: Some(parsed_step_info),
+                });
+            }
+        }
+        last_match_end = match_end;
+    }
+
+    if last_match_end < markdown.len() {
+        let remaining_text = &markdown[last_match_end..];
+        if !remaining_text.trim().is_empty() {
+            content_blocks.push(ContentBlock::Text(remaining_text.to_string()));
+        }
+    }
+    
+    debug!("完成 ExecutionSteps ({}) 和 ContentBlocks ({}) 解析", execution_steps.len(), content_blocks.len());
+    Ok((execution_steps, content_blocks))
 }
 
 /// 从Markdown内容中提取YAML前置数据
@@ -109,7 +319,6 @@ fn parse_metadata(yaml: &str) -> Result<TemplateMetadata> {
     
     debug!("YAML解析成功，开始提取字段");
     
-    // 提取必需字段
     let title = yaml_value["title"].as_str()
         .ok_or_else(|| anyhow!("元数据缺少'title'字段"))?
         .to_string();
@@ -126,7 +335,6 @@ fn parse_metadata(yaml: &str) -> Result<TemplateMetadata> {
         .to_string();
     debug!("提取unit_name: {}", unit_name);
     
-    // 提取可选字段
     let unit_version_command = yaml_value["unit_version_command"]
         .as_str()
         .map(|s| s.to_string());
@@ -145,23 +353,22 @@ fn parse_metadata(yaml: &str) -> Result<TemplateMetadata> {
         _ => Vec::new(),
     };
     
-    // 提取外部模板引用
     let references = match yaml_value["references"] {
         serde_yaml::Value::Sequence(ref seq) => {
             let mut refs = Vec::new();
             for ref_value in seq {
                 if let serde_yaml::Value::Mapping(ref mapping) = ref_value {
-                    let template_path = mapping.get(&serde_yaml::Value::String("template".to_string()))
+                    let template_path = mapping.get(&serde_yaml::Value::String("template_path".to_string()))
                         .and_then(|v| v.as_str())
-                        .ok_or_else(|| anyhow!("references中的项缺少'template'字段"))?
-                        .to_string();
-                        
-                    let namespace = mapping.get(&serde_yaml::Value::String("as".to_string()))
+                        .map(|s| s.to_string())
+                        .ok_or_else(|| anyhow!("references中的项缺少'template_path'字段"))?;
+                    
+                    let namespace = mapping.get(&serde_yaml::Value::String("namespace".to_string()))
                         .and_then(|v| v.as_str())
-                        .ok_or_else(|| anyhow!("references中的项缺少'as'字段"))?
-                        .to_string();
-                        
-                    debug!("提取模板引用: template={}, as={}", template_path, namespace);
+                        .map(|s| s.to_string())
+                        .ok_or_else(|| anyhow!("references中的项缺少'namespace'字段"))?;
+                    
+                    debug!("提取模板引用: template_path={}, namespace={}", template_path, namespace);
                     refs.push(TemplateReference {
                         template_path,
                         namespace,
@@ -177,11 +384,9 @@ fn parse_metadata(yaml: &str) -> Result<TemplateMetadata> {
         debug!("共提取到 {} 个外部模板引用", references.len());
     }
     
-    // 收集其他自定义字段
     let mut custom = HashMap::new();
     if let serde_yaml::Value::Mapping(mapping) = &yaml_value {
         for (key, value) in mapping {
-            // 跳过已处理的标准字段
             if let Some(key_str) = key.as_str() {
                 if ["title", "target_config", "unit_name", "unit_version_command", "tags", "references"]
                     .contains(&key_str) {
@@ -207,664 +412,89 @@ fn parse_metadata(yaml: &str) -> Result<TemplateMetadata> {
     })
 }
 
-/// 解析Markdown内容中的测试步骤
-fn parse_steps(markdown: &str) -> Result<Vec<TestStep>> {
-    debug!("开始解析Markdown内容中的测试步骤");
-    let mut steps = Vec::new();
-    
-    // 匹配标题块 - 改进正则表达式，更好地处理ID和依赖属性
-    let heading_re = Regex::new(r#"(?m)^(#+)\s+(.*?)(?:\s+\{id="([^"]+)"(?:\s+depends_on=(\[[^\]]+\]))?\s*\})?$"#)?;
-    
-    // 预扫描阶段：收集所有部分ID和代码块ID
-    let mut section_ids = HashMap::new();
-    let mut code_block_ids = HashMap::new();
-    
-    // 1. 首先扫描所有标题节ID
-    for caps in heading_re.captures_iter(markdown) {
-        if let Some(id_match) = caps.get(3) {
-            let section_id = id_match.as_str().to_string();
-            let heading_text = caps.get(2).unwrap().as_str().to_string();
-            section_ids.insert(section_id.clone(), heading_text.clone());
-            debug!("预扫描到标题ID: {}, 标题: {}", section_id, heading_text);
-        }
+/// Helper to parse inline attributes like {id="foo" exec="true"}
+fn parse_inline_attributes(attr_str: &str) -> HashMap<String, String> {
+    let mut attributes = HashMap::new();
+    let attr_re = Regex::new(r#"\s*(\w+)\s*=\s*"([^"]*)""#).unwrap();
+    for cap in attr_re.captures_iter(attr_str) {
+        attributes.insert(cap[1].to_string(), cap[2].to_string());
     }
-    
-    // 2. 扫描所有代码块ID
-    let code_block_re = Regex::new(r#"(?ms)```\w+\s+\{id="([^"]+)"[^}]*\}\n.*?```"#)?;
-    for caps in code_block_re.captures_iter(markdown) {
-        let block_id = caps.get(1).unwrap().as_str().to_string();
-        code_block_ids.insert(block_id.clone(), true);
-        debug!("预扫描到代码块ID: {}", block_id);
-    }
-    
-    // 合并所有已知ID用于后续验证
-    let mut all_known_ids = HashMap::new();
-    for (id, title) in &section_ids {
-        all_known_ids.insert(id.clone(), format!("标题: {}", title));
-    }
-    for (id, _) in &code_block_ids {
-        all_known_ids.insert(id.clone(), "代码块".to_string());
-    }
-    
-    info!("预扫描ID完成，找到 {} 个标题ID和代码块ID", all_known_ids.len());
-    
-    // 构建标题嵌套结构以处理依赖关系
-    let mut heading_stack: Vec<(String, usize, Vec<String>)> = Vec::new(); // (id, level, depends_on)
-    
-    // 匹配代码块，扩展正则表达式支持依赖关系属性
-    let code_block_re = Regex::new(r"(?ms)```(\w+)\s+\{([^}]+)\}\n(.*?)```")?;
-    
-    // 匹配输出块
-    let output_block_re = Regex::new(r#"(?ms)```output\s+\{ref=(?:"([^"]+)"|'([^']+)')\}\n(.*?)```"#)?;
-
-    // 遍历Markdown内容的每一行
-    let mut lines = markdown.lines().peekable();
-    let mut current_content = String::new();
-
-    while let Some(line) = lines.next() {
-        // 检查是否是标题行
-        if let Some(captures) = heading_re.captures(line) {
-            // 处理之前收集的内容（如果有）
-            if !current_content.is_empty() {
-                // 确保有父标题
-                if !heading_stack.is_empty() {
-                    let (parent_id, _, parent_deps) = heading_stack.last().unwrap();
-                    debug!("处理标题 {} 下的内容，内容长度={}", parent_id, current_content.len());
-                    
-                    // 解析内容中的代码块
-                    parse_blocks(&current_content, parent_id, parent_deps, &all_known_ids, &mut steps)?;
-                }
-                current_content.clear();
-            }
-            
-            // 解析当前标题
-            let level = captures.get(1).unwrap().as_str().len();
-            let title = captures.get(2).unwrap().as_str();
-            let section_id = captures.get(3).map_or_else(
-                || format!("section-{}", steps.len() + 1),
-                |m| m.as_str().to_string()
-            );
-            
-            // 解析显式声明的依赖
-            let mut depends_on = Vec::new();
-            if let Some(deps_match) = captures.get(4) {
-                let deps_str = deps_match.as_str();
-                // 去掉方括号并解析依赖项
-                let inner = deps_str.trim_start_matches('[').trim_end_matches(']');
-                depends_on = inner.split(',')
-                    .map(|s| s.trim().trim_matches(|c| c == '"' || c == '\'')).filter(|s| !s.is_empty())
-                    .map(|s| s.to_string())
-                    .collect();
-                
-                debug!("标题 {} 显式依赖于: {:?}", section_id, depends_on);
-            }
-            
-            // 处理标题级别和嵌套依赖
-            // 移除比当前标题级别更低的标题
-            while !heading_stack.is_empty() && heading_stack.last().unwrap().1 >= level {
-                heading_stack.pop();
-            }
-            
-            // 自动添加对父标题的依赖
-            if !heading_stack.is_empty() {
-                let parent_id = heading_stack.last().unwrap().0.clone();
-                if !depends_on.contains(&parent_id) {
-                    debug!("标题 {} 自动依赖于父标题 {}", section_id, parent_id);
-                    depends_on.push(parent_id);
-                }
-            }
-            
-            // 验证依赖ID是否存在
-            for dep_id in &depends_on {
-                if !all_known_ids.contains_key(dep_id) {
-                    warn!("标题 {} 依赖于未知ID: {}", section_id, dep_id);
-                }
-            }
-            
-            debug!("解析标题: level={}, title=\"{}\", id=\"{}\", 依赖={:?}", 
-                level, title, section_id, depends_on);
-            
-            // 添加当前标题到栈中
-            heading_stack.push((section_id.clone(), level, depends_on.clone()));
-            
-            // 创建标题步骤
-            let step = TestStep {
-                id: section_id,
-                description: Some(title.to_string()),
-                command: None,
-                depends_on,
-                assertions: Vec::new(),
-                extractions: Vec::new(),
-                executable: false,
-                ref_command: None,
-                raw_content: line.to_string(),
-            };
-            
-            debug!("添加标题步骤: id={}", step.id);
-            steps.push(step);
-            
-            // 将当前行添加到内容中
-            current_content.push_str(line);
-            current_content.push('\n');
-            continue;
-        }
-        
-        // 检查是否是代码块的开始
-        if line.starts_with("```") {
-            // 收集整个代码块
-            let mut code_block = String::new();
-            code_block.push_str(line);
-            code_block.push('\n');
-            
-            // 继续读取直到代码块结束
-            let mut in_code_block = true;
-            while in_code_block {
-                if let Some(next_line) = lines.next() {
-                    code_block.push_str(next_line);
-                    code_block.push('\n');
-                    if next_line.starts_with("```") {
-                        in_code_block = false;
-                    }
-                } else {
-                    // 文件结束但代码块未关闭
-                    warn!("代码块未正确关闭");
-                    in_code_block = false;
-                }
-            }
-            
-            // 直接处理代码块
-            if !heading_stack.is_empty() {
-                let (parent_id, _, parent_deps) = heading_stack.last().unwrap();
-                
-                // 对代码块和输出块进行匹配
-                if let Some(cap) = code_block_re.captures(&code_block) {
-                    let language = cap.get(1).unwrap().as_str();
-                    let attributes = cap.get(2).unwrap().as_str();
-                    let code = cap.get(3).unwrap().as_str();
-                    
-                    debug!("找到代码块: language={}, attributes='{}'", language, attributes);
-                    
-                    // 解析属性
-                    let (block_id, description, executable, mut depends_on, assertions, extractions) = 
-                        parse_block_attributes(attributes, parent_id)?;
-                    
-                    // 合并从父标题继承的依赖关系
-                    if depends_on.is_empty() && !parent_deps.is_empty() {
-                        depends_on = parent_deps.clone();
-                        debug!("代码块 {} 继承父标题 {} 的依赖: {:?}", block_id, parent_id, depends_on);
-                    }
-                    
-                    // 创建测试步骤
-                    let step = TestStep {
-                        id: block_id,
-                        description: Some(description),
-                        command: if language == "bash" || language == "sh" { Some(code.to_string()) } else { None },
-                        depends_on,
-                        assertions,
-                        extractions,
-                        executable,
-                        ref_command: None,
-                        raw_content: format!("```{} {{{}}}\n{}\n```", language, attributes, code),
-                    };
-                    
-                    debug!("添加代码块步骤: id={}", step.id);
-                    steps.push(step);
-                } else if let Some(cap) = output_block_re.captures(&code_block) {
-                    // 处理输出引用块
-                    let ref_id = cap.get(1).or_else(|| cap.get(2)).map_or("unknown", |m| m.as_str());
-                    let placeholder = cap.get(3).unwrap().as_str();
-                    
-                    debug!("找到输出引用块: ref_id={}", ref_id);
-                    
-                    let step = TestStep {
-                        id: format!("{}-output", ref_id),
-                        description: None,
-                        command: None,
-                        depends_on: vec![ref_id.to_string()],
-                        assertions: Vec::new(),
-                        extractions: Vec::new(),
-                        executable: false,
-                        ref_command: Some(ref_id.to_string()),
-                        raw_content: format!("```output {{ref=\"{}\"}}\n{}\n```", ref_id, placeholder),
-                    };
-                    
-                    debug!("添加输出引用步骤: id={}", step.id);
-                    steps.push(step);
-                }
-            } else {
-                // 如果没有父标题，将代码块添加到当前内容中
-                current_content.push_str(&code_block);
-            }
-            continue;
-        }
-        
-        // 普通行，添加到当前内容
-        current_content.push_str(line);
-        current_content.push('\n');
-    }
-    
-    // 处理最后收集的内容
-    if !current_content.is_empty() && !heading_stack.is_empty() {
-        let (parent_id, _, parent_deps) = heading_stack.last().unwrap();
-        debug!("处理最后的内容块: parent_id={}, 内容长度={}", parent_id, current_content.len());
-        parse_blocks(&current_content, parent_id, parent_deps, &all_known_ids, &mut steps)?;
-    }
-    
-    info!("共解析到 {} 个步骤", steps.len());
-    Ok(steps)
+    attributes
 }
 
-/// 解析Markdown内容
-pub fn parse_markdown(content: &str, file_path: &Path) -> Result<TestTemplate> {
-    info!("开始解析Markdown内容");
-
-    // 分离YAML前置数据和Markdown内容
-    let (yaml_front_matter, markdown_content) = extract_front_matter(content)?;
-    debug!("YAML前置数据长度: {} 字节", yaml_front_matter.len());
-    debug!("Markdown内容长度: {} 字节", markdown_content.len());
-
-    // 解析元数据
-    let metadata = parse_metadata(&yaml_front_matter)?;
-    info!("模板元数据解析完成: title=\"{}\", unit=\"{}\"", metadata.title, metadata.unit_name);
-    debug!("目标配置: {}", metadata.target_config.display());
-    debug!("标签: {:?}", metadata.tags);
-
-    // 解析Markdown内容中的步骤
-    let steps = parse_steps(markdown_content)?;
-    info!("已解析 {} 个测试步骤", steps.len());
-
-    // 在返回前记录最终解析出的步骤 ID 列表
-    let final_step_ids: Vec<String> = steps.iter().map(|s| s.id.clone()).collect();
-    debug!("Parser finished for {}: Final parsed step IDs: {:?}", file_path.display(), final_step_ids);
-
-    Ok(TestTemplate {
-        metadata,
-        steps,
-        file_path: file_path.to_path_buf(),
-        raw_content: content.to_string(),
-    })
+/// Helper to parse "depends_on" string and populate dependencies set
+fn parse_depends_on_str(deps_str: &str, dependencies: &mut HashSet<GlobalStepId>, current_template_id: &str, references: &[TemplateReference]) {
+    let deps_list_str = deps_str.trim_matches(|c| c == '[' || c == ']');
+    for dep_item_str in deps_list_str.split(',') {
+        let trimmed_dep = dep_item_str.trim().trim_matches(|c| c == '\'' || c == '\"');
+        if !trimmed_dep.is_empty() {
+            dependencies.insert(resolve_dependency_ref(trimmed_dep, current_template_id, references));
+        }
+    }
 }
 
-/// 解析步骤内容中的代码块和输出块
-fn parse_blocks(content: &str, step_id: &str, header_depends_on: &Vec<String>, all_known_ids: &HashMap<String, String>, steps: &mut Vec<TestStep>) -> Result<()> {
-    debug!("解析步骤 {} 中的代码块和输出块", step_id);
-    
-    // 识别代码块，支持不同的属性格式
-    let code_block_re = Regex::new(r"(?ms)```(\w+)\s+\{([^}]+)\}\n(.*?)```")?;
-    
-    // 识别输出块，同时支持单引号和双引号的引用
-    let output_block_re = Regex::new(r#"(?ms)```output\s+\{ref=(?:"([^"]+)"|'([^']+)')\}\n(.*?)```"#)?;
-    
-    // 解析代码块
-    for cap in code_block_re.captures_iter(content) {
-        let language = cap.get(1).unwrap().as_str();
-        let attributes = cap.get(2).unwrap().as_str();
-        let code = cap.get(3).unwrap().as_str();
-        
-        debug!("找到代码块: language={}, attributes='{}'", language, attributes);
-        
-        // 先进行属性解析，以便正确获取ID和其他属性
-        let (block_id, description, executable, mut depends_on, assertions, extractions) = 
-            parse_block_attributes(attributes, step_id)?;
-        
-        debug!("解析代码块属性结果: id={}", block_id);
-        
-        // 合并从标题继承的依赖关系
-        // 如果代码块没有显式指定依赖，则继承标题的依赖
-        if depends_on.is_empty() && !header_depends_on.is_empty() {
-            debug!("代码块 {} 继承标题 {} 的依赖: {:?}", block_id, step_id, header_depends_on);
-            depends_on = header_depends_on.clone();
-        }
-        
-        debug!("解析代码块属性: id={}, description=\"{}\", executable={}, 依赖数量={}, 断言数量={}, 提取数量={}",
-                block_id, description, executable, depends_on.len(), assertions.len(), extractions.len());
-        
-        // 验证依赖ID是否存在
-        for dep_id in &depends_on {
-            if !all_known_ids.contains_key(dep_id) {
-                warn!("代码块 {} 依赖于未知ID: {}", block_id, dep_id);
+/// Helper to resolve a dependency reference (e.g., "step_id" or "namespace::step_id") to a GlobalStepId
+fn resolve_dependency_ref(dep_ref: &str, current_template_id: &str, references: &[TemplateReference]) -> GlobalStepId {
+    if dep_ref.contains("::") {
+        let parts: Vec<&str> = dep_ref.splitn(2, "::").collect();
+        if parts.len() == 2 {
+            let namespace_or_template_id = parts[0];
+            let local_step_id = parts[1];
+
+            for reference in references {
+                if reference.namespace == namespace_or_template_id {
+                    let referenced_template_file_name = Path::new(&reference.template_path)
+                        .file_stem()
+                        .unwrap_or_default()
+                        .to_str()
+                        .unwrap_or(namespace_or_template_id);
+                    return format!("{}::{}", referenced_template_file_name, local_step_id);
+                }
             }
+            return dep_ref.to_string();
         }
-        
-        // 记录变量提取规则
-        for extraction in &extractions {
-            info!("代码块 {} 包含变量提取: {}=/{}/", block_id, extraction.variable, extraction.regex);
-        }
-        
-        // 创建测试步骤
-        let step = TestStep {
-            id: block_id.clone(),
-            description: Some(description),
-            command: if language == "bash" || language == "sh" { Some(code.to_string()) } else { None },
-            depends_on,
-            assertions,
-            extractions,
-            executable,
-            ref_command: None,
-            raw_content: format!("```{} {{{}}}\n{}\n```", language, attributes, code),
-        };
-        
-        debug!("添加代码块步骤: id={}", step.id);
-        steps.push(step);
     }
-    
-    // 解析输出块
-    for cap in output_block_re.captures_iter(content) {
-        // 获取引用ID（可能在第一个或第二个捕获组）
-        let ref_id = cap.get(1).or_else(|| cap.get(2)).map_or("unknown", |m| m.as_str());
-        let placeholder = cap.get(3).unwrap().as_str();
-        
-        debug!("找到输出引用块: ref_id={}, placeholder内容长度={}", ref_id, placeholder.len());
-        
-        // 验证引用ID是否存在
-        if !all_known_ids.contains_key(ref_id) {
-            warn!("输出引用块依赖于未知ID: {}", ref_id);
-        }
-        
-        // 创建引用步骤
-        let step = TestStep {
-            id: format!("{}-output", ref_id),
-            description: None,
-            command: None,
-            depends_on: vec![ref_id.to_string()],
-            assertions: Vec::new(),
-            extractions: Vec::new(),
-            executable: false,
-            ref_command: Some(ref_id.to_string()),
-            raw_content: format!("```output {{ref=\"{}\"}}\n{}\n```", ref_id, placeholder),
-        };
-        
-        debug!("添加输出引用步骤: id={}", step.id);
-        steps.push(step);
-    }
-    
-    Ok(())
+    format!("{}::{}", current_template_id, dep_ref)
 }
 
-/// 解析代码块属性
-fn parse_block_attributes(attributes: &str, parent_id: &str) -> Result<(String, String, bool, Vec<String>, Vec<AssertionType>, Vec<DataExtraction>)> {
-    debug!("解析代码块属性: {}", attributes);
-    
-    // 初始化返回值
-    let mut id = String::new();
-    let mut description = String::new();
-    let mut executable = false;
-    let mut depends_on = Vec::new();
+/// Helper to parse assertions from a HashMap of attributes
+fn parse_assertions_from_attributes(attributes: &HashMap<String, String>) -> Vec<AssertionType> {
     let mut assertions = Vec::new();
-    let mut extractions = Vec::new();
-    
-    // 获取原始属性列表，不使用HashMap以防止同名属性覆盖
-    let attributes_list = extract_attributes_as_list(attributes);
-    
-    // 记录找到的所有属性
-    debug!("提取到 {} 个属性:", attributes_list.len());
-    for (k, v) in &attributes_list {
-        debug!("  {}=\"{}\"", k, v);
-    }
-    
-    // 使用HashMap处理非断言属性
-    let mut attributes_map = HashMap::new();
-    for (k, v) in &attributes_list {
-        if !k.starts_with("assert.") {
-            attributes_map.insert(k.clone(), v.clone());
+    for (key, value) in attributes {
+        if key.starts_with("assert.") {
+            let assertion_key = key.trim_start_matches("assert.");
+            match assertion_key {
+                "exit_code" => if let Ok(code) = value.parse::<i32>() {
+                    assertions.push(AssertionType::ExitCode(code));
+                },
+                "stdout_contains" => assertions.push(AssertionType::StdoutContains(value.clone())),
+                "stdout_not_contains" => assertions.push(AssertionType::StdoutNotContains(value.clone())),
+                "stdout_matches" => assertions.push(AssertionType::StdoutMatches(value.clone())),
+                "stderr_contains" => assertions.push(AssertionType::StderrContains(value.clone())),
+                "stderr_not_contains" => assertions.push(AssertionType::StderrNotContains(value.clone())),
+                "stderr_matches" => assertions.push(AssertionType::StderrMatches(value.clone())),
+                _ => warn!("未知断言类型: {}", key),
+            }
         }
     }
-    
-    // 处理ID
-    if let Some(value) = attributes_map.get("id") {
-        id = value.clone();
-        debug!("找到ID: {}", id);
-    }
-    
-    // 处理描述
-    if let Some(value) = attributes_map.get("description") {
-        description = value.clone();
-        debug!("找到描述: {}", description);
-    }
-    
-    // 处理可执行标记
-    if let Some(value) = attributes_map.get("exec") {
-        executable = value == "true";
-        debug!("找到可执行标记: {}", executable);
-    }
-    
-    // 处理依赖关系
-    if let Some(value) = attributes_map.get("depends_on") {
-        let deps_str = value.trim().trim_matches(|c| c == '[' || c == ']');
-        depends_on = deps_str.split(',')
-            .map(|s| s.trim().trim_matches(|c| c == '"' || c == '\'').to_string())
-            .filter(|s| !s.is_empty())
-            .collect();
-        debug!("找到依赖: {:?}", depends_on);
-    }
-    
-    // 处理断言和提取 - 直接从原始属性列表中处理，支持同名断言属性
-    for (key, value) in &attributes_list {
-        if key.starts_with("assert.") {
-            let assertion_type = key.trim_start_matches("assert.");
-            let assertion = parse_assertion(assertion_type, value);
-            if let Some(a) = assertion {
-                debug!("找到断言: {:?}", a);
-                assertions.push(a);
-            }
-        } else if key.starts_with("extract.") {
-            let var_name = key.trim_start_matches("extract.");
-            
-            // 处理正则表达式格式，可能被/包裹
-            let regex_str = if value.starts_with('/') && value.ends_with('/') {
+    assertions
+}
+
+/// Helper to parse extractions from a HashMap of attributes
+fn parse_extractions_from_attributes(attributes: &HashMap<String, String>) -> Vec<DataExtraction> {
+    let mut extractions = Vec::new();
+    for (key, value) in attributes {
+        if key.starts_with("extract.") {
+            let var_name = key.trim_start_matches("extract.").to_string();
+            let regex_str = if value.starts_with('/') && value.ends_with('/') && value.len() > 1 {
                 value[1..value.len()-1].to_string()
             } else {
                 value.clone()
             };
-            
-            extractions.push(DataExtraction {
-                variable: var_name.to_string(),
-                regex: regex_str.clone(),
-            });
-            debug!("找到提取规则: {}=/{}/", var_name, regex_str);
+            extractions.push(DataExtraction { variable: var_name, regex: regex_str });
         }
     }
-    
-    // 如果没有指定ID，使用父ID加自动生成后缀
-    if id.is_empty() {
-        // 使用简单的计数器代替随机数
-        static COUNTER: AtomicU16 = AtomicU16::new(0);
-        let counter = COUNTER.fetch_add(1, Ordering::SeqCst);
-        id = format!("{}-block-{}", parent_id, counter);
-        debug!("自动生成ID: {}", id);
-    }
-    
-    // 最终日志输出
-    debug!("解析代码块属性完成: id={}, description=\"{}\", executable={}, 依赖数量={}, 断言数量={}, 提取数量={}",
-            id, description, executable, depends_on.len(), assertions.len(), extractions.len());
-    
-    Ok((id, description, executable, depends_on, assertions, extractions))
-}
-
-/// 从属性字符串中提取所有键值对，保留所有属性（包括重复键）
-fn extract_attributes_as_list(attributes: &str) -> Vec<(String, String)> {
-    let mut result = Vec::new();
-    
-    // 移除可能的大括号
-    let attr_str = attributes.trim_start_matches('{').trim_end_matches('}');
-    
-    debug!("解析代码块属性列表: {}", attr_str);
-    
-    // 状态机变量
-    enum ParseState {
-        Key,        // 解析键
-        Equal,      // 等号后
-        Value,      // 解析没有引号的值
-        QuoteValue, // 解析有引号的值
-    }
-    
-    let mut state = ParseState::Key;
-    let mut current_key = String::new();
-    let mut current_value = String::new();
-    let mut quote_char = ' '; // 当前引号类型 ' 或 "
-    
-    // 遍历字符
-    let mut chars = attr_str.chars().peekable();
-    while let Some(c) = chars.next() {
-        match state {
-            ParseState::Key => {
-                if c == '=' {
-                    // 遇到等号，切换到等号后状态
-                    state = ParseState::Equal;
-                } else if c.is_whitespace() {
-                    // 键名后遇到空格
-                    if !current_key.is_empty() {
-                        // 视为无值的布尔属性
-                        result.push((current_key.trim().to_string(), "true".to_string()));
-                        current_key = String::new();
-                    }
-                } else {
-                    // 继续收集键名
-                    current_key.push(c);
-                }
-            },
-            ParseState::Equal => {
-                if c == '"' || c == '\'' {
-                    // 等号后遇到引号，开始解析引号内的值
-                    quote_char = c;
-                    state = ParseState::QuoteValue;
-                } else if c.is_whitespace() {
-                    // 等号后的空格，忽略
-                } else {
-                    // 等号后开始收集非引号值
-                    current_value.push(c);
-                    state = ParseState::Value;
-                }
-            },
-            ParseState::Value => {
-                if c.is_whitespace() {
-                    // 值后面遇到空格，表示值结束
-                    result.push((current_key.trim().to_string(), current_value.trim().to_string()));
-                    current_key = String::new();
-                    current_value = String::new();
-                    state = ParseState::Key;
-                } else {
-                    // 继续收集非引号值
-                    current_value.push(c);
-                }
-            },
-            ParseState::QuoteValue => {
-                if c == quote_char {
-                    // 遇到匹配的引号，引号值结束
-                    result.push((current_key.trim().to_string(), current_value.clone()));
-                    current_key = String::new();
-                    current_value = String::new();
-                    state = ParseState::Key;
-                } else {
-                    // 继续收集引号内的值
-                    current_value.push(c);
-                }
-            }
-        }
-    }
-    
-    // 处理最后可能未完成的键值对
-    if !current_key.is_empty() {
-        if !current_value.is_empty() {
-            result.push((current_key.trim().to_string(), current_value.trim().to_string()));
-        } else {
-            result.push((current_key.trim().to_string(), "true".to_string()));
-        }
-    }
-    
-    // 记录解析结果
-    debug!("提取到 {} 个属性 (列表形式):", result.len());
-    for (i, (k, v)) in result.iter().enumerate() {
-        debug!("  {}. {}=\"{}\"", i+1, k, v);
-    }
-    
-    result
-}
-
-/// 解析断言
-fn parse_assertion(assertion_type: &str, value: &str) -> Option<AssertionType> {
-    match assertion_type {
-        "exit_code" => {
-            if let Ok(code) = value.parse::<i32>() {
-                Some(AssertionType::ExitCode(code))
-            } else {
-                warn!("无效的exit_code值: {}", value);
-                None
-            }
-        },
-        "stdout_contains" => {
-            Some(AssertionType::StdoutContains(value.to_string()))
-        },
-        "stdout_not_contains" => {
-            Some(AssertionType::StdoutNotContains(value.to_string()))
-        },
-        "stdout_matches" => {
-            Some(AssertionType::StdoutMatches(value.to_string()))
-        },
-        "stderr_contains" => {
-            Some(AssertionType::StderrContains(value.to_string()))
-        },
-        "stderr_not_contains" => {
-            Some(AssertionType::StderrNotContains(value.to_string()))
-        },
-        "stderr_matches" => {
-            Some(AssertionType::StderrMatches(value.to_string()))
-        },
-        _ => {
-            warn!("未知的断言类型: {}", assertion_type);
-            None
-        }
-    }
-}
-
-/// 从文本中提取变量值
-fn extract_variable(text: &str, regex_str: &str) -> Result<String> {
-    info!("尝试从文本中提取变量，正则表达式: {}", regex_str);
-    
-    let re = Regex::new(regex_str)
-        .with_context(|| format!("无效的正则表达式: {}", regex_str))?;
-    
-    match re.captures(text) {
-        Some(captures) => {
-            if captures.len() > 1 {
-                let value = captures.get(1).unwrap().as_str().to_string();
-                info!("成功提取变量值: {}", value);
-                Ok(value)
-            } else {
-                let value = captures.get(0).unwrap().as_str().to_string();
-                info!("成功提取变量值(使用完整匹配): {}", value);
-                Ok(value)
-            }
-        },
-        None => {
-            let preview = if text.len() > 50 { 
-                format!("{}...", &text[..50]) 
-            } else { 
-                text.to_string() 
-            };
-            warn!("未能从文本中提取变量，文本预览: {}", preview);
-            bail!("正则表达式没有匹配: {}", regex_str)
-        }
-    }
-}
-
-/// 解析命令中的环境变量设置（支持export VAR=value语法）
-fn parse_environment_vars(command: &str, env_vars: &mut Vec<(String, String)>) {
-    debug!("解析命令中的环境变量设置");
-    let patterns = [
-        r"export\s+([A-Za-z_][A-Za-z0-9_]*)=([^;]+)",
-        r"([A-Za-z_][A-Za-z0-9_]*)=([^;]+)\s+",
-    ];
-    
-    for pattern in &patterns {
-        let re = Regex::new(pattern).unwrap();
-        for cap in re.captures_iter(command) {
-            let var_name = cap.get(1).unwrap().as_str().to_string();
-            let value = cap.get(2).unwrap().as_str().to_string();
-            debug!("提取环境变量: {}={}", var_name, value);
-            env_vars.push((var_name, value));
-        }
-    }
+    extractions
 }
 
 #[cfg(test)]
@@ -917,6 +547,4 @@ custom_field: "custom value"
         assert_eq!(metadata.references[1].namespace, "namespace2");
         assert_eq!(metadata.custom.get("custom_field"), Some(&"custom value".to_string()));
     }
-    
-    // 更多测试...
 }

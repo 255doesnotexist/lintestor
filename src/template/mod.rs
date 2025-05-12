@@ -5,21 +5,43 @@
 
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
-use anyhow::{Result, Context, bail};
-use regex::Regex;
+use std::sync::Arc;
+use anyhow::{Result, Context};
 
 mod parser;
-mod executor;
+pub mod executor; // Changed to public
 mod reporter;
 mod discovery;
-mod template_dependency_manager;
+mod dependency;
+mod variable;
+mod batch_executor;
 
-use log::{warn, debug};
-pub use parser::parse_template;
-pub use executor::{TemplateExecutor, ExecutionResult, ExecutorOptions};
+// Re-export types from step.rs
+pub mod step;
+pub use step::{ExecutionStep, GlobalStepId, StepType};
+
+use log::debug;
+use crate::utils;
+// Import ContentBlock from parser, and the new parsing function
+pub use parser::{parse_template_into_content_blocks_and_steps, ContentBlock};
+pub use executor::{ExecutionResult, ExecutorOptions};
 pub use reporter::Reporter;
 pub use discovery::{discover_templates, filter_templates, TemplateFilter};
-pub use template_dependency_manager::TemplateDependencyManager;
+pub use variable::VariableManager;
+pub use batch_executor::BatchExecutor;
+pub use dependency::StepDependencyManager; // Added StepDependencyManager
+
+/// Options for controlling batch execution
+#[derive(Debug, Clone, Default)]
+pub struct BatchOptions {
+    /// Directory where reports should be saved.
+    pub report_directory: Option<PathBuf>,
+    /// Default command timeout in seconds for steps in the batch.
+    /// Can be overridden by individual step timeouts.
+    pub command_timeout_seconds: Option<u64>,
+    /// Whether to continue executing other steps in a template if one step fails.
+    pub continue_on_error: bool,
+}
 
 /// 外部模板引用
 #[derive(Debug, Clone)]
@@ -49,37 +71,9 @@ pub struct TemplateMetadata {
     pub custom: HashMap<String, String>,
 }
 
-/// 测试断言类型
-#[derive(Debug, Clone)]
-pub enum AssertionType {
-    /// 检查命令退出码
-    ExitCode(i32),
-    /// 检查标准输出是否包含特定文本
-    StdoutContains(String),
-    /// 检查标准输出是否不包含特定文本
-    StdoutNotContains(String),
-    /// 检查标准输出是否匹配正则表达式
-    StdoutMatches(String),
-    /// 检查标准错误是否包含特定文本
-    StderrContains(String),
-    /// 检查标准错误是否不包含特定文本
-    StderrNotContains(String),
-    /// 检查标准错误是否匹配正则表达式
-    StderrMatches(String),
-}
-
-/// 数据提取定义
-#[derive(Debug, Clone)]
-pub struct DataExtraction {
-    /// 变量名
-    pub variable: String,
-    /// 用于提取数据的正则表达式
-    pub regex: String,
-}
-
-/// 测试步骤
-#[derive(Debug, Clone)]
-pub struct TestStep {
+/// 测试步骤 (原 TestStep，现为 ParsedTestStep，代表解析出的原始步骤信息)
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize, PartialEq, Eq)]
+pub struct ParsedTestStep {
     /// 步骤ID
     pub id: String,
     /// 步骤描述
@@ -98,6 +92,38 @@ pub struct TestStep {
     pub ref_command: Option<String>,
     /// 步骤的原始Markdown内容
     pub raw_content: String,
+    /// Whether the step is active and should be run (parsed from attributes)
+    pub active: Option<bool>,
+    /// Timeout for the step in milliseconds (parsed from attributes)
+    pub timeout_ms: Option<u64>,
+}
+
+/// 测试断言类型
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize, PartialEq, Eq)]
+pub enum AssertionType {
+    /// 检查命令退出码
+    ExitCode(i32),
+    /// 检查标准输出是否包含特定文本
+    StdoutContains(String),
+    /// 检查标准输出是否不包含特定文本
+    StdoutNotContains(String),
+    /// 检查标准输出是否匹配正则表达式
+    StdoutMatches(String),
+    /// 检查标准错误是否包含特定文本
+    StderrContains(String),
+    /// 检查标准错误是否不包含特定文本
+    StderrNotContains(String),
+    /// 检查标准错误是否匹配正则表达式
+    StderrMatches(String),
+}
+
+/// 数据提取定义：说是数据提取，其实是用来从输出中提取这个变量的正则表达式
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize, PartialEq, Eq)]
+pub struct DataExtraction {
+    /// 变量名
+    pub variable: String,
+    /// 用于提取数据的正则表达式
+    pub regex: String,
 }
 
 /// 测试步骤执行状态
@@ -118,16 +144,22 @@ pub enum StepStatus {
 /// 步骤执行结果
 #[derive(Debug, Clone)]
 pub struct StepResult {
-    /// 步骤ID
-    pub id: String,
+    /// 步骤ID (全局唯一)
+    pub id: GlobalStepId,
+    /// 步骤描述
+    pub description: Option<String>,
     /// 执行状态
     pub status: StepStatus,
     /// 标准输出
-    pub stdout: String,
+    pub stdout: Option<String>,
     /// 标准错误
-    pub stderr: String,
+    pub stderr: Option<String>,
     /// 退出码
-    pub exit_code: i32,
+    pub exit_code: Option<i32>,
+    /// 执行耗时 (毫秒)
+    pub duration_ms: Option<u128>,
+    /// 断言错误信息
+    pub assertion_error: Option<String>,
     /// 提取的变量
     pub extracted_vars: HashMap<String, String>,
 }
@@ -137,42 +169,41 @@ pub struct StepResult {
 pub struct TestTemplate {
     /// 模板元数据
     pub metadata: TemplateMetadata,
-    /// 测试步骤
-    pub steps: Vec<TestStep>,
+    /// 测试步骤 (Now Vec<ExecutionStep> instead of Vec<TestStep>)
+    pub steps: Vec<ExecutionStep>,
     /// 模板文件路径
     pub file_path: PathBuf,
     /// 原始模板内容
-    pub raw_content: String,
-}
-
-/// 模板上下文，用于存储执行过程中的变量和结果
-#[derive(Debug, Clone)]
-pub struct TemplateContext {
-    /// 当前模板
-    pub template: TestTemplate,
-    /// 变量表
-    pub variables: HashMap<String, String>,
-    /// 特殊变量表（不可被覆盖）
-    pub special_vars: HashMap<String, String>,
-    /// 外部变量表（按命名空间分组）
-    pub external_vars: HashMap<String, HashMap<String, String>>,
-    /// 执行结果
-    pub results: HashMap<String, StepResult>,
+    pub raw_content: String, // Keep for now, might be useful for debugging or other purposes
+    /// 结构化的内容块，用于报告生成
+    pub content_blocks: Vec<ContentBlock>,
 }
 
 impl TestTemplate {
+    /// 获取模板ID（文件名，转换为纯字母和下划线格式）
+    pub fn get_template_id(&self) -> String {
+        let template_id = utils::get_template_id_from_path(&self.file_path);
+        template_id
+    }
+
     /// 从模板文件路径创建测试模板
     pub fn from_file<P: AsRef<Path>>(path: P) -> Result<Self> {
         let path = path.as_ref();
         let content = std::fs::read_to_string(path)
             .with_context(|| format!("无法读取模板文件: {}", path.display()))?;
         
-        let mut template = parse_template(&content)
-            .with_context(|| format!("解析模板失败: {}", path.display()))?;
+        // Use the new parser function that returns content_blocks as well
+        let (metadata, steps, content_blocks) = 
+            parser::parse_template_into_content_blocks_and_steps(&content, path)
+                .with_context(|| format!("解析模板失败: {}", path.display()))?;
         
-        template.file_path = path.to_path_buf();
-        
-        Ok(template)
+        Ok(TestTemplate {
+            metadata,
+            steps,
+            file_path: path.to_path_buf(),
+            raw_content: content.to_string(),
+            content_blocks, // Store the parsed content blocks
+        })
     }
     
     /// 验证模板的完整性和正确性
@@ -184,22 +215,29 @@ impl TestTemplate {
     }
 }
 
+/// 模板上下文，用于存储执行过程中的变量和结果
+#[derive(Debug, Clone)]
+pub struct TemplateContext {
+    /// 当前模板
+    pub template: Arc<TestTemplate>, // Changed TestTemplate to Arc<TestTemplate>
+    /// 变量管理器
+    pub variable_manager: VariableManager,
+    /// 执行结果
+    pub results: HashMap<String, StepResult>,
+}
+
 impl TemplateContext {
     /// 创建新的模板上下文
-    pub fn new(template: TestTemplate) -> Self {
-        let now = chrono::Local::now();
+    pub fn new(template: Arc<TestTemplate>) -> Self { // Changed TestTemplate to Arc<TestTemplate>
+        let mut variable_manager = VariableManager::new();
         
-        let mut special_vars = HashMap::new();
-        // 添加执行时间特殊变量
-        special_vars.insert("execution_date".to_string(), now.format("%Y-%m-%d").to_string());
-        special_vars.insert("execution_time".to_string(), now.format("%H:%M:%S").to_string());
-        special_vars.insert("execution_datetime".to_string(), now.format("%Y-%m-%d %H:%M:%S").to_string());
+        // 注册当前模板
+        let current_template_id = template.get_template_id();
+        variable_manager.register_template(&template.file_path, Some(&current_template_id));
         
         Self {
             template,
-            variables: HashMap::new(),
-            special_vars,
-            external_vars: HashMap::new(),
+            variable_manager,
             results: HashMap::new(),
         }
     }
@@ -222,135 +260,31 @@ impl TemplateContext {
         }
     }
     
-    /// 设置外部变量（从外部引用模板中加载）
-    pub fn set_external_variables(&mut self, namespace: &str, variables: HashMap<String, String>) {
-        // 直接将变量添加到主变量表中，使用命名空间作为前缀
-        for (key, value) in variables.clone() {
-            let namespaced_key = format!("{}::{}", namespace, key);
-            self.variables.insert(namespaced_key, value);
-        }
-        
-        // 同时保留原有的命名空间分组存储，便于完整性和调试
-        self.external_vars.insert(namespace.to_string(), variables);
-    }
-    
     /// 替换文本中的变量引用
-    ///
-    /// 支持多种变量引用格式:
-    /// - ${variable_name} - 标准变量引用
-    /// - ${namespace::variable_name} - 带命名空间的变量引用
-    /// - {{ variable_name }} - 模板风格的变量引用
-    /// - {{ namespace.variable_name }} - 带命名空间的模板风格变量引用
     pub fn replace_variables(&self, text: &str) -> String {
-        let mut result = text.to_string();
-        
-        // 匹配所有标准变量引用 ${variable} 或 ${namespace::variable}
-        let var_pattern = r"\$\{([a-zA-Z0-9_.:]+)(?:\|([^}]+))?\}";
-        let re = Regex::new(var_pattern).unwrap();
-        
-        // 匹配模板风格变量引用 {{ variable }} 或 {{ namespace.variable }}
-        let template_pattern = r"\{\{\s*([a-zA-Z0-9_.]+)\s*\}\}";
-        let template_re = Regex::new(template_pattern).unwrap();
-        
-        // 使用循环而不是单次替换，以处理嵌套变量
-        let mut prev_result = String::new();
-        let mut iteration = 0;
-        let max_iterations = 10; // 防止无限循环
-        
-        while prev_result != result && iteration < max_iterations {
-            prev_result = result.clone();
-            iteration += 1;
+        // 获取当前模板ID
+        let template_id = self.template.get_template_id();
             
-            // 处理标准变量引用 ${variable} 或 ${namespace::variable}
-            result = re.replace_all(&prev_result, |caps: &regex::Captures| {
-                let var_name = &caps[1];
-                let default_value = caps.get(2).map(|m| m.as_str()).unwrap_or("");
-                
-                self.get_variable_value(var_name, default_value)
-            }).to_string();
-            
-            // 处理模板风格变量引用 {{ variable }} 或 {{ namespace.variable }}
-            result = template_re.replace_all(&result, |caps: &regex::Captures| {
-                let var_name = &caps[1];
-                
-                // 将 namespace.variable 格式转换为 namespace::variable
-                let normalized_name = var_name.replace('.', "::");
-                
-                self.get_variable_value(&normalized_name, "")
-            }).to_string();
-        }
-        
-        result
+        // 使用变量管理器替换变量
+        self.variable_manager.replace_variables(text, Some(&template_id), None)
     }
     
-    /// 获取变量值，支持命名空间
-    fn get_variable_value(&self, var_name: &str, default_value: &str) -> String {
-        debug!("尝试获取变量值: {}", var_name);
-        
-        // 首先检查特殊变量
-        if let Some(value) = self.special_vars.get(var_name) {
-            debug!("找到特殊变量: {} = {}", var_name, value);
-            return value.clone();
-        }
-        
-        // 然后检查普通变量（包括命名空间变量）
-        if let Some(value) = self.variables.get(var_name) {
-            debug!("找到普通变量: {} = {}", var_name, value);
-            return value.clone();
-        }
-        
-        // 如果包含::分隔符，可能是命名空间变量引用
-        if var_name.contains("::") {
-            let parts: Vec<&str> = var_name.splitn(2, "::").collect();
-            if parts.len() == 2 {
-                let namespace = parts[0];
-                let local_var = parts[1];
-                
-                debug!("尝试查找命名空间变量: {}::{}", namespace, local_var);
-                
-                if let Some(ns_vars) = self.external_vars.get(namespace) {
-                    if let Some(value) = ns_vars.get(local_var) {
-                        debug!("找到命名空间变量: {}::{} = {}", namespace, local_var, value);
-                        return value.clone();
-                    }
-                }
-            }
-        }
-        
-        // 尝试将点表示法转换为双冒号，再次查找
-        if var_name.contains('.') {
-            let normalized_name = var_name.replace('.', "::");
-            debug!("转换点表示法尝试查找: {} -> {}", var_name, normalized_name);
+    /// 获取变量值
+    pub fn get_variable(&self, name: &str) -> Option<String> {
+        // 获取当前模板ID
+        let template_id = self.template.get_template_id();
             
-            if let Some(value) = self.variables.get(&normalized_name) {
-                debug!("找到通过点表示法转换的变量: {} = {}", normalized_name, value);
-                return value.clone();
-            }
-            
-            // 如果转换后包含::分隔符，尝试通过命名空间查找
-            if normalized_name.contains("::") {
-                let parts: Vec<&str> = normalized_name.splitn(2, "::").collect();
-                if parts.len() == 2 {
-                    let namespace = parts[0];
-                    let local_var = parts[1];
-                    
-                    if let Some(ns_vars) = self.external_vars.get(namespace) {
-                        if let Some(value) = ns_vars.get(local_var) {
-                            debug!("找到通过点表示法转换的命名空间变量: {}::{} = {}", namespace, local_var, value);
-                            return value.clone();
-                        }
-                    }
-                }
-            }
-        }
+        self.variable_manager.get_variable(name, Some(&template_id), None)
+    }
+    
+    /// 设置变量
+    pub fn set_variable(&mut self, name: &str, value: &str, step_id_opt: Option<&str>) -> Result<(), String> {
+        // 获取当前模板ID
+        let template_id = self.template.get_template_id();
         
-        // 使用默认值或保留原始引用
-        if default_value.is_empty() {
-            debug!("变量 {} 未找到，保留原始引用", var_name);
-            format!("${{{}}}", var_name) // 保留原始引用
-        } else {
-            debug!("变量 {} 未找到，使用默认值: {}", var_name, default_value);
-            default_value.to_string()
-        }
+        // 如果 step_id_opt 是 None，则使用 "GLOBAL" 作为步骤 ID
+        let actual_step_id = step_id_opt.unwrap_or("GLOBAL");
+        
+        self.variable_manager.set_variable(&template_id, actual_step_id, name, value)
     }
 }

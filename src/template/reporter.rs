@@ -1,572 +1,579 @@
 //! 测试报告生成器
 //!
 //! 这个模块负责根据测试模板和执行结果生成Markdown格式的测试报告
+//! 
+//! 当BatchExecutor执行完成测试模板后，会调用Reporter生成最终的测试报告
+//! Reporter主要做两件事:
+//! 1. 替换模板中的变量为已执行结果中的变量
+//! 2. 将命令执行结果插入到对应的输出块中
 
-use std::collections::HashMap;
 use std::fs;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf; // Path is not used directly, PathBuf is.
+use std::sync::Arc;
 use anyhow::{Result, Context};
 use regex::Regex;
-use log::{info, warn, debug, error};
+use log::{info, debug};
 
-use crate::template::{
-    TestTemplate, StepStatus, StepResult, TemplateContext
-};
+use crate::template::variable::VariableManager;
 use crate::template::executor::ExecutionResult;
+use crate::template::{StepStatus, TestTemplate, ContentBlock, StepType};
 
 /// 报告生成器
+/// 负责将执行结果转换为Markdown格式的测试报告
 pub struct Reporter {
-    /// 工作目录
-    work_dir: PathBuf,
-    /// 输出目录
-    output_dir: PathBuf,
+    /// 测试模板文件所在的目录，用于解析相对路径等
+    template_base_dir: PathBuf,
+    /// 报告最终输出的目录
+    report_output_dir: PathBuf,
 }
 
 impl Reporter {
     /// 创建新的报告生成器
-    pub fn new(work_dir: PathBuf, output_dir: Option<PathBuf>) -> Self {
-        let output_dir = output_dir.unwrap_or_else(|| work_dir.join("reports"));
+    ///
+    /// # 参数
+    /// * `template_base_dir`: 当前处理的测试模板文件所在的目录。
+    ///   用于解析模板中可能存在的相对路径引用，或作为报告中相对路径的基础。
+    /// * `report_output_dir`: 所有生成的报告文件最终应存放的目录。
+    ///   如果为 `None`，可能会使用 `template_base_dir` 下的 "reports" 子目录或其他默认逻辑。
+    pub fn new(template_base_dir: PathBuf, report_output_dir: Option<PathBuf>) -> Self {
+        let final_report_output_dir = report_output_dir
+            .unwrap_or_else(|| template_base_dir.join("reports"));
         Self {
-            work_dir,
-            output_dir,
+            template_base_dir,
+            report_output_dir: final_report_output_dir,
         }
     }
     
-    /// 生成测试报告
-    pub fn generate_report(&self, template: &TestTemplate, result: &ExecutionResult) -> Result<PathBuf> {
-        // 确保输出目录存在
-        fs::create_dir_all(&self.output_dir)
-            .with_context(|| format!("无法创建输出目录: {}", self.output_dir.display()))?;
+    /// 生成单个测试模板的测试报告
+    ///
+    /// # 参数
+    /// * `template`: 要为其生成报告的测试模板的 Arc 引用。
+    /// * `result`: 该模板的执行结果 (`ExecutionResult`)。
+    /// * `var_manager`: 一个对全局 `VariableManager` 的引用，用于在报告内容中替换变量。
+    ///
+    /// # 返回
+    /// * `Result<PathBuf>`: 如果成功，返回生成的报告文件的绝对路径。
+    pub fn generate_report(
+        &self, 
+        template: &Arc<TestTemplate>,
+        result: &ExecutionResult,
+        var_manager: &VariableManager,
+    ) -> Result<PathBuf> {
+        debug!("开始为模板生成测试报告: {}", result.template_id());
+        debug!("模板标题: {}", result.template_title());
+        debug!("模板文件所在目录 (基准目录): {}", self.template_base_dir.display());
+        debug!("报告计划输出目录: {}", self.report_output_dir.display());
         
-        // 确定报告文件名
+        // 确保报告输出目录存在
+        fs::create_dir_all(&self.report_output_dir)
+            .with_context(|| format!("无法创建报告输出目录: {}", self.report_output_dir.display()))?;
+
+        // 确定报告文件名 (可以基于模板ID和目标名称)
         let report_filename = format!(
             "{}_{}.report.md",
-            result.unit_name.replace(" ", "_").to_lowercase(),
-            result.target_name.replace(" ", "_").to_lowercase()
+            result.template_id().replace(['/', '\\', ':', ' '], "_").to_lowercase(),
+            result.target_name.replace(['/', '\\', ':', ' '], "_").to_lowercase()
         );
         
-        // 构建报告文件路径
-        let report_path = self.output_dir.join(&report_filename);
+        // 构建报告文件的完整路径
+        let report_path = self.report_output_dir.join(&report_filename);
         
-        // 生成报告内容
-        let report_content = self.generate_report_content(template, result)?;
+        // 生成报告的Markdown内容
+        let report_content = self.generate_report_content(template, result, var_manager)?;
         
-        // 写入报告文件
+        // 将生成的Markdown内容写入报告文件
         fs::write(&report_path, &report_content)
             .with_context(|| format!("无法写入报告文件: {}", report_path.display()))?;
         
-        info!("已生成测试报告: {}", report_path.display());
-        
+        info!("已成功生成测试报告: {}", report_path.display());
         Ok(report_path)
     }
     
-    /// 生成报告内容
-    fn generate_report_content(&self, template: &TestTemplate, result: &ExecutionResult) -> Result<String> {
-        // 获取原始模板内容
-        let mut content = template.raw_content.clone();
-        
-        // 确保YAML前置数据和正文之间有正确的换行
-        let re = Regex::new(r"(?s)^---\s*\n(.*?)\n---\s*\n")?;
-        if let Some(captures) = re.captures(&content) {
-            let yaml_part = captures.get(0).unwrap().as_str();
-            content = content.replacen(yaml_part, &format!("{}\n", yaml_part), 1);
+    /// 生成报告的Markdown内容核心逻辑
+    ///
+    /// # 参数
+    /// * `template`: 测试模板的 Arc 引用。
+    /// * `result`: 模板的执行结果。
+    /// * `var_manager`: 全局 `VariableManager` 的引用，用于变量替换。
+    ///
+    /// # 返回
+    /// * `Result<String>`: 生成的Markdown报告内容字符串。
+    fn generate_report_content(
+        &self,
+        template: &Arc<TestTemplate>,
+        result: &ExecutionResult,
+        var_manager: &VariableManager,
+    ) -> Result<String> {
+        let mut report_parts = Vec::new();
+        let template_id = template.get_template_id();
+
+        // Process metadata first if it exists as the first block
+        if let Some(ContentBlock::Metadata(yaml_content)) = template.content_blocks.first() {
+            let mut processed_yaml = var_manager.replace_variables(yaml_content, Some(&template_id), None);
+            processed_yaml = format!("---\n{}---", processed_yaml.trim());
+            report_parts.push(processed_yaml);
         }
-        
-        // 替换正文中的变量
-        
-        // 打印所有收集到的特殊变量
-        info!("处理特殊变量 - 共 {} 个", result.special_vars.len());
-        for (name, value) in &result.special_vars {
-            info!("特殊变量: {} = {}", name, value);
-        }
-        
-        // 打印所有提取的变量
-        info!("处理提取的变量 - 共 {} 个", result.variables.len());
-        for (name, value) in &result.variables {
-            info!("提取的变量: {} = {}", name, value);
-        }
-        
-        // 0. 替换元数据变量（模板中的title, unit_name等）
-        let pattern_title = "{{ title }}";
-        content = content.replace(pattern_title, &template.metadata.title);
-        
-        let pattern_unit_name = "{{ unit_name }}";
-        content = content.replace(pattern_unit_name, &template.metadata.unit_name);
-        
-        // 从target_config路径中提取目标名称
-        if let Some(target_name) = template.metadata.target_config
-            .components()
-            .filter_map(|comp| match comp {
-                std::path::Component::Normal(s) => Some(s.to_string_lossy().to_string()),
-                _ => None,
-            })
-            .find(|s| s == "targets") 
-            .and_then(|_| {
-                template.metadata.target_config
-                    .components()
-                    .filter_map(|comp| match comp {
-                        std::path::Component::Normal(s) => Some(s.to_string_lossy().to_string()),
-                        _ => None,
-                    })
-                    .nth(1)
-            }) 
-        {
-            let pattern_target = "{{ target_name }}";
-            content = content.replace(pattern_target, &target_name);
-        }
-        
-        // 处理自定义元数据
-        for (key, value) in &template.metadata.custom {
-            let pattern = format!("{{{{ {} }}}}", key);
-            content = content.replace(&pattern, value);
-        }
-        
-        // 1. 替换特殊变量
-        for (name, value) in &result.special_vars {
-            let pattern = format!("{{{{ {} }}}}", name);
-            let old_content = content.clone();
-            content = content.replace(&pattern, value);
-            
-            // 检查是否发生了替换，并记录日志
-            if old_content != content {
-                info!("特殊变量替换成功: {} = {}", name, value);
-            } else {
-                warn!("特殊变量未找到匹配: {} = {}", name, value);
+
+        for content_block in &template.content_blocks {
+            match content_block {
+                ContentBlock::Metadata(_) => { /* Already handled or ignore if not first */ }
+                ContentBlock::Text(text_content) => {
+                    let mut processed_text = text_content.clone();
+                    // Global and step-specific variable replacement (ensure correct step_id context if needed)
+                    processed_text = var_manager.replace_variables(&processed_text, Some(&template_id), None); // Broad pass
+                    // More specific passes if text can contain step-scoped variables:
+                    let mut sorted_step_ids: Vec<_> = result.step_results.keys().cloned().collect();
+                    sorted_step_ids.sort(); 
+                    for step_id_key in &sorted_step_ids {
+                        let local_step_id_for_var_lookup = step_id_key.split("::").last().unwrap_or(step_id_key);
+                        processed_text = var_manager.replace_variables(
+                            &processed_text,
+                            Some(&template_id),
+                            Some(local_step_id_for_var_lookup),
+                        );
+                    }
+                    report_parts.push(processed_text);
+                }
+                ContentBlock::DisplayableCodeBlock { original_content, local_step_id } => {
+                    let mut visible = true;
+                    let mut processed_code_block_content = original_content.clone();
+
+                    if let Some(step_local_id) = local_step_id {
+                        if let Some(exec_step) = template.steps.iter().find(|s| s.local_id == *step_local_id && s.template_id == template_id) {
+                            if let StepType::CodeBlock { attributes, .. } = &exec_step.step_type {
+                                if let Some(visibility_attr) = attributes.get("visible") {
+                                    if visibility_attr.eq_ignore_ascii_case("false") {
+                                        visible = false;
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    if visible {
+                        processed_code_block_content = var_manager.replace_variables(
+                            &processed_code_block_content, 
+                            Some(&template_id), 
+                            None
+                        );
+                        let mut sorted_step_ids_for_code_block: Vec<_> = result.step_results.keys().cloned().collect();
+                        sorted_step_ids_for_code_block.sort();
+                        for step_id_key in &sorted_step_ids_for_code_block {
+                            let local_id_for_lookup = step_id_key.split("::").last().unwrap_or(step_id_key);
+                            if local_step_id.as_deref() == Some(local_id_for_lookup) { // Apply step-specific vars if block is associated with this step
+                                processed_code_block_content = var_manager.replace_variables(
+                                    &processed_code_block_content,
+                                    Some(&template_id),
+                                    Some(local_id_for_lookup),
+                                );
+                            }
+                        }
+                        
+                        processed_code_block_content = self.clean_markdown_markup(&processed_code_block_content)?;
+                        report_parts.push(processed_code_block_content);
+                        if !report_parts.last().map_or(false, |s| s.ends_with('\n')) {
+                            report_parts.push("\n".to_string());
+                        }
+                    }
+                }
+                ContentBlock::OutputBlock { step_id } => {
+                    // The step_id here is the *local* ID referenced in the template (e.g., {ref="local_step_id"})
+                    // We need to find the corresponding StepResult using the global ID.
+                    let global_step_id_to_find = format!("{}::{}", template_id, step_id);
+                    if let Some(step_result) = result.step_results.get(&global_step_id_to_find) {
+                        let mut output_block_content = format!("```output {{ref=\"{}\"}}\n", step_id);
+                        // stdout is String, not Option<String> in executor::StepResult
+                        let stdout_content = step_result.stdout.trim_end_matches('\n');
+                        output_block_content.push_str(stdout_content);
+                        if !stdout_content.is_empty() { // Add newline only if there was content
+                             output_block_content.push('\n');
+                        }
+                        output_block_content.push_str("```\n");
+                        report_parts.push(output_block_content);
+                    } else {
+                        // Fallback if step result not found (should ideally not happen if template is valid)
+                        report_parts.push(format!("```output {{ref=\"{}\"}}\n[Output for step '{}' not found]\n```\n", step_id, step_id));
+                    }
+                }
+                ContentBlock::SummaryTablePlaceholder => {
+                    let summary_table = self.generate_summary_table_string(result, var_manager, &template_id)?;
+                    report_parts.push(summary_table);
+                }
             }
         }
-        
-        // 2. 替换提取的变量 - 增强日志和替换逻辑
-        for (name, value) in &result.variables {
-            // 变量名前后可能有空格，使用更宽松的正则表达式
-            let pattern_strict = format!("{{{{ {} }}}}", name); // 严格匹配，无空格
-            
-            // 修复：正确转义花括号，避免正则表达式错误
-            let pattern_loose = format!(r"\{{\s*{}\s*\}}", name); // 宽松匹配，允许空格
-            
-            info!("尝试替换变量: {} = {}", name, value);
-            info!("严格匹配模式: {}", pattern_strict);
-            info!("宽松匹配模式: {}", pattern_loose);
-            
-            // 计算变量出现次数
-            let occurrences = content.matches(&pattern_strict).count();
-            info!("变量 {} 在内容中出现 {} 次 (严格匹配)", name, occurrences);
-            
-            // 使用正则表达式查找所有匹配
-            let re_var = Regex::new(&pattern_loose)?;
-            let matches = re_var.find_iter(&content).count();
-            info!("变量 {} 在内容中找到 {} 个正则匹配", name, matches);
-            
-            // 首先尝试严格匹配替换
-            let old_content = content.clone();
-            content = content.replace(&pattern_strict, value);
-            
-            if old_content != content {
-                info!("变量 {} 替换成功 (严格匹配)", name);
-            } else {
-                // 如果严格匹配失败，尝试正则替换
-                info!("尝试使用正则表达式替换变量: {}", name);
-                content = re_var.replace_all(&content, value).to_string();
-                
-                if old_content != content {
-                    info!("变量 {} 替换成功 (正则匹配)", name);
-                } else {
-                    warn!("变量 {} 未能替换，在内容中未找到匹配", name);
-                    
-                    // 查找相似的变量模式
-                    let var_pattern = Regex::new(r"\{\{\s*([a-zA-Z0-9_]+)\s*\}\}")?;
-                    let mut found_vars = Vec::new();
-                    for cap in var_pattern.captures_iter(&content) {
-                        found_vars.push(cap[1].to_string());
-                    }
-                    
-                    if !found_vars.is_empty() {
-                        info!("在内容中发现其他变量占位符: {:?}", found_vars);
-                    }
+        let mut final_content = report_parts.join("");
+        let yaml_front_matter_re = Regex::new(r"(?s)^---\s*\n(.*?)\n---\s*\n")?;
+        if let Some(captures) = yaml_front_matter_re.captures(&final_content) {
+            let yaml_part_end = captures.get(0).unwrap().end();
+            if final_content.len() > yaml_part_end && !final_content[yaml_part_end..].starts_with('\n') {
+                if !final_content[yaml_part_end..].starts_with("\n\n") {
+                    final_content.insert(yaml_part_end, '\n');
                 }
             }
         }
         
-        // 3. 替换状态变量
-        // {{ status.step_id }} -> ✅ Pass, ❌ Fail, ⚠️ Skipped, ❓ Blocked
-        let status_pattern = Regex::new(r"\{\{\s*status\.([a-zA-Z0-9_-]+)\s*\}\}")?;
-        content = status_pattern.replace_all(&content, |caps: &regex::Captures| {
-            let step_id = &caps[1];
-            let status_value = match result.step_results.get(step_id) {
-                Some(step_result) => match step_result.status {
+        final_content = self.clean_markdown_markup(&final_content)?;
+        
+        Ok(final_content)
+    }
+
+    /// Generates the Markdown string for a step summary table.
+    fn generate_summary_table_string(
+        &self,
+        result: &ExecutionResult,
+        var_manager: &VariableManager,
+        template_id: &str,
+    ) -> Result<String> {
+        let mut table = String::new();
+        table.push_str("| 步骤ID | 描述 | 状态 | 退出码 | 输出摘要 | 错误信息 |\n");
+        table.push_str("|--------|------|------|--------|----------|----------|\n");
+
+        let mut sorted_step_global_ids: Vec<_> = result.step_results.keys().cloned().collect();
+        sorted_step_global_ids.sort();
+
+        for global_step_id in sorted_step_global_ids {
+            if let Some(step_result) = result.step_results.get(&global_step_id) {
+                let display_step_id = global_step_id.split("::").last().unwrap_or(&global_step_id);
+                
+                let status_icon = match step_result.status {
                     StepStatus::Pass => "✅ Pass",
                     StepStatus::Fail => "❌ Fail",
                     StepStatus::Skipped => "⚠️ Skipped",
                     StepStatus::Blocked => "❓ Blocked",
                     StepStatus::NotRun => "❓ Not Run",
-                },
-                None => "❓ Unknown",
-            };
-            
-            info!("替换状态变量: status.{} = {}", step_id, status_value);
-            status_value.to_string()
-        }).to_string();
-        
-        // 4. 替换命令输出
-        // 支持双引号或单引号形式的引用
-        let output_block_pattern = Regex::new(r#"(?ms)```output\s+\{ref=(?:"([^"]+)"|'([^']+)')\}\n.*?```"#)?;
-        content = output_block_pattern.replace_all(&content, |caps: &regex::Captures| {
-            // 获取引用ID（可能在第一个或第二个捕获组）
-            let cmd_id = caps.get(1).or_else(|| caps.get(2)).map_or("unknown", |m| m.as_str());
-            
-            info!("替换命令输出块: ref={}", cmd_id);
-            
-            match result.step_results.get(cmd_id) {
-                Some(step_result) => {
-                    info!("找到命令结果: {} (输出长度: {} 字节)", cmd_id, step_result.stdout.len());
-                    // 打印命令输出的内容预览，帮助诊断
-                    // 修复：安全地处理UTF-8字符边界
-                    let preview = if !step_result.stdout.is_empty() {
-                        let char_count = step_result.stdout.chars().take(50).count();
-                        let safe_index = step_result.stdout.char_indices()
-                            .map(|(i, _)| i)
-                            .nth(char_count)
-                            .unwrap_or(step_result.stdout.len());
-                            
-                        let truncated = &step_result.stdout[..safe_index];
-                        if safe_index < step_result.stdout.len() {
-                            format!("{}...", truncated.replace('\n', "\\n"))
-                        } else {
-                            truncated.replace('\n', "\\n")
-                        }
-                    } else {
-                        "<空输出>".to_string()
-                    };
-                    info!("输出内容预览: {}", preview);
-                    
-                    // 检查输出是否为空
-                    if step_result.stdout.is_empty() {
-                        // 检查stderr是否有内容
-                        if !step_result.stderr.is_empty() {
-                            warn!("命令 {} 的stdout为空，但stderr有内容: {}", cmd_id, step_result.stderr);
-                        }
-                        
-                        // 检查退出码
-                        info!("命令 {} 的退出码: {}", cmd_id, step_result.exit_code);
-                    }
-                    
-                    // 检查命令是否有数据提取结果
-                    if !step_result.extracted_vars.is_empty() {
-                        info!("命令 {} 提取的变量: {:?}", cmd_id, step_result.extracted_vars);
-                    }
-                    
-                    // 别改这三个 {} 因为这是原样字符串，你直接打 \n 在里面不是换行
-                    format!(r#"```output {{ref="{}"}}{}{}{}```"#, cmd_id, "\n", &step_result.stdout, "\n")
-                },
-                None => {
-                    warn!("未找到命令结果: {}", cmd_id);
-                    // 显示所有可用的命令ID，帮助诊断
-                    let available_ids: Vec<&String> = result.step_results.keys().collect();
-                    warn!("可用的命令结果ID: {:?}", available_ids);
-                    format!(r#"```output {{ref="{}"}}\n命令结果不可用\n```"#, cmd_id)
-                }
-            }
-        }).to_string();
-        
-        // 5. 处理自动生成总结表 - 改进显示更多有用信息
-        // 只在标记为generate_summary=true的节中生成摘要表
-        let summary_block_pattern = Regex::new(r#"(?ms)^##\s+.*?\s+\{id=(?:"([^"]+)"|'([^']+)').*?generate_summary=true.*?\}\s*$"#)?;
-        let mut processed_summary = false;  // 记录是否已生成摘要表
-        
-        content = summary_block_pattern.replace_all(&content, |caps: &regex::Captures| {
-            let section_id = caps.get(1).or_else(|| caps.get(2)).map_or("unknown", |m| m.as_str());
-            
-            // 如果已经处理过摘要，跳过后续的摘要生成
-            if processed_summary {
-                warn!("检测到多个摘要标记(generate_summary=true)，忽略额外摘要: {}", section_id);
-                return caps[0].to_string();  // 返回原始标题行，不生成表格
-            }
-            
-            info!("生成测试结果摘要表: section_id={}", section_id);
-            processed_summary = true;
-            
-            let mut summary = caps[0].to_string(); // 保留原始标题行
-            summary.push_str("\n\n");  // 确保有足够的换行
-
-            // 添加表头 - 更丰富的列信息
-            summary.push_str("| 步骤ID | 描述 | 状态 | 退出码 | 输出摘要 | 错误信息 |\n");
-            summary.push_str("|--------|------|------|--------|----------|----------|\n");
-
-            // 收集所有有效的执行步骤（排除输出引用步骤）
-            let mut valid_steps = Vec::new();
-            
-            for step in &template.steps {
-                // 跳过输出引用步骤（以-output结尾的步骤ID通常是输出引用）
-                if step.id.ends_with("-output") || step.ref_command.is_some() {
-                    continue;
-                }
-                
-                // 找到步骤结果
-                if let Some(step_result) = result.step_results.get(&step.id) {
-                    // 获取描述，如果没有则使用ID
-                    let description = step.description.clone().unwrap_or_else(|| step.id.clone());
-                    
-                    // 获取状态
-                    let status = match step_result.status {
-                        StepStatus::Pass => "✅ Pass",
-                        StepStatus::Fail => "❌ Fail",
-                        StepStatus::Skipped => "⚠️ Skipped",
-                        StepStatus::Blocked => "❓ Blocked",
-                        StepStatus::NotRun => "❓ Not Run",
-                    };
-                    
-                    // 获取输出和错误信息摘要
-                    let stdout_summary = if !step_result.stdout.is_empty() {
-                        // 获取第一行或前50个字符（以实际内容结构为准）
-                        let first_line = step_result.stdout
-                            .lines()
-                            .next()
-                            .unwrap_or("")
-                            .trim();
-                            
-                        let char_count = first_line.chars().take(50).count();
-                        let safe_index = first_line.char_indices()
-                            .map(|(i, _)| i)
-                            .nth(char_count)
-                            .unwrap_or_else(|| first_line.len());
-                            
-                        if safe_index < first_line.len() {
-                            format!("{}...", &first_line[..safe_index])
-                        } else {
-                            first_line.to_string()
-                        }
-                    } else {
-                        "-".to_string()
-                    };
-                    
-                    let stderr_summary = if !step_result.stderr.is_empty() {
-                        // 获取第一行或前30个字符
-                        let first_line = step_result.stderr
-                            .lines()
-                            .next()
-                            .unwrap_or("")
-                            .trim();
-                            
-                        let char_count = first_line.chars().take(30).count();
-                        let safe_index = first_line.char_indices()
-                            .map(|(i, _)| i)
-                            .nth(char_count)
-                            .unwrap_or_else(|| first_line.len());
-                            
-                        if safe_index < first_line.len() {
-                            format!("{}...", &first_line[..safe_index])
-                        } else {
-                            first_line.to_string()
-                        }
-                    } else {
-                        "-".to_string()
-                    };
-                    
-                    // 准备退出码显示
-                    let exit_code = format!("{}", step_result.exit_code);
-                    
-                    info!("添加摘要项: {} = {}", step.id, status);
-                    valid_steps.push((
-                        step.id.clone(),
-                        description,
-                        status.to_string(),
-                        exit_code,
-                        stdout_summary,
-                        stderr_summary
-                    ));
-                }
-            }
-            
-            // 如果没有找到有效步骤，添加一个提示
-            if valid_steps.is_empty() {
-                summary.push_str("| - | 未找到可执行步骤 | ❓ | - | - | - |\n");
-            } else {
-                // 添加步骤到表格
-                for (id, description, status, exit_code, stdout, stderr) in valid_steps {
-                    summary.push_str(&format!(
-                        "| {} | {} | {} | {} | {} | {} |\n",
-                        id, description, status, exit_code, stdout, stderr
-                    ));
-                }
-            }
-
-            summary.push_str("\n");
-            summary
-        }).to_string();
-        
-        // 6. 处理自动生成对比表格（未实现，可根据需要添加）
-        
-        // 7. 清理Markdown特殊标记
-        // 清理 {id="xxx"} 标记
-        let id_pattern = Regex::new(r#"\{id=(?:"[^"]+"|'[^']+')\}"#)?;
-        content = id_pattern.replace_all(&content, "").to_string();
-
-        // 清理 {exec=xxx} 标记
-        let exec_pattern = Regex::new(r"\{exec=(?:true|false)\}")?;
-        content = exec_pattern.replace_all(&content, "").to_string();
-        
-        // 清理 {description="xxx"} 标记
-        let desc_pattern = Regex::new(r#"\{description=(?:"[^"]+"|'[^']+')\}"#)?;
-        content = desc_pattern.replace_all(&content, "").to_string();
-        
-        // 清理 {assert.xxx=yyy} 标记
-        let assert_pattern = Regex::new(r"\{assert\.[a-zA-Z_]+=[^\}]+\}")?;
-        content = assert_pattern.replace_all(&content, "").to_string();
-        
-        // 清理 {extract.xxx=/yyy/} 标记
-        let extract_pattern = Regex::new(r"\{extract\.[a-zA-Z_]+=/.*/\}")?;
-        content = extract_pattern.replace_all(&content, "").to_string();
-        
-        // 清理 {depends_on=["xxx", "yyy"]} 标记
-        let depends_pattern = Regex::new(r#"\{depends_on=\[(?:\"[^\"]*\"|'[^']*')(?:\s*,\s*(?:\"[^\"]*\"|'[^']*'))*\]\}"#)?;
-        content = depends_pattern.replace_all(&content, "").to_string();
-        
-        // 清理所有其他花括号属性（捕获任何剩余的 {xxx=yyy} 格式）
-        let misc_pattern = Regex::new(r"\{[a-zA-Z_][a-zA-Z0-9_]*=.*?\}")?;
-        content = misc_pattern.replace_all(&content, "").to_string();
-        
-        // 清理连续的多余空格，但不清理换行符
-        content = Regex::new(r"[^\S\r\n]{2,}")?.replace_all(&content, " ").to_string();
-        
-        // 清理行尾空格，但保留换行符
-        content = Regex::new(r"[^\S\r\n]+\n")?.replace_all(&content, "\n").to_string();
-        
-        // 检查是否仍有未替换的变量占位符
-        let remaining_vars = Regex::new(r"\{\{\s*([a-zA-Z0-9_]+)\s*\}\}")?;
-        let mut remaining_list = Vec::new();
-        for cap in remaining_vars.captures_iter(&content) {
-            let var_name = cap.get(1).unwrap().as_str();
-            remaining_list.push(var_name.to_string());
-        }
-        
-        if !remaining_list.is_empty() {
-            warn!("报告中仍有未替换的变量: {:?}", remaining_list);
-        } else {
-            info!("所有变量都已成功替换");
-        }
-        
-        Ok(content)
-    }
-    
-    /// 生成总结报告
-    pub fn generate_summary_report(
-        &self,
-        results: &[ExecutionResult],
-        output_path: Option<PathBuf>
-    ) -> Result<PathBuf> {
-        // 使用默认路径或指定路径
-        let summary_path = output_path.unwrap_or_else(|| self.output_dir.join("summary.md"));
-        
-        // 生成总结内容
-        let mut content = String::new();
-        
-        // 添加标题
-        content.push_str("# 测试总结报告\n\n");
-        content.push_str(&format!("生成时间: {}\n\n", chrono::Local::now().format("%Y-%m-%d %H:%M:%S")));
-        
-        // 添加汇总统计
-        let total = results.len();
-        let passed = results.iter().filter(|r| r.overall_status == StepStatus::Pass).count();
-        let failed = results.iter().filter(|r| r.overall_status == StepStatus::Fail).count();
-        let skipped = results.iter().filter(|r| r.overall_status != StepStatus::Pass && r.overall_status != StepStatus::Fail).count();
-        
-        content.push_str("## 汇总统计\n\n");
-        content.push_str(&format!("- 总计测试: {}\n", total));
-        content.push_str(&format!("- 通过: {} ({}%)\n", passed, if total > 0 { passed * 100 / total } else { 0 }));
-        content.push_str(&format!("- 失败: {} ({}%)\n", failed, if total > 0 { failed * 100 / total } else { 0 }));
-        content.push_str(&format!("- 跳过: {} ({}%)\n", skipped, if total > 0 { skipped * 100 / total } else { 0 }));
-        content.push_str("\n");
-        
-        // 获取所有目标和单元
-        let mut targets = Vec::new();
-        let mut units = Vec::new();
-        
-        for result in results {
-            if !targets.contains(&result.target_name) {
-                targets.push(result.target_name.clone());
-            }
-            if !units.contains(&result.unit_name) {
-                units.push(result.unit_name.clone());
-            }
-        }
-        
-        targets.sort();
-        units.sort();
-        
-        // 生成矩阵表
-        content.push_str("## 测试矩阵\n\n");
-        
-        // 表头
-        content.push_str("| 目标↓ / 单元→ |");
-        for unit in &units {
-            content.push_str(&format!(" {} |", unit));
-        }
-        content.push_str("\n");
-        
-        // 分隔行
-        content.push_str("|--------------|");
-        for _ in &units {
-            content.push_str("------------|");
-        }
-        content.push_str("\n");
-        
-        // 表格内容
-        for target in &targets {
-            content.push_str(&format!("| {} |", target));
-            
-            for unit in &units {
-                // 查找对应的结果
-                let result = results.iter().find(|r| &r.target_name == target && &r.unit_name == unit);
-                
-                // 获取状态
-                let status = match result {
-                    Some(r) => match r.overall_status {
-                        StepStatus::Pass => "✅",
-                        StepStatus::Fail => "❌",
-                        StepStatus::Skipped => "⚠️",
-                        StepStatus::Blocked => "❓",
-                        StepStatus::NotRun => "❓",
-                    },
-                    None => "🟢", // 未测试
                 };
                 
-                // 如果有报告文件链接，添加链接
-                if let Some(r) = result {
-                    if let Some(ref path) = r.report_path {
-                        // 计算相对路径
-                        let rel_path = path.strip_prefix(&self.work_dir).unwrap_or(path);
-                        content.push_str(&format!(" [{}]({}/) |", status, rel_path.display()));
-                        continue;
-                    }
-                }
-                
-                // 无链接
-                content.push_str(&format!(" {} |", status));
+                let original_description = step_result.description.as_deref().unwrap_or("-");
+                let processed_description = var_manager.replace_variables(
+                    original_description,
+                    Some(template_id),
+                    Some(display_step_id),
+                );
+
+                let stdout_summary = Self::summarize_output(&step_result.stdout, 50);
+                let stderr_summary = Self::summarize_output(&step_result.stderr, 30);
+
+                table.push_str(&format!(
+                    "| {} | {} | {} | {} | {} | {} |\n",
+                    display_step_id.replace("|", "\\\\|"),
+                    processed_description.replace("|", "\\\\|").replace("\n", "<br>"),
+                    status_icon,
+                    step_result.exit_code.to_string(),
+                    stdout_summary.replace("|", "\\\\|").replace("\n", "<br>"),
+                    stderr_summary.replace("|", "\\\\|").replace("\n", "<br>")
+                ));
             }
-            
-            content.push_str("\n");
+        }
+        table.push_str("\n");
+        Ok(table)
+    }
+
+    /// 清理最终报告内容中不应出现的Markdown特殊属性标记
+    fn clean_markdown_markup(&self, content: &str) -> Result<String> {
+        let mut result = content.to_string();
+        
+        let patterns_to_remove = vec![
+            Regex::new(r#"\s*\{id=(?:\"[^\"]+\"|'[^']+')\s*\}"#)?,
+            Regex::new(r#"\s*\{exec=(?:true|false)\s*\}"#)?,
+            Regex::new(r#"\s*\{description=(?:\"[^\"]+\"|'[^']+')\s*\}"#)?,
+            Regex::new(r#"\s*\{assert\.[a-zA-Z0-9_]+=(?:\"[^\"]*\"|'[^']*'|[^}\s]+)\s*\}"#)?,
+            Regex::new(r#"\s*\{extract\.[a-zA-Z0-9_]+=/.*?/[dimsx]*\s*\}"#)?,
+            Regex::new(r#"\s*\{depends_on=\[(?:\"[^\"]*\"|'[^']*')(?:\s*,\s*(?:\"[^\"]*\"|'[^']*'))*\]\s*\}"#)?,
+            Regex::new(r#"\s*\{generate_summary=(?:true|false)\s*\}"#)?,
+        ];
+
+        for pattern in patterns_to_remove {
+            result = pattern.replace_all(&result, "").to_string();
         }
         
-        // 添加图例
-        content.push_str("\n### 图例\n\n");
-        content.push_str("- ✅ 通过\n");
-        content.push_str("- ❌ 失败\n");
-        content.push_str("- ⚠️ 跳过\n");
-        content.push_str("- ❓ 阻塞/未运行\n");
-        content.push_str("- 🟢 未测试\n");
+        result = Regex::new(r"[^\S\r\n]{2,}")?.replace_all(&result, " ").to_string();
+        result = Regex::new(r"[^\S\r\n]+\n")?.replace_all(&result, "\n").to_string();
+        result = Regex::new(r"\n{3,}")?.replace_all(&result, "\n\n").to_string();
         
-        // 写入文件
-        fs::write(&summary_path, &content)
-            .with_context(|| format!("无法写入总结报告: {}", summary_path.display()))?;
+        Ok(result.trim().to_string() + "\n")
+    }
+
+    /// 辅助函数：对输出字符串进行摘要
+    fn summarize_output(output: &str, max_len: usize) -> String {
+        let trimmed = output.trim();
+        if trimmed.is_empty() {
+            "-".to_string()
+        } else {
+            let first_line = trimmed.lines().next().unwrap_or("").trim();
+            if first_line.len() > max_len {
+                format!("{}...", &first_line[..max_len])
+            } else {
+                first_line.to_string()
+            }
+        }
+    }
+
+    /// 生成包含多个模板执行结果的摘要报告
+    pub fn generate_summary_report<'b>(
+        &self,
+        results: &[&'b ExecutionResult],
+        output_path_option: Option<PathBuf>,
+        var_manager: &VariableManager,
+    ) -> Result<PathBuf> {
+        if results.is_empty() {
+            info!("没有执行结果可供生成摘要报告。");
+            return Ok(self.report_output_dir.join("empty_summary.md"));
+        }
+
+        info!("开始生成摘要报告，包含 {} 个模板的结果。", results.len());
+
+        let output_path = output_path_option.unwrap_or_else(|| self.report_output_dir.join("lintestor_summary.md"));
+
+        let mut summary_content = String::new();
+        summary_content.push_str(&format!("# Lintestor 测试执行摘要 ({})\n\n", chrono::Local::now().format("%Y-%m-%d %H:%M:%S")));
         
-        info!("已生成总结报告: {}", summary_path.display());
-        
-        Ok(summary_path)
+        summary_content.push_str("| 模板ID | 单元名称 | 目标名称 | 总体状态 | 报告路径 |\n");
+        summary_content.push_str("|--------|----------|----------|----------|----------|\n");
+
+        let mut overall_passed_count = 0;
+        let mut overall_failed_count = 0;
+
+        for result in results {
+            let status_text = match result.overall_status {
+                StepStatus::Pass => { overall_passed_count += 1; "✅ Pass" },
+                StepStatus::Fail => { overall_failed_count += 1; "❌ Fail" },
+                StepStatus::Skipped => "⚠️ Skipped",
+                StepStatus::Blocked => "❓ Blocked",
+                StepStatus::NotRun => "❓ Not Run",
+            };
+            let report_link = result.report_path.as_ref()
+                .and_then(|p| p.file_name().and_then(|name| name.to_str()))
+                .map(|name| format!("[查看报告](./{})", name))
+                .unwrap_or_else(|| "-".to_string());
+
+            summary_content.push_str(&format!(
+                "| {} | {} | {} | {} | {} |\n",
+                result.template_id().replace("|", "\\|"),
+                result.unit_name.replace("|", "\\|"),
+                result.target_name.replace("|", "\\|"),
+                status_text,
+                report_link
+            ));
+        }
+        summary_content.push_str("\n");
+        summary_content.push_str(&format!("**总结: 总计 {} 个模板, 通过 {}, 失败 {}.**\n", results.len(), overall_passed_count, overall_failed_count));
+
+        let final_summary_content = var_manager.replace_variables(&summary_content, Some("lintestor_summary_context"), None);
+
+        fs::write(&output_path, final_summary_content)
+            .with_context(|| format!("无法写入摘要报告文件: {}", output_path.display()))?;
+
+        info!("已成功生成摘要报告: {}", output_path.display());
+        Ok(output_path)
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    
-    // 添加测试...
+    use std::sync::Arc;
+    use crate::template::{TemplateMetadata, ExecutionStep, ContentBlock, TemplateReference};
+    use crate::template::executor::{StepResult, ExecutionResult};
+    use std::collections::HashMap;
+    use tempfile;
+    use std::fs;
+    use std::path::PathBuf;
+    use anyhow::Result;
+
+    fn create_dummy_template(id: &str, raw_content: &str, content_blocks: Vec<ContentBlock>, steps: Vec<ExecutionStep>) -> Arc<TestTemplate> {
+        Arc::new(TestTemplate {
+            file_path: PathBuf::from(format!("/test/{}.test.md", id)),
+            raw_content: raw_content.to_string(),
+            content_blocks,
+            metadata: TemplateMetadata {
+                title: format!("{} Title", id),
+                target_config: PathBuf::from("dummy_target.toml"),
+                unit_name: format!("{}_unit", id),
+                unit_version_command: None,
+                tags: Vec::new(),
+                references: Vec::<TemplateReference>::new(),
+                custom: HashMap::new(),
+            },
+            steps, 
+        })
+    }
+
+    fn create_dummy_execution_result(
+        template_arc: Arc<TestTemplate>,
+        target_name: &str, 
+        unit_name: &str,
+        status: StepStatus
+    ) -> ExecutionResult {
+        let mut step_results = HashMap::new();
+        let template_id = template_arc.get_template_id();
+
+        let global_step1_id = format!("{}::step1", template_id);
+        let global_step2_id = format!("{}::step2_output_ref", template_id);
+
+        step_results.insert(global_step1_id.clone(), StepResult { 
+            id: global_step1_id.clone(),
+            description: Some("First step".to_string()),
+            status: StepStatus::Pass,
+            stdout: "Step 1 output".to_string(),
+            stderr: String::new(),
+            exit_code: 0,
+            duration_ms: Some(100),
+            assertion_error: None,
+        });
+        step_results.insert(global_step2_id.clone(), StepResult { 
+            id: global_step2_id.clone(),
+            description: Some("Second step with output".to_string()),
+            status: StepStatus::Pass,
+            stdout: "This is the output of step2_output_ref.".to_string(),
+            stderr: String::new(),
+            exit_code: 0,
+            duration_ms: Some(120),
+            assertion_error: None,
+        });
+
+        ExecutionResult { 
+            template: template_arc,
+            unit_name: unit_name.to_string(),
+            target_name: target_name.to_string(),
+            overall_status: status,
+            step_results,
+            variables: HashMap::new(),
+            special_vars: HashMap::new(),
+            report_path: None,
+        }
+    }
+
+    #[test]
+    fn test_generate_report_with_variable_substitution_and_output_blocks() -> Result<()> {
+        let temp_dir = tempfile::tempdir()?;
+        let template_base_dir = temp_dir.path().join("templates");
+        let report_output_dir = temp_dir.path().join("reports");
+        fs::create_dir_all(&template_base_dir)?;
+        fs::create_dir_all(&report_output_dir)?;
+        
+        let template_id_str = "report_test_final_v2"; // Unique ID for the test
+
+        let template_content_for_parsing = r#"
+---
+title: My Test Report for {{ sys.target_name }}
+unit_name: {{ sys.unit_name }}
+target_config: dummy.toml
+---
+
+# Introduction
+
+This report was generated on {{ sys.execution_date }}.
+The status of {{ report_test_final_v2 }}::step1 was {{ status.report_test_final_v2::step1 }}.
+A global var: {{ var.global_var }}
+A template var: {{ var.template_specific_var }}
+
+```bash {id="code1" visible="true"}
+echo "Hello from code1. Global: {{ var.global_var }}, Template: {{ var.template_specific_var }}, Step specific: {{ var.report_test_final_v2::code1::step_var }}"
+# Lintestor: id="code1" visible="true"
+```
+
+## Output of Step 2
+
+```output {ref="step2_output_ref"}
+This is a placeholder and should be replaced.
+```
+
+```bash {id="code2" visible="false"}
+echo "This should not be visible"
+# Lintestor: id="code2" visible="false"
+```
+
+---
+summary_table: true
+---
+"#;
+        
+        // Use the actual parser to get metadata, execution_steps, and content_blocks.
+        // The `parsed_execution_steps` are Vec<ExecutionStep> and already have attributes parsed.
+        let (metadata_obj, parsed_execution_steps, content_blocks) = 
+            crate::template::parser::parse_template_into_content_blocks_and_steps(
+                template_content_for_parsing, 
+                &PathBuf::from(format!("/{}.md", template_id_str))
+            )?;
+        
+        // Create the dummy template using the directly parsed execution_steps.
+        // This avoids any manual ExecutionStep creation or attribute parsing in the test.
+        let template_arc = create_dummy_template(
+            template_id_str, 
+            template_content_for_parsing, 
+            content_blocks, 
+            parsed_execution_steps // Use Vec<ExecutionStep> directly from the parser
+        );
+        
+        let execution_result = create_dummy_execution_result(
+            Arc::clone(&template_arc), 
+            "local_target", 
+            &metadata_obj.unit_name,
+            StepStatus::Pass
+        );
+        
+        let mut var_manager = VariableManager::new();
+        var_manager.register_template(&template_arc.file_path, Some(template_id_str));
+
+        var_manager.set_variable("GLOBAL", "GLOBAL", "sys.target_name", "local_target").unwrap();
+        var_manager.set_variable("GLOBAL", "GLOBAL", "sys.unit_name", &metadata_obj.unit_name).unwrap();
+        var_manager.set_variable("GLOBAL", "GLOBAL", "sys.execution_date", "2025-05-12").unwrap();
+        var_manager.set_variable("GLOBAL", "GLOBAL", "var.global_var", "GlobalValue").unwrap();
+        var_manager.set_variable(template_id_str, "GLOBAL", "var.template_specific_var", "TemplateValue").unwrap();
+        var_manager.set_variable(template_id_str, "code1", "var.step_var", "Step1CodeValue").unwrap();
+        var_manager.set_variable(template_id_str, "GLOBAL", &format!("status.{}::step1", template_id_str), "✅ Pass (step1)").unwrap();
+        var_manager.set_variable("GLOBAL", "LINTTESTOR_SUMMARY", "Pass", "✅ Pass").unwrap();
+
+        let reporter = Reporter::new(template_base_dir.clone(), Some(report_output_dir.clone()));
+        let report_path = reporter.generate_report(&template_arc, &execution_result, &var_manager)?;
+
+        assert!(report_path.exists());
+        let report_content = fs::read_to_string(report_path)?;
+
+        assert!(report_content.contains("title: My Test Report for local_target"));
+        assert!(report_content.contains(&format!("unit_name: {}", metadata_obj.unit_name)));
+        assert!(report_content.contains("This report was generated on 2025-05-12"));
+        assert!(report_content.contains(&format!("The status of {}::step1 was ✅ Pass (step1)", template_id_str)));
+        assert!(report_content.contains("A global var: GlobalValue"));
+        assert!(report_content.contains("A template var: TemplateValue"));
+        
+        assert!(report_content.contains("echo \"Hello from code1. Global: GlobalValue, Template: TemplateValue, Step specific: Step1CodeValue\""));
+        assert!(report_content.contains("# Lintestor: id=\"code1\" visible=\"true\""), "Lintestor comment SHOULD be present or clean_markdown_markup updated");
+        
+        assert!(report_content.contains("```output {ref=\"step2_output_ref\"}\nThis is the output of step2_output_ref.\n```"));
+        
+        assert!(!report_content.contains("This should not be visible"));
+        
+        let visible_code_block_header_in_report = report_content.lines()
+            .find(|l| l.starts_with("```bash") && l.contains("Hello from code1"))
+            .or_else(|| report_content.lines().find(|l| l.starts_with("```bash {id=\"code1\"")))
+            .unwrap_or("");
+
+        assert!(visible_code_block_header_in_report.contains("id=\"code1\""), "Attribute 'id=\"code1\"' SHOULD be present in visible code block header. Header was: {}", visible_code_block_header_in_report);
+        assert!(visible_code_block_header_in_report.contains("visible=\"true\""), "Attribute 'visible=\"true\"' SHOULD be present in visible code block header. Header was: {}", visible_code_block_header_in_report);
+        
+        assert!(!report_content.contains("id=\"code2\"")); 
+        assert!(!report_content.contains("visible=\"false\""));
+
+        assert!(report_content.contains("| 步骤ID | 描述 | 状态 | 退出码 | 输出摘要 | 错误信息 |"), "Summary table header mismatch");
+        assert!(report_content.contains("| step1 | First step | ✅ Pass | 0 | Step 1 output | - |"), "Summary table row for step1 mismatch");
+        assert!(report_content.contains("| step2_output_ref | Second step with output | ✅ Pass | 0 | This is the output of step2_output_ref. | - |"), "Summary table row for step2_output_ref mismatch");
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_clean_markdown_markup_removes_attributes() -> Result<()> {
+        let temp_dir = tempfile::tempdir()?;
+        let reporter = Reporter::new(temp_dir.path().to_path_buf(), None);
+
+        let input7 = "Start {id=\"id1\"} then {exec=true} finally {description=\"desc\"} end";
+        assert_eq!(reporter.clean_markdown_markup(input7)?, "Start then finally end\n");
+
+        let input8 = "\n\n  leading space and   multiple spaces {id=\"id8\"} \n\n\n trailing line\n  ";
+        let expected8 = "leading space and multiple spaces\n\ntrailing line\n";
+        assert_eq!(reporter.clean_markdown_markup(input8)?, expected8);
+        
+        Ok(())
+    }
 }

@@ -3,7 +3,7 @@
 //! 该模块提供了不同类型连接（SSH、本地、QEMU等）的统一接口
 
 use std::time::Duration;
-use anyhow::{Result, Context, bail, anyhow};
+use anyhow::{Result, bail};
 use crate::config::target_config::TargetConfig;
 
 /// 命令执行结果
@@ -24,9 +24,14 @@ pub trait ConnectionManager {
     
     /// 关闭连接
     fn close(&mut self) -> Result<()>;
-    
+
     /// 设置连接
-    fn setup(&mut self) -> Result<()>;
+    /// 
+    /// 默认实现什么也不做并返回Ok，使实现该trait的类型可以选择是否重写此方法
+    #[allow(unused)]
+    fn setup(&mut self) -> Result<()> {
+        Ok(())
+    }
     
     /// 清理连接
     fn teardown(&mut self) -> Result<()>;
@@ -46,19 +51,7 @@ impl ConnectionFactory {
                     None => bail!("No connection configuration provided for remote/SSH"),
                 };
                 
-                let ip = connection.ip.as_deref().unwrap_or("localhost");
-                let port = connection.port.unwrap_or(22);
-                let username = connection.username.as_deref().unwrap_or("root");
-                let password = connection.password.as_deref();
-                let private_key_path = connection.private_key_path.as_deref();
-                
-                Ok(Box::new(SSHConnectionManager::new(
-                    ip, 
-                    port, 
-                    username, 
-                    password, 
-                    private_key_path
-                )?))
+                Ok(Box::new(SSHConnectionManager::new(connection)?))
             },
             "local" | "locally" => {
                 // 创建本地执行环境
@@ -71,19 +64,7 @@ impl ConnectionFactory {
                     None => bail!("No connection configuration provided for QEMU"),
                 };
                 
-                let ip = connection.ip.as_deref().unwrap_or("localhost");
-                let port = connection.port.unwrap_or(2222);
-                let username = connection.username.as_deref().unwrap_or("root");
-                let password = connection.password.as_deref();
-                let private_key_path = connection.private_key_path.as_deref();
-                
-                Ok(Box::new(SSHConnectionManager::new(
-                    ip, 
-                    port, 
-                    username, 
-                    password, 
-                    private_key_path
-                )?))
+                Ok(Box::new(SSHConnectionManager::new(connection)?))
             },
             "boardtest" => {
                 // 这里应该实现BoardTest连接类型

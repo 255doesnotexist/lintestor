@@ -5,7 +5,7 @@ use crate::config::boardtest_config::BoardtestConfig;
 use crate::test_environment::boardtest::BoardtestEnvironment;
 use crate::test_environment::TestEnvironment;
 use crate::test_runner::TestRunner;
-use crate::test_template_manager::TestTemplateManager;
+use crate::test_script_manager::TestScriptManager;
 use crate::utils::{PackageMetadata, Report, TestResult, REMOTE_TMP_DIR};
 use base64::{engine::general_purpose::STANDARD as BASE64, Engine as _};
 use log::{debug, info, warn};

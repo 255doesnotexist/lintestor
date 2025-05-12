@@ -1,10 +1,10 @@
 //! Aggregates multiple test reports into a single report.
-use crate::utils::{get_units, Report};
-use log::{error, info, warn};
+use crate::utils::Report;
+use log::{info, warn};
 use std::{
     fs::File,
     io::{prelude::*, BufWriter},
-    path::{Path, PathBuf},
+    path::Path,
 };
 use anyhow::Result;
 
@@ -27,58 +27,6 @@ pub fn generate_report(file_path: &Path, report: Report) -> Result<(), Box<dyn s
     let mut writer = BufWriter::new(report_file);
     serde_json::to_writer(&mut writer, &report)?;
     writer.flush()?;
-    Ok(())
-}
-
-/// Aggregates reports from multiple distributions and units, and generates a consolidated report file.
-///
-/// # Parameters
-///
-/// - `targets`: Array of distribution names.
-/// - `units`: Array of unit names.
-/// - `dir`: The path of the program's working directory.
-///
-/// # Returns
-///
-/// Returns `Ok(())` if successful, otherwise returns an error.
-///
-/// # Errors
-///
-/// Returns an error if file opening or reading fails.
-pub fn aggregate_reports(
-    targets: &[&str],
-    units: &[&str],
-    dir: &Path,
-) -> Result<(), Box<dyn std::error::Error>> {
-    let mut consolidated_report = vec![];
-
-    for &target in targets {
-        let units_of_target = get_units(target, dir).unwrap_or_default();
-
-        for &unit in units
-            .iter()
-            .filter(|p| units_of_target.iter().any(|pkg| p == &pkg))
-        {
-            let report_path = dir.join(format!("{}/{}/report.json", target, unit));
-            if let Ok(file) = File::open(&report_path) {
-                info!("Aggregating {}", report_path.display());
-                let mut report: Report = serde_json::from_reader(file)?;
-                report.target = target.to_string();
-                consolidated_report.push(report);
-            } else {
-                error!(
-                    "Failed to open file {} for aggregation",
-                    report_path.display()
-                )
-            }
-        }
-    }
-
-    let consolidated_json = serde_json::to_string_pretty(&consolidated_report)?;
-    let file_path = dir.join("reports.json");
-    let mut file = File::create(&file_path)?;
-    file.write_all(consolidated_json.as_bytes())?;
-    info!("Aggregated report generated at {}", file_path.display());
     Ok(())
 }
 

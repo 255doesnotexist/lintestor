@@ -3,19 +3,191 @@
 //! This module provides common structures and utilities used across the project,
 //! including report structures, temporary file management, and command output handling.
 
-use log::{debug, error};
+use log::{debug, error, warn};
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
 use std::{
-    collections::HashSet,
+    collections::{HashMap, HashSet},
     error::Error,
     fs,
     path::{Path, PathBuf},
 };
+use std::collections::hash_map::DefaultHasher;
+use std::hash::{Hash, Hasher};
 
 use crate::config::target_config::TargetConfig;
 
 /// The remote temporary directory used for operations.
 pub static REMOTE_TMP_DIR: &str = "/tmp/lintestor";
+
+/// 标准化模板ID
+/// 
+/// 移除末尾的 `.test` 后缀，并确保ID不包含分隔符
+/// 
+/// # 参数
+/// 
+/// - `template_id`: 原始模板ID
+/// 
+/// # 返回值
+/// 
+/// 返回标准化后的模板ID
+pub fn normalize_template_id(template_id: &str) -> String {
+    let clean_id = if template_id.ends_with(".test") {
+        let len = template_id.len();
+        &template_id[0..len-5]
+    } else {
+        template_id
+    };
+    
+    if clean_id.contains("::") {
+        warn!("模板ID不应包含'::'分隔符: {}, 进行清理", clean_id);
+        clean_id.split("::").next().unwrap_or(clean_id).to_string()
+    } else {
+        clean_id.to_string()
+    }
+}
+
+/// 从文件路径获取模板ID
+/// 
+/// 从文件名提取模板ID，移除扩展名和.test后缀
+/// 
+/// # 参数
+/// 
+/// - `file_path`: 文件路径
+/// 
+/// # 返回值
+/// 
+/// 返回提取的模板ID
+pub fn get_template_id_from_path(file_path: &Path) -> String {
+    let file_stem = file_path.file_stem()
+        .and_then(|s| s.to_str())
+        .unwrap_or("unknown");
+    
+    normalize_template_id(file_stem)
+}
+
+/// 构建变量标识符
+/// 
+/// 根据模板ID和步骤ID构建标准化的变量标识符
+/// 
+/// # 参数
+/// 
+/// - `name`: 变量名
+/// - `template_id`: 可选的模板ID
+/// - `step_id`: 可选的步骤ID
+/// 
+/// # 返回值
+/// 
+/// 返回构建的变量标识符
+pub fn build_variable_key(name: &str, template_id: Option<&str>, step_id: Option<&str>) -> String {
+    // 确保变量有完整的命名空间
+    // 如果模板ID和步骤ID都为None，则将变量视为系统特殊变量，放入特殊的全局命名空间
+    let (template_id_str, step_id_str) = match (template_id, step_id) {
+        (Some(tid), Some(sid)) => (normalize_template_id(tid), sid.to_string()),
+        (Some(tid), None) => (normalize_template_id(tid), "GLOBAL".to_string()),
+        (None, Some(sid)) => {
+            warn!("设置变量时提供了步骤ID但未提供模板ID，使用GLOBAL作为默认模板ID: {:?}::{:?}::{}", "GLOBAL", sid, name);
+            ("GLOBAL".to_string(), sid.to_string())
+        },
+        (None, None) => {
+            // 系统全局变量，如 execution_date、execution_time 等
+            if name.starts_with("execution_") || name == "title" || name == "unit_name" || name == "target_name" {
+                debug!("系统特殊变量: {}, 放入全局命名空间", name);
+                ("GLOBAL".to_string(), "GLOBAL".to_string())
+            } else {
+                warn!("设置非系统变量时未提供模板ID和步骤ID，使用GLOBAL作为默认命名空间: {:?}::{:?}::{}", "GLOBAL", "GLOBAL", name);
+                ("GLOBAL".to_string(), "GLOBAL".to_string())
+            }
+        }
+    };
+    
+    // 生成标准化的变量标识符 (模板ID::步骤ID::变量名)
+    format!("{}::{}::{}", template_id_str, step_id_str, name)
+}
+
+/// 规范化变量键名
+/// 
+/// 分析键名，去除重复部分，确保它符合模板ID::步骤ID::变量名的格式
+/// 
+/// # 参数
+/// 
+/// - `key`: 原始变量键名
+/// 
+/// # 返回值
+/// 
+/// 返回规范化后的键名
+pub fn normalize_variable_key(key: &str) -> String {
+    // 如果键不包含分隔符，直接返回
+    if !key.contains("::") {
+        return key.to_string();
+    }
+    
+    let parts: Vec<&str> = key.split("::").collect();
+    
+    // 如果只有一个或两个部分(如template::var或var)，直接返回
+    if parts.len() <= 2 {
+        return key.to_string();
+    }
+    
+    // 检查是否存在重复部分（如README::README::var）
+    let mut result_parts = Vec::new();
+    let mut seen_parts = HashSet::new();
+    
+    // 处理模板ID和步骤ID部分(除了最后一个变量名)
+    for part in &parts[..parts.len()-1] {  
+        if !seen_parts.contains(*part) {
+            seen_parts.insert(*part);
+            result_parts.push(*part);
+        } else {
+            debug!("检测到重复部分在键名中: {}", part);
+            // 重复部分不添加
+        }
+    }
+    
+    // 添加变量名部分
+    result_parts.push(parts[parts.len()-1]);
+    
+    // 重新组装键名
+    let normalized = result_parts.join("::");
+    if normalized != key {
+        debug!("规范化键名: {} -> {}", key, normalized);
+    }
+    
+    normalized
+}
+
+/// 将点符号转换为双冒号符号
+/// 
+/// 用于处理命名空间引用，将a.b格式转换为a::b格式
+/// 
+/// # 参数
+/// 
+/// - `name`: 包含点符号的变量引用
+/// 
+/// # 返回值
+/// 
+/// 返回转换后的字符串
+pub fn convert_dot_to_colon(name: &str) -> String {
+    name.replace('.', "::")
+}
+
+/// 生成变量哈希标识符
+/// 
+/// 为变量创建唯一的哈希标识符，可用于快速比较和存储
+/// 
+/// # 参数
+/// 
+/// - `template_id`: 模板ID
+/// - `step_id`: 步骤ID
+/// - `name`: 变量名
+/// 
+/// # 返回值
+/// 
+/// 返回变量的哈希标识符
+pub fn hash_variable(template_id: &str, step_id: &str, name: &str) -> u64 {
+    let mut hasher = DefaultHasher::new();
+    format!("{}::{}::{}", template_id, step_id, name).hash(&mut hasher);
+    hasher.finish()
+}
 
 /// Represents a complete test report for a unit on a specific distribution.
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -188,7 +360,7 @@ pub fn get_targets(dir: &Path) -> Result<Vec<String>, Box<dyn Error>> {
                 "Loaded config for target {}: \n{:?}",
                 target_dir_name, target_config
             );
-            if target_config.enabled {
+            if true {
                 targets.push(target_dir_name);
             }
         }

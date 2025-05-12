@@ -4,8 +4,8 @@
 
 use std::path::{Path, PathBuf};
 use std::fs;
-use anyhow::{Result, Context};
-use log::{info, warn, debug, error};
+use anyhow::Result;
+use log::{info, warn, debug};
 
 use crate::template::TestTemplate;
 
@@ -142,11 +142,4 @@ fn matches_filter(template: &TestTemplate, filter: &TemplateFilter) -> bool {
     }
     
     true
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    
-    // 测试代码将在这里添加
 }

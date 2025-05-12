@@ -29,16 +29,8 @@
 ```toml
 # targets/my_qemu_vm/config.toml 示例
 
-# [target_info] # (可选) 关于此目标的基本信息
-# name = "My QEMU VM (Debian Sid)"
-# description = "QEMU VM for testing on Debian Sid"
-# info_command = "uname -a && lsb_release -a" # (可选) 在目标上运行以获取信息的命令
-
+enabled = true
 testing_type = "qemu-based-remote" # 或 "remote", "boardtest", "locally"
-
-# QEMU 相关 (仅当 testing_type 为 qemu-* 时需要)
-startup_script = "scripts/start_my_qemu.sh" # 启动脚本路径 (相对于工作目录)
-stop_script = "scripts/stop_my_qemu.sh"   # 停止脚本路径
 
 # 连接信息 (仅当 testing_type 为 remote, qemu-*, boardtest 时需要)
 [connection]
@@ -47,7 +39,9 @@ ip = "localhost"
 port = 2222
 username = "tester"
 private_key_path = "~/.ssh/id_rsa_tester" # 或使用 password
-# ... 其他 SSH 相关选项
+jump_hosts = ["jump1.example.com", "user@jump2.example.com:2222"] # 可选，SSH跳板机列表
+max_retries = 3     # 可选，连接失败时的最大重试次数，默认为3
+connect_timeout_secs = 15  # 可选，连接超时时间（秒），默认为15秒
 
 [boardtest] # (仅当 testing_type 为 boardtest 时需要)
 token = "your_boardtest_token"
@@ -74,6 +68,9 @@ serial = "device_serial_123"
     unit_name: "my_package"
     unit_version_command: "my_package --version" # 获取 Unit 版本的命令
     tags: ["core", "regression"]
+    references:
+    - template: "base_test.test.md"
+        as: "base"
     ---
 
     # {{ title }}
@@ -101,7 +98,7 @@ serial = "device_serial_123"
 
     运行核心功能测试脚本。
 
-    ```bash {id="run-core" exec=true description="运行核心测试" assert.stdout_contains="All tests passed" extract.pass_rate=/Pass Rate: (\d+)%/}
+    ```bash {id="run-core" exec=true description="运行核心测试" assert.stdout_contains="All tests passed" extract.pass_rate=/Pass Rate: (\d+)%/ depends_on=["base::setup-env"]}
     echo "正在运行核心测试..."
     sleep 2
     echo "Pass Rate: 100%"
@@ -150,6 +147,7 @@ serial = "device_serial_123"
     *   `unit_name`: 被测单元的名称。
     *   `unit_version_command`: (可选) 在 Target 上执行以获取 Unit 版本的命令。
     *   `tags`: (可选) 用于分类和筛选测试的标签列表。
+    *   `references`: (可选) 引用其他测试模板文件，格式为 `[{ template_path: "相对路径", namespace: "引用命名空间" }]`。
 *   **Markdown 块属性 (`{...}`)**:
     *   `id="unique-id"`: 块的唯一标识符，用于依赖、引用等。
     *   `exec=true`: 标记代码块为可执行。
@@ -170,6 +168,7 @@ serial = "device_serial_123"
         *   可以依赖于**标题节ID**: 意味着依赖该标题下的所有代码块执行成功。
         *   可以依赖于**代码块ID**: 只依赖特定代码块执行成功。
         *   **继承机制**: 如果代码块没有显式指定依赖关系，但所在标题节有依赖，则代码块会继承标题的依赖关系。
+        *   **跨模板依赖**: 使用 `namespace::step_id` 格式可以依赖其他模板中的步骤，例如 `depends_on=["base::setup-env"]`。
 *   **占位符:**
     *   `output {ref="command-id"}`: 标记此处插入 ID 为 `command-id` 的命令的输出。
     *   `{{ variable_name }}`: 插入提取的变量或特殊变量的值。
@@ -197,6 +196,193 @@ serial = "device_serial_123"
 1. **UTF-8安全处理:** 所有输出处理均支持中文等UTF-8字符，确保不会因字符边界问题发生错误。
 2. **断言评估:** 测试步骤的通过与否完全取决于用户定义的断言，而不是stderr是否有内容。即使stderr有错误信息，只要断言全部通过，步骤仍被视为通过。
 
+## 模板引用和变量命名空间
+
+Lintestor v0.2.0 新增了强大的模板引用功能，允许在一个测试模板中引用和重用另一个测试模板中的步骤和变量，大大提高了测试代码的复用能力。
+
+### 模板引用声明
+
+在 YAML Front Matter 中使用 `references` 数组定义对其他模板的引用：
+
+```yaml
+---
+title: "性能测试模板"
+# ...其他元数据...
+references: [
+  { template_path: "common/base_test.test.md", namespace: "base" },
+  { template_path: "common/setup_utils.test.md", namespace: "setup" }
+]
+---
+```
+
+每个引用包含两个关键信息：
+- `template_path`: 被引用模板的路径（相对于工作目录）
+- `namespace`: 为该引用分配的命名空间，用于在当前模板中引用被引用模板中的步骤和变量
+
+### 代码块级别依赖管理
+
+Lintestor v0.2.0 实现了基于代码块级别的依赖管理系统，相比之前基于文档级别的依赖管理，提供了更精确的控制和更高的执行效率：
+
+1. **精确的依赖关系**：依赖关系精确到代码块级别，一个步骤可以只依赖另一个模板中的特定步骤，而不是整个模板
+2. **灵活的执行顺序**：执行顺序完全由依赖关系图决定，而不是模板出现的顺序
+3. **高效的并行执行**：没有依赖关系的代码块可以并行执行，提高执行效率
+4. **避免重复执行**：已执行过的代码块不会重复执行，即使多个模板引用了相同的步骤
+
+### 跨模板依赖声明
+
+使用 `namespace::step_id` 格式在代码块的 `depends_on` 属性中声明跨模板依赖：
+
+```markdown
+```bash {id="performance-test" exec=true depends_on=["base::setup-env", "setup::prepare-tools"]}
+# 这个代码块依赖于 base 命名空间中的 setup-env 步骤和 setup 命名空间中的 prepare-tools 步骤
+echo "运行性能测试..."
+```
+```
+
+### 变量命名空间和引用
+
+在 Lintestor 中，变量管理采用了严格的命名空间隔离机制，确保不同模板、不同步骤之间的变量引用准确无误：
+
+#### 变量的内部存储机制
+
+所有变量在内部都使用全限定标识符（Fully Qualified Identifier）进行存储，格式为：
+
+```
+模板ID::步骤ID::变量名
+```
+
+- **模板ID**: 可以是模板文件名（不含扩展名）或模板唯一标识符
+- **步骤ID**: 产生该变量的步骤ID
+- **变量名**: 原始变量名称
+
+这种标识方式确保了每个变量在全局变量表中的唯一性，避免了命名冲突。
+
+#### 命名空间是逻辑概念
+
+重要的是，命名空间（如 `base`, `perf` 等）在 Lintestor 中是**纯逻辑概念**，仅用于用户引用变量。内部系统会将命名空间映射到实际的模板ID，然后通过模板ID组织变量存储。
+
+当一个模板被多次引用时（例如模板A以命名空间"base1"引用模板C，模板B以命名空间"base2"引用相同的模板C），变量只会在模板C执行时存储一次，但可以通过不同的命名空间引用访问。
+
+#### 变量引用方式
+
+用户可以使用以下三种方式在模板中引用变量：
+
+1. **完全限定引用**: `{{ namespace::step_id::variable_name }}`
+   - 例如：`{{ base::system-info::kernel_version }}`
+   - 最精确的引用方式，唯一确定地指定了特定命名空间中特定步骤产生的特定变量
+
+2. **模板级别引用**: `{{ namespace::variable_name }}`
+   - 例如：`{{ base::version }}`
+   - 引用指定命名空间中的变量，无论它在哪个步骤中产生
+   - 系统会自动查找该命名空间中匹配的变量
+
+3. **无前缀引用**: `{{ variable_name }}`
+   - 例如：`{{ score }}`
+   - 最简洁的引用方式
+   - 只在当前上下文中无命名冲突时可用
+   - 系统会优先查找当前模板中的变量，如果不存在且全局无命名冲突，则可能查找其他模板
+
+#### 变量查找规则
+
+变量查找遵循"最近优先"原则：
+
+1. 首先在当前代码块内查找
+2. 然后在当前步骤内查找
+3. 然后在当前模板内查找
+4. 最后在全局范围内查找（需确保无命名冲突）
+
+使用命名空间引用时，系统会：
+1. 将命名空间映射到对应的模板ID
+2. 根据规则构造全限定标识符
+3. 在全局变量表中查找该标识符
+
+#### 点表示法与双冒号表示法
+
+Lintestor 同时支持两种变量引用表示法：
+
+- **点表示法**: `{{ namespace.variable_name }}` 或 `{{ namespace.step_id.variable_name }}`
+- **双冒号表示法**: `{{ namespace::variable_name }}` 或 `{{ namespace::step_id::variable_name }}`
+
+这两种表示法在系统内部会被统一处理，用户可以选择自己喜欢的方式。
+
+#### 示例
+
+```markdown
+## 使用引用模板中的变量
+
+- 基础变量 (模板级别引用): {{ base::version }} 或 {{ base.version }}
+- 完全限定引用: {{ base::system-info::kernel_version }} 或 {{ base.system-info.kernel_version }}
+- 当前模板变量 (无前缀): {{ score }}
+```
+
+这种命名机制确保了变量引用的准确性和隔离性，同时在简单情况下保持了使用的便利性。
+
+## SSH 跳板机功能
+
+`lintestor` 支持通过一系列跳板机（Jump Hosts）连接到远程测试目标。这在目标机器不直接暴露在公网，或者位于多层安全网络环境中时特别有用。
+
+### 配置跳板机
+
+在目标的 `config.toml` 文件中，使用 `jump_hosts` 数组指定跳板机序列：
+
+```toml
+[connection]
+method = "ssh"
+ip = "target-server"  # 最终目标主机
+port = 22
+username = "tester"   # 最终目标的用户名
+private_key_path = "~/.ssh/id_rsa_tester"  # 最终目标的认证方式
+jump_hosts = ["jumphost1", "user2@jumphost2:2222", "jump3.example.com"]  # 跳板机序列
+max_retries = 3     # 可选，连接失败时的最大重试次数，默认为3
+connect_timeout_secs = 15  # 可选，连接超时时间（秒），默认为15秒
+```
+
+### 跳板机认证
+
+**重要说明：** 跳板机的认证信息（用户名、密码、密钥等）**不是**在 `config.toml` 中配置的，而是从您系统中的 SSH 客户端配置获取：
+
+1. 系统级的 SSH 配置（`/etc/ssh/ssh_config`）
+2. 用户级的 SSH 配置（`~/.ssh/config`）
+
+这意味着：
+
+- 跳板机的主机名、别名、用户名、端口等应该在您的 SSH 配置中预先定义
+- 跳板机的密钥应该已经通过 `ssh-agent` 加载或在 SSH 配置中指定
+- 系统将遵循您本地 SSH 客户端的所有设置，如 ControlMaster、连接超时等
+
+### 使用别名
+
+您可以在 `jump_hosts` 中使用 SSH 配置文件中定义的主机别名：
+
+```
+# 在 ~/.ssh/config 中:
+Host jump1
+    HostName jump1.example.com
+    User jumpuser
+    Port 2222
+    IdentityFile ~/.ssh/jump_key
+
+# 在 config.toml 中:
+jump_hosts = ["jump1"]  # 使用别名即可，系统会解析
+```
+
+### 连接流程
+
+当使用跳板机时，`lintestor` 执行以下步骤：
+
+1. 启动系统 SSH 客户端，使用 `-J` 选项指定跳板机链
+2. 创建一个从本地随机端口到最终目标的隧道
+3. 通过该本地端口使用 SSH 库连接到目标，进行后续操作
+
+### 故障排除
+
+如果跳板机连接失败：
+
+1. 确保所有跳板机在您的 `~/.ssh/config` 中配置正确
+2. 使用 `ssh -J jumphost1,user@jumphost2 user@target` 测试您的跳板机链
+3. 检查是否需要运行 `ssh-add` 将您的私钥添加到 SSH 代理
+4. 将环境变量 `RUST_LOG=debug` 与 lintestor 一起使用，查看详细的连接调试信息
+
 ## 运行测试
 
 使用 `lintestor` 命令执行测试、聚合报告和生成摘要。
@@ -217,6 +403,15 @@ serial = "device_serial_123"
 # 组合筛选
 ./lintestor --test --target k1_device --unit other_package --tag regression
 
+# 指定测试环境类型
+./lintestor --test --local      # 强制使用本地环境
+./lintestor --test --remote     # 强制使用远程SSH环境
+./lintestor --test --qemu       # 强制使用QEMU环境
+./lintestor --test --boardtest  # 强制使用Boardtest环境
+
+# 组合环境类型与筛选条件
+./lintestor --test --local --unit my_package --tag core
+
 # 运行测试后，聚合所有生成的 .report.md 文件
 ./lintestor --aggr
 
@@ -227,6 +422,9 @@ serial = "device_serial_123"
 ./lintestor --test --aggr --summ
 # 或简写
 ./lintestor -tas
+
+# 使用代码块级别执行模式（更高效）
+./lintestor --test --block-level
 ```
 
 **执行流程:**
@@ -237,6 +435,7 @@ serial = "device_serial_123"
     *   对每个选中的模板：
         *   解析模板，构建执行计划（考虑 `depends_on`）。
         *   读取模板元数据中 `target_config` 指向的配置文件，建立与目标的连接。
+        *   如果指定了环境类型（`--local`, `--remote`, `--qemu`, `--boardtest`），将覆盖 `target_config` 中的设置。
         *   按计划顺序执行标记为 `{exec=true}` 的命令块，处理断言、提取变量。
         *   执行完成后，在模板文件所在目录下生成对应的 `.report.md` 文件，包含所有执行细节。
 2.  `--aggr`:
@@ -246,6 +445,36 @@ serial = "device_serial_123"
 3.  `--summ`:
     *   读取 `reports.json` 文件。
     *   在工作目录下生成（或覆盖）`summary.md` 文件，包含 Target x Unit 的测试结果矩阵。
+4.  `--block-level`: (v0.2.0新增)
+    *   启用代码块级别的依赖管理和执行系统。
+    *   使用拓扑排序确定最优执行顺序。
+    *   可能并行执行没有依赖关系的代码块。
+    *   避免重复执行已执行过的代码块。
+
+### 测试筛选与环境选择
+
+Lintestor提供了灵活的测试筛选和环境选择机制：
+
+1. **单元筛选 (`--unit`)**: 
+   * 只运行指定单元名称的测试
+   * 单元名称来自测试模板的 `unit_name` 元数据字段
+   * 例如: `./lintestor --test --unit libc` 将只运行 `unit_name: "libc"` 的测试模板
+
+2. **标签筛选 (`--tag`)**:
+   * 只运行包含指定标签的测试
+   * 标签来自测试模板的 `tags` 元数据数组
+   * 例如: `./lintestor --test --tag regression` 将只运行 `tags` 包含 "regression" 的测试模板
+
+3. **环境类型覆盖**:
+   * 使用 `--local`, `--remote`, `--qemu`, `--boardtest` 可覆盖测试模板中指定的环境类型
+   * 这使您可以在不修改测试模板的情况下，在不同的环境中执行相同的测试
+   * 例如: `./lintestor --test --local --unit kernel-modules` 将以本地模式运行所有内核模块测试，即便它们的 `target_config` 指定了其他环境
+
+4. **复合筛选**:
+   * 可组合使用多个筛选条件进行精确筛选
+   * 例如: `./lintestor --test --local --unit core-utils --tag quick`
+
+这些筛选机制在大型测试套件中尤为有用，可以帮助您快速运行特定的测试子集，而不是整个测试套件。
 
 ## 命令行参数
 
@@ -255,19 +484,34 @@ serial = "device_serial_123"
 ```
 
 ```bash
-Usage: lintestor [OPTIONS]
-
 Options:
-  -t, --test                           运行通过 .test.md 模板定义的测试
-  -a, --aggr                           聚合所有 .report.md 文件到 reports.json
-  -s, --summ                           根据 reports.json 生成 summary.md 摘要报告
-  -D, --directory <working_directory>  指定包含 targets/ 和 tests/ 的工作目录
-      --target <target>                指定要测试的目标 (可指定多个，逗号分隔)
-      --unit <unit>                    指定要测试的单元 (可指定多个，逗号分隔)
-      --tag <tag>                      指定要运行的测试标签 (可指定多个，逗号分隔)
-      --skip-successful                (待定/可能移除) 跳过先前成功的测试
-  -h, --help                           打印帮助信息
-  -V, --version                        打印版本信息
+  -t, --test                         运行测试 - 执行测试模板中的命令
+  -a, --aggregate                    聚合报告 - 将多个测试报告合并为一个JSON文件
+  -s, --summarize                    生成汇总 - 从聚合报告生成Markdown格式汇总报告
+  -p, --parse-only                   仅解析 - 只解析测试模板但不执行命令
+  -v, --verbose                      详细模式 - 显示更多日志信息
+  -q, --quiet                        安静模式 - 不显示提示和进度信息
+      --local                        本地测试模式 - 在本地环境中执行测试
+      --remote                       远程测试模式 - 在远程环境中执行测试
+      --qemu                         QEMU测试模式 - 在QEMU环境中执行测试
+      --boardtest                    板测试模式 - 在目标板上执行测试
+      --template <TEMPLATE>          测试模板路径 - 指定单一测试模板的路径
+  -D, --test-dir <TEST_DIR>          测试目录 - 指定包含测试模板的目录
+      --reports-dir <REPORTS_DIR>    报告目录 - 指定存放测试报告的目录
+  -o, --output <o>                   聚合报告输出 - 指定聚合报告的输出文件路径
+      --reports-json <REPORTS_JSON>  报告JSON路径 - 指定包含报告数据的JSON文件路径
+      --summary-path <SUMMARY_PATH>  汇总报告路径 - 指定汇总报告的输出路径
+      --report-path <REPORT_PATH>    报告路径 - 指定单一测试报告的输出路径
+      --unit <UNIT>                  单元名称 - 通过单元名称筛选测试
+      --tag <TAG>                    标签 - 通过标签筛选测试
+      --target <TARGET>              目标配置文件 - 指定目标配置文件路径
+      --continue-on-error            出错继续 - 即使测试失败也继续执行其余测试
+      --timeout <TIMEOUT>            执行命令超时时间（秒） [default: 300]
+      --retry <RETRY>                命令失败后重试次数 [default: 3]
+      --block-level                  代码块级别执行 - 使用代码块级别的依赖管理和执行系统
+      --parallel <PARALLEL>          并行度 - 并行执行的最大代码块数量 [default: 1]
+  -h, --help                         Print help
+  -V, --version                      Print version
 ```
 
 **环境变量:**

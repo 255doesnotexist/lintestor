@@ -15,10 +15,18 @@ tags: ["base", "foundation"]
 uname -a
 ```
 
+```output {ref="collect-system"}
+output
+```
+
 ## 时间戳生成 {id="timestamp"}
 
 ```bash {id="get-timestamp" exec=true extract.time=/Current time:\s+(.+)/}
 echo "Current time: $(date '+%Y-%m-%d %H:%M:%S')"
+```
+
+```output {ref="get-timestamp"}
+output
 ```
 
 ## 用户信息获取 {id="user-info"}
@@ -27,12 +35,20 @@ echo "Current time: $(date '+%Y-%m-%d %H:%M:%S')"
 echo "Current user: $(whoami)"
 ```
 
+```output {ref="get-user"}
+output
+```
+
 ## 计算基准数值 {id="benchmarks"}
 
 ```bash {id="calc-base-values" exec=true extract.base_score=/Base score:\s+(\d+)/}
 echo "Performing base calculations..."
 sleep 1
 echo "Base score: 85"
+```
+
+```output {ref="benchmarks"}
+output
 ```
 
 系统信息: 内核版本 {{ kernel }}
