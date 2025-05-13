@@ -138,10 +138,12 @@ pub enum StepStatus {
     /// 由于依赖失败而跳过
     Skipped,
     /// 由于依赖尚未执行而阻塞
+    #[allow(dead_code)]
     Blocked,
     /// 尚未执行
+    #[allow(dead_code)]
     NotRun,
-}
+} // Blocked 和 NotRun 是为将来可能的异步 or 并行执行保留的状态，当前实现还没用上
 
 /// 步骤执行结果
 #[derive(Debug, Clone)]

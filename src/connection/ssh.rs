@@ -313,6 +313,7 @@ impl SSHConnectionManager {
         username: &str,
         password: Option<&str>,
         private_key_path: Option<&str>,
+        #[allow(unused)]
         public_key_path: Option<&str>,
     ) -> Result<()> {
         if let Some(private_key) = private_key_path {

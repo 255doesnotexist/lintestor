@@ -131,7 +131,7 @@ fn run_single_template_test(
     }
 
     // 创建变量管理器
-    let mut variable_manager = template::VariableManager::new();
+    let variable_manager = template::VariableManager::new();
     
     // 准备执行选项，从cli_args获取超时和重试设置
     #[allow(dead_code)]
@@ -325,7 +325,7 @@ fn run_template_tests(
             continue_on_error: executor_options.continue_on_error,
         };
 
-        let mut variable_manager = template::VariableManager::new();
+        let variable_manager = template::VariableManager::new();
 
         let batch_execution_results = {
             let mut batch_executor = BatchExecutor::new(

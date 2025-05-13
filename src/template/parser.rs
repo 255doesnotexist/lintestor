@@ -14,6 +14,7 @@ use crate::template::step::{ExecutionStep, GlobalStepId, StepType};
 use crate::template::{
     TemplateMetadata, ParsedTestStep, AssertionType, DataExtraction, TemplateReference
 };
+use crate::utils;
 
 
 /// 表示模板文件内容的不同结构化块。
@@ -66,7 +67,7 @@ pub fn parse_template_into_content_blocks_and_steps(
     let metadata = parse_metadata(&yaml_front_matter)?;
     info!("模板元数据解析完成: title=\"{}\", unit=\"{}\"", metadata.title, metadata.unit_name);
     
-    let template_id = file_path.file_stem().unwrap_or_default().to_str().unwrap_or("unknown_template").to_string();
+    let template_id = utils::get_template_id_from_path(file_path);
     debug!("生成的模板 ID: {}", template_id);
 
     // 同时解析步骤和内容块

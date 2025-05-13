@@ -12,7 +12,7 @@ use log::{debug, info, warn, error};
 use chrono;
 
 use crate::config::target_config::TargetConfig;
-use crate::connection::{ConnectionFactory, ConnectionManager};
+use crate::connection::ConnectionFactory;
 use crate::template::{StepStatus, TestTemplate, BatchOptions};
 use crate::template::step::{GlobalStepId, StepType};
 use crate::template::variable::VariableManager;

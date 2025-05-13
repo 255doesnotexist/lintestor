@@ -39,11 +39,13 @@ pub struct TargetConfig {
 
 impl TargetConfig {
     /// 获取测试类型
+    #[allow(dead_code)]
     pub fn get_testing_type(&self) -> &str {
         &self.testing_type
     }
     
     /// 获取连接配置
+    #[allow(dead_code)]
     pub fn get_connection(&self) -> Option<&ConnectionConfig> {
         self.connection.as_ref()
     }

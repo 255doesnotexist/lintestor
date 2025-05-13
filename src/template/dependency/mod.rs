@@ -4,13 +4,10 @@
 //! 当一个模板引用了另一个模板的变量时，它必须在被引用模板执行完成后才能执行。
 
 use std::collections::{HashMap, HashSet, VecDeque};
-use std::path::{Path, PathBuf};
-use anyhow::{Result, bail};
-use log::{debug, info, warn};
+use anyhow::{Result};
+use log::{debug, warn};
 use regex::Regex;
-use serde::de;
 
-use crate::template::{TestTemplate, DataExtraction};
 use crate::template::step::{ExecutionStep, GlobalStepId, StepType};
 
 /// Manages dependencies between individual execution steps.
@@ -182,6 +179,9 @@ impl StepDependencyManager {
         self.nodes.get(step_id)
     }
 
+    /// 也许有必要，以后自动基于亲子关系设定执行依赖
+    /// 比如，代码块依赖于它的父标题
+    #[allow(dead_code)]
     pub fn identify_parent_headings(&self, step: &ExecutionStep) -> Vec<GlobalStepId> {
         let mut parents = Vec::new();
         let mut current_id_to_check = step.id.clone();
