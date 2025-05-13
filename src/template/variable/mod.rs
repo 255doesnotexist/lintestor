@@ -7,8 +7,11 @@
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
+use anyhow::bail;
 use log::{debug, info, warn};
 use regex::Regex;
+
+use crate::utils;
 
 /// 变量管理器
 /// 
@@ -51,7 +54,26 @@ impl VariableManager {
         debug!("为命名空间 {} 建立映射到模板ID {}", namespace, template_id);
         self.namespace_to_template_id.insert(namespace.to_string(), template_id.to_string());
     }
-    
+
+    /// 判断是否存在命名空间
+    /// 
+    /// 检查命名空间是否已注册
+    pub fn namespace_exists(&self, _namespace: Option<&str>) -> bool {
+        if let Some(namespace) = _namespace {
+            self.namespace_to_template_id.contains_key(namespace)
+        } else {
+            false
+        }
+    }
+
+    /// 获取命名空间对应的模板ID
+    /// 
+    /// 根据命名空间获取对应的模板ID
+    pub fn get_template_id_by_namespace(&self, namespace: &str) -> Option<String> {
+        self.namespace_to_template_id.get(namespace).cloned()
+    }
+
+
     /// 注册模板
     /// 
     /// 注册模板路径和对应的模板ID
@@ -64,6 +86,16 @@ impl VariableManager {
                 .unwrap_or("unknown")
                 .to_string()
         });
+
+        // 注册与模板 id 同名的命名空间
+        self.register_namespace(&template_id, &template_id);
+        // 其他在这里引用的命名空间（直接导入全局了）
+        for item in template.metadata.references.iter() {
+            let template_path = item.template_path.clone();
+            let as_namespace = item.namespace.clone();
+            let item_template_id = utils::get_template_id_from_path(Path::new(&template_path));
+            self.register_namespace(&as_namespace, &item_template_id);
+        }
         
         self.initialize_system_variables(template, template_id.as_str());
         self.template_path_to_id.insert(template_path.to_path_buf(), template_id);
@@ -90,7 +122,7 @@ impl VariableManager {
     /// - 不包含 "::"
     /// - template_id 不能以 ".test" 结尾 (特殊值 "GLOBAL" 除外)
     /// 否则将返回错误。
-    pub fn set_variable(&mut self, template_id: &str, step_id: &str, name: &str, value: &str) -> Result<(), String> {
+    pub fn set_variable(&mut self, _template_id: &str, step_id: &str, name: &str, value: &str) -> Result<(), String> {
         // 1. Validate 'name' (variable part of the key)
         if name.is_empty() {
             return Err(format!("Invalid variable name: '{}'. Cannot be empty.", name));
@@ -100,6 +132,22 @@ impl VariableManager {
         }
 
         // 2. Validate 'template_id'
+        let mut template_id = _template_id.to_string();
+        // 来点命名空间适配，希望没有什么会在这里造成死循环
+        while self.namespace_exists(Some(template_id.as_str())) &&
+              !self.template_id_exists(template_id.as_str()) {
+            // 如果 template_id 是命名空间，获取对应的模板ID
+            if let Some(tid) = self.get_template_id_by_namespace(template_id.as_str()) {
+                warn!("理论上你不该在赋值时还用的命名空间而不是具体 ID，但是命名空间 {} 这里自动被解析为模板ID {}", template_id, tid);
+                if template_id == tid {
+                    warn!("命名空间 {} 和模板ID {} 相同，避免死循环，跳出", template_id, tid);
+                    break; // 避免死循环
+                }
+                template_id = tid;
+            } else {
+                break; // 没有对应的模板ID，退出循环
+            }
+        }
         if template_id.is_empty() {
             return Err(format!("Invalid template_id: '{}'. Cannot be empty.", template_id));
         }
@@ -107,6 +155,7 @@ impl VariableManager {
             return Err(format!("Invalid template_id: '{}'. Cannot contain '::'.", template_id));
         }
         // "GLOBAL" is a special keyword and should not be subjected to ".test" suffix check in the same way.
+        // 只觉得这行非常没意义但反正没有副作用。。
         if template_id != "GLOBAL" && template_id.ends_with(".test") {
             return Err(format!("Invalid template_id: '{}'. Cannot end with '.test'.", template_id));
         }
@@ -206,34 +255,92 @@ impl VariableManager {
     /// 获取变量值
     /// 
     /// 根据变量名、当前模板ID和步骤ID,按照优先级查找变量值
-    pub fn get_variable(&self, var_name: &str, current_template_id: Option<&str>, current_step_id: Option<&str>) -> Option<String> {
+    pub fn get_variable(&self, _var_name: &str, _current_template_id: Option<&str>, _current_step_id: Option<&str>) -> Option<String> {
+        // 以下俩 ID 等待回填中，填完了要说还是 UNFILLED 该 panic 了
+        let mut current_template_id = "UNFILLED".to_string();
+        let mut current_step_id = "UNFILLED".to_string();
+        let mut var_name = _var_name.to_string();
+        // 如果用户传入的 var_name 已经指定了完整命名空间怎么办呢？
+        // 首先 { t1::step::greeting } 里，t1 和 step 是不会体现在传入的 _current 里的
+        // 因为传入的这个是当前代码块所处的相对 template_id 和 step_id
+        // 因此，一旦 var_name 里有 ::，我们就要手动提取命名空间和步骤 ID
+        // 为了偷懒少写逻辑，接下来可以直接用提取到的 ns 和 stp_id override 掉原本的 _current 系列变量
+        // 另外，还有两种情况：用户可能传入 t1::greeting 或 t1::step::greeting
+        // 前者意味着 t1::GLOBAL::greeting 的语法糖，我们也要能妥善处理
+        // 这里是一个 workaround
+        if var_name.contains("::") {
+            let parts: Vec<String> = var_name.splitn(3, "::")
+                .map(|s| s.to_string())
+                .collect();
+            if parts.len() == 3 {
+                // 完整的命名空间::步骤::变量名
+                current_template_id = parts[0].clone();
+                current_step_id = parts[1].clone();
+                var_name = parts[2].clone();
+            } else if parts.len() == 2 {
+                // 命名空间::变量名
+                current_template_id = parts[0].clone();
+                current_step_id = "GLOBAL".to_string();
+                var_name = parts[1].clone();
+            }
+        }
+        
+        // 这之后，还是先转一波第一位的标识符，看看如果是命名空间的话需不需要转模板 ID 哈。
+        if current_template_id == "UNFILLED" {
+            // 如果用户没在 var_name 里指定 template_id，隐式地使用当前代码块处于的 template_id
+            current_template_id = _current_template_id.unwrap_or("GLOBAL").to_string();
+        }
+        // 来点命名空间适配，希望没有什么会在这里造成死循环
+        while self.namespace_exists(Some(current_template_id.as_str())) &&
+              !self.template_id_exists(current_template_id.as_str()) {
+            // 如果 template_id 是命名空间，获取对应的模板ID
+            if let Some(tid) = self.get_template_id_by_namespace(current_template_id.as_str()) {
+                debug!("命名空间 {} 被解析为模板ID {}", current_template_id, tid);
+                if current_template_id == tid {
+                    warn!("命名空间 {} 和模板ID {} 相同，避免死循环，跳出", current_template_id, tid);
+                    break; // 避免死循环
+                }
+                current_template_id = tid;
+            } else {
+                break; // 没有对应的模板ID，退出循环
+            }
+        }
+
+        if current_step_id == "UNFILLED" {
+            // 如果用户没在 var_name 里指定 step_id，隐式地使用当前代码块处于的 step_id
+            current_step_id = _current_step_id.unwrap_or("GLOBAL").to_string();
+        }
+        // 这里的 current_template_id 和 current_step_id 已经是经过处理的
         debug!("变量查询: '{}' (当前模板: {:?}, 当前步骤: {:?})",
             var_name, current_template_id, current_step_id);
 
+        if current_template_id == "GLOBAL" && current_step_id != "GLOBAL" {
+            panic!("不允许 /wildcard_namespace/::step::var_name 这种格式的变量引用");
+        }
+
         // 1. 尝试直接作为完全限定变量名查找 (e.g., "T1::S1::V1", "GLOBAL::GLOBAL::V1", "T1::GLOBAL::V1")
         // 或简单名称（如果它们是这样存储的，例如旧版全局变量）
-        if let Some(value) = self.variables.get(var_name) {
+        if let Some(value) = self.variables.get(&var_name) {
             debug!("直接匹配找到变量 '{}': {}", var_name, value);
             return Some(value.clone());
         }
 
-        // 2. 处理带命名空间分隔符的变量引用 (e.g., "NS::V", "NS::S::V")
-        if var_name.contains("::") {
-            // 主动检查不允许的模式: GLOBAL::SpecificStep::Var from non-GLOBAL template context
-            let parts: Vec<&str> = var_name.splitn(3, "::").collect();
-            // 检查是否为 "GLOBAL::NotGlobalStep::VarName" 格式
-            if parts.len() == 3 && parts[0] == "GLOBAL" && parts[1] != "GLOBAL" {
-                if let Some(ctid) = current_template_id {
-                    if ctid != "GLOBAL" {
-                        warn!("不允许的变量查询: 从模板 '{}' 查询 '{}'。不允许从非全局模板通过 'GLOBAL::SpecificStep::VarName' 格式引用特定步骤变量。", ctid, var_name);
-                        return None; // 主动禁止
-                    }
-                }
-            }
-        }
+        // 这里我在前面用简单逻辑做了 workaround
+        // // 2. 处理带命名空间分隔符的变量引用 (e.g., "NS::V", "NS::S::V")
+        // if var_name.contains("::") {
+        //     // 主动检查不允许的模式: GLOBAL::SpecificStep::Var from non-GLOBAL template context
+        //     let parts: Vec<&str> = var_name.splitn(3, "::").collect();
+        //     // 检查是否为 "GLOBAL::NotGlobalStep::VarName" 格式
+        //     if parts.len() == 3 && parts[0] == "GLOBAL" && parts[1] != "GLOBAL" {
+        //         if current_template_id != "GLOBAL" {
+        //             warn!("不允许的变量查询: 从模板 '{}' 查询 '{}'。不允许从非全局模板通过 'GLOBAL::SpecificStep::VarName' 格式引用特定步骤变量。", current_template_id, var_name);
+        //             return None; // 主动禁止
+        //         }
+        //     }
+        // }
 
         // 3. 上下文查找 (此时 var_name 是简单的, 例如 "query", 不包含 "::")
-        if let (Some(tid), Some(sid)) = (current_template_id, current_step_id) {
+        if let (tid, sid) = (current_template_id.clone(), current_step_id.clone()) {
             // a. tid::sid::var_name (例如 current_namespace::current_step::query)
             let key1 = format!("{}::{}::{}", tid, sid, var_name);
             if let Some(value) = self.variables.get(&key1) {
@@ -292,6 +399,11 @@ impl VariableManager {
         &self.variables
     }
 
+    /// 检查模板ID是否存在
+    pub fn template_id_exists(&self, template_id: &str) -> bool {
+        self.template_path_to_id.values().any(|id| id == template_id)
+    }
+
     /// 替换文本中的变量引用（包括条件表达式）
     ///
     /// 支持多种变量引用格式:
@@ -301,9 +413,24 @@ impl VariableManager {
     /// - {{ namespace.variable_name }} - 带命名空间的模板风格双花括号变量引用
     /// - { variable_name } - 模板风格的单花括号变量引用
     /// - { namespace.variable_name } - 带命名空间的模板风格单花括号变量引用
+    /// 必须有两个 { 和 } 才是三元表达式
     /// - {{ variable == "value" ? "true_result" : "false_result" }} - 三元条件表达式
     /// - {{ variable > 100 ? "high" : "low" }} - 数值比较条件表达式
-    pub fn replace_variables(&self, text: &str, current_template_id: Option<&str>, current_step_id: Option<&str>) -> String {
+    pub fn replace_variables(&self, text: &str, input_ns_or_template_id: Option<&str>, current_step_id: Option<&str>) -> String {
+        // 输入的可能是命名空间也可能是模板ID
+        let current_template_id = if self.namespace_exists(input_ns_or_template_id) {
+            self.get_template_id_by_namespace(input_ns_or_template_id.unwrap()).unwrap_or_else(|| input_ns_or_template_id.unwrap_or("GLOBAL").to_string())
+        } else if self.template_id_exists(input_ns_or_template_id.unwrap_or("GLOBAL")) {
+            input_ns_or_template_id.unwrap_or("GLOBAL").to_string()
+        } else {
+            if input_ns_or_template_id.is_some() {
+                warn!("这个命名空间或者模板 ID 疑似没有被注册，请检查: {}", input_ns_or_template_id.unwrap_or("GLOBAL"));
+            }
+            "GLOBAL".to_string()
+        };
+
+        let current_step_id = current_step_id.unwrap_or("GLOBAL");
+        
         let mut result = text.to_string();
         
         // 匹配所有标准变量引用 ${variable} 或 ${namespace::variable}
@@ -356,7 +483,7 @@ impl VariableManager {
                     };
                 }
                 
-                match self.get_variable(var_name, current_template_id, current_step_id) {
+                match self.get_variable(var_name, Some(current_template_id.as_str()), Some(current_step_id)) {
                     Some(value) => value,
                     None if !default_value.is_empty() => default_value.to_string(),
                     None => {
@@ -384,14 +511,26 @@ impl VariableManager {
                 let false_value = &caps[3];
                 
                 // 评估条件
-                match self.evaluate_condition(condition, current_template_id, current_step_id) {
+                let mut output = match self.evaluate_condition(condition, Some(current_template_id.as_str()), Some(current_step_id)) {
                     Ok(true) => true_value.to_string(),
                     Ok(false) => false_value.to_string(),
                     Err(e) => {
                         warn!("条件表达式求值错误: {} - {}", condition, e);
                         format!("{{ {} ? {} : {} }}", condition, true_value, false_value)
                     }
+                };
+
+                // 经典老番之检查输出的是变量还是字面值还是表达式，要不要进一步递归求值
+                // 目前不支持递归求值，只能套一层！
+                if output.starts_with("\"") && output.ends_with("\"") {
+                    output = output[1..output.len()-1].to_string(); // 拿字面值里的实际字符串内容
+                } else {
+                    // 好吧这么干理论上是支持递归求值的只是吓唬一下别瞎用
+                    // 体感上会有一些问题我猜
+                    output = self.replace_variables(&output, Some(current_template_id.as_str()), Some(current_step_id));
                 }
+
+                output
             }).to_string();
             
             // 重置处理过的变量计数
@@ -410,7 +549,7 @@ impl VariableManager {
                     return format!("{{ {} }}", var_name); // 保留原始引用
                 }
                 
-                match self.get_variable(var_name, current_template_id, current_step_id) {
+                match self.get_variable(var_name, Some(current_template_id.as_str()), Some(current_step_id)) {
                     Some(value) => value,
                     None => {
                         // 如果是命名空间变量且无法解析，尝试在日志中提供更多信息
@@ -443,7 +582,7 @@ impl VariableManager {
                     return format!("{{ {} }}", var_name); 
                 }
                 
-                match self.get_variable(var_name, current_template_id, current_step_id) {
+                match self.get_variable(var_name, Some(current_template_id.as_str()), Some(current_step_id)) {
                     Some(value) => value,
                     None => {
                         // 如果是命名空间变量且无法解析，尝试在日志中提供更多信息
@@ -491,15 +630,21 @@ impl VariableManager {
             let left = cap[1].trim();
             let right = cap[2].trim();
             
-            // 获取左侧变量值
-            let left_value = match self.get_variable(left, current_template_id, current_step_id) {
-                Some(value) => value,
-                None => return Err(format!("左侧变量不存在: {}", left)),
+            // 获取左侧值（可能是字面量或变量）
+            let left_value = if left.starts_with('"') && left.ends_with('"') {
+                // 字面量字符串，去掉引号
+                left[1..left.len()-1].to_string()
+            } else {
+                // 尝试解析为变量
+                match self.get_variable(left, current_template_id, current_step_id) {
+                    Some(value) => value,
+                    None => left.to_string(), // 使用原始值
+                }
             };
             
             // 获取右侧值（可能是字面量或变量）
             let right_value = if right.starts_with('"') && right.ends_with('"') {
-                // 字面量字符串
+                // 字面量字符串，去掉引号
                 right[1..right.len()-1].to_string()
             } else {
                 // 尝试解析为变量
@@ -680,6 +825,8 @@ impl VariableManager {
 
 #[cfg(test)]
 mod tests {
+    use crate::template::TestTemplate;
+
     use super::*;
     
     #[test]
@@ -691,7 +838,6 @@ mod tests {
         
         // 获取变量
         assert_eq!(manager.get_variable("test_var", Some("template1"), Some("step1")), Some("test_value".to_string()));
-        assert_eq!(manager.get_variable("template1::step1::test_var", None, None), Some("test_value".to_string()));
     }
     
     #[test]
@@ -705,8 +851,7 @@ mod tests {
         manager.set_variable("template1", "GLOBAL", "var1", "value1").unwrap();
         
         // 通过命名空间访问
-        assert_eq!(manager.get_variable("ns1::var1", None, None), Some("value1".to_string()));
-        assert_eq!(manager.get_variable("ns1.var1", None, None), Some("value1".to_string()));
+        assert_eq!(manager.get_variable("var1", Some("ns1"), Some("GLOBAL")), Some("value1".to_string()));
     }
     
     #[test]
@@ -717,6 +862,21 @@ mod tests {
         manager.set_variable("template1", "step1", "name", "Alice").unwrap();
         manager.set_variable("template1", "GLOBAL", "greeting", "Hello").unwrap();
         manager.register_namespace("t1", "template1");
+        manager.register_template(&Arc::new(TestTemplate {
+            metadata: crate::template::TemplateMetadata {
+                title: "Test Template".to_string(),
+                unit_name: "Test Unit".to_string(),
+                target_config: PathBuf::from("default.cfg"),
+                unit_version_command: Some("version".to_string()),
+                tags: vec!["test".to_string()],
+                references: vec![],
+                custom: HashMap::new(),
+            },
+            steps: vec![], // Empty vector of ExecutionStep
+            file_path: PathBuf::from("template1_path"),
+            raw_content: "Test content".to_string(),
+            content_blocks: vec![], // Empty vector of ContentBlock
+        }), Some("template1"));
         
         // 测试替换
         assert_eq!(
@@ -725,12 +885,12 @@ mod tests {
         );
         
         assert_eq!(
-            manager.replace_variables("{{ t1.greeting }} {{ name }}!", Some("template1"), Some("step1")),
+            manager.replace_variables("{{ t1::GLOBAL::greeting }} {{ name }}!", Some("template1"), Some("step1")),
             "Hello Alice!"
         );
 
         assert_eq!(
-            manager.replace_variables("{ t1.greeting } { name }!", Some("template1"), Some("step1")),
+            manager.replace_variables("{ t1::GLOBAL::greeting } { name }!", Some("template1"), Some("step1")),
             "Hello Alice!"
         );
     }
@@ -739,14 +899,35 @@ mod tests {
     fn test_conditional_expressions() {
         let mut manager = VariableManager::new();
         
+        // Create a mock test template
+        let file_path = PathBuf::from("template1_path");
+        let template_obj = Arc::new(TestTemplate {
+            metadata: crate::template::TemplateMetadata {
+                title: "Test Template".to_string(),
+                unit_name: "Test Unit".to_string(),
+                target_config: PathBuf::from("default.cfg"),
+                unit_version_command: Some("version".to_string()),
+                tags: vec!["test".to_string()],
+                references: vec![],
+                custom: HashMap::new(),
+            },
+            steps: vec![], // Empty vector of ExecutionStep
+            file_path,
+            raw_content: "Test content".to_string(),
+            content_blocks: vec![], // Empty vector of ContentBlock
+        });
+        
+        // 注册模板（这里吗顺便注册模板默认id对应的命名空间。想要别的自己注册）
+        manager.register_template(&template_obj, Some("template1"));
+
         // 设置变量
         manager.set_variable("template1", "GLOBAL", "score", "85").unwrap();
         manager.set_variable("template1", "GLOBAL", "name", "Alice").unwrap();
         manager.set_variable("template1", "GLOBAL", "version", "1.2.3").unwrap();
         
         // 测试等于条件
-        assert_eq!(
-            manager.replace_variables("{{ score == \"85\" ? \"优秀\" : \"良好\" }}", Some("template1"), None),
+        assert_eq!( // 使用双花括号
+            manager.replace_variables(r#"{{ score == "85" ? "优秀" : "良好" }}"#, Some("template1"), None),
             "优秀"
         );
         

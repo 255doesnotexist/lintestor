@@ -47,6 +47,11 @@ impl BatchExecutor {
     }
 
     pub fn add_template(&mut self, template: Arc<TestTemplate>) {
+        let template_id = template.get_template_id();
+        // 在这里注册一下模板
+        if !self.variable_manager.template_id_exists(&template_id) {
+            self.variable_manager.register_template(&template, Some(&template_id));
+        }
         self.templates.insert(template.get_template_id(), template);
     }
 
