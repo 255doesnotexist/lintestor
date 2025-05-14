@@ -18,7 +18,7 @@ tags: ["basic", "example"]
 
 下面是一个简单的命令示例：
 
-```bash {id="echo-cmd" exec=true description="Echo 命令演示" assert.exit_code=0}
+```bash
 echo "Hello, Lintestor!"
 echo "当前日期: $(date)"
 ```
@@ -27,14 +27,14 @@ echo "当前日期: $(date)"
 
 ```output {ref="echo-cmd"}
 Hello, Lintestor!
-当前日期: Wed May 14 09:37:30 PM CST 2025
+当前日期: Wed May 14 11:10:23 PM CST 2025
 ```
 
 ## 检查系统信息
 
 获取一些基本的系统信息：
 
-```bash {id="sys-info" exec=true description="系统信息" assert.exit_code=0}
+```bash
 uname -a
 echo "----------------"
 echo "内存信息:"
@@ -48,13 +48,13 @@ Linux debian 6.11.10-amd64 #1 SMP PREEMPT_DYNAMIC Debian 6.11.10-1 (2024-11-23) 
 ----------------
 内存信息:
  total used free shared buff/cache available
-Mem: 15Gi 10Gi 2.8Gi 79Mi 2.5Gi 4.9Gi
+Mem: 15Gi 8.5Gi 3.6Gi 76Mi 4.0Gi 7.1Gi
 Swap: 0B 0B 0B
 ```
 
-## 测试结果摘要 {id="summary" generate_summary=true}
+## 测试结果摘要
 
 | 步骤描述 | 状态 |
 |---------|------|
-| Echo 命令演示 | {{ status.echo-cmd }} |
-| 系统信息 | {{ status.sys-info }} |
+| Echo 命令演示 | {{status.echo-cmd}} |
+| 系统信息 | {{status.sys-info}} |

@@ -272,22 +272,40 @@ impl Reporter {
 
     /// 清理最终报告内容中不应出现的Markdown特殊属性标记
     fn clean_markdown_markup(&self, content: &str) -> Result<String> {
-        let mut result = content.to_string();
-        
-        let patterns_to_remove = vec![
-            Regex::new(r#"\s*\{id=(?:\"[^\"]+\"|'[^']+')\s*\}"#)?,
-            Regex::new(r#"\s*\{exec=(?:true|false)\s*\}"#)?,
-            Regex::new(r#"\s*\{description=(?:\"[^\"]+\"|'[^']+')\s*\}"#)?,
-            Regex::new(r#"\s*\{assert\.[a-zA-Z0-9_]+=(?:\"[^\"]*\"|'[^']*'|[^}\s]+)\s*\}"#)?,
-            Regex::new(r#"\s*\{extract\.[a-zA-Z0-9_]+=/.*?/[dimsx]*\s*\}"#)?,
-            Regex::new(r#"\s*\{depends_on=\[(?:\"[^\"]*\"|'[^']*')(?:\s*,\s*(?:\"[^\"]*\"|'[^']*'))*\]\s*\}"#)?,
-            Regex::new(r#"\s*\{generate_summary=(?:true|false)\s*\}"#)?,
+        // 定义要从属性块内部移除的特定属性的正则表达式
+        // 这些模式匹配 "key=value" 对，并包含尾随空格以帮助清理
+        // TODO: 如何匹配某个 attr，和之前解析的时候用的表达式应该类似，未来要考虑复用
+        let attribute_rules_for_inner_cleaning = vec![
+            Regex::new(r#"id=(?:\"[^\"]+\"|'[^']+')\s*"#)?,
+            Regex::new(r#"exec=(?:true|false)\s*"#)?,
+            Regex::new(r#"description=(?:\"[^\"]+\"|'[^']+')\s*"#)?,
+            Regex::new(r#"assert\.[a-zA-Z0-9_]+=(?:\"[^\"]*\"|'[^']*'|[^}\s]+)\s*"#)?,
+            Regex::new(r#"extract\.[a-zA-Z0-9_]+=/.*?/[dimsx]*\s*"#)?,
+            Regex::new(r#"depends_on=\[(?:\"[^\"]*\"|'[^']*')(?:\s*,\s*(?:\"[^\"]*\"|'[^']*'))*\]\s*"#)?,
+            Regex::new(r#"generate_summary=(?:true|false)\s*"#)?,
         ];
 
-        for pattern in patterns_to_remove {
-            result = pattern.replace_all(&result, "").to_string();
-        }
+        // 匹配整个 {...} 块并捕获其内部内容
+        let attr_block_regex = Regex::new(r#"\{([^{}]+)\}"#)?;
+        let space_collapse_regex = Regex::new(r"\s\s+")?;
+
+        let mut result = attr_block_regex.replace_all(content, |caps: &regex::Captures| {
+            let mut inner_attrs = caps[1].to_string();
+            for pattern in &attribute_rules_for_inner_cleaning {
+                inner_attrs = pattern.replace_all(&inner_attrs, "").to_string();
+            }
+            
+            inner_attrs = inner_attrs.trim().to_string();
+            if inner_attrs.is_empty() {
+                "".to_string() // 如果所有属性都被移除，则移除花括号
+            } else {
+                // 清理内部可能留下的多余空格
+                inner_attrs = space_collapse_regex.replace_all(&inner_attrs, " ").to_string();
+                format!("{{{}}}", inner_attrs) // 重建花括号和清理后的属性
+            }
+        }).into_owned();
         
+        // 通用空格和换行符清理
         result = Regex::new(r"[^\S\r\n]{2,}")?.replace_all(&result, " ").to_string();
         result = Regex::new(r"[^\S\r\n]+\n")?.replace_all(&result, "\n").to_string();
         result = Regex::new(r"\n{3,}")?.replace_all(&result, "\n\n").to_string();
