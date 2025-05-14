@@ -235,6 +235,7 @@ mod tests {
         }
     }
     
+    use crate::template::DataExtraction;
     fn create_mock_parsed_step(id: &str, command: Option<&str>, extractions: Vec<DataExtraction>) -> ParsedTestStep {
         ParsedTestStep {
             id: id.to_string(),
@@ -283,6 +284,7 @@ mod tests {
 
     #[test_log::test]
     fn test_implicit_dependency_from_variable() {
+        use crate::template::DataExtraction;
         let mut manager = StepDependencyManager::new();
 
         let extraction_s1 = vec![DataExtraction { variable: "my_var".to_string(), regex: ".*".to_string() }];

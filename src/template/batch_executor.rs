@@ -19,6 +19,7 @@ use crate::template::variable::VariableManager;
 use crate::template::reporter::Reporter;
 use crate::template::executor::{ExecutionResult, check_assertion, extract_variable};
 use crate::template::dependency::StepDependencyManager;
+use crate::utils;
 
 /// 批量测试执行器
 pub struct BatchExecutor {
@@ -246,7 +247,7 @@ impl BatchExecutor {
                 duration_ms: Some(duration_ms),
                 assertion_error: assertion_error_msg,
             };
-            current_template_step_results.insert(step_def.local_id.clone(), exec_step_result.clone());
+            current_template_step_results.insert(utils::get_result_id(template_id, step_def.local_id.as_str()), exec_step_result.clone());
             self.executed_step_results.insert(step_id.clone(), exec_step_result);
 
             if template_overall_status == StepStatus::Fail && !continue_on_error {

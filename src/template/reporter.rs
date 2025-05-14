@@ -17,6 +17,7 @@ use log::{info, debug};
 use crate::template::variable::VariableManager;
 use crate::template::executor::ExecutionResult;
 use crate::template::{StepStatus, TestTemplate, ContentBlock, StepType};
+use crate::utils;
 
 /// 报告生成器
 /// 负责将执行结果转换为Markdown格式的测试报告
@@ -180,7 +181,7 @@ impl Reporter {
                 ContentBlock::OutputBlock { step_id } => {
                     // The step_id here is the *local* ID referenced in the template (e.g., {ref="local_step_id"})
                     // We need to find the corresponding StepResult using the global ID.
-                    let global_step_id_to_find = format!("{}::{}", template_id, step_id);
+                    let global_step_id_to_find = utils::get_result_id(template_id.as_str(), step_id);
                     if let Some(step_result) = result.step_results.get(&global_step_id_to_find) {
                         let mut output_block_content = format!("```output {{ref=\"{}\"}}\n", step_id);
                         // stdout is String, not Option<String> in executor::StepResult

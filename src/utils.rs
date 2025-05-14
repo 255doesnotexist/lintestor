@@ -9,12 +9,12 @@ use std::{
     collections::{HashMap, HashSet},
     error::Error,
     fs,
-    path::{Path, PathBuf},
+    path::{Path, PathBuf}, sync::Arc,
 };
 use std::collections::hash_map::DefaultHasher;
 use std::hash::{Hash, Hasher};
 
-use crate::config::target_config::TargetConfig;
+use crate::{config::target_config::TargetConfig, template::{self, TestTemplate}};
 
 /// The remote temporary directory used for operations.
 pub static REMOTE_TMP_DIR: &str = "/tmp/lintestor";
@@ -63,6 +63,22 @@ pub fn get_template_id_from_path(file_path: &Path) -> String {
         .unwrap_or("unknown");
     
     normalize_template_id(file_stem)
+}
+
+/// 从模板 Arc 引用和本地步骤 ID 获取 step 对应的 ResultID
+/// 
+/// # 参数
+/// 
+/// - `template`: 模板引用
+/// - `local_step_id`: 本地步骤 ID
+/// 
+/// # 返回值
+/// 
+/// 返回 ResultID
+pub fn get_result_id(template_id: &str, local_step_id: &str) -> String {
+    let template_id = template_id.to_string();
+    let step_id = local_step_id.to_string();
+    format!("{}::{}", template_id, step_id)
 }
 
 /// Represents a complete test report for a unit on a specific distribution.
