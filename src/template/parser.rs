@@ -421,12 +421,19 @@ fn parse_metadata(yaml: &str) -> Result<TemplateMetadata> {
     })
 }
 
-/// Helper to parse inline attributes like {id="foo" exec="true"}
+/// Helper to parse inline attributes like {id="foo" exec="true" assert.exit_code=0}
 fn parse_inline_attributes(attr_str: &str) -> HashMap<String, String> {
     let mut attributes = HashMap::new();
-    let attr_re = Regex::new(r#"\s*(\w+)\s*=\s*"([^"]*)""#).unwrap();
+    let attr_re = Regex::new(r#"([\w.-]+)\s*=\s*(?:(?:"([^"]*)")|([\w.-]+))"#).unwrap();
     for cap in attr_re.captures_iter(attr_str) {
-        attributes.insert(cap[1].to_string(), cap[2].to_string());
+        let key = cap[1].to_string();
+        // 值可能在捕获组2（带引号）或捕获组3（不带引号）
+        // TODO: 这里以后可以用来准备确定处理的值是数字 or true/false or 字符串，现在还是直接返回吧
+        // TODO: 需要确定的时候，返回 HashMap<String, (String, ValType（某种 enum?）)>
+        let value = cap.get(2).map(|m| m.as_str())
+                      .or_else(|| cap.get(3).map(|m| m.as_str()))
+                      .unwrap_or("").to_string();
+        attributes.insert(key, value);
     }
     attributes
 }

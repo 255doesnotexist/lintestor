@@ -9,12 +9,12 @@ custom_field: "自定义字段值"
 
 # 综合功能测试模板
 
-**测试标题:** {{ title }}  
+**测试标题:** {{ metadata.title }}  
 **执行时间:** {{ execution_date }}  
-**单元名称:** {{ unit_name }}  
-**单元版本:** {{ unit_version }}  
-**目标环境:** {{ target_name }}  
-**自定义字段:** {{ custom_field }}
+**单元名称:** {{ metadata.unit }}  
+**单元版本:** {{ metadata.unit_version }}  
+**目标环境:** {{ metadata.target }}  
+**自定义字段:** {{ metadata.custom_field }}
 
 > 本测试模板演示了 Lintestor 的所有主要功能，包括但不限于：变量提取、断言验证、依赖关系、特殊属性等。
 
