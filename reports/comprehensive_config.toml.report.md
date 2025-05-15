@@ -10,11 +10,11 @@ custom_field: "自定义字段值"
 # 综合功能测试模板
 
 **测试标题:** 综合功能测试
-**执行时间:** 2025-05-15
+**执行时间:** 2025-05-16
 **单元名称:** ComprehensiveTest
-**单元版本:** {metadata.unit_version}
+**单元版本:** {{metadata.unit_version}}
 **目标环境:** config.toml
-**自定义字段:** {metadata.custom_field}
+**自定义字段:** {{metadata.custom_field}}
 
 > 本测试模板演示了 Lintestor 的所有主要功能，包括但不限于：变量提取、断言验证、依赖关系、特殊属性等。
 
@@ -43,10 +43,10 @@ cat version.env
 
 ```output {ref="setup-env"}
 total 8
-drwxrwxr-x 2 ezra ezra 80 May 15 11:33 .
-drwxrwxrwt 164 root root 3820 May 15 18:05 ..
--rw-rw-r-- 1 ezra ezra 20 May 15 20:12 test.txt
--rw-rw-r-- 1 ezra ezra 48 May 15 20:12 version.env
+drwxrwxr-x 2 ezra ezra 80 May 16 01:54 .
+drwxrwxrwt 164 root root 3820 May 16 01:54 ..
+-rw-rw-r-- 1 ezra ezra 20 May 16 01:56 test.txt
+-rw-rw-r-- 1 ezra ezra 48 May 16 01:56 version.env
 This is a test file
 VERSION=1.2.3
 CONFIG=production
@@ -86,7 +86,7 @@ echo "File updated successfully"
 **命令输出:**
 
 ```output {ref="file-operations"}
-2 test.txt
+3 test.txt
 File updated successfully
 ```
 
@@ -110,18 +110,18 @@ This test should pass
 使用之前提取的变量：
 
 ```bash
-echo "软件版本: {version}"
-echo "构建编号: {build}"
-echo "配置环境: {config}"
+echo "软件版本: {{version}}"
+echo "构建编号: {{build}}"
+echo "配置环境: {{config}}"
 echo "当前工作目录: $(pwd)"
 ```
 
 **命令输出:**
 
 ```output {ref="use-variables"}
-软件版本: {version}
-构建编号: {build}
-配置环境: {config}
+软件版本: {{version}}
+构建编号: {{build}}
+配置环境: {{config}}
 当前工作目录: /home/ezra/lintestor
 ```
 
@@ -133,9 +133,9 @@ echo "当前工作目录: $(pwd)"
 cd /tmp/comprehensive_test
 echo "综合报告:"
 echo "----------------------------------------"
-echo "软件版本: {version}"
-echo "构建编号: {build}"
-echo "配置模式: {config}"
+echo "软件版本: {{version}}"
+echo "构建编号: {{build}}"
+echo "配置模式: {{config}}"
 echo "----------------------------------------"
 echo "文件内容:"
 cat test.txt
@@ -147,12 +147,13 @@ echo "----------------------------------------"
 ```output {ref="combined"}
 综合报告:
 ----------------------------------------
-软件版本: {version}
-构建编号: {build}
-配置模式: {config}
+软件版本: {{version}}
+构建编号: {{build}}
+配置模式: {{config}}
 ----------------------------------------
 文件内容:
-This is a test file
+Additional content
+Additional content
 ----------------------------------------
 ```
 
@@ -177,17 +178,17 @@ echo "测试环境已清理"
 
 | 变量名 | 值 |
 |-------|-----|
-| version | {version} |
-| build | {build} |
-| config | {config} |
+| version | 1.2.3 |
+| build | 42 |
+| config | production |
 
 ### 特殊变量
 
 | 变量名 | 值 |
 |-------|-----|
-| execution_date | 2025-05-15 |
-| target_info | {target_info} |
-| unit_version | {unit_version} |
+| execution_date | 2025-05-16 |
+| target_info | {{target_info}} |
+| unit_version | {{unit_version}} |
 
 ## 测试结果摘要
 
@@ -198,5 +199,5 @@ echo "测试环境已清理"
 | 文件操作 | {{status.file-operations}} |
 | 复杂断言 | {{status.complex-assert}} |
 | 使用变量 | {{status.use-variables}} |
-| 组合测试 | {status.combined} |
+| 组合测试 | {{status.combined}} |
 | 清理环境 | {{status.cleanup-env}} |

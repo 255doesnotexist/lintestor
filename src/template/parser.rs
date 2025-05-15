@@ -99,7 +99,7 @@ fn parse_markdown_to_steps_and_content_blocks(
     let mut content_blocks = Vec::new();
     let mut all_local_ids: HashSet<String> = HashSet::new();
     let mut all_depends_refs: Vec<(String, String)> = Vec::new(); // (当前step global_id, depends_on的原始id)
-    let heading_re = Regex::new(r#"(?m)^(#+)\s+(.*?)(?:\s+\{(.*)\}|\s*)$"#)?;
+    let heading_re = Regex::new(r"(?m)^(#+)\s+(.*?)(?:\s+\{([^}]*)\}\s*|\s*)$")?;
     let code_block_re = Regex::new(r"(?ms)```(\w*)\s*(\{([^}]*)\})?\n(.*?)```")?;
     let output_block_re = Regex::new(r#"(?ms)```output\s+\{ref=(?:\"([^\"]+)\"|'([^']+)')\}\n(?:.*?)```"#)?;
     let summary_table_re = Regex::new(r#"(?im)^\s*<!--\s*LINTESOR_SUMMARY_TABLE\s*-->\s*$"#)?;
@@ -131,7 +131,8 @@ fn parse_markdown_to_steps_and_content_blocks(
             if let Some(caps) = heading_re.captures(line) {
                 let level = caps.get(1).map_or(0, |m| m.as_str().len() as u8);
                 let text = caps.get(2).map_or("", |m| m.as_str()).trim().to_string();
-                let attributes_str = caps.get(3).map_or("", |m| m.as_str());
+                let attributes_str = caps.get(3).map_or("", |m| m.as_str()).trim();
+                // debug!("[lintestor heading] attributes_str before parse_inline_attributes: '{:?}' (line: {:?})", attributes_str, line);
                 let attributes = parse_inline_attributes(attributes_str);
                 let local_id = attributes.get("id").cloned().unwrap_or_else(|| {
                     local_id_counter += 1;
@@ -468,6 +469,7 @@ fn parse_inline_attributes(input: &str) -> HashMap<String, String> {
         RegexValue,
         RegexEscape,
         RegexFlags,
+        ListValue { bracket_level: usize },
         Bareword,
         // Done, // Not strictly needed if loop handles EOF
     }
@@ -542,6 +544,11 @@ fn parse_inline_attributes(input: &str) -> HashMap<String, String> {
                             value.clear(); 
                             value.push('/'); 
                             state = State::RegexValue;
+                        }
+                        '[' => {
+                            chars.next();
+                            value.clear();
+                            state = State::ListValue { bracket_level: 1 };
                         }
                         c if c.is_whitespace() => {
                             chars.next(); 
@@ -631,6 +638,35 @@ fn parse_inline_attributes(input: &str) -> HashMap<String, String> {
                 }
                 result.insert(key.clone(), value.clone());
                 state = State::Start; // Go back to start
+            }
+            State::ListValue { bracket_level } => {
+                if let Some(&ch) = chars.peek() {
+                    match ch {
+                        '[' => {
+                            let new_level = bracket_level + 1;
+                            value.push(ch);
+                            chars.next();
+                            state = State::ListValue { bracket_level: new_level };
+                        }
+                        ']' => {
+                            let new_level = bracket_level - 1;
+                            value.push(ch);
+                            chars.next();
+                            if new_level == 0 {
+                                result.insert(key.clone(), value.clone());
+                                state = State::Start;
+                            } else {
+                                state = State::ListValue { bracket_level: new_level };
+                            }
+                        }
+                        _ => {
+                            value.push(ch);
+                            chars.next();
+                        }
+                    }
+                } else {
+                    panic!("Unexpected EOF in list value for key '{}': missing closing ']'", key);
+                }
             }
             State::Bareword => {
                 if let Some(&ch) = chars.peek() {

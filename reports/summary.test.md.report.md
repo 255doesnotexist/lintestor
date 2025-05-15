@@ -1,5 +1,5 @@
-# Test Execution Summary (2025-05-16T01:09:38.530780944+08:00)
+# Test Execution Summary (2025-05-16T01:56:11.242856539+08:00)
 
 | Template ID | Overall Status | Steps Passed | Steps Failed | Steps Skipped | Steps Blocked | Steps Not Run | Report File |
 |-------------|----------------|--------------|--------------|---------------|---------------|---------------|-------------|
-| basic | Pass | 2 | 0 | 6 | 0 | 0 | basic_config.toml.report.md |
+| comprehensive | Pass | 7 | 0 | 19 | 0 | 0 | comprehensive_config.toml.report.md |
