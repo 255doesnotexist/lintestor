@@ -2,7 +2,7 @@
 title: "GNU Toolchain 在 K1 上的测试"
 target_config: "targets/k1/config.toml"
 unit_name: "gnu-plct"
-unit_version_command: "riscv64-plct-linux-gnu-gcc --version | head -n 1"
+unit_version: "0.1.0"
 tags: ["gnu", "toolchain", "riscv"]
 ---
 

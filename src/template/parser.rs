@@ -355,12 +355,10 @@ fn parse_metadata(yaml: &str) -> Result<TemplateMetadata> {
         .to_string();
     debug!("提取unit_name: {}", unit_name);
     
-    let unit_version_command = yaml_value["unit_version_command"]
-        .as_str()
-        .map(|s| s.to_string());
-    if let Some(ref cmd) = unit_version_command {
-        debug!("提取unit_version_command: {}", cmd);
-    }
+    let unit_version = yaml_value["unit_version"].as_str()
+        .ok_or_else(|| anyhow!("元数据缺少'unit_version'字段"))?
+        .to_string();
+    debug!("提取unit_version: {}", unit_version);
     
     let tags = match yaml_value["tags"] {
         serde_yaml::Value::Sequence(ref seq) => {
@@ -411,7 +409,7 @@ fn parse_metadata(yaml: &str) -> Result<TemplateMetadata> {
     if let serde_yaml::Value::Mapping(mapping) = &yaml_value {
         for (key, value) in mapping {
             if let Some(key_str) = key.as_str() {
-                if ["title", "target_config", "unit_name", "unit_version_command", "tags", "references"]
+                if ["title", "target_config", "unit_name", "unit_version", "tags", "references"]
                     .contains(&key_str) {
                     continue;
                 }
@@ -428,7 +426,7 @@ fn parse_metadata(yaml: &str) -> Result<TemplateMetadata> {
         title,
         target_config,
         unit_name,
-        unit_version_command,
+        unit_version,
         tags,
         references,
         custom,
@@ -803,7 +801,7 @@ unit_name: "MyUnit"
 title: "Test Template"
 target_config: "targets/my_target/config.toml"
 unit_name: "MyUnit"
-unit_version_command: "myunit --version"
+unit_version: "1.0.0"
 tags:
   - core
   - feature-abc
@@ -819,7 +817,7 @@ custom_field: "custom value"
         assert_eq!(metadata.title, "Test Template");
         assert_eq!(metadata.target_config, PathBuf::from("targets/my_target/config.toml"));
         assert_eq!(metadata.unit_name, "MyUnit");
-        assert_eq!(metadata.unit_version_command, Some("myunit --version".to_string()));
+        assert_eq!(metadata.unit_version, "1.0.0");
         assert_eq!(metadata.tags, vec!["core".to_string(), "feature-abc".to_string()]);
         assert_eq!(metadata.references.len(), 2);
         assert_eq!(metadata.references[0].template_path, "external_template_1.md");

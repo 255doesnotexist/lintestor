@@ -2,7 +2,7 @@
 title: "综合功能测试"
 target_config: "targets/local/config.toml"
 unit_name: "ComprehensiveTest"
-unit_version_command: "echo 'v1.0.0-test'"
+unit_version: "v1.0.0-test"
 tags: ["comprehensive", "all-features", "advanced"]
 custom_field: "自定义字段值"
 ---

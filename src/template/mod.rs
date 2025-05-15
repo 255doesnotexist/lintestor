@@ -63,8 +63,8 @@ pub struct TemplateMetadata {
     pub target_config: PathBuf,
     /// 测试单元名称
     pub unit_name: String,
-    /// 获取单元版本的命令（可选）
-    pub unit_version_command: Option<String>,
+    /// 单元版本字符串
+    pub unit_version: String,
     /// 测试标签列表
     pub tags: Vec<String>,
     /// 引用的外部模板列表
