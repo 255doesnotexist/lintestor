@@ -95,20 +95,18 @@ fn parse_markdown_to_steps_and_content_blocks(
     metadata: &TemplateMetadata
 ) -> Result<(Vec<ExecutionStep>, Vec<ContentBlock>)> {
     debug!("开始将Markdown内容解析为 ExecutionSteps 和 ContentBlocks (template_id: {})", template_id);
-    let mut execution_steps = Vec::new();
+    let mut execution_steps: Vec<ExecutionStep> = Vec::new();
     let mut content_blocks = Vec::new();
-    
-    // heading_re & code_block_re & output_block_re none of them captures {}
+    let mut all_local_ids: HashSet<String> = HashSet::new();
+    let mut all_depends_refs: Vec<(String, String)> = Vec::new(); // (当前step global_id, depends_on的原始id)
     let heading_re = Regex::new(r#"(?m)^(#+)\s+(.*?)(?:\s+\{(.*)\}|\s*)$"#)?;
     let code_block_re = Regex::new(r"(?ms)```(\w*)\s*(\{([^}]*)\})?\n(.*?)```")?;
-    let output_block_re = Regex::new(r#"(?ms)```output\s+\{ref=(?:"([^"]+)"|'([^']+)')\}\n(?:.*?)```"#)?;
+    let output_block_re = Regex::new(r#"(?ms)```output\s+\{ref=(?:\"([^\"]+)\"|'([^']+)')\}\n(?:.*?)```"#)?;
     let summary_table_re = Regex::new(r#"(?im)^\s*<!--\s*LINTESOR_SUMMARY_TABLE\s*-->\s*$"#)?;
 
-    let mut current_heading_stack: Vec<(GlobalStepId, u8)> = Vec::new();
+    let mut current_heading_stack: Vec<(GlobalStepId, u8, Vec<GlobalStepId>)> = Vec::new(); // (id, level, children)
     let mut local_id_counter = 0;
-
     let mut last_match_end = 0;
-
     let combined_re_str = format!(
         "(?P<heading>{})|(?P<output_block>{})|(?P<summary_table>{})|(?P<code_block>{})",
         heading_re.as_str(),
@@ -121,46 +119,59 @@ fn parse_markdown_to_steps_and_content_blocks(
     for captures in combined_re.captures_iter(markdown) {
         let match_start = captures.get(0).unwrap().start();
         let match_end = captures.get(0).unwrap().end();
-
         if match_start > last_match_end {
             let text_segment = &markdown[last_match_end..match_start];
             if !text_segment.trim().is_empty() {
                 content_blocks.push(ContentBlock::Text(text_segment.to_string()));
             }
         }
-
         if let Some(heading_match) = captures.name("heading") {
             let line = heading_match.as_str();
             content_blocks.push(ContentBlock::Text(line.to_string()));
-
             if let Some(caps) = heading_re.captures(line) {
                 let level = caps.get(1).map_or(0, |m| m.as_str().len() as u8);
                 let text = caps.get(2).map_or("", |m| m.as_str()).trim().to_string();
                 let attributes_str = caps.get(3).map_or("", |m| m.as_str());
-                
                 let attributes = parse_inline_attributes(attributes_str);
                 let local_id = attributes.get("id").cloned().unwrap_or_else(|| {
                     local_id_counter += 1;
                     format!("heading_{}", local_id_counter)
                 });
+                all_local_ids.insert(local_id.clone());
                 let global_id = format!("{}::{}", template_id, local_id);
-
-                while let Some((_, last_level)) = current_heading_stack.last() {
+                // 处理 heading stack，弹出比当前 level 大的 heading，并把子节点挂到 dependencies
+                // 这里 current_heading_stack 是一个栈，保存了所有未闭合的 heading 及其 level 和子节点列表
+                // 每遇到一个更高或同级 heading，就把栈顶 heading 弹出，并把它收集到的所有直接子节点（children）
+                // 全部加入到该 heading 的 dependencies 字段，实现“父依赖所有直接子节点”
+                while let Some((_, last_level, _)) = current_heading_stack.last_mut() {
                     if *last_level >= level {
-                        current_heading_stack.pop();
+                        // 弹出并更新 dependencies
+                        let (parent_id, _, children) = current_heading_stack.pop().unwrap();
+                        // 这里 parent_id 是 heading 的全局 id，children 是它的所有直接子节点 id
+                        if let Some(parent_step) = execution_steps.iter_mut().find(|s| s.id == parent_id) {
+                            for child in children {
+                                // 将所有直接子节点加入 heading 的依赖
+                                parent_step.dependencies.insert(child);
+                            }
+                        }
                     } else {
                         break;
                     }
                 }
-
+                // 只处理 heading 自己的 depends_on，结构性依赖全部通过 children 机制实现
                 let mut dependencies = HashSet::new();
-                if let Some(parent_heading_id) = current_heading_stack.last() {
-                    dependencies.insert(parent_heading_id.0.clone());
-                }
                 if let Some(deps_str) = attributes.get("depends_on") {
-                    parse_depends_on_str(deps_str, &mut dependencies, template_id, &metadata.references);
+                    // 先不检查，先收集
+                    for dep_item_str in deps_str.trim_matches(|c| c == '[' || c == ']').split(',') {
+                        let trimmed_dep = dep_item_str.trim().trim_matches(|c| c == '\'' || c == '"');
+                        if !trimmed_dep.is_empty() {
+                            let dep_id = extract_dep_id_from_dep_str(trimmed_dep);
+                            all_depends_refs.push((global_id.clone(), dep_id.to_string()));
+                        }
+                    }
+                    // 依赖实际插入依赖集
+                    parse_depends_on_str(deps_str, &mut dependencies, template_id, &metadata.references, &all_local_ids);
                 }
-
                 execution_steps.push(ExecutionStep {
                     id: global_id.clone(),
                     template_id: template_id.to_string(),
@@ -169,23 +180,18 @@ fn parse_markdown_to_steps_and_content_blocks(
                     dependencies,
                     original_parsed_step: None,
                 });
-                current_heading_stack.push((global_id, level));
+                current_heading_stack.push((global_id, level, Vec::new())); // 新 heading 入栈，准备收集子节点
             }
         } else if let Some(output_match) = captures.name("output_block") {
             if let Some(caps) = output_block_re.captures(output_match.as_str()) {
                 let ref_id_attr = caps.get(1).or_else(|| caps.get(2)).map_or("", |m| m.as_str()).to_string();
                 content_blocks.push(ContentBlock::OutputBlock { step_id: ref_id_attr.clone() });
-                
                 let local_id = format!("{}-outputplaceholder", ref_id_attr);
+                all_local_ids.insert(local_id.clone());
                 let global_id = format!("{}::{}", template_id, local_id);
                 let mut dependencies = HashSet::new();
                 let ref_global_id = resolve_dependency_ref(&ref_id_attr, template_id, &metadata.references);
                 dependencies.insert(ref_global_id.clone());
-
-                if let Some(parent_heading_id) = current_heading_stack.last() {
-                    dependencies.insert(parent_heading_id.0.clone());
-                }
-
                 let parsed_step_info = ParsedTestStep {
                     id: local_id.clone(),
                     description: Some(format!("Placeholder for output of step {}", ref_id_attr)),
@@ -196,71 +202,61 @@ fn parse_markdown_to_steps_and_content_blocks(
                     executable: false, // Not directly executable
                     ref_command: Some(ref_id_attr.to_string()),
                     raw_content: output_match.as_str().to_string(),
-                    active: Some(true), // Output blocks are typically always active if the ref step runs
+                    active: Some(true),
                     timeout_ms: None,
                 };
-
                 execution_steps.push(ExecutionStep {
-                    id: global_id,
+                    id: global_id.clone(),
                     template_id: template_id.to_string(),
                     local_id,
                     step_type: StepType::OutputPlaceholder,
                     dependencies,
                     original_parsed_step: Some(parsed_step_info),
                 });
+                // 只让父 heading 的 children 收集这个 output block
+                // 这样 heading 只依赖于自己直接的 output/code/heading 子节点
+                if let Some((_, _, children)) = current_heading_stack.last_mut() {
+                    children.push(global_id.clone());
+                }
             }
         } else if captures.name("summary_table").is_some() {
             content_blocks.push(ContentBlock::SummaryTablePlaceholder);
         } else if let Some(code_match) = captures.name("code_block") {
-            // This is a general code block, which is an ExecutionStep 
-            // and potentially a DisplayableCodeBlock for the report.
             let block_content = code_match.as_str();
-            
-            // Parse attributes to get local_id for DisplayableCodeBlock and ExecutionStep
-            let preliminary_caps = code_block_re.captures(block_content); // Re-capture to get groups
+            let preliminary_caps = code_block_re.captures(block_content);
             let lang_for_check = preliminary_caps.as_ref().and_then(|c| c.get(1)).map_or("", |m| m.as_str());
             let attrs_str_for_check = preliminary_caps.as_ref().and_then(|c| c.get(2)).map_or("", |m| m.as_str());
-
-            // Avoid double-processing if it's an output block that was missed by the more specific output_block_re
-            // (though output_block_re should be preferred and capture it first)
             if lang_for_check == "output" && attrs_str_for_check.contains("ref=") {
-                // This should have been caught by the OutputBlock regex. 
-                // If it reaches here, it implies a parsing logic subtlety or an edge case.
-                // For safety, we can push it as Text, or log a warning.
-                // However, the combined regex order should prevent this.
-                // If it does happen, pushing as Text is safer than creating a confusing DisplayableCodeBlock.
-                // For now, assume combined_re handles order correctly and this branch is less likely for true output blocks.
-                // Let's proceed to treat it as a potential DisplayableCodeBlock / ExecutionStep.
+                // skip, handled by output_block
             }
-
-            // Now parse it as an ExecutionStep::CodeBlock and get its local_id
-            if let Some(caps) = code_block_re.captures(block_content) { // Re-capture for full parsing
+            if let Some(caps) = code_block_re.captures(block_content) {
                 let lang = caps.get(1).map_or("", |m| m.as_str()).to_string();
                 let attributes_str = caps.get(3).map_or("", |m| m.as_str());
                 let command = caps.get(4).map_or("", |m| m.as_str()).trim().to_string();
-                
                 let attributes = parse_inline_attributes(attributes_str);
                 let local_id = attributes.get("id").cloned().unwrap_or_else(|| {
                     local_id_counter += 1;
                     format!("codeblock_{}", local_id_counter)
                 });
-
-                // Add as DisplayableCodeBlock for the report structure
+                all_local_ids.insert(local_id.clone());
                 content_blocks.push(ContentBlock::DisplayableCodeBlock {
                     original_content: block_content.to_string(),
                     local_step_id: Some(local_id.clone()),
                 });
-
-                // Create the ExecutionStep as before
                 let global_id = format!("{}::{}", template_id, local_id);
                 let mut dependencies = HashSet::new();
-                if let Some(parent_heading_id) = current_heading_stack.last() {
-                    dependencies.insert(parent_heading_id.0.clone());
-                }
                 if let Some(deps_str) = attributes.get("depends_on") {
-                    parse_depends_on_str(deps_str, &mut dependencies, template_id, &metadata.references);
+                    // 先不检查，先收集
+                    for dep_item_str in deps_str.trim_matches(|c| c == '[' || c == ']').split(',') {
+                        let trimmed_dep = dep_item_str.trim().trim_matches(|c| c == '\'' || c == '"');
+                        if !trimmed_dep.is_empty() {
+                            let dep_id = extract_dep_id_from_dep_str(trimmed_dep);
+                            all_depends_refs.push((global_id.clone(), dep_id.to_string()));
+                        }
+                    }
+                    // 依赖实际插入依赖集
+                    parse_depends_on_str(deps_str, &mut dependencies, template_id, &metadata.references, &all_local_ids);
                 }
-                
                 let parsed_step_info = ParsedTestStep {
                     id: local_id.clone(),
                     description: attributes.get("description").cloned(),
@@ -270,31 +266,47 @@ fn parse_markdown_to_steps_and_content_blocks(
                     extractions: parse_extractions_from_attributes(&attributes),
                     executable: attributes.get("exec").and_then(|v_str| v_str.parse::<bool>().ok()).unwrap_or(true),
                     ref_command: None,
-                    raw_content: block_content.to_string(), // raw_content in ParsedTestStep is the code itself, not the full block with ```
+                    raw_content: block_content.to_string(),
                     active: attributes.get("active").and_then(|v_str| v_str.parse::<bool>().ok()),
                     timeout_ms: attributes.get("timeout_ms").and_then(|v_str| v_str.parse::<u64>().ok()),
                 };
-
                 execution_steps.push(ExecutionStep {
-                    id: global_id,
+                    id: global_id.clone(),
                     template_id: template_id.to_string(),
                     local_id,
                     step_type: StepType::CodeBlock { lang, command, attributes: attributes.clone() },
                     dependencies,
                     original_parsed_step: Some(parsed_step_info),
                 });
+                // 只让父 heading 的 children 收集这个 codeblock
+                // 这样 heading 只依赖于自己直接的 codeblock/output/heading 子节点
+                if let Some((_, _, children)) = current_heading_stack.last_mut() {
+                    children.push(global_id.clone());
+                }
             }
         }
         last_match_end = match_end;
     }
-
+    // 处理所有未闭合 heading 的 children
+    while let Some((parent_id, _, children)) = current_heading_stack.pop() {
+        if let Some(parent_step) = execution_steps.iter_mut().find(|s| s.id == parent_id) {
+            for child in children {
+                parent_step.dependencies.insert(child);
+            }
+        }
+    }
     if last_match_end < markdown.len() {
         let remaining_text = &markdown[last_match_end..];
         if !remaining_text.trim().is_empty() {
             content_blocks.push(ContentBlock::Text(remaining_text.to_string()));
         }
     }
-    
+    // 检查所有 depends_on 的 id 是否都存在
+    for (from_id, dep_id) in &all_depends_refs {
+        if !all_local_ids.contains(dep_id) {
+            panic!("depends_on 中引用了不存在的步骤 id: {} (from step {})", dep_id, from_id);
+        }
+    }
     debug!("完成 ExecutionSteps ({}) 和 ContentBlocks ({}) 解析", execution_steps.len(), content_blocks.len());
     Ok((execution_steps, content_blocks))
 }
@@ -420,6 +432,15 @@ fn parse_metadata(yaml: &str) -> Result<TemplateMetadata> {
         references,
         custom,
     })
+}
+
+/// 提取 depends_on 字符串中的单个依赖 id（去除 namespace，仅返回本地 id）
+fn extract_dep_id_from_dep_str(dep_str: &str) -> &str {
+    if dep_str.contains("::") {
+        dep_str.split("::").last().unwrap_or("")
+    } else {
+        dep_str
+    }
 }
 
 /// Helper to parse inline attributes like id="foo" exec="true" assert.exit_code=0 extract.lintestor=/Lintestor/
@@ -642,11 +663,16 @@ fn parse_inline_attributes(input: &str) -> HashMap<String, String> {
 }
 
 /// Helper to parse "depends_on" string and populate dependencies set
-fn parse_depends_on_str(deps_str: &str, dependencies: &mut HashSet<GlobalStepId>, current_template_id: &str, references: &[TemplateReference]) {
+fn parse_depends_on_str(deps_str: &str, dependencies: &mut HashSet<GlobalStepId>, current_template_id: &str, references: &[TemplateReference], all_local_ids: &std::collections::HashSet<String>) {
     let deps_list_str = deps_str.trim_matches(|c| c == '[' || c == ']');
     for dep_item_str in deps_list_str.split(',') {
-        let trimmed_dep = dep_item_str.trim().trim_matches(|c| c == '\'' || c == '\"');
+        let trimmed_dep = dep_item_str.trim().trim_matches(|c| c == '\'' || c == '"');
         if !trimmed_dep.is_empty() {
+            // 检查依赖的 step id 是否存在于已解析的 local_id 列表
+            let dep_id = extract_dep_id_from_dep_str(trimmed_dep);
+            if !all_local_ids.contains(dep_id) {
+                panic!("depends_on 中引用了不存在的步骤 id: {}", trimmed_dep);
+            }
             dependencies.insert(resolve_dependency_ref(trimmed_dep, current_template_id, references));
         }
     }
