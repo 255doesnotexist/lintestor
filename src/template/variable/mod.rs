@@ -432,179 +432,175 @@ impl VariableManager {
         let current_step_id = current_step_id.unwrap_or("GLOBAL");
         
         let mut result = text.to_string();
-        
-        // 匹配所有标准变量引用 ${variable} 或 ${namespace::variable}
-        let var_pattern = r"\$\{([a-zA-Z0-9_.:]+)(?:\|([^}]+))?\}";
-        let re = Regex::new(var_pattern).unwrap();
-        
-        // 匹配双花括号模板风格变量引用 {{ variable }} 或 {{ namespace.variable }}
-        let template_pattern = r"\{\{\s*([a-zA-Z0-9_.:]+)\s*\}\}";
-        let template_re = Regex::new(template_pattern).unwrap();
-        
-        // 匹配单花括号模板风格变量引用 { variable } 或 { namespace.variable }
-        // 这种单花括号格式用于兼容旧版报告模板
-        let single_brace_pattern = r"\{\s*([a-zA-Z0-9_.:]+)\s*\}";
-        let single_brace_re = Regex::new(single_brace_pattern).unwrap();
-        
-        // 匹配三元条件表达式 {{ condition ? true_value : false_value }}
-        let conditional_pattern = r"\{\{\s*(.*?)\s*\?\s*(.*?)\s*:\s*(.*?)\s*\}\}";
-        let conditional_re = Regex::new(conditional_pattern).unwrap();
-        
-        // 使用循环而不是单次替换,以处理嵌套变量
-        let mut prev_result = String::new();
-        let mut iteration = 0;
-        let max_iterations = 10; // 防止无限循环
-        
-        // 跟踪已处理的变量，防止循环引用
-        let mut processed_vars = HashMap::new();
-        
-        while prev_result != result && iteration < max_iterations {
-            prev_result = result.clone();
-            iteration += 1;
-            
-            // 每次迭代前重置处理过的变量计数
-            processed_vars.clear();
-            
-            // 1. 处理标准变量引用 ${variable} 或 ${namespace::variable}
-            result = re.replace_all(&prev_result, |caps: &regex::Captures| {
-                let var_name = &caps[1];
-                let default_value = caps.get(2).map(|m| m.as_str()).unwrap_or("");
-                
-                // 检查循环引用
-                let count = processed_vars.entry(var_name.to_string()).or_insert(0);
-                *count += 1;
-                
-                if *count > 3 {  // 如果同一变量被处理超过3次，可能存在循环引用
-                    warn!("检测到可能的循环引用: {}", var_name);
-                    return if !default_value.is_empty() { 
-                        default_value.to_string() 
-                    } else { 
-                        format!("${{{}}}", var_name) // 保留原始引用
-                    };
-                }
-                
-                match self.get_variable(var_name, Some(current_template_id.as_str()), Some(current_step_id)) {
-                    Some(value) => value,
-                    None if !default_value.is_empty() => default_value.to_string(),
-                    None => {
-                        // 如果是命名空间变量且无法解析，尝试在日志中提供更多信息
-                        if var_name.contains("::") /*|| var_name.contains(".")*/ {
-                            let normalized_name = var_name.replace('.', "::");
-                            let parts: Vec<&str> = normalized_name.splitn(2, "::").collect();
-                            if parts.len() == 2 {
-                                let namespace = parts[0];
-                                warn!("无法解析命名空间变量: {}，命名空间 {} 未注册或变量不存在", var_name, namespace);
-                            }
-                        }
-                        format!("${{{}}}", var_name) // 保留原始引用
-                    }
-                }
-            }).to_string();
-            
-            // 重置处理过的变量计数
-            processed_vars.clear();
-            
-            // 2. 处理三元条件表达式 {{ condition ? true_value : false_value }}
-            result = conditional_re.replace_all(&result, |caps: &regex::Captures| {
-                let condition = &caps[1];
-                let true_value = &caps[2];
-                let false_value = &caps[3];
-                
-                // 评估条件
-                let mut output = match self.evaluate_condition(condition, Some(current_template_id.as_str()), Some(current_step_id)) {
-                    Ok(true) => true_value.to_string(),
-                    Ok(false) => false_value.to_string(),
-                    Err(e) => {
-                        warn!("条件表达式求值错误: {} - {}", condition, e);
-                        format!("{{ {} ? {} : {} }}", condition, true_value, false_value)
-                    }
-                };
 
-                // 经典老番之检查输出的是变量还是字面值还是表达式，要不要进一步递归求值
-                // 目前不支持递归求值，只能套一层！
-                if output.starts_with("\"") && output.ends_with("\"") {
-                    output = output[1..output.len()-1].to_string(); // 拿字面值里的实际字符串内容
-                } else {
-                    // 好吧这么干理论上是支持递归求值的只是吓唬一下别瞎用
-                    // 体感上会有一些问题我猜
-                    output = self.replace_variables(&output, Some(current_template_id.as_str()), Some(current_step_id));
-                }
+        #[derive(Debug, PartialEq)]
+        enum State {
+            Normal,
+            Escape,
+            VarDollar,           // 进入 ${
+            VarDollarContent { content: String, brace_level: usize },
+            VarDoubleBrace,      // 进入 {{
+            VarDoubleBraceContent { content: String },
+            VarSingleBrace,      // 进入 {
+            VarSingleBraceContent { content: String, brace_level: usize },
+        }
 
-                output
-            }).to_string();
-            
-            // 重置处理过的变量计数
-            processed_vars.clear();
-            
-            // 3. 处理双花括号模板风格变量引用 {{ variable }} 或 {{ namespace.variable }}
-            result = template_re.replace_all(&result, |caps: &regex::Captures| {
-                let var_name = &caps[1];
-                
-                // 检查循环引用
-                let count = processed_vars.entry(var_name.to_string()).or_insert(0);
-                *count += 1;
-                
-                if *count > 3 {  // 如果同一变量被处理超过3次，可能存在循环引用
-                    warn!("检测到可能的循环引用: {}", var_name);
-                    return format!("{{ {} }}", var_name); // 保留原始引用
-                }
-                
-                match self.get_variable(var_name, Some(current_template_id.as_str()), Some(current_step_id)) {
-                    Some(value) => value,
-                    None => {
-                        // 如果是命名空间变量且无法解析，尝试在日志中提供更多信息
-                        if var_name.contains("::") {
-                            let parts: Vec<&str> = var_name.splitn(2, "::").collect();
-                            if parts.len() == 2 {
-                                let namespace = parts[0];
-                                warn!("无法解析命名空间变量: {{ {} }}，命名空间 {} 未注册或变量不存在", var_name, namespace);
-                            }
-                        }
-                        format!("{{ {} }}", var_name) // 保留原始引用
+        let mut chars = result.chars().peekable();
+        let mut output = String::new();
+        let mut state = State::Normal;
+
+        while let Some(c) = chars.next() {
+            match &mut state {
+                State::Normal => {
+                    if c == '\\' {
+                        state = State::Escape;
+                    } else if c == '$' && chars.peek() == Some(&'{') {
+                        chars.next(); // 跳过 '{'
+                        state = State::VarDollarContent { content: String::new(), brace_level: 1 };
+                    } else if c == '{' && chars.peek() == Some(&'{') {
+                        chars.next(); // 跳过第二个 '{'
+                        state = State::VarDoubleBraceContent { content: String::new() };
+                    } else if c == '{' {
+                        state = State::VarSingleBraceContent { content: String::new(), brace_level: 1 };
+                    } else {
+                        output.push(c);
                     }
                 }
-            }).to_string();
-            
-            // 重置处理过的变量计数
-            processed_vars.clear();
-            
-            // 4. 处理单花括号模板风格变量引用 { variable } 或 { namespace.variable }
-            result = single_brace_re.replace_all(&result, |caps: &regex::Captures| {
-                let var_name = &caps[1];
-                
-                // 检查循环引用
-                let count = processed_vars.entry(var_name.to_string()).or_insert(0);
-                *count += 1;
-                
-                if *count > 3 {  // 如果同一变量被处理超过3次，可能存在循环引用
-                    warn!("检测到可能的循环引用: {}", var_name);
-                    // In case of loop, panic was too strong, return original or placeholder
-                    return format!("{{ {} }}", var_name); 
+                State::Escape => {
+                    // 只转义变量包裹符
+                    if c == '$' || c == '{' {
+                        output.push(c);
+                    } else {
+                        output.push('\\');
+                        output.push(c);
+                    }
+                    state = State::Normal;
                 }
-                
-                match self.get_variable(var_name, Some(current_template_id.as_str()), Some(current_step_id)) {
-                    Some(value) => value,
-                    None => {
-                        // 如果是命名空间变量且无法解析，尝试在日志中提供更多信息
-                        if var_name.contains("::") {
-                            let parts: Vec<&str> = var_name.splitn(2, "::").collect();
-                            if parts.len() == 2 {
-                                let namespace = parts[0];
-                                // Corrected warning line:
-                                warn!("处理单花括号变量 '{{ {} }}' 时，无法解析其中的命名空间 '{}'。原始引用: '{}'", var_name, namespace, caps.get(0).map_or(var_name, |m| m.as_str()));
-                            }
+                State::VarDollarContent { content, brace_level } => {
+                    if c == '{' {
+                        *brace_level += 1;
+                        content.push(c);
+                    } else if c == '}' {
+                        *brace_level -= 1;
+                        if *brace_level == 0 {
+                            // 处理 ${...}
+                            let mut parts = content.splitn(2, '|');
+                            let var_name = parts.next().unwrap_or("").trim();
+                            let default_value = parts.next().unwrap_or("");
+                            let value = match self.get_variable(var_name, Some(current_template_id.as_str()), Some(current_step_id)) {
+                                Some(v) => v,
+                                None if !default_value.is_empty() => default_value.to_string(),
+                                None => format!("${{{}}}", var_name),
+                            };
+                            output.push_str(&value);
+                            state = State::Normal;
+                        } else {
+                            content.push(c);
                         }
-                        debug!("未找到单花括号变量: {}", var_name);
-                        format!("{{ {} }}", var_name) // 保留原始引用，但格式化为双花括号
+                    } else {
+                        content.push(c);
                     }
                 }
-            }).to_string();
+                State::VarDoubleBraceContent { content } => {
+                    if c == '}' && chars.peek() == Some(&'}') {
+                        chars.next(); // 跳过第二个 '}'
+                        // Unicode安全：用char_indices记录?和:的字节下标
+                        let inner = content.trim();
+                        let mut qmark_byte = None;
+                        let mut colon_byte = None;
+                        let mut level = 0;
+                        for (i, ch) in inner.char_indices() {
+                            if ch == '?' && level == 0 && qmark_byte.is_none() {
+                                qmark_byte = Some(i);
+                            } else if ch == ':' && level == 0 && colon_byte.is_none() && qmark_byte.is_some() {
+                                colon_byte = Some(i);
+                            } else if ch == '{' {
+                                level += 1;
+                            } else if ch == '}' && level > 0 {
+                                level -= 1;
+                            }
+                        }
+                        if let (Some(q), Some(c)) = (qmark_byte, colon_byte) {
+                            // 三元表达式
+                            let cond = inner[..q].trim();
+                            let tval = inner[q+1..c].trim();
+                            let fval = inner[c+1..].trim();
+                            let mut output_val = match self.evaluate_condition(cond, Some(current_template_id.as_str()), Some(current_step_id)) {
+                                Ok(true) => tval.to_string(),
+                                Ok(false) => fval.to_string(),
+                                Err(e) => {
+                                    warn!("条件表达式求值错误: {} - {}", cond, e);
+                                    format!("{{{{ {} ? {} : {} }}}}", cond, tval, fval)
+                                }
+                            };
+                            if output_val.starts_with('"') && output_val.ends_with('"') && output_val.len() > 1 {
+                                output_val = output_val[1..output_val.len()-1].to_string();
+                            } else {
+                                output_val = self.replace_variables(&output_val, Some(current_template_id.as_str()), Some(current_step_id));
+                            }
+                            output.push_str(&output_val);
+                        } else {
+                            // 普通变量
+                            let var_name = inner;
+                            let value = match self.get_variable(var_name, Some(current_template_id.as_str()), Some(current_step_id)) {
+                                Some(v) => v,
+                                None => format!("{{{{ {} }}}}", var_name),
+                            };
+                            output.push_str(&value);
+                        }
+                        state = State::Normal;
+                    } else {
+                        content.push(c);
+                    }
+                }
+                State::VarSingleBraceContent { content, brace_level } => {
+                    if c == '{' {
+                        *brace_level += 1;
+                        content.push(c);
+                    } else if c == '}' {
+                        *brace_level -= 1;
+                        if *brace_level == 0 {
+                            // 处理 { ... }
+                            let var_name = content.trim();
+                            let value = match self.get_variable(var_name, Some(current_template_id.as_str()), Some(current_step_id)) {
+                                Some(v) => v,
+                                None => format!("{{ {} }}", var_name),
+                            };
+                            output.push_str(&value);
+                            state = State::Normal;
+                        } else {
+                            content.push(c);
+                        }
+                    } else {
+                        content.push(c);
+                    }
+                }
+                // 新增：处理未进入内容状态的 VarDollar/VarDoubleBrace/VarSingleBrace
+                State::VarDollar | State::VarDoubleBrace | State::VarSingleBrace => {
+                    // 理论上不会进入这些状态，直接回到 Normal
+                    output.push(c);
+                    state = State::Normal;
+                }
+            }
         }
-        
-        if iteration >= max_iterations && prev_result != result {
-            warn!("变量替换达到最大迭代次数 ({})，可能存在复杂的嵌套或循环引用", max_iterations);
+        // 如果结束时还在变量状态，降级为原文输出
+        match state {
+            State::VarDollarContent { content, .. } => {
+                output.push_str(&format!("${{{}}}", content));
+            }
+            State::VarDoubleBraceContent { content } => {
+                output.push_str(&format!("{{{{ {} }}}}", content));
+            }
+            State::VarSingleBraceContent { content, .. } => {
+                output.push_str(&format!("{{ {} }}", content));
+            }
+            State::Escape => {
+                output.push('\\');
+            }
+            _ => {}
         }
-        
+        result = output;
+
         result
     }
 
