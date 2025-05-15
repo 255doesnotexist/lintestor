@@ -98,7 +98,8 @@ fn parse_markdown_to_steps_and_content_blocks(
     let mut execution_steps = Vec::new();
     let mut content_blocks = Vec::new();
     
-    let heading_re = Regex::new(r#"(?m)^(#+)\s+(.*?)(?:\s+(\{.*\})|\s*)$"#)?;
+    // heading_re & code_block_re & output_block_re none of them captures {}
+    let heading_re = Regex::new(r#"(?m)^(#+)\s+(.*?)(?:\s+\{(.*)\}|\s*)$"#)?;
     let code_block_re = Regex::new(r"(?ms)```(\w*)\s*(\{([^}]*)\})?\n(.*?)```")?;
     let output_block_re = Regex::new(r#"(?ms)```output\s+\{ref=(?:"([^"]+)"|'([^']+)')\}\n(?:.*?)```"#)?;
     let summary_table_re = Regex::new(r#"(?im)^\s*<!--\s*LINTESOR_SUMMARY_TABLE\s*-->\s*$"#)?;
@@ -218,7 +219,7 @@ fn parse_markdown_to_steps_and_content_blocks(
             // Parse attributes to get local_id for DisplayableCodeBlock and ExecutionStep
             let preliminary_caps = code_block_re.captures(block_content); // Re-capture to get groups
             let lang_for_check = preliminary_caps.as_ref().and_then(|c| c.get(1)).map_or("", |m| m.as_str());
-            let attrs_str_for_check = preliminary_caps.as_ref().and_then(|c| c.get(3)).map_or("", |m| m.as_str());
+            let attrs_str_for_check = preliminary_caps.as_ref().and_then(|c| c.get(2)).map_or("", |m| m.as_str());
 
             // Avoid double-processing if it's an output block that was missed by the more specific output_block_re
             // (though output_block_re should be preferred and capture it first)
@@ -421,21 +422,223 @@ fn parse_metadata(yaml: &str) -> Result<TemplateMetadata> {
     })
 }
 
-/// Helper to parse inline attributes like {id="foo" exec="true" assert.exit_code=0}
-fn parse_inline_attributes(attr_str: &str) -> HashMap<String, String> {
-    let mut attributes = HashMap::new();
-    let attr_re = Regex::new(r#"([\w.-]+)\s*=\s*(?:(?:"([^"]*)")|([\w.-]+))"#).unwrap();
-    for cap in attr_re.captures_iter(attr_str) {
-        let key = cap[1].to_string();
-        // 值可能在捕获组2（带引号）或捕获组3（不带引号）
-        // TODO: 这里以后可以用来准备确定处理的值是数字 or true/false or 字符串，现在还是直接返回吧
-        // TODO: 需要确定的时候，返回 HashMap<String, (String, ValType（某种 enum?）)>
-        let value = cap.get(2).map(|m| m.as_str())
-                      .or_else(|| cap.get(3).map(|m| m.as_str()))
-                      .unwrap_or("").to_string();
-        attributes.insert(key, value);
+/// Helper to parse inline attributes like id="foo" exec="true" assert.exit_code=0 extract.lintestor=/Lintestor/
+/// 这个函数解析类似于 id="foo" exec="true" assert.exit_code=0 extract.lintestor=/Lintestor/ 的内联属性
+/// 实现方式是使用有限状态机来解析键值对，内部状态似乎没什么复用的可能性所以 State 就不对外暴露了
+/// 注意我们在状态里没考虑 { 和 } 所以不许传入整个带 {} 的 attr_str
+fn parse_inline_attributes(input: &str) -> HashMap<String, String> {
+    let mut result = HashMap::new();
+    let mut chars = input.chars().peekable();
+    let mut key = String::new();
+    let mut value = String::new();
+
+    if input.is_empty() {
+        // Early return if input is empty, because of state machine expect {} mustly 
+        return result; 
     }
-    attributes
+
+    enum State {
+        Start,
+        Key,
+        ExpectEq,
+        ValueStart,
+        StringValue,
+        StringEscape,
+        RegexValue,
+        RegexEscape,
+        RegexFlags,
+        Bareword,
+        // Done, // Not strictly needed if loop handles EOF
+    }
+
+    let mut state = State::Start;
+
+    loop {
+        match state {
+            State::Start => {
+                if let Some(&ch) = chars.peek() {
+                    if ch.is_whitespace() {
+                        chars.next();
+                    } else {
+                        key.clear();
+                        value.clear();
+                        state = State::Key;
+                    }
+                } else {
+                    // EOF reached, exit the loop
+                    info!("Reached EOF in Start state, exiting loop");
+                    break;
+                }
+            }
+            State::Key => {
+                if let Some(&ch) = chars.peek() {
+                    if ch == '=' {
+                        state = State::ExpectEq;
+                    } else if ch.is_alphanumeric() || ch == '.' || ch == '-' || ch == '_' {
+                        key.push(ch);
+                        chars.next();
+                    } else if ch.is_whitespace() {
+                        chars.next();
+                        state = State::ExpectEq; 
+                    } else {
+                        if key.is_empty() {
+                            panic!("Unexpected character '{}' at start of key or empty key before '='", ch);
+                        }
+                        panic!("Unexpected character '{}' after key '{}', expected '=' or whitespace or '}}'", ch, key);
+                    }
+                } else {
+                    if !key.is_empty() {
+                        panic!("Unexpected EOF after key: {}", key);
+                    }
+                    // EOF after attributes have started, but before '}'
+                    panic!("Unexpected EOF, expected attributes or '}}'");
+                }
+            }
+            State::ExpectEq => {
+                if let Some(&ch) = chars.peek() {
+                    if ch == '=' {
+                        chars.next();
+                        state = State::ValueStart;
+                    } else if ch.is_whitespace() {
+                        chars.next(); 
+                    } else {
+                        panic!("Expected '=' after key '{}', found '{}'", key, ch);
+                    }
+                } else {
+                    panic!("Unexpected EOF after key '{}', expected '='", key);
+                }
+            }
+            State::ValueStart => {
+                if let Some(&ch) = chars.peek() {
+                    match ch {
+                        '"' => {
+                            chars.next(); 
+                            value.clear();
+                            state = State::StringValue;
+                        }
+                        '/' => {
+                            chars.next(); 
+                            value.clear(); 
+                            value.push('/'); 
+                            state = State::RegexValue;
+                        }
+                        c if c.is_whitespace() => {
+                            chars.next(); 
+                        }
+                        _ => {
+                            value.clear();
+                            state = State::Bareword;
+                        }
+                    }
+                } else {
+                    panic!("Unexpected EOF for key '{}', expected a value.", key);
+                }
+            }
+            State::StringValue => {
+                if let Some(&ch) = chars.peek() {
+                    match ch {
+                        '\\' => {
+                            chars.next(); 
+                            state = State::StringEscape;
+                        }
+                        '"' => {
+                            chars.next(); 
+                            result.insert(key.clone(), value.clone());
+                            state = State::Start; // Go back to start to look for more attributes or '}'
+                        }
+                        _ => {
+                            value.push(ch);
+                            chars.next();
+                        }
+                    }
+                } else {
+                    panic!("Unexpected EOF in string value for key '{}'", key);
+                }
+            }
+            State::StringEscape => {
+                if let Some(&ch) = chars.peek() {
+                    value.push(ch);
+                    chars.next();
+                    state = State::StringValue;
+                } else {
+                    panic!("Unexpected EOF after string escape for key '{}'", key);
+                }
+            }
+            State::RegexValue => {
+                if let Some(&ch) = chars.peek() {
+                    match ch {
+                        '\\' => {
+                            chars.next(); 
+                            state = State::RegexEscape;
+                        }
+                        '/' => {
+                            chars.next(); 
+                            value.push('/'); 
+                            state = State::RegexFlags;
+                        }
+                        _ => {
+                            value.push(ch);
+                            chars.next();
+                        }
+                    }
+                } else {
+                    panic!("Unexpected EOF in regex value for key '{}'", key);
+                }
+            }
+            State::RegexEscape => {
+                if let Some(&ch) = chars.peek() {
+                    value.push('\\'); 
+                    value.push(ch);   
+                    chars.next();
+                    state = State::RegexValue;
+                } else {
+                    panic!("Unexpected EOF after regex escape for key '{}'", key);
+                }
+            }
+            State::RegexFlags => {
+                let mut flags_str = String::new();
+                while let Some(&ch_flag) = chars.peek() {
+                    if ch_flag.is_alphabetic() { 
+                        flags_str.push(ch_flag);
+                        chars.next();
+                    } else {
+                        break; 
+                    }
+                }
+                if !flags_str.is_empty() {
+                    value.push_str(&flags_str); 
+                }
+                result.insert(key.clone(), value.clone());
+                state = State::Start; // Go back to start
+            }
+            State::Bareword => {
+                if let Some(&ch) = chars.peek() {
+                    if ch.is_whitespace() {
+                        chars.next(); 
+                        result.insert(key.clone(), value.clone());
+                        state = State::Start; // Go back to start
+                    } else {
+                        value.push(ch);
+                        chars.next();
+                    }
+                } else {
+                    // EOF, this is the end of the input and also the end of the bareword
+                    result.insert(key.clone(), value.clone());
+                    // Since input ended, we expect it to be implicitly closed
+                    break;
+                }
+            }
+        }
+    }
+    
+    debug!("解析内联属性完成: {} -> {:?}", input, result);
+
+    if !chars.peek().is_none() {
+        // If we reach here and there are still characters left, it means we didn't close the attributes properly
+        panic!("未闭合的属性定义，可能缺少 '}}' ");
+    }
+
+    result
 }
 
 /// Helper to parse "depends_on" string and populate dependencies set
