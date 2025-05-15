@@ -126,6 +126,9 @@ impl BatchExecutor {
             let mut stderr_val = String::new();
             let mut exit_code_val = 0;
             let mut assertion_error_msg: Option<String> = None;
+            let mut assertion_status = StepStatus::Skipped;
+            let mut assertion_statuses: Vec<StepStatus> = Vec::new();
+            let mut assertion_error_msgs: Vec<Option<String>> = Vec::new();
 
             let step_start_time = Instant::now();
 
@@ -165,20 +168,31 @@ impl BatchExecutor {
                                     self.variable_manager.set_variable(&step_def.template_id,&step_def.local_id,"exit_code", &exit_code_val.to_string());
 
                                     if !parsed_step_details.assertions.is_empty() {
-                                        for assertion_details in &parsed_step_details.assertions {
+                                        assertion_status = StepStatus::Pass;
+                                        for (idx, assertion_details) in parsed_step_details.assertions.iter().enumerate() {
                                             let assertion_result = check_assertion(
                                                 assertion_details,
                                                 &stdout_val,
                                                 &stderr_val,
                                                 exit_code_val,
                                             );
-                                            if let Err(e) = assertion_result {
-                                                step_status = StepStatus::Fail;
-                                                assertion_error_msg = Some(e.to_string());
-                                                error!("Assertion failed for step {}: {}", step_id, e);
-                                                break;
+                                            match assertion_result {
+                                                Ok(_) => {
+                                                    assertion_statuses.push(StepStatus::Pass);
+                                                    assertion_error_msgs.push(None);
+                                                },
+                                                Err(e) => {
+                                                    step_status = StepStatus::Fail;
+                                                    assertion_status = StepStatus::Fail;
+                                                    assertion_statuses.push(StepStatus::Fail);
+                                                    assertion_error_msgs.push(Some(e.to_string()));
+                                                    error!("Assertion {} failed for step {}: {}", idx, step_id, e);
+                                                }
                                             }
                                         }
+                                    } else {
+                                        assertion_statuses.clear();
+                                        assertion_error_msgs.clear();
                                     }
 
                                     if step_status == StepStatus::Pass {
@@ -205,6 +219,7 @@ impl BatchExecutor {
                                 Err(e) => {
                                     error!("Command execution failed for step {}: {}", step_id, e);
                                     step_status = StepStatus::Fail;
+                                    assertion_status = StepStatus::Fail;
                                     stderr_val = e.to_string();
                                     assertion_error_msg = Some(format!("Command execution failed: {}", e));
                                 }
@@ -212,10 +227,12 @@ impl BatchExecutor {
                         } else {
                             info!("Step {} is inactive or not executable, skipping execution.", step_id);
                             step_status = StepStatus::Skipped;
+                            assertion_status = StepStatus::Skipped;
                         }
                     } else {
                         error!("CodeBlock step {} is missing original parsed details. Cannot execute.", step_id);
                         step_status = StepStatus::Fail;
+                        assertion_status = StepStatus::Fail;
                         stderr_val = format!("Internal error: CodeBlock {} missing parsed details.", step_id);
                         assertion_error_msg = Some(stderr_val.clone());
                     }
@@ -223,11 +240,13 @@ impl BatchExecutor {
                 StepType::Heading { .. } => {
                     info!("Skipping execution for heading step: {}", step_id);
                     step_status = StepStatus::Skipped;
+                    assertion_status = StepStatus::Skipped;
                 }
                 StepType::OutputPlaceholder => {
                     // OutputPlaceholder steps are handled by the reporter, not executed here.
                     info!("Skipping execution for OutputPlaceholder step: {}", step_id);
                     step_status = StepStatus::Skipped;
+                    assertion_status = StepStatus::Skipped;
                 }
             }
 
@@ -236,6 +255,13 @@ impl BatchExecutor {
             if step_status == StepStatus::Fail {
                 template_overall_status = StepStatus::Fail;
             }
+
+            let _ = self.variable_manager.set_variable(
+                &step_def.template_id,
+                &step_def.local_id,
+                "status.execution",
+                step_status.as_str(),
+            );
 
             let exec_step_result = crate::template::executor::StepResult {
                 id: step_def.local_id.clone(),
@@ -249,6 +275,33 @@ impl BatchExecutor {
             };
             current_template_step_results.insert(utils::get_result_id(template_id, step_def.local_id.as_str()), exec_step_result.clone());
             self.executed_step_results.insert(step_id.clone(), exec_step_result);
+
+            // 注册断言状态变量（整体）
+            let _ = self.variable_manager.set_variable(
+                &step_def.template_id,
+                &step_def.local_id,
+                "status.assertion",
+                assertion_status.as_str(),
+            );
+            // 注册每个断言的状态和错误信息
+            for (idx, status) in assertion_statuses.iter().enumerate() {
+                let var_name = format!("status.assertion.{}", idx);
+                let _ = self.variable_manager.set_variable(
+                    &step_def.template_id,
+                    &step_def.local_id,
+                    &var_name,
+                    status.as_str(),
+                );
+                if let Some(Some(err_msg)) = assertion_error_msgs.get(idx) {
+                    let err_var_name = format!("assertion_error.{}", idx);
+                    let _ = self.variable_manager.set_variable(
+                        &step_def.template_id,
+                        &step_def.local_id,
+                        &err_var_name,
+                        err_msg,
+                    );
+                }
+            }
 
             if template_overall_status == StepStatus::Fail && !continue_on_error {
                 info!("Stopping execution of template {} due to step failure and continue_on_error=false.", template_id);

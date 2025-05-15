@@ -55,17 +55,7 @@ Swap: 0B 0B 0B
 
 ## 测试结果摘要
 
-
 | 步骤描述 | 状态 |
 |---------|------|
-| sys-info-output | ✅ Pass |
-| echo-cmd-output | ✅ Pass |
-| Echo | ✅ Pass |
-| | ✅ Pass |
-| | ✅ Pass |
-| 系统信息 | ✅ Pass |
-
-| 步骤描述 | 状态 |
-|---------|------|
-| Echo 命令演示 | ✅ Pass |
-| 系统信息 | ✅ Pass |
+| Echo 命令演示 | {{echo-cmd::status.execution}} |
+| 系统信息 | {{sys-info::status.execution}} |

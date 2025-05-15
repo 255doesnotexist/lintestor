@@ -330,6 +330,8 @@ impl VariableManager {
             panic!("不允许 /wildcard_namespace/::step::var_name 这种格式的变量引用");
         }
 
+        // 变量名允许带点（如 status.execution），查找时整体作为变量名处理，不做特殊分割
+
         // 1. 尝试直接作为完全限定变量名查找 (e.g., "T1::S1::V1", "GLOBAL::GLOBAL::V1", "T1::GLOBAL::V1")
         // 或简单名称（如果它们是这样存储的，例如旧版全局变量）
         if let Some(value) = self.variables.get(&var_name) {
@@ -372,8 +374,8 @@ impl VariableManager {
             // 如果 sid == "GLOBAL", key1 已经是 tid::GLOBAL::var_name, 所以 key2 被跳过。
 
             // c. GLOBAL::GLOBAL::var_name (例如 GLOBAL::GLOBAL::query)
-            let key3 = format!("{}::{}::{}", "GLOBAL", "GLOBAL", var_name);
             let mut try_key3 = true;
+            let key3 = format!("{}::{}::{}", "GLOBAL", "GLOBAL", var_name);
 
             // 如果 key1 已经是 GLOBAL::GLOBAL::var_name (当 tid="GLOBAL" 且 sid="GLOBAL")
             if tid == "GLOBAL" && sid == "GLOBAL" {

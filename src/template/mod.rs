@@ -145,6 +145,21 @@ pub enum StepStatus {
     NotRun,
 } // Blocked 和 NotRun 是为将来可能的异步 or 并行执行保留的状态，当前实现还没用上
 
+impl StepStatus {
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            StepStatus::Pass => "Pass",
+            StepStatus::Fail => "Fail",
+            StepStatus::Skipped => "Skipped",
+            StepStatus::Blocked => "Blocked",
+            StepStatus::NotRun => "NotRun",
+        }
+    }
+}
+
+// 这个 StepStatus 的实现是为了方便在报告中输出状态字符串，会把状态关联到 template_id::step_id::status.execution/assertion 的格式
+// 变量名允许带点（如 status.execution），查找时整体作为变量名处理，不做特殊分割
+
 /// 步骤执行结果
 #[derive(Debug, Clone)]
 pub struct StepResult {

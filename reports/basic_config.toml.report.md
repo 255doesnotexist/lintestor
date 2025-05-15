@@ -7,7 +7,7 @@ tags: ["basic", "example"]
 
 # 基本功能测试
 
-*测试执行于: 2025-05-14*
+*测试执行于: 2025-05-16*
 
 这是一个最基本的测试模板示例，演示以下功能：
 - 基本命令执行
@@ -27,18 +27,22 @@ echo "当前日期: $(date)"
 
 ```output {ref="echo-cmd"}
 Hello, Lintestor!
-当前日期: Wed May 14 11:10:23 PM CST 2025
+当前日期: Fri May 16 01:09:38 AM CST 2025
 ```
 
 ## 检查系统信息
 
 获取一些基本的系统信息：
+（代码块的依赖写 depends_on=["step_id","template_id::step_id"]）
+（以及会自动隐式依赖属于它这一级的标题，（不对吧？应该是标题依赖于底下所有代码块））
 
 ```bash
 uname -a
 echo "----------------"
 echo "内存信息:"
 free -h | head -3
+echo "----------------"
+echo "Lintestor"
 ```
 
 **命令输出:**
@@ -48,13 +52,15 @@ Linux debian 6.11.10-amd64 #1 SMP PREEMPT_DYNAMIC Debian 6.11.10-1 (2024-11-23) 
 ----------------
 内存信息:
  total used free shared buff/cache available
-Mem: 15Gi 8.5Gi 3.6Gi 76Mi 4.0Gi 7.1Gi
+Mem: 15Gi 9.2Gi 4.3Gi 75Mi 2.6Gi 6.4Gi
 Swap: 0B 0B 0B
+----------------
+Lintestor
 ```
 
 ## 测试结果摘要
 
 | 步骤描述 | 状态 |
 |---------|------|
-| Echo 命令演示 | {{status.echo-cmd}} |
-| 系统信息 | {{status.sys-info}} |
+| Echo 命令演示 | Pass |
+| 系统信息 | Pass |

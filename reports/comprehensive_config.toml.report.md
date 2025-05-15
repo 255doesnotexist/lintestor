@@ -43,10 +43,10 @@ cat version.env
 
 ```output {ref="setup-env"}
 total 8
-drwxrwxr-x 2 ezra ezra 80 May 15 00:26 .
-drwxrwxrwt 164 root root 3840 May 15 00:26 ..
--rw-rw-r-- 1 ezra ezra 20 May 15 00:26 test.txt
--rw-rw-r-- 1 ezra ezra 48 May 15 00:26 version.env
+drwxrwxr-x 2 ezra ezra 80 May 15 11:33 .
+drwxrwxrwt 164 root root 3820 May 15 18:05 ..
+-rw-rw-r-- 1 ezra ezra 20 May 15 20:12 test.txt
+-rw-rw-r-- 1 ezra ezra 48 May 15 20:12 version.env
 This is a test file
 VERSION=1.2.3
 CONFIG=production
@@ -66,6 +66,9 @@ echo "提取完成"
 **命令输出:**
 
 ```output {ref="version-extract"}
+VERSION=1.2.3
+CONFIG=production
+BUILD_NUMBER=42
 提取完成
 ```
 
@@ -83,7 +86,7 @@ echo "File updated successfully"
 **命令输出:**
 
 ```output {ref="file-operations"}
-1 test.txt
+2 test.txt
 File updated successfully
 ```
 
@@ -149,7 +152,7 @@ echo "----------------------------------------"
 配置模式: {config}
 ----------------------------------------
 文件内容:
-Additional content
+This is a test file
 ----------------------------------------
 ```
 
