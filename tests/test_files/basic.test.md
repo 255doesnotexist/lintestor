@@ -2,6 +2,7 @@
 title: "基本功能测试"
 target_config: "targets/local/config.toml"
 unit_name: "BasicTest"
+unit_version: 0.1.0
 tags: ["basic", "example"]
 ---
 

@@ -11,9 +11,9 @@ custom_field: "自定义字段值"
 
 **测试标题:** 综合功能测试
 **执行时间:** 2025-05-16
-**单元名称:** ComprehensiveTest
-**单元版本:** {{metadata.unit_version}}
-**目标环境:** config.toml
+**单元名称:** {{metadata.unit}}
+**单元版本:** v1.0.0-test
+**目标环境:** {{metadata.target}}
 **自定义字段:** {{metadata.custom_field}}
 
 > 本测试模板演示了 Lintestor 的所有主要功能，包括但不限于：变量提取、断言验证、依赖关系、特殊属性等。
@@ -43,10 +43,10 @@ cat version.env
 
 ```output {ref="setup-env"}
 total 8
-drwxrwxr-x 2 ezra ezra 80 May 16 01:54 .
-drwxrwxrwt 164 root root 3820 May 16 01:54 ..
--rw-rw-r-- 1 ezra ezra 20 May 16 01:56 test.txt
--rw-rw-r-- 1 ezra ezra 48 May 16 01:56 version.env
+drwxrwxr-x 2 ezra ezra 80 May 16 04:22 .
+drwxrwxrwt 164 root root 3820 May 16 04:22 ..
+-rw-rw-r-- 1 ezra ezra 20 May 16 04:22 test.txt
+-rw-rw-r-- 1 ezra ezra 48 May 16 04:22 version.env
 This is a test file
 VERSION=1.2.3
 CONFIG=production
@@ -86,7 +86,7 @@ echo "File updated successfully"
 **命令输出:**
 
 ```output {ref="file-operations"}
-3 test.txt
+2 test.txt
 File updated successfully
 ```
 
@@ -152,6 +152,7 @@ echo "----------------------------------------"
 配置模式: {{config}}
 ----------------------------------------
 文件内容:
+Additional content
 Additional content
 Additional content
 ----------------------------------------

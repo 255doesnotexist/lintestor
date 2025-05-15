@@ -2,6 +2,7 @@
 title: "基本功能测试"
 target_config: "targets/local/config.toml"
 unit_name: "BasicTest"
+unit_version: 0.1.0
 tags: ["basic", "example"]
 ---
 
@@ -27,7 +28,7 @@ echo "当前日期: $(date)"
 
 ```output {ref="echo-cmd"}
 Hello, Lintestor!
-当前日期: Fri May 16 01:09:38 AM CST 2025
+当前日期: Fri May 16 04:22:45 AM CST 2025
 ```
 
 ## 检查系统信息
@@ -52,7 +53,7 @@ Linux debian 6.11.10-amd64 #1 SMP PREEMPT_DYNAMIC Debian 6.11.10-1 (2024-11-23) 
 ----------------
 内存信息:
  total used free shared buff/cache available
-Mem: 15Gi 9.2Gi 4.3Gi 75Mi 2.6Gi 6.4Gi
+Mem: 15Gi 10Gi 3.4Gi 75Mi 2.6Gi 5.5Gi
 Swap: 0B 0B 0B
 ----------------
 Lintestor

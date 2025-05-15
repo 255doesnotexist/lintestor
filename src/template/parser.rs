@@ -171,7 +171,7 @@ fn parse_markdown_to_steps_and_content_blocks(
                         }
                     }
                     // 依赖实际插入依赖集
-                    parse_depends_on_str(deps_str, &mut dependencies, template_id, &metadata.references, &all_local_ids);
+                    parse_depends_on_str(deps_str, &mut dependencies, template_id, &metadata.references);
                 }
                 execution_steps.push(ExecutionStep {
                     id: global_id.clone(),
@@ -256,7 +256,7 @@ fn parse_markdown_to_steps_and_content_blocks(
                         }
                     }
                     // 依赖实际插入依赖集
-                    parse_depends_on_str(deps_str, &mut dependencies, template_id, &metadata.references, &all_local_ids);
+                    parse_depends_on_str(deps_str, &mut dependencies, template_id, &metadata.references);
                 }
                 let parsed_step_info = ParsedTestStep {
                     id: local_id.clone(),
@@ -697,16 +697,12 @@ fn parse_inline_attributes(input: &str) -> HashMap<String, String> {
 }
 
 /// Helper to parse "depends_on" string and populate dependencies set
-fn parse_depends_on_str(deps_str: &str, dependencies: &mut HashSet<GlobalStepId>, current_template_id: &str, references: &[TemplateReference], all_local_ids: &std::collections::HashSet<String>) {
+fn parse_depends_on_str(deps_str: &str, dependencies: &mut HashSet<GlobalStepId>, current_template_id: &str, references: &[TemplateReference]) {
     let deps_list_str = deps_str.trim_matches(|c| c == '[' || c == ']');
     for dep_item_str in deps_list_str.split(',') {
         let trimmed_dep = dep_item_str.trim().trim_matches(|c| c == '\'' || c == '"');
         if !trimmed_dep.is_empty() {
-            // 检查依赖的 step id 是否存在于已解析的 local_id 列表
-            let dep_id = extract_dep_id_from_dep_str(trimmed_dep);
-            if !all_local_ids.contains(dep_id) {
-                panic!("depends_on 中引用了不存在的步骤 id: {}", trimmed_dep);
-            }
+            // 收集依赖之把这个 block 显式在 depends_on 声明的的所有依赖都放到 dependencies 里
             dependencies.insert(resolve_dependency_ref(trimmed_dep, current_template_id, references));
         }
     }

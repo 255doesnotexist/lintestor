@@ -6,9 +6,9 @@ unit_version: "0.1.0"
 tags: ["toolchain", "gcc", "gnu-upstream", "K1"]
 ---
 
-# {{ title }}
+# {{ metadata.title }}
 
-## 环境信息
+## 环境信息 {id="env_info" depends_on=["check-version"]}
 
 * **测试日期:** `{{ execution_date }}`
 * **目标配置:** `target/k1.toml`
@@ -196,19 +196,19 @@ CoreMark 向量扩展优化分数: {{ run-coremark-vector::coremark_vector_score
 
 | 步骤ID | 描述 | 状态 | 退出码 | 输出摘要 | 错误信息 |
 |--------|------|------|--------|----------|----------|
-| install-toolchain | 安装 Upstream GNU Toolchain | {{ install-toolchain::status.execution }} | {{ install-toolchain::exit_code }} | {{ install-toolchain::output_summary }} | {{ install-toolchain::error }} |
-| create-venv | 创建测试虚拟环境 | {{ create-venv::status.execution }} | {{ create-venv::exit_code }} | {{ create-venv::output_summary }} | {{ create-venv::error }} |
-| activate-venv | 激活虚拟环境 | {{ activate-venv::status.execution }} | {{ activate-venv::exit_code }} | {{ activate-venv::output_summary }} | {{ activate-venv::error }} |
-| check-version | 检查编译器版本 | {{ check-version::status.execution }} | {{ check-version::exit_code }} | {{ check-version::output_summary }} | {{ check-version::error }} |
-| create-hello | 创建 Hello World 源文件 | {{ create-hello::status.execution }} | {{ create-hello::exit_code }} | {{ create-hello::output_summary }} | {{ create-hello::error }} |
-| compile-hello | 编译 Hello World 程序 | {{ compile-hello::status.execution }} | {{ compile-hello::exit_code }} | {{ compile-hello::output_summary }} | {{ compile-hello::error }} |
-| run-hello | 运行 Hello World 程序 | {{ run-hello::status.execution }} | {{ run-hello::exit_code }} | {{ run-hello::output_summary }} | {{ run-hello::error }} |
-| extract-coremark | 提取 CoreMark 包 | {{ extract-coremark::status.execution }} | {{ extract-coremark::exit_code }} | {{ extract-coremark::output_summary }} | {{ extract-coremark::error }} |
-| config-coremark | 配置 CoreMark 编译 | {{ config-coremark::status.execution }} | {{ config-coremark::exit_code }} | {{ config-coremark::output_summary }} | {{ config-coremark::error }} |
-| build-coremark | 编译 CoreMark (默认优化) | {{ build-coremark::status.execution }} | {{ build-coremark::exit_code }} | {{ build-coremark::output_summary }} | {{ build-coremark::error }} |
-| run-coremark | 运行 CoreMark (默认优化) | {{ run-coremark::status.execution }} | {{ run-coremark::exit_code }} | {{ run-coremark::output_summary }} | {{ run-coremark::error }} |
-| build-coremark-vector | 编译 CoreMark (向量扩展) | {{ build-coremark-vector::status.execution }} | {{ build-coremark-vector::exit_code }} | {{ build-coremark-vector::output_summary }} | {{ build-coremark-vector::error }} |
-| run-coremark-vector | 运行 CoreMark (向量扩展) | {{ run-coremark-vector::status.execution }} | {{ run-coremark-vector::exit_code }} | {{ run-coremark-vector::output_summary }} | {{ run-coremark-vector::error }} |
+| install-toolchain | 安装 Upstream GNU Toolchain | {{ install-toolchain::status.execution }} | {{ install-toolchain::exit_code }} | {{ install-toolchain::stdout }} | {{ install-toolchain::stderr }} |
+| create-venv | 创建测试虚拟环境 | {{ create-venv::status.execution }} | {{ create-venv::exit_code }} | {{ create-venv::stdout }} | {{ create-venv::stderr }} |
+| activate-venv | 激活虚拟环境 | {{ activate-venv::status.execution }} | {{ activate-venv::exit_code }} | {{ activate-venv::stdout }} | {{ activate-venv::stderr }} |
+| check-version | 检查编译器版本 | {{ check-version::status.execution }} | {{ check-version::exit_code }} | {{ check-version::stdout }} | {{ check-version::stderr }} |
+| create-hello | 创建 Hello World 源文件 | {{ create-hello::status.execution }} | {{ create-hello::exit_code }} | {{ create-hello::stdout }} | {{ create-hello::stderr }} |
+| compile-hello | 编译 Hello World 程序 | {{ compile-hello::status.execution }} | {{ compile-hello::exit_code }} | {{ compile-hello::stdout }} | {{ compile-hello::stderr }} |
+| run-hello | 运行 Hello World 程序 | {{ run-hello::status.execution }} | {{ run-hello::exit_code }} | {{ run-hello::stdout }} | {{ run-hello::stderr }} |
+| extract-coremark | 提取 CoreMark 包 | {{ extract-coremark::status.execution }} | {{ extract-coremark::exit_code }} | {{ extract-coremark::stdout }} | {{ extract-coremark::stderr }} |
+| config-coremark | 配置 CoreMark 编译 | {{ config-coremark::status.execution }} | {{ config-coremark::exit_code }} | {{ config-coremark::stdout }} | {{ config-coremark::stderr }} |
+| build-coremark | 编译 CoreMark (默认优化) | {{ build-coremark::status.execution }} | {{ build-coremark::exit_code }} | {{ build-coremark::stdout }} | {{ build-coremark::stderr }} |
+| run-coremark | 运行 CoreMark (默认优化) | {{ run-coremark::status.execution }} | {{ run-coremark::exit_code }} | {{ run-coremark::stdout }} | {{ run-coremark::stderr }} |
+| build-coremark-vector | 编译 CoreMark (向量扩展) | {{ build-coremark-vector::status.execution }} | {{ build-coremark-vector::exit_code }} | {{ build-coremark-vector::stdout }} | {{ build-coremark-vector::stderr }} |
+| run-coremark-vector | 运行 CoreMark (向量扩展) | {{ run-coremark-vector::status.execution }} | {{ run-coremark-vector::exit_code }} | {{ run-coremark-vector::stdout }} | {{ run-coremark-vector::stderr }} |
 
 ## 9. 性能比较 {id="performance"}
 

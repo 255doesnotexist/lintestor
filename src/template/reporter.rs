@@ -498,7 +498,7 @@ echo "Hello, {{ execution_time }}"
             raw_content: template_content.to_string(),
             content_blocks: vec![
                 ContentBlock::Metadata("title: Test Report\nunit_name: Test Unit\ntarget_name: Test Target".to_string()),
-                ContentBlock::Text("# {{ metadata.title }}\n\nThis is a test report for {{ metadata.unit }} targeting {{ metadata.target }}.".to_string()),
+                ContentBlock::Text("# {{ metadata.title }}\n\nThis is a test report for {{ metadata.unit_name }} targeting {{ metadata.target_name }}.".to_string()),
                 ContentBlock::OutputBlock { step_id: "code1".to_string() },
                 ContentBlock::DisplayableCodeBlock {
                     original_content: "```bash {id=\"code1\"}\necho \"Hello, {{ execution_time }}\"\n```".to_string(),

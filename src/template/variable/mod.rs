@@ -110,8 +110,9 @@ impl VariableManager {
         // 从这开始 metadata 组变量就可以被使用了
         // 作用域：当前模板、任意步骤、[title, unit, target]
         self.set_variable(template_id, "GLOBAL", "metadata.title", &template.metadata.title);
-        self.set_variable(template_id, "GLOBAL", "metadata.unit", &template.metadata.unit_name);
-        self.set_variable(template_id, "GLOBAL", "metadata.target", &template.metadata.target_config.file_name().and_then(|n| n.to_str()).unwrap_or("default").to_string());
+        self.set_variable(template_id, "GLOBAL", "metadata.unit_version", &template.metadata.unit_version);
+        self.set_variable(template_id, "GLOBAL", "metadata.unit_name", &template.metadata.unit_name);
+        self.set_variable(template_id, "GLOBAL", "metadata.target_name", &template.metadata.target_config.file_name().and_then(|n| n.to_str()).unwrap_or("default").to_string());
     }
     
     /// 设置变量

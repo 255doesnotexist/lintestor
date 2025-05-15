@@ -6,14 +6,14 @@ unit_version: "0.1.0"
 tags: ["toolchain", "gcc", "gnu-upstream", "K1"]
 ---
 
-# {{title}}
+# SpacemiT K1/M1 (X60) GNU Toolchain (gnu-upstream) 测试
 
 ## 环境信息
 
 * **测试日期:** `2025-05-16`
 * **目标配置:** `target/k1.toml`
 * **工具链版本:** `{{check-version::gcc_version}}`
-* **单元版本:** `{{metadata.unit_version}}`
+* **单元版本:** `0.1.0`
 
 ## 0. 初始化 ruyi 包管理器
 
@@ -164,9 +164,9 @@ cd coremark
 ```output {ref="run-coremark"}
 2K performance run parameters for coremark.
 CoreMark Size : 666
-Total ticks : 19999
-Total time (secs): 19.999000
-Iterations/Sec : 5500.275014
+Total ticks : 20019
+Total time (secs): 20.019000
+Iterations/Sec : 5494.779959
 Iterations : 110000
 Compiler version : GCC14.2.0
 Compiler flags : -O2 -march=rv64gcv_zvl256b -mabi=lp64d -lrt
@@ -178,10 +178,10 @@ seedcrc : 0xe9f5
 [0]crcstate : 0x8e3a
 [0]crcfinal : 0x33ff
 Correct operation validated. See readme.txt for run and reporting rules.
-CoreMark 1.0 : 5500.275014 / GCC14.2.0 -O2 -march=rv64gcv_zvl256b -mabi=lp64d -lrt / Heap
+CoreMark 1.0 : 5494.779959 / GCC14.2.0 -O2 -march=rv64gcv_zvl256b -mabi=lp64d -lrt / Heap
 ```
 
-CoreMark 默认优化分数: 5500.275014
+CoreMark 默认优化分数: 5494.779959
 
 ## 7. CoreMark 基准测试 (向量扩展)
 
@@ -212,9 +212,9 @@ cd coremark
 ```output {ref="run-coremark-vector"}
 2K performance run parameters for coremark.
 CoreMark Size : 666
-Total ticks : 20012
-Total time (secs): 20.012000
-Iterations/Sec : 5496.701979
+Total ticks : 20014
+Total time (secs): 20.014000
+Iterations/Sec : 5496.152693
 Iterations : 110000
 Compiler version : GCC14.2.0
 Compiler flags : -O2 -march=rv64gcv_zvl256b -mabi=lp64d -lrt
@@ -226,32 +226,117 @@ seedcrc : 0xe9f5
 [0]crcstate : 0x8e3a
 [0]crcfinal : 0x33ff
 Correct operation validated. See readme.txt for run and reporting rules.
-CoreMark 1.0 : 5496.701979 / GCC14.2.0 -O2 -march=rv64gcv_zvl256b -mabi=lp64d -lrt / Heap
+CoreMark 1.0 : 5496.152693 / GCC14.2.0 -O2 -march=rv64gcv_zvl256b -mabi=lp64d -lrt / Heap
 ```
 
-CoreMark 向量扩展优化分数: 5496.701979
+CoreMark 向量扩展优化分数: 5496.152693
 
 ## 8. 测试总结
 
 | 步骤ID | 描述 | 状态 | 退出码 | 输出摘要 | 错误信息 |
 |--------|------|------|--------|----------|----------|
-| install-toolchain | 安装 Upstream GNU Toolchain | Pass | 0 | {{install-toolchain::output_summary}} | {{install-toolchain::error}} |
-| create-venv | 创建测试虚拟环境 | Pass | 0 | {{create-venv::output_summary}} | {{create-venv::error}} |
-| activate-venv | 激活虚拟环境 | Pass | 0 | {{activate-venv::output_summary}} | {{activate-venv::error}} |
-| check-version | 检查编译器版本 | Pass | 0 | {{check-version::output_summary}} | {{check-version::error}} |
-| create-hello | 创建 Hello World 源文件 | Pass | 0 | {{create-hello::output_summary}} | {{create-hello::error}} |
-| compile-hello | 编译 Hello World 程序 | Pass | 0 | {{compile-hello::output_summary}} | {{compile-hello::error}} |
-| run-hello | 运行 Hello World 程序 | Pass | 0 | {{run-hello::output_summary}} | {{run-hello::error}} |
-| extract-coremark | 提取 CoreMark 包 | Pass | 0 | {{extract-coremark::output_summary}} | {{extract-coremark::error}} |
-| config-coremark | 配置 CoreMark 编译 | Pass | 0 | {{config-coremark::output_summary}} | {{config-coremark::error}} |
-| build-coremark | 编译 CoreMark (默认优化) | Pass | 0 | {{build-coremark::output_summary}} | {{build-coremark::error}} |
-| run-coremark | 运行 CoreMark (默认优化) | Pass | 0 | {{run-coremark::output_summary}} | {{run-coremark::error}} |
-| build-coremark-vector | 编译 CoreMark (向量扩展) | Pass | 0 | {{build-coremark-vector::output_summary}} | {{build-coremark-vector::error}} |
-| run-coremark-vector | 运行 CoreMark (向量扩展) | Pass | 0 | {{run-coremark-vector::output_summary}} | {{run-coremark-vector::error}} |
+| install-toolchain | 安装 Upstream GNU Toolchain | Pass | 0 | | warn: this ruyi installation has telemetry mode set to on, and will upload non-tracking usage information to RuyiSDK-managed servers every Wednesday
+info: the next upload will happen anytime ruyi is executed between 2025-05-21 08:00:00 +0800 and 2025-05-22 08:00:00 +0800
+info: in order to hide this banner:
+info: - opt out with ruyi telemetry optout
+info: - or give consent with ruyi telemetry consent
+info: skipping already installed package gnu-upstream-0.20250401.0
+ |
+| create-venv | 创建测试虚拟环境 | Pass | 0 | | warn: this ruyi installation has telemetry mode set to on, and will upload non-tracking usage information to RuyiSDK-managed servers every Wednesday
+info: the next upload will happen anytime ruyi is executed between 2025-05-21 08:00:00 +0800 and 2025-05-22 08:00:00 +0800
+info: in order to hide this banner:
+info: - opt out with ruyi telemetry optout
+info: - or give consent with ruyi telemetry consent
+info: Creating a Ruyi virtual environment at venv-gnu-upstream...
+info: The virtual environment is now created.
+
+You may activate it by sourcing the appropriate activation script in the
+bin directory, and deactivate by invoking `ruyi-deactivate`.
+
+A fresh sysroot/prefix is also provisioned in the virtual environment.
+It is available at the following path:
+
+ /home/ezra/venv-gnu-upstream/sysroot
+
+The virtual environment also comes with ready-made CMake toolchain file
+and Meson cross file. Check the virtual environment root for those;
+comments in the files contain usage instructions.
+
+ |
+| activate-venv | 激活虚拟环境 | Pass | 0 | 环境已激活
+ | |
+| check-version | 检查编译器版本 | Pass | 0 | | Using built-in specs.
+COLLECT_GCC=/home/ezra/.local/share/ruyi/binaries/riscv64/gnu-upstream-0.20250401.0/bin/riscv64-unknown-linux-gnu-gcc
+COLLECT_LTO_WRAPPER=/home/ezra/.local/share/ruyi/binaries/riscv64/gnu-upstream-0.20250401.0/bin/../libexec/gcc/riscv64-unknown-linux-gnu/14.2.0/lto-wrapper
+Target: riscv64-unknown-linux-gnu
+Configured with: /work/HOST-riscv64-linux-gnu/riscv64-unknown-linux-gnu/src/gcc/configure --build=x86_64-build_pc-linux-gnu --host=riscv64-host_unknown-linux-gnu --target=riscv64-unknown-linux-gnu --prefix=/opt/ruyi/HOST-riscv64-linux-gnu/riscv64-unknown-linux-gnu --exec_prefix=/opt/ruyi/HOST-riscv64-linux-gnu/riscv64-unknown-linux-gnu --with-sysroot=/opt/ruyi/HOST-riscv64-linux-gnu/riscv64-unknown-linux-gnu/riscv64-unknown-linux-gnu/sysroot --enable-languages=c,c++,fortran,objc,obj-c++ --with-arch=rv64gc --with-abi=lp64d --with-pkgversion='RuyiSDK 20250401 Upstream-Sources' --with-bugurl=https://github.com/ruyisdk/ruyisdk/issues --enable-__cxa_atexit --disable-libmudflap --disable-libgomp --disable-libquadmath --disable-libquadmath-support --disable-libmpx --with-gmp=/work/HOST-riscv64-linux-gnu/riscv64-unknown-linux-gnu/buildtools/complibs-host --with-mpfr=/work/HOST-riscv64-linux-gnu/riscv64-unknown-linux-gnu/buildtools/complibs-host --with-mpc=/work/HOST-riscv64-linux-gnu/riscv64-unknown-linux-gnu/buildtools/complibs-host --with-isl=/work/HOST-riscv64-linux-gnu/riscv64-unknown-linux-gnu/buildtools/complibs-host --enable-lto --enable-threads=posix --enable-target-optspace --enable-linker-build-id --with-linker-hash-style=gnu --enable-plugin --disable-nls --disable-multilib --with-local-prefix=/opt/ruyi/HOST-riscv64-linux-gnu/riscv64-unknown-linux-gnu/riscv64-unknown-linux-gnu/sysroot --enable-long-long
+Thread model: posix
+Supported LTO compression algorithms: zlib zstd
+gcc version 14.2.0 (RuyiSDK 20250401 Upstream-Sources)
+ |
+| create-hello | 创建 Hello World 源文件 | Pass | 0 | | |
+| compile-hello | 编译 Hello World 程序 | Pass | 0 | hello_upstream: ELF 64-bit LSB executable, UCB RISC-V, RVC, double-float ABI, version 1 (SYSV), dynamically linked, interpreter /lib/ld-linux-riscv64-lp64d.so.1, BuildID[sha1]=3f957a7dffdbebbda3524d8c601b149ef231839c, for GNU/Linux 4.15.0, with debug_info, not stripped
+ | |
+| run-hello | 运行 Hello World 程序 | Pass | 0 | Hello, world!
+ | |
+| extract-coremark | 提取 CoreMark 包 | Pass | 0 | | mkdir: 无法创建目录 "coremark": File exists
+warn: this ruyi installation has telemetry mode set to on, and will upload non-tracking usage information to RuyiSDK-managed servers every Wednesday
+info: the next upload will happen anytime ruyi is executed between 2025-05-21 08:00:00 +0800 and 2025-05-22 08:00:00 +0800
+info: in order to hide this banner:
+info: - opt out with ruyi telemetry optout
+info: - or give consent with ruyi telemetry consent
+info: extracting coremark-1.01.tar.gz for package coremark-1.0.1
+info: package coremark-1.0.1 extracted to current working directory
+ |
+| config-coremark | 配置 CoreMark 编译 | Pass | 0 | | |
+| build-coremark | 编译 CoreMark (默认优化) | Pass | 0 | riscv64-unknown-linux-gnu-gcc -O2 -Ilinux64 -I. -DFLAGS_STR=\""-O2 -lrt"\" -DITERATIONS=0 core_list_join.c core_main.c core_matrix.c core_state.c core_util.c linux64/core_portme.c -o ./coremark.exe -lrt
+Link performed along with compile
+coremark.exe: ELF 64-bit LSB executable, UCB RISC-V, RVC, double-float ABI, version 1 (SYSV), dynamically linked, interpreter /lib/ld-linux-riscv64-lp64d.so.1, BuildID[sha1]=5c8618cf62e0f1f7dd462ba5bddb03479631d0e9, for GNU/Linux 4.15.0, with debug_info, not stripped
+ | |
+| run-coremark | 运行 CoreMark (默认优化) | Pass | 0 | 2K performance run parameters for coremark.
+CoreMark Size : 666
+Total ticks : 20019
+Total time (secs): 20.019000
+Iterations/Sec : 5494.779959
+Iterations : 110000
+Compiler version : GCC14.2.0
+Compiler flags : -O2 -march=rv64gcv_zvl256b -mabi=lp64d -lrt
+Memory location : Please put data memory location here
+ (e.g. code in flash, data on heap etc)
+seedcrc : 0xe9f5
+[0]crclist : 0xe714
+[0]crcmatrix : 0x1fd7
+[0]crcstate : 0x8e3a
+[0]crcfinal : 0x33ff
+Correct operation validated. See readme.txt for run and reporting rules.
+CoreMark 1.0 : 5494.779959 / GCC14.2.0 -O2 -march=rv64gcv_zvl256b -mabi=lp64d -lrt / Heap
+ | |
+| build-coremark-vector | 编译 CoreMark (向量扩展) | Pass | 0 | riscv64-unknown-linux-gnu-gcc -O2 -Ilinux64 -I. -DFLAGS_STR=\""-O2 -march=rv64gcv_zvl256b -mabi=lp64d -lrt"\" -DITERATIONS=0 -march=rv64gcv_zvl256b -mabi=lp64d core_list_join.c core_main.c core_matrix.c core_state.c core_util.c linux64/core_portme.c -o ./coremark.exe -lrt
+Link performed along with compile
+coremark.exe: ELF 64-bit LSB executable, UCB RISC-V, RVC, double-float ABI, version 1 (SYSV), dynamically linked, interpreter /lib/ld-linux-riscv64-lp64d.so.1, BuildID[sha1]=26ed89acf90a9b7d555582be7602c422e6aeccbe, for GNU/Linux 4.15.0, with debug_info, not stripped
+ | |
+| run-coremark-vector | 运行 CoreMark (向量扩展) | Pass | 0 | 2K performance run parameters for coremark.
+CoreMark Size : 666
+Total ticks : 20014
+Total time (secs): 20.014000
+Iterations/Sec : 5496.152693
+Iterations : 110000
+Compiler version : GCC14.2.0
+Compiler flags : -O2 -march=rv64gcv_zvl256b -mabi=lp64d -lrt
+Memory location : Please put data memory location here
+ (e.g. code in flash, data on heap etc)
+seedcrc : 0xe9f5
+[0]crclist : 0xe714
+[0]crcmatrix : 0x1fd7
+[0]crcstate : 0x8e3a
+[0]crcfinal : 0x33ff
+Correct operation validated. See readme.txt for run and reporting rules.
+CoreMark 1.0 : 5496.152693 / GCC14.2.0 -O2 -march=rv64gcv_zvl256b -mabi=lp64d -lrt / Heap
+ | |
 
 ## 9. 性能比较
 
 | 优化选项 | CoreMark 分数 |
 |---------|-------------|
-| 默认优化 (-O2 -lrt) | 5500.275014 |
-| 向量扩展 (-O2 -march=rv64gcv_zvl256b -mabi=lp64d -lrt) | 5496.701979 |
+| 默认优化 (-O2 -lrt) | 5494.779959 |
+| 向量扩展 (-O2 -march=rv64gcv_zvl256b -mabi=lp64d -lrt) | 5496.152693 |
