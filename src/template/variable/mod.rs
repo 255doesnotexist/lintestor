@@ -278,10 +278,22 @@ impl VariableManager {
                 current_step_id = parts[1].clone();
                 var_name = parts[2].clone();
             } else if parts.len() == 2 {
-                // 命名空间::变量名
-                current_template_id = parts[0].clone();
-                current_step_id = "GLOBAL".to_string();
-                var_name = parts[1].clone();
+                let first = &parts[0];
+                let second = &parts[1];
+                // 如果first是命名空间/模板ID，补全为 first::GLOBAL::second
+                // 我其实觉得在这里引入如此有二义性的逻辑是个错误
+                // 但是为了对某些模板的兼容性就先这样吧
+                // TODO: 考虑是否需要在这里引入更严格的检查
+                if self.namespace_exists(Some(first)) || self.template_id_exists(first) {
+                    current_template_id = first.clone();
+                    current_step_id = "GLOBAL".to_string();
+                    var_name = second.clone();
+                } else {
+                    // 否则，自动补全为当前template_id::first::second
+                    current_step_id = first.clone();
+                    var_name = second.clone();
+                    // current_template_id 保持不变
+                }
             }
         }
         
@@ -406,7 +418,7 @@ impl VariableManager {
 
     /// 替换文本中的变量引用（包括条件表达式）
     ///
-    /// 支持多种变量引用格式:
+    /// 支持多种变量引用格式: (OUTDATED maybe, need updates)
     /// - ${variable_name} - 标准变量引用
     /// - ${namespace::variable_name} - 带命名空间的变量引用
     /// - {{ variable_name }} - 模板风格的双花括号变量引用
