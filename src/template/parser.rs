@@ -276,7 +276,7 @@ fn parse_markdown_to_steps_and_content_blocks(
                 .map_or("", |m| m.as_str());
             let attrs_str_for_check = preliminary_caps
                 .as_ref()
-                .and_then(|c| c.get(2))
+                .and_then(|c: &regex::Captures<'_>| c.get(2))
                 .map_or("", |m| m.as_str());
             if lang_for_check == "output" && attrs_str_for_check.contains("ref=") {
                 // skip, handled by output_block

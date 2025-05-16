@@ -208,12 +208,66 @@ impl BatchExecutor {
                                         "stdout",
                                         &stdout_val,
                                     )?;
+                                    // OMG 我们又加了一个硬编码。。
+                                    // 新增 stdout_summary 变量，取前 5 行，每行不超过 200 字符，合并为单行
+                                    let stdout_summary = {
+                                        let mut summary = String::new();
+                                        let mut line_count = 0;
+                                        for line in stdout_val.lines() {
+                                            if line_count >= 5 { break; }
+                                            if !summary.is_empty() { summary.push(' '); }
+                                            if line.len() > 200 {
+                                                summary.push_str(&line[..200]);
+                                                summary.push_str("...");
+                                            } else {
+                                                summary.push_str(line);
+                                            }
+                                            line_count += 1;
+                                        }
+                                        if stdout_val.lines().count() > 5 || stdout_val.len() > 200 {
+                                            summary.push_str(" ...");
+                                        }
+                                        summary
+                                    };
+                                    self.variable_manager.set_variable(
+                                        &step_def.template_id,
+                                        &step_def.local_id,
+                                        "stdout_summary",
+                                        &stdout_summary,
+                                    )?;
                                     self.variable_manager.set_variable(
                                         &step_def.template_id,
                                         &step_def.local_id,
                                         "stderr",
                                         &stderr_val,
                                     )?;
+                                    // 新增 stderr_summary 变量，取前 5 行，每行不超过 200 字符，合并为单行
+                                    let stderr_summary = {
+                                        let mut summary = String::new();
+                                        let mut line_count = 0;
+                                        for line in stderr_val.lines() {
+                                            if line_count >= 5 { break; }
+                                            if !summary.is_empty() { summary.push(' '); }
+                                            if line.len() > 200 {
+                                                summary.push_str(&line[..200]);
+                                                summary.push_str("...");
+                                            } else {
+                                                summary.push_str(line);
+                                            }
+                                            line_count += 1;
+                                        }
+                                        if stderr_val.lines().count() > 5 || stderr_val.len() > 200 {
+                                            summary.push_str(" ...");
+                                        }
+                                        summary
+                                    };
+                                    self.variable_manager.set_variable(
+                                        &step_def.template_id,
+                                        &step_def.local_id,
+                                        "stderr_summary",
+                                        &stderr_summary,
+                                    )?;
+
                                     self.variable_manager.set_variable(
                                         &step_def.template_id,
                                         &step_def.local_id,
