@@ -2,20 +2,19 @@
 //!
 //! 这个模块负责解析Markdown格式的测试模板内容，识别其中的元数据、可执行代码块和特殊属性。
 
+use anyhow::{anyhow, bail, Context, Result};
+use log::{debug, error, info, warn};
+use regex::Regex;
 use std::collections::{HashMap, HashSet};
 use std::path::{Path, PathBuf};
-use anyhow::{Result, Context, bail, anyhow};
-use regex::Regex;
-use log::{debug, info, warn, error};
 
 // Import the new ExecutionStep related types
 use crate::template::step::{ExecutionStep, GlobalStepId, StepType};
 // Import ParsedTestStep directly, ContentBlock is defined in this file
 use crate::template::{
-    TemplateMetadata, ParsedTestStep, AssertionType, DataExtraction, TemplateReference
+    AssertionType, DataExtraction, ParsedTestStep, TemplateMetadata, TemplateReference,
 };
 use crate::utils;
-
 
 /// 表示模板文件内容的不同结构化块。
 /// 解析器 (Parser) 会将原始模板字符串转换为 `Vec<ContentBlock>`。
@@ -51,9 +50,7 @@ pub enum ContentBlock {
 
     /// 代表一个步骤输出的占位符。
     /// 例如 ` ```output {ref="step_id"} ... ``` `。
-    OutputBlock {
-        step_id: String,
-    },
+    OutputBlock { step_id: String },
 
     /// 通用 Markdown 文本块。
     /// 这可以包含任何 Markdown内容，包括原始的步骤定义文本（如果它们不被特殊处理为其他类型的块）。
@@ -65,11 +62,14 @@ pub enum ContentBlock {
 
 /// 解析Markdown测试模板内容，返回元数据、执行步骤列表和内容块列表
 pub fn parse_template_into_content_blocks_and_steps(
-    content: &str, 
-    file_path: &Path
+    content: &str,
+    file_path: &Path,
 ) -> Result<(TemplateMetadata, Vec<ExecutionStep>, Vec<ContentBlock>)> {
-    info!("开始解析测试模板 (结构化内容和步骤): {}", file_path.display());
-    
+    info!(
+        "开始解析测试模板 (结构化内容和步骤): {}",
+        file_path.display()
+    );
+
     let mut content_blocks = Vec::new();
 
     let (yaml_front_matter, markdown_content) = extract_front_matter(content)?;
@@ -77,45 +77,61 @@ pub fn parse_template_into_content_blocks_and_steps(
     debug!("Markdown内容长度: {} 字节", markdown_content.len());
 
     content_blocks.push(ContentBlock::Metadata(yaml_front_matter.clone()));
-    
+
     let metadata = parse_metadata(&yaml_front_matter)?;
-    info!("模板元数据解析完成: title=\"{}\", unit=\"{}\"", metadata.title, metadata.unit_name);
-    
+    info!(
+        "模板元数据解析完成: title=\"{}\", unit=\"{}\"",
+        metadata.title, metadata.unit_name
+    );
+
     let template_id = utils::get_template_id_from_path(file_path);
-    debug!("生成的模板 ID: {}", template_id);
+    debug!("生成的模板 ID: {template_id}");
 
     // 同时解析步骤和内容块
-    let (execution_steps, md_content_blocks) = parse_markdown_to_steps_and_content_blocks(&markdown_content, &template_id, &metadata)?;
+    let (execution_steps, md_content_blocks) =
+        parse_markdown_to_steps_and_content_blocks(markdown_content, &template_id, &metadata)?;
     content_blocks.extend(md_content_blocks);
-    
-    info!("已解析 {} 个执行步骤和 {} 个内容块", execution_steps.len(), content_blocks.len());
-    
+
+    info!(
+        "已解析 {} 个执行步骤和 {} 个内容块",
+        execution_steps.len(),
+        content_blocks.len()
+    );
+
     for step in &execution_steps {
-        debug!("ExecutionStep: id={}, type={:?}, local_id={}, template_id={}, deps={:?}", 
-            step.id, step.step_type, step.local_id, step.template_id, step.dependencies);
+        debug!(
+            "ExecutionStep: id={}, type={:?}, local_id={}, template_id={}, deps={:?}",
+            step.id, step.step_type, step.local_id, step.template_id, step.dependencies
+        );
         if let Some(parsed_step) = &step.original_parsed_step {
-            debug!("  Original Parsed Step: id={}, exec={}, assertions={}, extractions={}", 
-                parsed_step.id, parsed_step.executable, parsed_step.assertions.len(), parsed_step.extractions.len());
+            debug!(
+                "  Original Parsed Step: id={}, exec={}, assertions={}, extractions={}",
+                parsed_step.id,
+                parsed_step.executable,
+                parsed_step.assertions.len(),
+                parsed_step.extractions.len()
+            );
         }
     }
-    
+
     Ok((metadata, execution_steps, content_blocks))
 }
 
 /// 从Markdown内容中解析出 ExecutionSteps 和 ContentBlocks
 fn parse_markdown_to_steps_and_content_blocks(
-    markdown: &str, 
-    template_id: &str, 
-    metadata: &TemplateMetadata
+    markdown: &str,
+    template_id: &str,
+    metadata: &TemplateMetadata,
 ) -> Result<(Vec<ExecutionStep>, Vec<ContentBlock>)> {
-    debug!("开始将Markdown内容解析为 ExecutionSteps 和 ContentBlocks (template_id: {})", template_id);
+    debug!("开始将Markdown内容解析为 ExecutionSteps 和 ContentBlocks (template_id: {template_id})");
     let mut execution_steps: Vec<ExecutionStep> = Vec::new();
     let mut content_blocks = Vec::new();
     let mut all_local_ids: HashSet<String> = HashSet::new();
-    let mut all_depends_refs: Vec<(String, String)> = Vec::new(); // (当前step global_id, depends_on的原始id)
+    let all_depends_refs: Vec<(String, String)> = Vec::new(); // (当前step global_id, depends_on的原始id)
     let heading_re = Regex::new(r"(?m)^(#+)\s+(.*?)(?:\s+\{([^}]*)\}\s*|\s*)$")?;
     let code_block_re = Regex::new(r"(?ms)```(\w*)\s*(\{([^}]*)\})?\n(.*?)```")?;
-    let output_block_re = Regex::new(r#"(?ms)```output\s+\{ref=(?:\"([^\"]+)\"|'([^']+)')\}\n(?:.*?)```"#)?;
+    let output_block_re =
+        Regex::new(r#"(?ms)```output\s+\{ref=(?:\"([^\"]+)\"|'([^']+)')\}\n(?:.*?)```"#)?;
     let summary_table_re = Regex::new(r#"(?im)^\s*<!--\s*LINTESOR_SUMMARY_TABLE\s*-->\s*$"#)?;
 
     let mut current_heading_stack: Vec<(GlobalStepId, u8, Vec<GlobalStepId>)> = Vec::new(); // (id, level, children)
@@ -149,10 +165,10 @@ fn parse_markdown_to_steps_and_content_blocks(
                 let attributes = parse_inline_attributes(attributes_str);
                 let local_id = attributes.get("id").cloned().unwrap_or_else(|| {
                     local_id_counter += 1;
-                    format!("heading_{}", local_id_counter)
+                    format!("heading_{local_id_counter}")
                 });
                 all_local_ids.insert(local_id.clone());
-                let global_id = format!("{}::{}", template_id, local_id);
+                let global_id = format!("{template_id}::{local_id}");
                 // 处理 heading stack，弹出比当前 level 大的 heading，并把子节点挂到 dependencies
                 // 这里 current_heading_stack 是一个栈，保存了所有未闭合的 heading 及其 level 和子节点列表
                 // 每遇到一个更高或同级 heading，就把栈顶 heading 弹出，并把它收集到的所有直接子节点（children）
@@ -162,7 +178,9 @@ fn parse_markdown_to_steps_and_content_blocks(
                         // 弹出并更新 dependencies
                         let (parent_id, _, children) = current_heading_stack.pop().unwrap();
                         // 这里 parent_id 是 heading 的全局 id，children 是它的所有直接子节点 id
-                        if let Some(parent_step) = execution_steps.iter_mut().find(|s| s.id == parent_id) {
+                        if let Some(parent_step) =
+                            execution_steps.iter_mut().find(|s| s.id == parent_id)
+                        {
                             for child in children {
                                 // 将所有直接子节点加入 heading 的依赖
                                 parent_step.dependencies.insert(child);
@@ -176,7 +194,12 @@ fn parse_markdown_to_steps_and_content_blocks(
                 let mut dependencies = HashSet::new();
                 if let Some(deps_str) = attributes.get("depends_on") {
                     // 插入依赖集
-                    parse_depends_on_str(deps_str, &mut dependencies, template_id, &metadata.references);
+                    parse_depends_on_str(
+                        deps_str,
+                        &mut dependencies,
+                        template_id,
+                        &metadata.references,
+                    );
                 }
                 content_blocks.push(ContentBlock::HeadingBlock {
                     id: local_id.clone(),
@@ -188,7 +211,11 @@ fn parse_markdown_to_steps_and_content_blocks(
                     id: global_id.clone(),
                     template_id: template_id.to_string(),
                     local_id,
-                    step_type: StepType::Heading { level, text, attributes: attributes.clone() },
+                    step_type: StepType::Heading {
+                        level,
+                        text,
+                        attributes: attributes.clone(),
+                    },
                     dependencies,
                     original_parsed_step: None,
                 });
@@ -196,18 +223,25 @@ fn parse_markdown_to_steps_and_content_blocks(
             }
         } else if let Some(output_match) = captures.name("output_block") {
             if let Some(caps) = output_block_re.captures(output_match.as_str()) {
-                let ref_id_attr = caps.get(1).or_else(|| caps.get(2)).map_or("", |m| m.as_str()).to_string();
-                content_blocks.push(ContentBlock::OutputBlock { step_id: ref_id_attr.clone() });
-                let local_id = format!("{}-outputplaceholder", ref_id_attr);
+                let ref_id_attr = caps
+                    .get(1)
+                    .or_else(|| caps.get(2))
+                    .map_or("", |m| m.as_str())
+                    .to_string();
+                content_blocks.push(ContentBlock::OutputBlock {
+                    step_id: ref_id_attr.clone(),
+                });
+                let local_id = format!("{ref_id_attr}-outputplaceholder");
                 all_local_ids.insert(local_id.clone());
-                let global_id = format!("{}::{}", template_id, local_id);
+                let global_id = format!("{template_id}::{local_id}");
                 let mut dependencies = HashSet::new();
-                let ref_global_id = resolve_dependency_ref(&ref_id_attr, template_id, &metadata.references);
+                let ref_global_id =
+                    resolve_dependency_ref(&ref_id_attr, template_id, &metadata.references);
                 dependencies.insert(ref_global_id.clone());
                 let parsed_step_info = ParsedTestStep {
                     id: local_id.clone(),
-                    description: Some(format!("Placeholder for output of step {}", ref_id_attr)),
-                    command: None, 
+                    description: Some(format!("Placeholder for output of step {ref_id_attr}")),
+                    command: None,
                     depends_on: vec![ref_id_attr.to_string()],
                     assertions: Vec::new(),
                     extractions: Vec::new(),
@@ -236,8 +270,14 @@ fn parse_markdown_to_steps_and_content_blocks(
         } else if let Some(code_match) = captures.name("code_block") {
             let block_content = code_match.as_str();
             let preliminary_caps = code_block_re.captures(block_content);
-            let lang_for_check = preliminary_caps.as_ref().and_then(|c| c.get(1)).map_or("", |m| m.as_str());
-            let attrs_str_for_check = preliminary_caps.as_ref().and_then(|c| c.get(2)).map_or("", |m| m.as_str());
+            let lang_for_check = preliminary_caps
+                .as_ref()
+                .and_then(|c| c.get(1))
+                .map_or("", |m| m.as_str());
+            let attrs_str_for_check = preliminary_caps
+                .as_ref()
+                .and_then(|c| c.get(2))
+                .map_or("", |m| m.as_str());
             if lang_for_check == "output" && attrs_str_for_check.contains("ref=") {
                 // skip, handled by output_block
             }
@@ -248,7 +288,7 @@ fn parse_markdown_to_steps_and_content_blocks(
                 let attributes = parse_inline_attributes(attributes_str);
                 let local_id = attributes.get("id").cloned().unwrap_or_else(|| {
                     local_id_counter += 1;
-                    format!("codeblock_{}", local_id_counter)
+                    format!("codeblock_{local_id_counter}")
                 });
                 all_local_ids.insert(local_id.clone());
                 content_blocks.push(ContentBlock::CodeBlock {
@@ -257,30 +297,49 @@ fn parse_markdown_to_steps_and_content_blocks(
                     code: command.clone(),
                     attributes: attributes.clone(),
                 });
-                let global_id = format!("{}::{}", template_id, local_id);
+                let global_id = format!("{template_id}::{local_id}");
                 let mut dependencies = HashSet::new();
                 if let Some(deps_str) = attributes.get("depends_on") {
                     // 插入依赖集
-                    parse_depends_on_str(deps_str, &mut dependencies, template_id, &metadata.references);
+                    parse_depends_on_str(
+                        deps_str,
+                        &mut dependencies,
+                        template_id,
+                        &metadata.references,
+                    );
                 }
                 let parsed_step_info = ParsedTestStep {
                     id: local_id.clone(),
                     description: attributes.get("description").cloned(),
                     command: Some(command.clone()),
-                    depends_on: dependencies.iter().map(|gsid| gsid.split("::").last().unwrap_or("").to_string()).collect(),
+                    depends_on: dependencies
+                        .iter()
+                        .map(|gsid| gsid.split("::").last().unwrap_or("").to_string())
+                        .collect(),
                     assertions: parse_assertions_from_attributes(&attributes),
                     extractions: parse_extractions_from_attributes(&attributes),
-                    executable: attributes.get("exec").and_then(|v_str| v_str.parse::<bool>().ok()).unwrap_or(true),
+                    executable: attributes
+                        .get("exec")
+                        .and_then(|v_str| v_str.parse::<bool>().ok())
+                        .unwrap_or(true),
                     ref_command: None,
                     raw_content: block_content.to_string(),
-                    active: attributes.get("active").and_then(|v_str| v_str.parse::<bool>().ok()),
-                    timeout_ms: attributes.get("timeout_ms").and_then(|v_str| v_str.parse::<u64>().ok()),
+                    active: attributes
+                        .get("active")
+                        .and_then(|v_str| v_str.parse::<bool>().ok()),
+                    timeout_ms: attributes
+                        .get("timeout_ms")
+                        .and_then(|v_str| v_str.parse::<u64>().ok()),
                 };
                 execution_steps.push(ExecutionStep {
                     id: global_id.clone(),
                     template_id: template_id.to_string(),
                     local_id,
-                    step_type: StepType::CodeBlock { lang, command, attributes: attributes.clone() },
+                    step_type: StepType::CodeBlock {
+                        lang,
+                        command,
+                        attributes: attributes.clone(),
+                    },
                     dependencies,
                     original_parsed_step: Some(parsed_step_info),
                 });
@@ -310,10 +369,14 @@ fn parse_markdown_to_steps_and_content_blocks(
     // 检查所有 depends_on 的 id 是否都存在
     for (from_id, dep_id) in &all_depends_refs {
         if !all_local_ids.contains(dep_id) {
-            panic!("depends_on 中引用了不存在的步骤 id: {} (from step {})", dep_id, from_id);
+            panic!("depends_on 中引用了不存在的步骤 id: {dep_id} (from step {from_id})");
         }
     }
-    debug!("完成 ExecutionSteps ({}) 和 ContentBlocks ({}) 解析", execution_steps.len(), content_blocks.len());
+    debug!(
+        "完成 ExecutionSteps ({}) 和 ContentBlocks ({}) 解析",
+        execution_steps.len(),
+        content_blocks.len()
+    );
     Ok((execution_steps, content_blocks))
 }
 
@@ -321,14 +384,14 @@ fn parse_markdown_to_steps_and_content_blocks(
 fn extract_front_matter(content: &str) -> Result<(String, &str)> {
     debug!("从模板内容中提取YAML前置数据");
     let re = Regex::new(r"(?s)^---\s*\n(.*?)\n---\s*\n(.*)$")?;
-    
+
     match re.captures(content) {
         Some(caps) => {
             let yaml = caps.get(1).unwrap().as_str();
             let markdown = caps.get(2).unwrap().as_str();
             debug!("成功提取YAML前置数据");
             Ok((yaml.to_string(), markdown))
-        },
+        }
         None => {
             error!("未找到YAML前置数据");
             bail!("未找到YAML前置数据，格式应为 '---\\n<yaml>\\n---\\n<markdown>'")
@@ -339,43 +402,48 @@ fn extract_front_matter(content: &str) -> Result<(String, &str)> {
 /// 解析YAML元数据
 fn parse_metadata(yaml: &str) -> Result<TemplateMetadata> {
     debug!("解析YAML元数据");
-    let yaml_value: serde_yaml::Value = serde_yaml::from_str(yaml)
-        .with_context(|| "无法解析YAML前置数据")?;
-    
+    let yaml_value: serde_yaml::Value =
+        serde_yaml::from_str(yaml).with_context(|| "无法解析YAML前置数据")?;
+
     debug!("YAML解析成功，开始提取字段");
-    
-    let title = yaml_value["title"].as_str()
+
+    let title = yaml_value["title"]
+        .as_str()
         .ok_or_else(|| anyhow!("元数据缺少'title'字段"))?
         .to_string();
-    debug!("提取title: {}", title);
-    
-    let target_config_str = yaml_value["target_config"].as_str()
+    debug!("提取title: {title}");
+
+    let target_config_str = yaml_value["target_config"]
+        .as_str()
         .ok_or_else(|| anyhow!("元数据缺少'target_config'字段"))?;
-    debug!("提取target_config: {}", target_config_str);
-    
+    debug!("提取target_config: {target_config_str}");
+
     let target_config = PathBuf::from(target_config_str);
-    
-    let unit_name = yaml_value["unit_name"].as_str()
+
+    let unit_name = yaml_value["unit_name"]
+        .as_str()
         .ok_or_else(|| anyhow!("元数据缺少'unit_name'字段"))?
         .to_string();
-    debug!("提取unit_name: {}", unit_name);
-    
-    let unit_version = yaml_value["unit_version"].as_str()
+    debug!("提取unit_name: {unit_name}");
+
+    let unit_version = yaml_value["unit_version"]
+        .as_str()
         .ok_or_else(|| anyhow!("元数据缺少'unit_version'字段"))?
         .to_string();
-    debug!("提取unit_version: {}", unit_version);
-    
+    debug!("提取unit_version: {unit_version}");
+
     let tags = match yaml_value["tags"] {
         serde_yaml::Value::Sequence(ref seq) => {
-            let tags: Vec<_> = seq.iter()
+            let tags: Vec<_> = seq
+                .iter()
                 .filter_map(|v| v.as_str().map(|s| s.to_string()))
                 .collect();
-            debug!("提取tags: {:?}", tags);
+            debug!("提取tags: {tags:?}");
             tags
-        },
+        }
         _ => Vec::new(),
     };
-    
+
     let references = match yaml_value["references"] {
         serde_yaml::Value::Sequence(ref seq) => {
             let mut refs = Vec::new();
@@ -384,17 +452,21 @@ fn parse_metadata(yaml: &str) -> Result<TemplateMetadata> {
                     // 为了在模板里看起来舒服，我们实际上的对应是按下面这样的
                     // template -> template_path
                     // as -> namespace
-                    let template_path = mapping.get(&serde_yaml::Value::String("template".to_string()))
+                    let template_path = mapping
+                        .get(serde_yaml::Value::String("template".to_string()))
                         .and_then(|v| v.as_str())
                         .map(|s| s.to_string())
-                        .ok_or_else(|| anyhow!("references中的项缺少'template(template_path)'字段"))?;
-                    
-                    let namespace = mapping.get(&serde_yaml::Value::String("as".to_string()))
+                        .ok_or_else(|| {
+                            anyhow!("references中的项缺少'template(template_path)'字段")
+                        })?;
+
+                    let namespace = mapping
+                        .get(serde_yaml::Value::String("as".to_string()))
                         .and_then(|v| v.as_str())
                         .map(|s| s.to_string())
                         .ok_or_else(|| anyhow!("references中的项缺少'as(namespace)'字段"))?;
-                    
-                    debug!("提取模板引用: template_path={}, namespace={}", template_path, namespace);
+
+                    debug!("提取模板引用: template_path={template_path}, namespace={namespace}");
                     refs.push(TemplateReference {
                         template_path,
                         namespace,
@@ -402,31 +474,39 @@ fn parse_metadata(yaml: &str) -> Result<TemplateMetadata> {
                 }
             }
             refs
-        },
+        }
         _ => Vec::new(),
     };
-    
+
     if !references.is_empty() {
         debug!("共提取到 {} 个外部模板引用", references.len());
     }
-    
+
     let mut custom = HashMap::new();
     if let serde_yaml::Value::Mapping(mapping) = &yaml_value {
         for (key, value) in mapping {
             if let Some(key_str) = key.as_str() {
-                if ["title", "target_config", "unit_name", "unit_version", "tags", "references"]
-                    .contains(&key_str) {
+                if [
+                    "title",
+                    "target_config",
+                    "unit_name",
+                    "unit_version",
+                    "tags",
+                    "references",
+                ]
+                .contains(&key_str)
+                {
                     continue;
                 }
-                
+
                 if let Some(value_str) = value.as_str() {
-                    debug!("提取自定义字段: {} = {}", key_str, value_str);
+                    debug!("提取自定义字段: {key_str} = {value_str}");
                     custom.insert(key_str.to_string(), value_str.to_string());
                 }
             }
         }
     }
-    
+
     Ok(TemplateMetadata {
         title,
         target_config,
@@ -462,8 +542,8 @@ fn parse_inline_attributes(input: &str) -> HashMap<String, String> {
     let mut value = String::new();
 
     if input.is_empty() {
-        // Early return if input is empty, because of state machine expect {} mustly 
-        return result; 
+        // Early return if input is empty, because of state machine expect {} mustly
+        return result;
     }
 
     enum State {
@@ -509,16 +589,16 @@ fn parse_inline_attributes(input: &str) -> HashMap<String, String> {
                         chars.next();
                     } else if ch.is_whitespace() {
                         chars.next();
-                        state = State::ExpectEq; 
+                        state = State::ExpectEq;
                     } else {
                         if key.is_empty() {
-                            panic!("Unexpected character '{}' at start of key or empty key before '='", ch);
+                            panic!("Unexpected character '{ch}' at start of key or empty key before '='");
                         }
-                        panic!("Unexpected character '{}' after key '{}', expected '=' or whitespace or '}}'", ch, key);
+                        panic!("Unexpected character '{ch}' after key '{key}', expected '=' or whitespace or '}}'");
                     }
                 } else {
                     if !key.is_empty() {
-                        panic!("Unexpected EOF after key: {}", key);
+                        panic!("Unexpected EOF after key: {key}");
                     }
                     // EOF after attributes have started, but before '}'
                     panic!("Unexpected EOF, expected attributes or '}}'");
@@ -530,26 +610,26 @@ fn parse_inline_attributes(input: &str) -> HashMap<String, String> {
                         chars.next();
                         state = State::ValueStart;
                     } else if ch.is_whitespace() {
-                        chars.next(); 
+                        chars.next();
                     } else {
-                        panic!("Expected '=' after key '{}', found '{}'", key, ch);
+                        panic!("Expected '=' after key '{key}', found '{ch}'");
                     }
                 } else {
-                    panic!("Unexpected EOF after key '{}', expected '='", key);
+                    panic!("Unexpected EOF after key '{key}', expected '='");
                 }
             }
             State::ValueStart => {
                 if let Some(&ch) = chars.peek() {
                     match ch {
                         '"' => {
-                            chars.next(); 
+                            chars.next();
                             value.clear();
                             state = State::StringValue;
                         }
                         '/' => {
-                            chars.next(); 
-                            value.clear(); 
-                            value.push('/'); 
+                            chars.next();
+                            value.clear();
+                            value.push('/');
                             state = State::RegexValue;
                         }
                         '[' => {
@@ -558,7 +638,7 @@ fn parse_inline_attributes(input: &str) -> HashMap<String, String> {
                             state = State::ListValue { bracket_level: 1 };
                         }
                         c if c.is_whitespace() => {
-                            chars.next(); 
+                            chars.next();
                         }
                         _ => {
                             value.clear();
@@ -566,18 +646,18 @@ fn parse_inline_attributes(input: &str) -> HashMap<String, String> {
                         }
                     }
                 } else {
-                    panic!("Unexpected EOF for key '{}', expected a value.", key);
+                    panic!("Unexpected EOF for key '{key}', expected a value.");
                 }
             }
             State::StringValue => {
                 if let Some(&ch) = chars.peek() {
                     match ch {
                         '\\' => {
-                            chars.next(); 
+                            chars.next();
                             state = State::StringEscape;
                         }
                         '"' => {
-                            chars.next(); 
+                            chars.next();
                             result.insert(key.clone(), value.clone());
                             state = State::Start; // Go back to start to look for more attributes or '}'
                         }
@@ -587,7 +667,7 @@ fn parse_inline_attributes(input: &str) -> HashMap<String, String> {
                         }
                     }
                 } else {
-                    panic!("Unexpected EOF in string value for key '{}'", key);
+                    panic!("Unexpected EOF in string value for key '{key}'");
                 }
             }
             State::StringEscape => {
@@ -596,19 +676,19 @@ fn parse_inline_attributes(input: &str) -> HashMap<String, String> {
                     chars.next();
                     state = State::StringValue;
                 } else {
-                    panic!("Unexpected EOF after string escape for key '{}'", key);
+                    panic!("Unexpected EOF after string escape for key '{key}'");
                 }
             }
             State::RegexValue => {
                 if let Some(&ch) = chars.peek() {
                     match ch {
                         '\\' => {
-                            chars.next(); 
+                            chars.next();
                             state = State::RegexEscape;
                         }
                         '/' => {
-                            chars.next(); 
-                            value.push('/'); 
+                            chars.next();
+                            value.push('/');
                             state = State::RegexFlags;
                         }
                         _ => {
@@ -617,31 +697,31 @@ fn parse_inline_attributes(input: &str) -> HashMap<String, String> {
                         }
                     }
                 } else {
-                    panic!("Unexpected EOF in regex value for key '{}'", key);
+                    panic!("Unexpected EOF in regex value for key '{key}'");
                 }
             }
             State::RegexEscape => {
                 if let Some(&ch) = chars.peek() {
-                    value.push('\\'); 
-                    value.push(ch);   
+                    value.push('\\');
+                    value.push(ch);
                     chars.next();
                     state = State::RegexValue;
                 } else {
-                    panic!("Unexpected EOF after regex escape for key '{}'", key);
+                    panic!("Unexpected EOF after regex escape for key '{key}'");
                 }
             }
             State::RegexFlags => {
                 let mut flags_str = String::new();
                 while let Some(&ch_flag) = chars.peek() {
-                    if ch_flag.is_alphabetic() { 
+                    if ch_flag.is_alphabetic() {
                         flags_str.push(ch_flag);
                         chars.next();
                     } else {
-                        break; 
+                        break;
                     }
                 }
                 if !flags_str.is_empty() {
-                    value.push_str(&flags_str); 
+                    value.push_str(&flags_str);
                 }
                 result.insert(key.clone(), value.clone());
                 state = State::Start; // Go back to start
@@ -653,7 +733,9 @@ fn parse_inline_attributes(input: &str) -> HashMap<String, String> {
                             let new_level = bracket_level + 1;
                             value.push(ch); // [
                             chars.next();
-                            state = State::ListValue { bracket_level: new_level };
+                            state = State::ListValue {
+                                bracket_level: new_level,
+                            };
                         }
                         ']' => {
                             let new_level = bracket_level - 1;
@@ -663,7 +745,9 @@ fn parse_inline_attributes(input: &str) -> HashMap<String, String> {
                                 result.insert(key.clone(), value.trim().to_string());
                                 state = State::Start;
                             } else {
-                                state = State::ListValue { bracket_level: new_level };
+                                state = State::ListValue {
+                                    bracket_level: new_level,
+                                };
                             }
                         }
                         ',' => {
@@ -682,9 +766,12 @@ fn parse_inline_attributes(input: &str) -> HashMap<String, String> {
                                 if c == '"' {
                                     // 检查是否为转义
                                     let mut backslash_count = 0;
-                                    let mut iter = value.chars().rev().skip(1);
-                                    while let Some(bc) = iter.next() {
-                                        if bc == '\\' { backslash_count += 1; } else { break; }
+                                    for bc in value.chars().rev().skip(1) {
+                                        if bc == '\\' {
+                                            backslash_count += 1;
+                                        } else {
+                                            break;
+                                        }
                                     }
                                     if backslash_count % 2 == 0 {
                                         break;
@@ -703,13 +790,13 @@ fn parse_inline_attributes(input: &str) -> HashMap<String, String> {
                         }
                     }
                 } else {
-                    panic!("Unexpected EOF in list value for key '{}': missing closing ']'", key);
+                    panic!("Unexpected EOF in list value for key '{key}': missing closing ']'");
                 }
             }
             State::Bareword => {
                 if let Some(&ch) = chars.peek() {
                     if ch.is_whitespace() {
-                        chars.next(); 
+                        chars.next();
                         result.insert(key.clone(), value.clone());
                         state = State::Start; // Go back to start
                     } else {
@@ -725,10 +812,10 @@ fn parse_inline_attributes(input: &str) -> HashMap<String, String> {
             }
         }
     }
-    
-    debug!("解析内联属性完成: {} -> {:?}", input, result);
 
-    if !chars.peek().is_none() {
+    debug!("解析内联属性完成: {input} -> {result:?}");
+
+    if chars.peek().is_some() {
         // If we reach here and there are still characters left, it means we didn't close the attributes properly
         panic!("未闭合的属性定义，可能缺少 '}}' ");
     }
@@ -737,19 +824,32 @@ fn parse_inline_attributes(input: &str) -> HashMap<String, String> {
 }
 
 /// Helper to parse "depends_on" string and populate dependencies set
-fn parse_depends_on_str(deps_str: &str, dependencies: &mut HashSet<GlobalStepId>, current_template_id: &str, references: &[TemplateReference]) {
+fn parse_depends_on_str(
+    deps_str: &str,
+    dependencies: &mut HashSet<GlobalStepId>,
+    current_template_id: &str,
+    references: &[TemplateReference],
+) {
     let deps_list_str = deps_str.trim_matches(|c| c == '[' || c == ']');
     for dep_item_str in deps_list_str.split(',') {
         let trimmed_dep = extract_dep_id_from_dep_str(dep_item_str);
         if !trimmed_dep.is_empty() {
             // 收集依赖之把这个 block 显式在 depends_on 声明的的所有依赖都放到 dependencies 里
-            dependencies.insert(resolve_dependency_ref(trimmed_dep, current_template_id, references));
+            dependencies.insert(resolve_dependency_ref(
+                trimmed_dep,
+                current_template_id,
+                references,
+            ));
         }
     }
 }
 
 /// Helper to resolve a dependency reference (e.g., "step_id" or "namespace::step_id") to a GlobalStepId
-fn resolve_dependency_ref(dep_ref: &str, current_template_id: &str, references: &[TemplateReference]) -> GlobalStepId {
+fn resolve_dependency_ref(
+    dep_ref: &str,
+    current_template_id: &str,
+    references: &[TemplateReference],
+) -> GlobalStepId {
     if dep_ref.contains("::") {
         let parts: Vec<&str> = dep_ref.splitn(2, "::").collect();
         if parts.len() == 2 {
@@ -763,13 +863,13 @@ fn resolve_dependency_ref(dep_ref: &str, current_template_id: &str, references: 
                         .unwrap_or_default()
                         .to_str()
                         .unwrap_or(namespace_or_template_id);
-                    return format!("{}::{}", referenced_template_file_name, local_step_id);
+                    return format!("{referenced_template_file_name}::{local_step_id}");
                 }
             }
             return dep_ref.to_string();
         }
     }
-    format!("{}::{}", current_template_id, dep_ref)
+    format!("{current_template_id}::{dep_ref}")
 }
 
 /// Helper to parse assertions from a HashMap of attributes
@@ -779,16 +879,22 @@ fn parse_assertions_from_attributes(attributes: &HashMap<String, String>) -> Vec
         if key.starts_with("assert.") {
             let assertion_key = key.trim_start_matches("assert.");
             match assertion_key {
-                "exit_code" => if let Ok(code) = value.parse::<i32>() {
-                    assertions.push(AssertionType::ExitCode(code));
-                },
+                "exit_code" => {
+                    if let Ok(code) = value.parse::<i32>() {
+                        assertions.push(AssertionType::ExitCode(code));
+                    }
+                }
                 "stdout_contains" => assertions.push(AssertionType::StdoutContains(value.clone())),
-                "stdout_not_contains" => assertions.push(AssertionType::StdoutNotContains(value.clone())),
+                "stdout_not_contains" => {
+                    assertions.push(AssertionType::StdoutNotContains(value.clone()))
+                }
                 "stdout_matches" => assertions.push(AssertionType::StdoutMatches(value.clone())),
                 "stderr_contains" => assertions.push(AssertionType::StderrContains(value.clone())),
-                "stderr_not_contains" => assertions.push(AssertionType::StderrNotContains(value.clone())),
+                "stderr_not_contains" => {
+                    assertions.push(AssertionType::StderrNotContains(value.clone()))
+                }
                 "stderr_matches" => assertions.push(AssertionType::StderrMatches(value.clone())),
-                _ => warn!("未知断言类型: {}", key),
+                _ => warn!("未知断言类型: {key}"),
             }
         }
     }
@@ -802,11 +908,14 @@ fn parse_extractions_from_attributes(attributes: &HashMap<String, String>) -> Ve
         if key.starts_with("extract.") {
             let var_name = key.trim_start_matches("extract.").to_string();
             let regex_str = if value.starts_with('/') && value.ends_with('/') && value.len() > 1 {
-                value[1..value.len()-1].to_string()
+                value[1..value.len() - 1].to_string()
             } else {
                 value.clone()
             };
-            extractions.push(DataExtraction { variable: var_name, regex: regex_str });
+            extractions.push(DataExtraction {
+                variable: var_name,
+                regex: regex_str,
+            });
         }
     }
     extractions
@@ -815,7 +924,7 @@ fn parse_extractions_from_attributes(attributes: &HashMap<String, String>) -> Ve
 #[cfg(test)]
 mod tests {
     use super::*;
-    
+
     #[test]
     fn test_extract_front_matter() {
         let content = r#"---
@@ -825,12 +934,12 @@ unit_name: "MyUnit"
 ---
 
 # Test Content"#;
-        
+
         let (yaml, markdown) = extract_front_matter(content).unwrap();
         assert!(yaml.contains("title"));
         assert!(markdown.contains("# Test Content"));
     }
-    
+
     #[test]
     fn test_parse_metadata() {
         let yaml = r#"
@@ -848,18 +957,33 @@ references:
     as: "namespace2"
 custom_field: "custom value"
 "#;
-        
+
         let metadata = parse_metadata(yaml).unwrap();
         assert_eq!(metadata.title, "Test Template");
-        assert_eq!(metadata.target_config, PathBuf::from("targets/my_target/config.toml"));
+        assert_eq!(
+            metadata.target_config,
+            PathBuf::from("targets/my_target/config.toml")
+        );
         assert_eq!(metadata.unit_name, "MyUnit");
         assert_eq!(metadata.unit_version, "1.0.0");
-        assert_eq!(metadata.tags, vec!["core".to_string(), "feature-abc".to_string()]);
+        assert_eq!(
+            metadata.tags,
+            vec!["core".to_string(), "feature-abc".to_string()]
+        );
         assert_eq!(metadata.references.len(), 2);
-        assert_eq!(metadata.references[0].template_path, "external_template_1.md");
+        assert_eq!(
+            metadata.references[0].template_path,
+            "external_template_1.md"
+        );
         assert_eq!(metadata.references[0].namespace, "namespace1");
-        assert_eq!(metadata.references[1].template_path, "external_template_2.md");
+        assert_eq!(
+            metadata.references[1].template_path,
+            "external_template_2.md"
+        );
         assert_eq!(metadata.references[1].namespace, "namespace2");
-        assert_eq!(metadata.custom.get("custom_field"), Some(&"custom value".to_string()));
+        assert_eq!(
+            metadata.custom.get("custom_field"),
+            Some(&"custom value".to_string())
+        );
     }
 }

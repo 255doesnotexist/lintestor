@@ -79,7 +79,7 @@ impl VariableManager {
     ///
     /// 将命名空间映射到模板ID
     pub fn register_namespace(&mut self, namespace: &str, template_id: &str) {
-        debug!("为命名空间 {} 建立映射到模板ID {}", namespace, template_id);
+        debug!("为命名空间 {namespace} 建立映射到模板ID {template_id}");
         self.namespace_to_template_id
             .insert(namespace.to_string(), template_id.to_string());
     }
@@ -170,13 +170,12 @@ impl VariableManager {
             template_id,
             "GLOBAL",
             "metadata.target_name",
-            &template
+            template
                 .metadata
                 .target_config
                 .file_name()
                 .and_then(|n| n.to_str())
-                .unwrap_or("default")
-                .to_string(),
+                .unwrap_or("default"),
         )?;
         Ok(())
     }
@@ -198,15 +197,11 @@ impl VariableManager {
     ) -> Result<(), String> {
         // 1. Validate 'name' (variable part of the key)
         if name.is_empty() {
-            return Err(format!(
-                "Invalid variable name: '{}'. Cannot be empty.",
-                name
-            ));
+            return Err(format!("Invalid variable name: '{name}'. Cannot be empty."));
         }
         if name.contains("::") {
             return Err(format!(
-                "Invalid variable name: '{}'. Cannot contain '::'.",
-                name
+                "Invalid variable name: '{name}'. Cannot contain '::'."
             ));
         }
 
@@ -218,12 +213,9 @@ impl VariableManager {
         {
             // 如果 template_id 是命名空间，获取对应的模板ID
             if let Some(tid) = self.get_template_id_by_namespace(template_id.as_str()) {
-                warn!("理论上你不该在赋值时还用的命名空间而不是具体 ID，但是命名空间 {} 这里自动被解析为模板ID {}", template_id, tid);
+                warn!("理论上你不该在赋值时还用的命名空间而不是具体 ID，但是命名空间 {template_id} 这里自动被解析为模板ID {tid}");
                 if template_id == tid {
-                    warn!(
-                        "命名空间 {} 和模板ID {} 相同，避免死循环，跳出",
-                        template_id, tid
-                    );
+                    warn!("命名空间 {template_id} 和模板ID {tid} 相同，避免死循环，跳出");
                     break; // 避免死循环
                 }
                 template_id = tid;
@@ -233,61 +225,56 @@ impl VariableManager {
         }
         if template_id.is_empty() {
             return Err(format!(
-                "Invalid template_id: '{}'. Cannot be empty.",
-                template_id
+                "Invalid template_id: '{template_id}'. Cannot be empty."
             ));
         }
         if template_id.contains("::") {
             return Err(format!(
-                "Invalid template_id: '{}'. Cannot contain '::'.",
-                template_id
+                "Invalid template_id: '{template_id}'. Cannot contain '::'."
             ));
         }
         // "GLOBAL" is a special keyword and should not be subjected to ".test" suffix check in the same way.
         // 只觉得这行非常没意义但反正没有副作用。。
         if template_id != "GLOBAL" && template_id.ends_with(".test") {
             return Err(format!(
-                "Invalid template_id: '{}'. Cannot end with '.test'.",
-                template_id
+                "Invalid template_id: '{template_id}'. Cannot end with '.test'."
             ));
         }
 
         // 3. Validate 'step_id'
         if step_id.is_empty() {
-            return Err(format!("Invalid step_id: '{}'. Cannot be empty.", step_id));
+            return Err(format!("Invalid step_id: '{step_id}'. Cannot be empty."));
         }
         if step_id.contains("::") {
             return Err(format!(
-                "Invalid step_id: '{}'. Cannot contain '::'.",
-                step_id
+                "Invalid step_id: '{step_id}'. Cannot contain '::'."
             ));
         }
 
         // 生成标准化的变量标识符 (模板ID::步骤ID::变量名)
-        let variable_key = format!("{}::{}::{}", template_id, step_id, name);
+        let variable_key = format!("{template_id}::{step_id}::{name}");
 
         debug!(
-            "构建变量标识符: {} (template_id='{}', step_id='{}', name='{}')",
-            variable_key, template_id, step_id, name
+            "构建变量标识符: {variable_key} (template_id='{template_id}', step_id='{step_id}', name='{name}')"
         );
 
         // 使用一个简单的访问记录集合来避免递归引用
         let mut visited_vars = std::collections::HashSet::new();
         if self.has_recursive_reference(&variable_key, value, &mut visited_vars) {
-            debug!("检测到递归引用，跳过变量注册: {}", variable_key);
+            debug!("检测到递归引用，跳过变量注册: {variable_key}");
             return Ok(());
         }
 
         // 检查变量是否已存在
         if self.variables.contains_key(&variable_key) {
-            debug!("变量已存在，跳过注册: {}", variable_key);
+            debug!("变量已存在，跳过注册: {variable_key}");
             return Ok(());
         }
 
         // 注册变量
         self.variables
             .insert(variable_key.clone(), value.to_string());
-        debug!("注册变量: {} = {}", variable_key, value);
+        debug!("注册变量: {variable_key} = {value}");
         Ok(())
     }
 
@@ -322,8 +309,7 @@ impl VariableManager {
                 let referenced_var = caps.get(1).unwrap().as_str();
 
                 // 如果引用了自己，那么肯定是循环
-                if referenced_var == var_key || referenced_var.ends_with(&format!("::{}", var_key))
-                {
+                if referenced_var == var_key || referenced_var.ends_with(&format!("::{var_key}")) {
                     return true;
                 }
 
@@ -420,12 +406,9 @@ impl VariableManager {
         {
             // 如果 template_id 是命名空间，获取对应的模板ID
             if let Some(tid) = self.get_template_id_by_namespace(current_template_id.as_str()) {
-                debug!("命名空间 {} 被解析为模板ID {}", current_template_id, tid);
+                debug!("命名空间 {current_template_id} 被解析为模板ID {tid}");
                 if current_template_id == tid {
-                    warn!(
-                        "命名空间 {} 和模板ID {} 相同，避免死循环，跳出",
-                        current_template_id, tid
-                    );
+                    warn!("命名空间 {current_template_id} 和模板ID {tid} 相同，避免死循环，跳出");
                     break; // 避免死循环
                 }
                 current_template_id = tid;
@@ -440,8 +423,7 @@ impl VariableManager {
         }
         // 这里的 current_template_id 和 current_step_id 已经是经过处理的
         debug!(
-            "变量查询: '{}' (当前模板: {:?}, 当前步骤: {:?})",
-            var_name, current_template_id, current_step_id
+            "变量查询: '{var_name}' (当前模板: {current_template_id:?}, 当前步骤: {current_step_id:?})"
         );
 
         if current_template_id == "GLOBAL" && current_step_id != "GLOBAL" {
@@ -453,7 +435,7 @@ impl VariableManager {
         // 1. 尝试直接作为完全限定变量名查找 (e.g., "T1::S1::V1", "GLOBAL::GLOBAL::V1", "T1::GLOBAL::V1")
         // 或简单名称（如果它们是这样存储的，例如旧版全局变量）
         if let Some(value) = self.variables.get(&var_name) {
-            debug!("直接匹配找到变量 '{}': {}", var_name, value);
+            debug!("直接匹配找到变量 '{var_name}': {value}");
             return Some(value.clone());
         }
 
@@ -474,9 +456,9 @@ impl VariableManager {
         // 3. 上下文查找 (此时 var_name 是简单的, 例如 "query", 不包含 "::")
         if let (tid, sid) = (current_template_id.clone(), current_step_id.clone()) {
             // a. tid::sid::var_name (例如 current_namespace::current_step::query)
-            let key1 = format!("{}::{}::{}", tid, sid, var_name);
+            let key1 = format!("{tid}::{sid}::{var_name}");
             if let Some(value) = self.variables.get(&key1) {
-                debug!("找到变量 ({}): {}", key1, value);
+                debug!("找到变量 ({key1}): {value}");
                 return Some(value.clone());
             }
 
@@ -485,7 +467,7 @@ impl VariableManager {
             if sid != "GLOBAL" {
                 let key2 = format!("{}::{}::{}", tid, "GLOBAL", var_name);
                 if let Some(value) = self.variables.get(&key2) {
-                    debug!("找到变量 ({}): {}", key2, value);
+                    debug!("找到变量 ({key2}): {value}");
                     return Some(value.clone());
                 }
             }
@@ -509,7 +491,7 @@ impl VariableManager {
             if try_key3 {
                 // 这意味着 tid 不是 "GLOBAL"
                 if let Some(value) = self.variables.get(&key3) {
-                    debug!("找到变量 ({}): {}", key3, value);
+                    debug!("找到变量 ({key3}): {value}");
                     return Some(value.clone());
                 }
             }
@@ -519,12 +501,12 @@ impl VariableManager {
             // (这是在 var_name 最初未通过直接匹配找到的情况)
             let key_global_simple = format!("{}::{}::{}", "GLOBAL", "GLOBAL", var_name);
             if let Some(value) = self.variables.get(&key_global_simple) {
-                debug!("找到无上下文全局变量 ({}): {}", key_global_simple, value);
+                debug!("找到无上下文全局变量 ({key_global_simple}): {value}");
                 return Some(value.clone());
             }
         }
 
-        debug!("未找到变量 '{}'", var_name);
+        debug!("未找到变量 '{var_name}'");
         None
     }
 
@@ -635,7 +617,7 @@ impl VariableManager {
                 } => {
                     if c == '\n' || c == '\r' {
                         // 换行符，降级为原文输出
-                        output.push_str(&format!("${{{}}}", content));
+                        output.push_str(&format!("${{{content}}}"));
                         output.push(c);
                         state = State::Normal;
                     } else if c == '{' {
@@ -655,7 +637,7 @@ impl VariableManager {
                             ) {
                                 Some(v) => v,
                                 None if !default_value.is_empty() => default_value.to_string(),
-                                None => format!("${{{}}}", var_name),
+                                None => format!("${{{var_name}}}"),
                             };
                             output.push_str(&value);
                             state = State::Normal;
@@ -669,7 +651,7 @@ impl VariableManager {
                 State::VarDoubleBraceContent { content } => {
                     if c == '\n' || c == '\r' {
                         // 换行符，降级为原文输出
-                        output.push_str(&format!("{{{{ {} }}}}", content));
+                        output.push_str(&format!("{{{{ {content} }}}}"));
                         output.push(c);
                         state = State::Normal;
                     } else if c == '}' && chars.peek() == Some(&'}') {
@@ -707,8 +689,8 @@ impl VariableManager {
                                 Ok(true) => tval.to_string(),
                                 Ok(false) => fval.to_string(),
                                 Err(e) => {
-                                    warn!("条件表达式求值错误: {} - {}", cond, e);
-                                    format!("{{{{ {} ? {} : {} }}}}", cond, tval, fval)
+                                    warn!("条件表达式求值错误: {cond} - {e}");
+                                    format!("{{{{ {cond} ? {tval} : {fval} }}}}")
                                 }
                             };
                             if output_val.starts_with('"')
@@ -733,7 +715,7 @@ impl VariableManager {
                                 Some(current_step_id),
                             ) {
                                 Some(v) => v,
-                                None => format!("{{{{ {} }}}}", var_name),
+                                None => format!("{{{{ {var_name} }}}}"),
                             };
                             output.push_str(&value);
                         }
@@ -748,7 +730,7 @@ impl VariableManager {
                 } => {
                     if c == '\n' || c == '\r' {
                         // 换行符，降级为原文输出
-                        output.push_str(&format!("{{ {} }}", content));
+                        output.push_str(&format!("{{ {content} }}"));
                         output.push(c);
                         state = State::Normal;
                     } else if c == '{' {
@@ -765,7 +747,7 @@ impl VariableManager {
                                 Some(current_step_id),
                             ) {
                                 Some(v) => v,
-                                None => format!("{{ {} }}", var_name),
+                                None => format!("{{ {var_name} }}"),
                             };
                             output.push_str(&value);
                             state = State::Normal;
@@ -787,13 +769,13 @@ impl VariableManager {
         // 如果结束时还在变量状态，降级为原文输出
         match state {
             State::VarDollarContent { content, .. } => {
-                output.push_str(&format!("${{{}}}", content));
+                output.push_str(&format!("${{{content}}}"));
             }
             State::VarDoubleBraceContent { content } => {
-                output.push_str(&format!("{{{{ {} }}}}", content));
+                output.push_str(&format!("{{{{ {content} }}}}"));
             }
             State::VarSingleBraceContent { content, .. } => {
-                output.push_str(&format!("{{ {} }}", content));
+                output.push_str(&format!("{{ {content} }}"));
             }
             State::Escape => {
                 output.push('\\');
@@ -824,7 +806,7 @@ impl VariableManager {
         current_template_id: Option<&str>,
         current_step_id: Option<&str>,
     ) -> Result<bool, String> {
-        info!("求值条件表达式: {}", condition);
+        info!("求值条件表达式: {condition}");
         let trimmed = condition.trim();
 
         // 处理相等比较 (var == value)
@@ -859,7 +841,7 @@ impl VariableManager {
                 }
             };
 
-            debug!("比较: '{}' == '{}'", left_value, right_value);
+            debug!("比较: '{left_value}' == '{right_value}'");
             return Ok(left_value == right_value);
         }
 
@@ -873,7 +855,7 @@ impl VariableManager {
 
             let left_value = match self.get_variable(left, current_template_id, current_step_id) {
                 Some(value) => value,
-                None => return Err(format!("左侧变量不存在: {}", left)),
+                None => return Err(format!("左侧变量不存在: {left}")),
             };
 
             let right_value = if right.starts_with('"') && right.ends_with('"') {
@@ -885,7 +867,7 @@ impl VariableManager {
                 }
             };
 
-            debug!("比较: '{}' != '{}'", left_value, right_value);
+            debug!("比较: '{left_value}' != '{right_value}'");
             return Ok(left_value != right_value);
         }
 
@@ -900,7 +882,7 @@ impl VariableManager {
 
             let left_value = match self.get_variable(left, current_template_id, current_step_id) {
                 Some(value) => value,
-                None => return Err(format!("左侧变量不存在: {}", left)),
+                None => return Err(format!("左侧变量不存在: {left}")),
             };
 
             let right_value = if right.starts_with('"') && right.ends_with('"') {
@@ -915,22 +897,22 @@ impl VariableManager {
             // 尝试转换为数值进行比较
             let left_num = match left_value.parse::<f64>() {
                 Ok(n) => n,
-                Err(_) => return Err(format!("左侧值不是有效数字: {}", left_value)),
+                Err(_) => return Err(format!("左侧值不是有效数字: {left_value}")),
             };
 
             let right_num = match right_value.parse::<f64>() {
                 Ok(n) => n,
-                Err(_) => return Err(format!("右侧值不是有效数字: {}", right_value)),
+                Err(_) => return Err(format!("右侧值不是有效数字: {right_value}")),
             };
 
-            debug!("数值比较: {} {} {}", left_num, op, right_num);
+            debug!("数值比较: {left_num} {op} {right_num}");
 
             match op {
                 ">" => return Ok(left_num > right_num),
                 "<" => return Ok(left_num < right_num),
                 ">=" => return Ok(left_num >= right_num),
                 "<=" => return Ok(left_num <= right_num),
-                _ => return Err(format!("不支持的操作符: {}", op)),
+                _ => return Err(format!("不支持的操作符: {op}")),
             }
         }
 
@@ -944,7 +926,7 @@ impl VariableManager {
 
             let left_value = match self.get_variable(left, current_template_id, current_step_id) {
                 Some(value) => value,
-                None => return Err(format!("左侧变量不存在: {}", left)),
+                None => return Err(format!("左侧变量不存在: {left}")),
             };
 
             let right_value = if right.starts_with('"') && right.ends_with('"') {
@@ -956,7 +938,7 @@ impl VariableManager {
                 }
             };
 
-            debug!("检查包含: '{}' contains '{}'", left_value, right_value);
+            debug!("检查包含: '{left_value}' contains '{right_value}'");
             return Ok(left_value.contains(&right_value));
         }
 
@@ -970,7 +952,7 @@ impl VariableManager {
 
             let left_value = match self.get_variable(left, current_template_id, current_step_id) {
                 Some(value) => value,
-                None => return Err(format!("左侧变量不存在: {}", left)),
+                None => return Err(format!("左侧变量不存在: {left}")),
             };
 
             let right_value = if right.starts_with('"') && right.ends_with('"') {
@@ -982,10 +964,7 @@ impl VariableManager {
                 }
             };
 
-            debug!(
-                "检查不包含: '{}' not_contains '{}'",
-                left_value, right_value
-            );
+            debug!("检查不包含: '{left_value}' not_contains '{right_value}'");
             return Ok(!left_value.contains(&right_value));
         }
 
@@ -999,15 +978,15 @@ impl VariableManager {
 
             let left_value = match self.get_variable(left, current_template_id, current_step_id) {
                 Some(value) => value,
-                None => return Err(format!("左侧变量不存在: {}", left)),
+                None => return Err(format!("左侧变量不存在: {left}")),
             };
 
             match Regex::new(pattern) {
                 Ok(re) => {
-                    debug!("正则匹配: '{}' matches /{}/", left_value, pattern);
+                    debug!("正则匹配: '{left_value}' matches /{pattern}/");
                     return Ok(re.is_match(&left_value));
                 }
-                Err(e) => return Err(format!("无效的正则表达式: {} - {}", pattern, e)),
+                Err(e) => return Err(format!("无效的正则表达式: {pattern} - {e}")),
             }
         }
 
@@ -1021,15 +1000,15 @@ impl VariableManager {
 
             let left_value = match self.get_variable(left, current_template_id, current_step_id) {
                 Some(value) => value,
-                None => return Err(format!("左侧变量不存在: {}", left)),
+                None => return Err(format!("左侧变量不存在: {left}")),
             };
 
             match Regex::new(pattern) {
                 Ok(re) => {
-                    debug!("正则不匹配: '{}' not_matches /{}/", left_value, pattern);
+                    debug!("正则不匹配: '{left_value}' not_matches /{pattern}/");
                     return Ok(!re.is_match(&left_value));
                 }
-                Err(e) => return Err(format!("无效的正则表达式: {} - {}", pattern, e)),
+                Err(e) => return Err(format!("无效的正则表达式: {pattern} - {e}")),
             }
         }
 
@@ -1045,7 +1024,7 @@ impl VariableManager {
             }
         }
 
-        Err(format!("无法解析条件表达式: {}", condition))
+        Err(format!("无法解析条件表达式: {condition}"))
     }
 }
 

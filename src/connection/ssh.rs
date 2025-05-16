@@ -64,7 +64,7 @@ impl SSHConnectionManager {
         let public_key_path = connection_config.get_public_key_path();
         let jump_hosts = connection_config.get_jump_hosts();
 
-        debug!("创建SSH连接: {}@{}:{}", username, host, port);
+        debug!("创建SSH连接: {username}@{host}:{port}");
 
         // 获取连接配置的重试和超时设置
         let max_retries = connection_config.get_max_retries();
@@ -86,12 +86,12 @@ impl SSHConnectionManager {
                 )?;
 
                 // 连接到本地转发端口
-                debug!("连接到本地转发端口: localhost:{}", local_port);
+                debug!("连接到本地转发端口: localhost:{local_port}");
                 let tcp = Self::connect_with_retry(
-                    || TcpStream::connect(format!("localhost:{}", local_port)),
+                    || TcpStream::connect(format!("localhost:{local_port}")),
                     max_retries as usize,
                     connect_timeout_secs,
-                    &format!("无法连接到本地转发端口 localhost:{}", local_port),
+                    &format!("无法连接到本地转发端口 localhost:{local_port}"),
                 )?;
 
                 // 创建SSH会话
@@ -119,10 +119,10 @@ impl SSHConnectionManager {
 
         // 没有跳板机时的普通连接方式，使用重试机制
         let tcp = Self::connect_with_retry(
-            || TcpStream::connect(format!("{}:{}", host, port)),
+            || TcpStream::connect(format!("{host}:{port}")),
             max_retries as usize,
             connect_timeout_secs,
-            &format!("无法连接到 {}:{}", host, port),
+            &format!("无法连接到 {host}:{port}"),
         )?;
 
         // 创建SSH会话
@@ -163,7 +163,7 @@ impl SSHConnectionManager {
         // 重试循环
         for retry in 0..max_retries {
             if retry > 0 {
-                debug!("SSH转发连接重试 #{}", retry);
+                debug!("SSH转发连接重试 #{retry}");
                 std::thread::sleep(Duration::from_secs(1)); // 重试前短暂等待
             }
 
@@ -198,12 +198,12 @@ impl SSHConnectionManager {
                 .arg("-o")
                 .arg("ServerAliveInterval=30")
                 .arg("-o")
-                .arg(format!("ConnectTimeout={}", connect_timeout_secs))
+                .arg(format!("ConnectTimeout={connect_timeout_secs}"))
                 .arg("-v"); // 详细输出，便于调试
 
             // 添加本地端口转发
             cmd.arg("-L")
-                .arg(format!("{}:{}:{}", local_port, final_host, final_port));
+                .arg(format!("{local_port}:{final_host}:{final_port}"));
 
             // 添加跳板机配置
             if !jump_hosts.is_empty() {
@@ -212,10 +212,10 @@ impl SSHConnectionManager {
             }
 
             // 目标主机
-            cmd.arg(format!("{}@{}", final_username, final_host));
+            cmd.arg(format!("{final_username}@{final_host}"));
 
             // 在后台启动ssh
-            debug!("执行SSH转发命令: {:?}", cmd);
+            debug!("执行SSH转发命令: {cmd:?}");
 
             let mut child = match cmd.stdout(Stdio::piped()).stderr(Stdio::piped()).spawn() {
                 Ok(c) => c,
@@ -231,7 +231,7 @@ impl SSHConnectionManager {
             let start_time = Instant::now();
             let timeout = Duration::from_secs(connect_timeout_secs);
             let mut connected = false;
-            let local_addr = match format!("127.0.0.1:{}", local_port).parse::<SocketAddr>() {
+            let local_addr = match format!("127.0.0.1:{local_port}").parse::<SocketAddr>() {
                 Ok(addr) => addr,
                 Err(_) => {
                     let _ = child.kill();
@@ -273,7 +273,7 @@ impl SSHConnectionManager {
 
             // 检查是否成功连接
             if connected {
-                debug!("SSH转发已成功建立，本地端口: {}", local_port);
+                debug!("SSH转发已成功建立，本地端口: {local_port}");
 
                 // 如果一切正常，保持SSH进程在后台运行
                 std::mem::forget(child); // 防止进程被终止
@@ -296,12 +296,12 @@ impl SSHConnectionManager {
         private_key_path: &str,
     ) -> Result<()> {
         let mut prikey_file = File::open(private_key_path)
-            .with_context(|| format!("无法打开密钥文件: {}", private_key_path))?;
+            .with_context(|| format!("无法打开密钥文件: {private_key_path}"))?;
 
         let mut prikey_contents = Vec::new();
         prikey_file
             .read_to_end(&mut prikey_contents)
-            .with_context(|| format!("无法读取密钥文件: {}", private_key_path))?;
+            .with_context(|| format!("无法读取密钥文件: {private_key_path}"))?;
 
         if !prikey_contents.starts_with(b"-----BEGIN RSA PRIVATE KEY-----")
             && !prikey_contents.starts_with(b"-----BEGIN OPENSSH PRIVATE KEY-----")
@@ -321,7 +321,7 @@ impl SSHConnectionManager {
                 debug!("公钥认证成功");
             }
             Err(e) => {
-                debug!("公钥认证失败: {}", e);
+                debug!("公钥认证失败: {e}");
             }
         }
 
@@ -338,7 +338,7 @@ impl SSHConnectionManager {
     ) -> Result<()> {
         if let Some(private_key) = private_key_path {
             Self::authenticate_with_key(session, username, private_key)
-                .with_context(|| format!("密钥认证失败: {}", private_key))?;
+                .with_context(|| format!("密钥认证失败: {private_key}"))?;
         } else if let Some(pass) = password {
             debug!("使用密码进行认证");
             session
@@ -375,7 +375,7 @@ impl SSHConnectionManager {
             match connect_fn() {
                 Ok(stream) => return Ok(stream),
                 Err(e) => {
-                    debug!("连接失败: {}", e.to_string());
+                    debug!("连接失败: {e}");
                     if start_time.elapsed() > timeout {
                         return Err(anyhow::anyhow!(error_message.to_string()));
                     }
@@ -385,7 +385,7 @@ impl SSHConnectionManager {
             if retry > max_retries {
                 return Err(anyhow::anyhow!(error_message.to_string()));
             }
-            debug!("连接重试 #{}", retry);
+            debug!("连接重试 #{retry}");
             std::thread::sleep(Duration::from_secs(1));
         }
     }
@@ -414,7 +414,7 @@ impl ConnectionManager for SSHConnectionManager {
             bail!("SSH连接已关闭");
         }
 
-        debug!("执行SSH命令: {}", command);
+        debug!("执行SSH命令: {command}");
 
         // 创建命令
         let mut actual_command = String::new();
@@ -422,7 +422,7 @@ impl ConnectionManager for SSHConnectionManager {
         // 添加环境变量（如果启用了会话状态保持）
         if self.maintain_session {
             for (name, value) in &self.env_vars {
-                actual_command.push_str(&format!("export {}=\"{}\"; ", name, value));
+                actual_command.push_str(&format!("export {name}=\"{value}\"; "));
             }
         }
 
@@ -438,7 +438,7 @@ impl ConnectionManager for SSHConnectionManager {
         // 执行命令
         channel
             .exec(&actual_command)
-            .with_context(|| format!("无法执行远程命令: {}", actual_command))?;
+            .with_context(|| format!("无法执行远程命令: {actual_command}"))?;
 
         // 关闭标准输入
         channel.send_eof().with_context(|| "无法关闭标准输入")?;
@@ -452,7 +452,7 @@ impl ConnectionManager for SSHConnectionManager {
         // 关闭通道
         channel.wait_close().with_context(|| "等待通道关闭失败")?;
 
-        debug!("SSH命令执行完成: exit_code={}", exit_code);
+        debug!("SSH命令执行完成: exit_code={exit_code}");
 
         // 解析命令的环境变量设置（如果启用了会话状态保持）
         if self.maintain_session {
@@ -462,7 +462,7 @@ impl ConnectionManager for SSHConnectionManager {
         Ok(CommandOutput {
             stdout,
             stderr,
-            exit_code: exit_code as i32,
+            exit_code,
         })
     }
 
@@ -489,7 +489,7 @@ impl Drop for SSHConnectionManager {
     fn drop(&mut self) {
         if self.connected {
             if let Err(e) = self.session.disconnect(None, "连接被丢弃", None) {
-                error!("关闭SSH连接失败: {}", e);
+                error!("关闭SSH连接失败: {e}");
             }
         }
     }

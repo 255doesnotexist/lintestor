@@ -31,7 +31,7 @@ pub fn normalize_template_id(template_id: &str) -> String {
     };
 
     if clean_id.contains("::") {
-        warn!("模板ID不应包含'::'分隔符: {}, 进行清理", clean_id);
+        warn!("模板ID不应包含'::'分隔符: {clean_id}, 进行清理");
         clean_id.split("::").next().unwrap_or(clean_id).to_string()
     } else {
         clean_id.to_string()
@@ -71,7 +71,7 @@ pub fn get_template_id_from_path(file_path: &Path) -> String {
 pub fn get_result_id(template_id: &str, local_step_id: &str) -> String {
     let template_id = template_id.to_string();
     let step_id = local_step_id.to_string();
-    format!("{}::{}", template_id, step_id)
+    format!("{template_id}::{step_id}")
 }
 
 /// Represents a complete test report for a unit on a specific distribution.
@@ -193,7 +193,7 @@ where
     let config: T = match toml::de::from_str(&content) {
         Ok(config) => config,
         Err(e) => {
-            error!("Failed to parse TOML file: {}", e);
+            error!("Failed to parse TOML file: {e}");
             return Err(Box::new(e));
         }
     };

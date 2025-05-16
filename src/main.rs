@@ -75,7 +75,7 @@ fn run_single_template_test(
     let template = match template::TestTemplate::from_file(template_file) {
         Ok(t) => t,
         Err(e) => {
-            return Err(format!("Failed to load template from file: {}", e).into());
+            return Err(format!("Failed to load template from file: {e}").into());
         }
     };
 
@@ -98,14 +98,14 @@ fn run_single_template_test(
     let mut target_config: TargetConfig = match utils::read_toml_from_file(&target_config_path) {
         Ok(config) => config,
         Err(e) => {
-            return Err(format!("Failed to load target config: {}", e).into());
+            return Err(format!("Failed to load target config: {e}").into());
         }
     };
 
     // 如果有环境类型覆盖，则更新目标配置
     let environment_type = cli_args.get_environment_type();
     if let Some(env_type) = &environment_type {
-        info!("Overriding environment type to: {}", env_type);
+        info!("Overriding environment type to: {env_type}");
         target_config.testing_type = env_type.clone();
     }
 
@@ -152,7 +152,7 @@ fn run_single_template_test(
             if !results.is_empty() {
                 // 获取第一个结果，使用迭代器而不是索引
                 if let Some(result) = results.first() {
-                    Ok(format!("Test completed with status: {:?}", result.overall_status).into())
+                    Ok(format!("Test completed with status: {:?}", result.overall_status))
                 } else {
                     Err("Failed to fetch first execution result".to_string().into())
                 }
@@ -160,7 +160,7 @@ fn run_single_template_test(
                 Err("Execution result is empty".to_string().into())
             }
         }
-        Err(e) => Err(format!("Failed to execute template: {}", e).into()),
+        Err(e) => Err(format!("Failed to execute template: {e}").into()),
     }
 }
 
@@ -200,7 +200,7 @@ fn run_template_tests(cli_args: &CliArgs, working_dir: &Path) -> Result<(), Box<
     let loaded_templates: Vec<TestTemplate> = match filter_templates(&all_template_paths, &filter) {
         Ok(t) => t,
         Err(e) => {
-            error!("Failed to load or filter templates: {}", e);
+            error!("Failed to load or filter templates: {e}");
             return Err(e.into()); // Propagate error
         }
     };
@@ -286,7 +286,7 @@ fn run_template_tests(cli_args: &CliArgs, working_dir: &Path) -> Result<(), Box<
                 target_config_path.display(),
                 templates_in_group.len()
             );
-            error!("{}", msg);
+            error!("{msg}");
             if !cli_args.continue_on_error {
                 return Err(msg.into());
             }
@@ -307,7 +307,7 @@ fn run_template_tests(cli_args: &CliArgs, working_dir: &Path) -> Result<(), Box<
                     e,
                     templates_in_group.len()
                 );
-                error!("{}", msg);
+                error!("{msg}");
                 if !cli_args.continue_on_error {
                     return Err(msg.into());
                 }
@@ -380,7 +380,7 @@ fn run_template_tests(cli_args: &CliArgs, working_dir: &Path) -> Result<(), Box<
                         target_config_path.display(),
                         e
                     );
-                    error!("{}", msg);
+                    error!("{msg}");
                     if !cli_args.continue_on_error {
                         return Err(msg.into());
                     }
@@ -419,8 +419,7 @@ fn run_template_tests(cli_args: &CliArgs, working_dir: &Path) -> Result<(), Box<
 
     if fail_count > 0 && !cli_args.continue_on_error {
         return Err(format!(
-            "{} tests failed and continue_on_error is false.",
-            fail_count
+            "{fail_count} tests failed and continue_on_error is false."
         )
         .into());
     }

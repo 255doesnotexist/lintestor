@@ -78,8 +78,8 @@ impl QemuEnvironment {
 
         if !output.status.success() {
             let stderr = String::from_utf8_lossy(&output.stderr);
-            error!("启动 QEMU 失败: {}", stderr);
-            return Err(format!("启动 QEMU 失败: {}", stderr).into());
+            error!("启动 QEMU 失败: {stderr}");
+            return Err(format!("启动 QEMU 失败: {stderr}").into());
         }
 
         info!("QEMU 虚拟机启动成功，等待 SSH 可用");
@@ -108,8 +108,8 @@ impl QemuEnvironment {
 
         if !output.status.success() {
             let stderr = String::from_utf8_lossy(&output.stderr);
-            error!("停止 QEMU 失败: {}", stderr);
-            return Err(format!("停止 QEMU 失败: {}", stderr).into());
+            error!("停止 QEMU 失败: {stderr}");
+            return Err(format!("停止 QEMU 失败: {stderr}").into());
         }
 
         info!("QEMU 虚拟机停止成功");
@@ -126,16 +126,16 @@ impl QemuEnvironment {
         let mut attempt = 0;
         while start_time.elapsed() < timeout {
             attempt += 1;
-            debug!("尝试 SSH 连接 (尝试 {})", attempt);
+            debug!("尝试 SSH 连接 (尝试 {attempt})");
             
             // 尝试建立连接
             match self.remote_env.setup() {
                 Ok(_) => {
-                    info!("SSH 连接成功 (尝试 {})", attempt);
+                    info!("SSH 连接成功 (尝试 {attempt})");
                     return Ok(());
                 }
                 Err(e) => {
-                    debug!("SSH 连接尝试失败: {}, 等待重试", e);
+                    debug!("SSH 连接尝试失败: {e}, 等待重试");
                     // 在重试前，确保先断开任何可能的部分连接
                     let _ = self.remote_env.teardown();
                 }
@@ -146,8 +146,7 @@ impl QemuEnvironment {
         }
         
         Err(format!(
-            "等待 SSH 连接超时，{} 次尝试后失败",
-            attempt
+            "等待 SSH 连接超时，{attempt} 次尝试后失败"
         ).into())
     }
 
@@ -218,7 +217,7 @@ impl TestEnvironment for QemuEnvironment {
 impl Drop for QemuEnvironment {
     fn drop(&mut self) {
         if let Err(e) = self.teardown() {
-            error!("QemuEnvironment teardown 过程中出错: {}", e);
+            error!("QemuEnvironment teardown 过程中出错: {e}");
         }
     }
 }

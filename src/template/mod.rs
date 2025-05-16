@@ -197,8 +197,8 @@ pub struct TestTemplate {
 impl TestTemplate {
     /// 获取模板ID（文件名，转换为纯字母和下划线格式）
     pub fn get_template_id(&self) -> String {
-        let template_id = utils::get_template_id_from_path(&self.file_path);
-        template_id
+        
+        utils::get_template_id_from_path(&self.file_path)
     }
 
     /// 从模板文件路径创建测试模板

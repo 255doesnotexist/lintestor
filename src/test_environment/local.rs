@@ -37,7 +37,7 @@ impl TestEnvironment for LocalEnvironment {
     }
 
     fn run_command(&self, command: &str) -> Result<CommandOutput, Box<dyn Error>> {
-        debug!("Running local command: {}", command);
+        debug!("Running local command: {command}");
         let output = Command::new("bash")
             .arg("-c")
             .arg(command)
@@ -52,10 +52,10 @@ impl TestEnvironment for LocalEnvironment {
         // 如果启用了调试，则记录输出
         if log_enabled!(Level::Debug) {
             if !stdout_str.is_empty() {
-                debug!("stdout:\n{}", stdout_str);
+                debug!("stdout:\n{stdout_str}");
             }
             if !stderr_str.is_empty() {
-                debug!("stderr:\n{}", stderr_str);
+                debug!("stderr:\n{stderr_str}");
             }
             debug!("Exit status: {:?}", output.status.code());
         }
@@ -63,7 +63,7 @@ impl TestEnvironment for LocalEnvironment {
         Ok(CommandOutput {
             command: command.to_string(),
             exit_status: output.status.code().unwrap_or(1), // 如果被信号终止提供默认退出码
-            output: format!("stdout:\n{}\nstderr:\n{}", stdout_str, stderr_str), // 合并 stdout/stderr 以兼容，后续考虑分开
+            output: format!("stdout:\n{stdout_str}\nstderr:\n{stderr_str}"), // 合并 stdout/stderr 以兼容，后续考虑分开
         })
     }
 
@@ -74,8 +74,7 @@ impl TestEnvironment for LocalEnvironment {
         mode: i32,
     ) -> Result<(), Box<dyn Error>> {
         debug!(
-            "Uploading local file {:?} to {:?} with mode {:o}",
-            local_path, remote_path, mode
+            "Uploading local file {local_path:?} to {remote_path:?} with mode {mode:o}"
         );
         // 确保父目录存在
         if let Some(parent) = Path::new(remote_path).parent() {
@@ -91,8 +90,7 @@ impl TestEnvironment for LocalEnvironment {
 
     fn download_file(&self, remote_path: &str, local_path: &Path) -> Result<(), Box<dyn Error>> {
         debug!(
-            "Downloading local file {:?} to {:?}",
-            remote_path, local_path
+            "Downloading local file {remote_path:?} to {local_path:?}"
         );
         // 确保父目录存在
         if let Some(parent) = local_path.parent() {
@@ -103,18 +101,18 @@ impl TestEnvironment for LocalEnvironment {
     }
 
     fn read_remote_file(&self, remote_path: &str) -> Result<String, Box<dyn Error>> {
-        debug!("Reading local file {:?}", remote_path);
+        debug!("Reading local file {remote_path:?}");
         Ok(read_to_string(remote_path)?)
     }
 
     fn mkdir(&self, remote_path: &str) -> Result<(), Box<dyn Error>> {
-        debug!("Creating local directory {:?}", remote_path);
+        debug!("Creating local directory {remote_path:?}");
         fs::create_dir_all(remote_path)?;
         Ok(())
     }
 
     fn rm_rf(&self, remote_path: &str) -> Result<(), Box<dyn Error>> {
-        debug!("Removing local path {:?}", remote_path);
+        debug!("Removing local path {remote_path:?}");
         if Path::new(remote_path).is_dir() {
             fs::remove_dir_all(remote_path)?;
         } else if Path::new(remote_path).exists() {

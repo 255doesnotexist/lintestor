@@ -49,7 +49,7 @@ impl StepDependencyManager {
         let var_regex = match Regex::new(r"\$\{\s*([a-zA-Z0-9_]+(?:[:]{2}[a-zA-Z0-9_]+)?)\s*\}") {
             Ok(r) => r,
             Err(e) => {
-                warn!("Failed to compile regex for variable extraction: {}", e);
+                warn!("Failed to compile regex for variable extraction: {e}");
                 return;
             }
         };
@@ -85,8 +85,7 @@ impl StepDependencyManager {
                                 // Ensure a step does not depend on itself implicitly.
                                 if current_step_id != potential_source_global_id {
                                     debug!(
-                                        "Found implicit dependency: {} depends on {} due to variable {}",
-                                        current_step_id, potential_source_global_id, var_name_in_command
+                                        "Found implicit dependency: {current_step_id} depends on {potential_source_global_id} due to variable {var_name_in_command}"
                                     );
                                     self.graph.entry(current_step_id.clone()).or_default().dependencies.insert(potential_source_global_id.clone());
                                     self.graph.entry(potential_source_global_id.clone()).or_default().dependents.insert(current_step_id.clone());
@@ -128,7 +127,7 @@ impl StepDependencyManager {
         
         if queue.is_empty() && !self.nodes.is_empty() && self.graph.values().any(|nd| !nd.dependencies.is_empty()) {
             let all_nodes_have_deps = self.graph.iter().all(|(id, data)| {
-                data.dependencies.len() > 0 || self.graph.values().all(|other_data| !other_data.dependents.contains(id))
+                !data.dependencies.is_empty() || self.graph.values().all(|other_data| !other_data.dependents.contains(id))
             });
             if all_nodes_have_deps && self.graph.len() > 1 {
                 warn!("Topological sort: Queue is empty but nodes exist, possible cycle. Graph: {:?}", self.graph);
@@ -147,7 +146,7 @@ impl StepDependencyManager {
                             queue.push_back(v_id.clone());
                         }
                     } else {
-                        warn!("Topological sort: Dependent node {} not found in in_degree map.", v_id);
+                        warn!("Topological sort: Dependent node {v_id} not found in in_degree map.");
                     }
                 }
             }
@@ -194,14 +193,11 @@ impl StepDependencyManager {
             if let Some(node_data) = self.graph.get(&current_id_to_check) {
                 for dep_id in &node_data.dependencies {
                     if let Some(dep_step) = self.nodes.get(dep_id) {
-                        match &dep_step.step_type {
-                            StepType::Heading { .. } => {
-                                parents.push(dep_id.clone());
-                                current_id_to_check = dep_id.clone();
-                                found_parent_heading = true;
-                                break; 
-                            }
-                            _ => {}
+                        if let StepType::Heading { .. } = &dep_step.step_type {
+                            parents.push(dep_id.clone());
+                            current_id_to_check = dep_id.clone();
+                            found_parent_heading = true;
+                            break; 
                         }
                     }
                 }

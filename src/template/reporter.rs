@@ -146,7 +146,7 @@ impl Reporter {
                             Some(local_step_id_for_var_lookup),
                         );
                     }
-                    processed_text.push_str("\n");
+                    processed_text.push('\n');
                     report_parts.push(processed_text);
                 }
                 ContentBlock::HeadingBlock {
@@ -190,10 +190,10 @@ impl Reporter {
                         .unwrap_or(true);
                     if visible {
                         // 变量替换
-                        let mut processed_code =
+                        let processed_code =
                             var_manager.replace_variables(code, Some(&template_id), Some(id));
                         // 只输出lang和code内容，不输出任何属性
-                        let code_block_str = format!("```{}\n{}\n```", lang, processed_code);
+                        let code_block_str = format!("```{lang}\n{processed_code}\n```");
                         report_parts.push(self.clean_markdown_markup(&code_block_str)?);
                     }
                 }
@@ -204,7 +204,7 @@ impl Reporter {
                         utils::get_result_id(template_id.as_str(), step_id);
                     if let Some(step_result) = result.step_results.get(&global_step_id_to_find) {
                         let mut output_block_content =
-                            format!("```output {{ref=\"{}\"}}\n", step_id);
+                            format!("```output {{ref=\"{step_id}\"}}\n");
                         // stdout is String, not Option<String> in executor::StepResult
                         let stdout_content = step_result.stdout.trim_end_matches('\n');
                         output_block_content.push_str(stdout_content);
@@ -217,8 +217,7 @@ impl Reporter {
                     } else {
                         // Fallback if step result not found (should ideally not happen if template is valid)
                         report_parts.push(format!(
-                            "```output {{ref=\"{}\"}}\n[Output for step '{}' not found]\n```\n",
-                            step_id, step_id
+                            "```output {{ref=\"{step_id}\"}}\n[Output for step '{step_id}' not found]\n```\n"
                         ));
                     }
                 }
@@ -235,11 +234,9 @@ impl Reporter {
             let yaml_part_end = captures.get(0).unwrap().end();
             if final_content.len() > yaml_part_end
                 && !final_content[yaml_part_end..].starts_with('\n')
-            {
-                if !final_content[yaml_part_end..].starts_with("\n\n") {
+                && !final_content[yaml_part_end..].starts_with("\n\n") {
                     final_content.insert(yaml_part_end, '\n');
                 }
-            }
         }
 
         final_content = self.clean_markdown_markup(&final_content)?;
@@ -290,13 +287,13 @@ impl Reporter {
                         .replace("|", "\\\\|")
                         .replace("\n", "<br>"),
                     status_icon,
-                    step_result.exit_code.to_string(),
+                    step_result.exit_code,
                     stdout_summary.replace("|", "\\\\|").replace("\n", "<br>"),
                     stderr_summary.replace("|", "\\\\|").replace("\n", "<br>")
                 ));
             }
         }
-        table.push_str("\n");
+        table.push('\n');
         Ok(table)
     }
 
@@ -336,7 +333,7 @@ impl Reporter {
                     inner_attrs = space_collapse_regex
                         .replace_all(&inner_attrs, " ")
                         .to_string();
-                    format!("{{{}}}", inner_attrs) // 重建花括号和清理后的属性
+                    format!("{{{inner_attrs}}}") // 重建花括号和清理后的属性
                 }
             })
             .into_owned();
@@ -371,9 +368,9 @@ impl Reporter {
     }
 
     /// 生成包含多个模板执行结果的摘要报告
-    pub fn generate_summary_report<'b>(
+    pub fn generate_summary_report(
         &self,
-        results: &[&'b ExecutionResult],
+        results: &[&ExecutionResult],
         output_path_option: Option<PathBuf>,
         var_manager: &VariableManager,
     ) -> Result<PathBuf> {
@@ -417,7 +414,7 @@ impl Reporter {
                 .report_path
                 .as_ref()
                 .and_then(|p| p.file_name().and_then(|name| name.to_str()))
-                .map(|name| format!("[查看报告](./{})", name))
+                .map(|name| format!("[查看报告](./{name})"))
                 .unwrap_or_else(|| "-".to_string());
 
             summary_content.push_str(&format!(
@@ -429,7 +426,7 @@ impl Reporter {
                 report_link
             ));
         }
-        summary_content.push_str("\n");
+        summary_content.push('\n');
         summary_content.push_str(&format!(
             "**总结: 总计 {} 个模板, 通过 {}, 失败 {}.**\n",
             results.len(),

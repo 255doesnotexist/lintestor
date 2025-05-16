@@ -80,7 +80,7 @@ impl RemoteEnvironment {
                 }
                 Err(e) => {
                     // 不检查特定的错误代码，只处理通用错误
-                    debug!("SSH 代理认证失败: {}", e);
+                    debug!("SSH 代理认证失败: {e}");
                 }
             }
         }
@@ -125,7 +125,7 @@ impl RemoteEnvironment {
                         authenticated = true;
                     }
                     Err(e) => {
-                        debug!("SSH 密码认证失败: {}", e);
+                        debug!("SSH 密码认证失败: {e}");
                     }
                 }
             }
@@ -150,7 +150,7 @@ impl TestEnvironment for RemoteEnvironment {
 
     fn teardown(&mut self) -> Result<(), Box<dyn Error>> {
         debug!("RemoteEnvironment teardown called.");
-        if let Some(mut sess) = self.session.take() {
+        if let Some(sess) = self.session.take() {
             debug!("断开 SSH 会话连接。");
             // 如果存在则先关闭 SFTP
             if self.sftp.is_some() {
@@ -168,7 +168,7 @@ impl TestEnvironment for RemoteEnvironment {
             .as_ref()
             .ok_or("SSH 会话未建立。先调用 setup()。")?;
 
-        trace!("运行远程命令: {}", command);
+        trace!("运行远程命令: {command}");
         let mut channel = session.channel_session()?;
         channel.exec(command)?;
 
@@ -186,17 +186,17 @@ impl TestEnvironment for RemoteEnvironment {
 
         // 记录输出
         if !stdout_str.is_empty() {
-            debug!("stdout:\n{}", stdout_str);
+            debug!("stdout:\n{stdout_str}");
         }
         if !stderr_str.is_empty() {
-            debug!("stderr:\n{}", stderr_str);
+            debug!("stderr:\n{stderr_str}");
         }
-        debug!("Exit status: {}", exit_status);
+        debug!("Exit status: {exit_status}");
 
         Ok(CommandOutput {
             command: command.to_string(),
             exit_status,
-            output: format!("stdout:\n{}\nstderr:\n{}", stdout_str, stderr_str),
+            output: format!("stdout:\n{stdout_str}\nstderr:\n{stderr_str}"),
         })
     }
 
@@ -212,10 +212,7 @@ impl TestEnvironment for RemoteEnvironment {
             .ok_or("SSH 会话未建立。先调用 setup()。")?;
 
         trace!(
-            "上传 {:?} 到远程 {} 并设置模式 {:o}",
-            local_path,
-            remote_path,
-            mode
+            "上传 {local_path:?} 到远程 {remote_path} 并设置模式 {mode:o}"
         );
         let mut local_file = File::open(local_path)?;
         let file_size = local_file.metadata()?.len();
@@ -241,7 +238,7 @@ impl TestEnvironment for RemoteEnvironment {
             .as_ref()
             .ok_or("SSH 会话未建立。先调用 setup()。")?;
 
-        trace!("下载远程 {} 到 {:?}", remote_path, local_path);
+        trace!("下载远程 {remote_path} 到 {local_path:?}");
         if let Some(parent) = local_path.parent() {
             std::fs::create_dir_all(parent)?;
         }
@@ -261,10 +258,10 @@ impl TestEnvironment for RemoteEnvironment {
 
     fn read_remote_file(&self, remote_path: &str) -> Result<String, Box<dyn Error>> {
         // 使用 run_command 运行 cat 命令来读取文件
-        trace!("读取远程文件 {}", remote_path);
+        trace!("读取远程文件 {remote_path}");
         // 使用带引号的路径以防止特殊字符
         let quoted_path = format!("\"{}\"", remote_path.replace("\"", "\\\""));
-        let cat_command = format!("cat {}", quoted_path);
+        let cat_command = format!("cat {quoted_path}");
         let output = self.run_command(&cat_command)?;
         if output.exit_status == 0 {
             // 从输出中提取内容
@@ -281,10 +278,10 @@ impl TestEnvironment for RemoteEnvironment {
     }
 
     fn mkdir(&self, remote_path: &str) -> Result<(), Box<dyn Error>> {
-        trace!("创建远程目录 {}", remote_path);
+        trace!("创建远程目录 {remote_path}");
         // 使用带引号的路径以防止特殊字符
         let quoted_path = format!("\"{}\"", remote_path.replace("\"", "\\\""));
-        let command = format!("mkdir -p {}", quoted_path);
+        let command = format!("mkdir -p {quoted_path}");
         let output = self.run_command(&command)?;
         if output.exit_status == 0 {
             Ok(())
@@ -294,10 +291,10 @@ impl TestEnvironment for RemoteEnvironment {
     }
 
     fn rm_rf(&self, remote_path: &str) -> Result<(), Box<dyn Error>> {
-        trace!("删除远程路径 {}", remote_path);
+        trace!("删除远程路径 {remote_path}");
         // 使用带引号的路径以防止特殊字符
         let quoted_path = format!("\"{}\"", remote_path.replace("\"", "\\\""));
-        let command = format!("rm -rf {}", quoted_path);
+        let command = format!("rm -rf {quoted_path}");
         let output = self.run_command(&command)?;
         if output.exit_status == 0 {
             Ok(())
@@ -330,7 +327,7 @@ impl TestEnvironment for RemoteEnvironment {
 impl Drop for RemoteEnvironment {
     fn drop(&mut self) {
         if let Err(e) = self.teardown() {
-            warn!("RemoteEnvironment teardown 过程中出错: {}", e);
+            warn!("RemoteEnvironment teardown 过程中出错: {e}");
         }
     }
 }

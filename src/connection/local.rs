@@ -28,7 +28,7 @@ impl ConnectionManager for LocalConnectionManager {
         command: &str,
         timeout: Option<Duration>,
     ) -> Result<CommandOutput> {
-        debug!("执行本地命令: {}", command);
+        debug!("执行本地命令: {command}");
 
         // 创建命令进程
         let mut child = Command::new("sh")
@@ -38,7 +38,7 @@ impl ConnectionManager for LocalConnectionManager {
             .stdout(Stdio::piped())
             .stderr(Stdio::piped())
             .spawn()
-            .with_context(|| format!("无法启动命令进程: {}", command))?;
+            .with_context(|| format!("无法启动命令进程: {command}"))?;
 
         let start_time = Instant::now();
         let timeout_duration = timeout.unwrap_or(Duration::from_secs(60)); // 默认60秒超时
@@ -48,7 +48,7 @@ impl ConnectionManager for LocalConnectionManager {
         while child.try_wait()?.is_none() {
             if start_time.elapsed() > timeout_duration {
                 timed_out = true;
-                warn!("命令执行超时: {}", command);
+                warn!("命令执行超时: {command}");
                 child.kill()?;
                 break;
             }
@@ -73,13 +73,10 @@ impl ConnectionManager for LocalConnectionManager {
         let exit_code = if timed_out {
             -1 // 超时返回-1
         } else {
-            match child.wait()?.code() {
-                Some(code) => code,
-                None => -1, // 被信号终止
-            }
+            child.wait()?.code().unwrap_or(-1)
         };
 
-        debug!("命令执行完成: exit_code={}", exit_code);
+        debug!("命令执行完成: exit_code={exit_code}");
 
         Ok(CommandOutput {
             stdout,

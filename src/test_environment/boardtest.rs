@@ -97,7 +97,7 @@ impl BoardtestEnvironment {
         };
 
         let write_test_resp = client
-            .post(format!("{}/write_test", api_url))
+            .post(format!("{api_url}/write_test"))
             .json(&json!({
                 "token": token,
                 "test_name": "unit_test",
@@ -126,7 +126,7 @@ impl BoardtestEnvironment {
         );
 
         let create_resp = client
-            .post(format!("{}/create_test", api_url))
+            .post(format!("{api_url}/create_test"))
             .json(&json!({
                 "token": token,
                 "args": create_test_args
@@ -151,7 +151,7 @@ impl BoardtestEnvironment {
         let token = &self.config.token;
         
         let resp = client
-            .post(format!("{}/start_test/{}", api_url, test_id))
+            .post(format!("{api_url}/start_test/{test_id}"))
             .json(&json!({
                 "token": token
             }))
@@ -173,7 +173,7 @@ impl BoardtestEnvironment {
 
         while start_time.elapsed() < Duration::from_secs(timeout_secs) {
             let resp = client
-                .get(format!("{}/test_status/{}", api_url, test_id))
+                .get(format!("{api_url}/test_status/{test_id}"))
                 .send()
                 .context("获取测试状态失败")?;
 
@@ -194,8 +194,7 @@ impl BoardtestEnvironment {
         }
 
         Err(format!(
-            "测试超时 {} 秒后未完成",
-            timeout_secs
+            "测试超时 {timeout_secs} 秒后未完成"
         ).into())
     }
 
@@ -205,7 +204,7 @@ impl BoardtestEnvironment {
         let api_url = &self.config.api_url;
         
         let resp = client
-            .get(format!("{}/test_output/{}", api_url, test_id))
+            .get(format!("{api_url}/test_output/{test_id}"))
             .send()
             .context("获取测试输出失败")?;
 
@@ -220,8 +219,7 @@ impl BoardtestEnvironment {
     fn execute_command_on_board(&mut self, command: &str, base64_content: Option<&str>) -> Result<CommandOutput, Box<dyn Error>> {
         let cmd_with_extract = if let Some(content) = base64_content {
             format!(
-                "echo '{}' | base64 -d | tar xz -C /tmp && {}",
-                content, command
+                "echo '{content}' | base64 -d | tar xz -C /tmp && {command}"
             )
         } else {
             command.to_string()
@@ -242,7 +240,7 @@ impl BoardtestEnvironment {
         let result = CommandOutput {
             command: command.to_string(),
             exit_status: if test_passed { 0 } else { 1 },
-            output: format!("stdout:\n{}\nstderr:\n", test_output), // 在 boardtest 中没有分开的 stderr
+            output: format!("stdout:\n{test_output}\nstderr:\n"), // 在 boardtest 中没有分开的 stderr
         };
         
         // 存储命令结果以备将来使用
@@ -271,7 +269,7 @@ impl TestEnvironment for BoardtestEnvironment {
     fn run_command(&self, command: &str) -> Result<CommandOutput, Box<dyn Error>> {
         // 注意：我们在 board 上实际上是建立新的测试，这里需要 &mut self
         // 但由于 trait 定义为 &self，我们需要使用另一种方式实现
-        debug!("在 BoardtestEnvironment 上运行命令: {}", command);
+        debug!("在 BoardtestEnvironment 上运行命令: {command}");
         
         // 检查我们是否已经有该命令的结果
         if let Some(result) = self.command_results.get(command) {
@@ -285,36 +283,33 @@ impl TestEnvironment for BoardtestEnvironment {
 
     fn upload_file(&self, local_path: &Path, _remote_path: &str, _mode: i32) -> Result<(), Box<dyn Error>> {
         // Boardtest 不支持直接上传文件，必须通过测试包含的 base64 内容
-        Err(format!("BoardtestEnvironment 不支持直接上传单个文件: {:?}，请使用 execute_command 并提供整个测试目录的 base64 内容", local_path).into())
+        Err(format!("BoardtestEnvironment 不支持直接上传单个文件: {local_path:?}，请使用 execute_command 并提供整个测试目录的 base64 内容").into())
     }
 
     fn download_file(&self, remote_path: &str, _local_path: &Path) -> Result<(), Box<dyn Error>> {
         // Boardtest 不支持直接下载文件
-        Err(format!("BoardtestEnvironment 不支持下载文件: {}", remote_path).into())
+        Err(format!("BoardtestEnvironment 不支持下载文件: {remote_path}").into())
     }
 
     fn read_remote_file(&self, remote_path: &str) -> Result<String, Box<dyn Error>> {
         // 我们可以通过运行 cat 命令来模拟
         // 但由于 run_command 的限制，我们只能返回错误
         Err(format!(
-            "BoardtestEnvironment 不支持直接读取远程文件: {}。请使用 execute_command 运行 'cat {}'", 
-            remote_path, remote_path
+            "BoardtestEnvironment 不支持直接读取远程文件: {remote_path}。请使用 execute_command 运行 'cat {remote_path}'"
         ).into())
     }
 
     fn mkdir(&self, remote_path: &str) -> Result<(), Box<dyn Error>> {
         // 同样，不能直接在 board 上创建目录
         Err(format!(
-            "BoardtestEnvironment 不支持直接创建远程目录: {}。请使用 execute_command 运行 'mkdir -p {}'", 
-            remote_path, remote_path
+            "BoardtestEnvironment 不支持直接创建远程目录: {remote_path}。请使用 execute_command 运行 'mkdir -p {remote_path}'"
         ).into())
     }
 
     fn rm_rf(&self, remote_path: &str) -> Result<(), Box<dyn Error>> {
         // 同样，不能直接在 board 上删除目录
         Err(format!(
-            "BoardtestEnvironment 不支持直接删除远程目录: {}。请使用 execute_command 运行 'rm -rf {}'", 
-            remote_path, remote_path
+            "BoardtestEnvironment 不支持直接删除远程目录: {remote_path}。请使用 execute_command 运行 'rm -rf {remote_path}'"
         ).into())
     }
 

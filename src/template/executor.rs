@@ -128,7 +128,7 @@ pub fn check_assertion(assertion: &AssertionType, stdout: &str, stderr: &str, ex
         }
         AssertionType::StdoutMatches(pattern) => {
             let re = Regex::new(pattern)
-                .with_context(|| format!("无效的正则表达式 (stdout): {}", pattern))?;
+                .with_context(|| format!("无效的正则表达式 (stdout): {pattern}"))?;
             
             if !re.is_match(stdout) {
                 bail!("标准输出不匹配正则表达式: '{}'", pattern);
@@ -146,7 +146,7 @@ pub fn check_assertion(assertion: &AssertionType, stdout: &str, stderr: &str, ex
         }
         AssertionType::StderrMatches(pattern) => {
             let re = Regex::new(pattern)
-                .with_context(|| format!("无效的正则表达式 (stderr): {}", pattern))?;
+                .with_context(|| format!("无效的正则表达式 (stderr): {pattern}"))?;
             
             if !re.is_match(stderr) {
                 bail!("标准错误不匹配正则表达式: '{}'", pattern);
@@ -167,7 +167,7 @@ pub fn check_assertion(assertion: &AssertionType, stdout: &str, stderr: &str, ex
 /// * `Err(anyhow::Error)` - 如果正则表达式无效或没有匹配
 pub fn extract_variable(text: &str, regex_str: &str) -> Result<String> {
     let re = Regex::new(regex_str)
-        .with_context(|| format!("无效的提取正则表达式: {}", regex_str))?;
+        .with_context(|| format!("无效的提取正则表达式: {regex_str}"))?;
     
     match re.captures(text) {
         Some(caps) => {
