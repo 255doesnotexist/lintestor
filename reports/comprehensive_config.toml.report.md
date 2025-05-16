@@ -14,7 +14,7 @@ custom_field: "自定义字段值"
 **单元名称:** ComprehensiveTest
 **单元版本:** v1.0.0-test
 **目标环境:** config.toml
-**自定义字段:** {{metadata.custom_field}}
+**自定义字段:** 自定义字段值
 
 > 本测试模板演示了 Lintestor 的所有主要功能，包括但不限于：变量提取、断言验证、依赖关系、特殊属性等。
 
@@ -43,10 +43,10 @@ cat version.env
 
 ```output {ref="setup-env"}
 total 8
-drwxrwxr-x 2 ezra ezra 80 May 16 11:18 .
-drwxrwxrwt 164 root root 3820 May 16 11:18 ..
--rw-rw-r-- 1 ezra ezra 20 May 16 11:18 test.txt
--rw-rw-r-- 1 ezra ezra 48 May 16 11:18 version.env
+drwxrwxr-x 2 ezra ezra 80 May 16 23:30 .
+drwxrwxrwt 165 root root 3840 May 16 23:30 ..
+-rw-rw-r-- 1 ezra ezra 20 May 16 23:30 test.txt
+-rw-rw-r-- 1 ezra ezra 48 May 16 23:30 version.env
 This is a test file
 VERSION=1.2.3
 CONFIG=production

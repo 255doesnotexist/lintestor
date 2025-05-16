@@ -69,6 +69,18 @@ impl BatchExecutor {
             }
         };
 
+        // Now you could use template_id::metadata.custom_field to read the custom field in the template metadata
+        // This map append "metadata." at the front of the key
+        let custom_fields_map: HashMap<String, String> = template_arc
+            .metadata
+            .custom
+            .iter()
+            .map(|(k, v)| (format!("metadata.{k}"), v.clone()))
+            .collect::<HashMap<String, String>>();
+
+        self.variable_manager.set_variables_from_map(&template_arc.get_template_id(), "GLOBAL", 
+            &custom_fields_map)?;
+
         self.step_dependency_manager = StepDependencyManager::new();
 
         let execution_steps_from_template = template_arc.steps.clone();

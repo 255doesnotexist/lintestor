@@ -25,7 +25,8 @@ Lintestor 是一个基于 Rust 的自动化测试框架，旨在通过**可执�
 
 ### 变量引用
 - 支持 `{{ step-id::变量名 }}`、`{{ namespace::step-id::变量名 }}`、`{{ variable_name }}` 等多种引用方式。
-- 点号和双冒号写法等价，推荐在有歧义时用完全限定名。
+- 点号和双冒号写法并不等价，推荐在有歧义时用完全限定名（三段式名 template_id::step_id::var_name）。
+- 其中 . 可以是 var_name 的一部分。
 
 ### 依赖管理
 - 每个 ContentBlock（代码块或标题节）可通过 `depends_on` 声明依赖。
