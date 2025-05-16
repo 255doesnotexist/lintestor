@@ -25,18 +25,28 @@ pub enum ContentBlock {
     /// 存储的是 `---` 分隔符内部的原始 YAML 字符串。
     Metadata(String),
 
-    /// 通用 Markdown 文本块。
-    /// 这可以包含任何 Markdown内容，包括原始的步骤定义文本（如果它们不被特殊处理为其他类型的块）。
-    Text(String),
+    /// 结构化的标题块（Heading），包含id、级别、文本和属性。
+    HeadingBlock {
+        /// 步骤唯一id（local id）
+        id: String,
+        /// 标题级别 (1-6)
+        level: u8,
+        /// 标题文本内容
+        text: String,
+        /// 标题的原始属性（如 {id="..."}）
+        attributes: HashMap<String, String>,
+    },
 
-    /// 代表一个旨在报告中显示的代码块。
-    /// 其可见性可能由其属性控制。
-    DisplayableCodeBlock {
-        /// 代码块的原始内容，包括 ```lang {attrs}...``` 和代码本身。
-        original_content: String,
-        /// 此代码块对应的步骤的本地ID (如果有)。
-        /// 用于查找 ExecutionStep 以获取属性 (例如可见性)。
-        local_step_id: Option<String>,
+    /// 结构化的代码块，包含id、语言、代码内容和属性。
+    CodeBlock {
+        /// 步骤唯一id（local id）
+        id: String,
+        /// 代码块的语言标识 (如 "bash", "python")
+        lang: String,
+        /// 代码内容
+        code: String,
+        /// 代码块的原始属性（如 {id="...", depends_on="..."}）
+        attributes: HashMap<String, String>,
     },
 
     /// 代表一个步骤输出的占位符。
@@ -44,6 +54,10 @@ pub enum ContentBlock {
     OutputBlock {
         step_id: String,
     },
+
+    /// 通用 Markdown 文本块。
+    /// 这可以包含任何 Markdown内容，包括原始的步骤定义文本（如果它们不被特殊处理为其他类型的块）。
+    Text(String),
 
     /// 一个标记，指示在此处应插入自动生成的步骤摘要表。
     SummaryTablePlaceholder,
@@ -127,12 +141,11 @@ fn parse_markdown_to_steps_and_content_blocks(
         }
         if let Some(heading_match) = captures.name("heading") {
             let line = heading_match.as_str();
-            content_blocks.push(ContentBlock::Text(line.to_string()));
+            // 生成结构化 HeadingBlock
             if let Some(caps) = heading_re.captures(line) {
                 let level = caps.get(1).map_or(0, |m| m.as_str().len() as u8);
                 let text = caps.get(2).map_or("", |m| m.as_str()).trim().to_string();
                 let attributes_str = caps.get(3).map_or("", |m| m.as_str()).trim();
-                // debug!("[lintestor heading] attributes_str before parse_inline_attributes: '{:?}' (line: {:?})", attributes_str, line);
                 let attributes = parse_inline_attributes(attributes_str);
                 let local_id = attributes.get("id").cloned().unwrap_or_else(|| {
                     local_id_counter += 1;
@@ -162,17 +175,15 @@ fn parse_markdown_to_steps_and_content_blocks(
                 // 只处理 heading 自己的 depends_on，结构性依赖全部通过 children 机制实现
                 let mut dependencies = HashSet::new();
                 if let Some(deps_str) = attributes.get("depends_on") {
-                    // 先不检查，先收集
-                    for dep_item_str in deps_str.trim_matches(|c| c == '[' || c == ']').split(',') {
-                        let trimmed_dep = dep_item_str.trim().trim_matches(|c| c == '\'' || c == '"');
-                        if !trimmed_dep.is_empty() {
-                            let dep_id = extract_dep_id_from_dep_str(trimmed_dep);
-                            all_depends_refs.push((global_id.clone(), dep_id.to_string()));
-                        }
-                    }
-                    // 依赖实际插入依赖集
+                    // 插入依赖集
                     parse_depends_on_str(deps_str, &mut dependencies, template_id, &metadata.references);
                 }
+                content_blocks.push(ContentBlock::HeadingBlock {
+                    id: local_id.clone(),
+                    level,
+                    text: text.clone(),
+                    attributes: attributes.clone(),
+                });
                 execution_steps.push(ExecutionStep {
                     id: global_id.clone(),
                     template_id: template_id.to_string(),
@@ -240,22 +251,16 @@ fn parse_markdown_to_steps_and_content_blocks(
                     format!("codeblock_{}", local_id_counter)
                 });
                 all_local_ids.insert(local_id.clone());
-                content_blocks.push(ContentBlock::DisplayableCodeBlock {
-                    original_content: block_content.to_string(),
-                    local_step_id: Some(local_id.clone()),
+                content_blocks.push(ContentBlock::CodeBlock {
+                    id: local_id.clone(),
+                    lang: lang.clone(),
+                    code: command.clone(),
+                    attributes: attributes.clone(),
                 });
                 let global_id = format!("{}::{}", template_id, local_id);
                 let mut dependencies = HashSet::new();
                 if let Some(deps_str) = attributes.get("depends_on") {
-                    // 先不检查，先收集
-                    for dep_item_str in deps_str.trim_matches(|c| c == '[' || c == ']').split(',') {
-                        let trimmed_dep = dep_item_str.trim().trim_matches(|c| c == '\'' || c == '"');
-                        if !trimmed_dep.is_empty() {
-                            let dep_id = extract_dep_id_from_dep_str(trimmed_dep);
-                            all_depends_refs.push((global_id.clone(), dep_id.to_string()));
-                        }
-                    }
-                    // 依赖实际插入依赖集
+                    // 插入依赖集
                     parse_depends_on_str(deps_str, &mut dependencies, template_id, &metadata.references);
                 }
                 let parsed_step_info = ParsedTestStep {
@@ -434,7 +439,11 @@ fn parse_metadata(yaml: &str) -> Result<TemplateMetadata> {
 }
 
 /// 提取 depends_on 字符串中的单个依赖 id（去除 namespace，仅返回本地 id）
+/// 意思是暂时不考虑跨 namespace 的依赖
 fn extract_dep_id_from_dep_str(dep_str: &str) -> &str {
+    // 依赖 id 的格式是 "namespace::local_id" 或者 "local_id"
+    let dep_str = dep_str.trim().trim_matches('"').trim_matches('\'');
+
     if dep_str.contains("::") {
         dep_str.split("::").last().unwrap_or("")
     } else {
@@ -442,8 +451,8 @@ fn extract_dep_id_from_dep_str(dep_str: &str) -> &str {
     }
 }
 
-/// Helper to parse inline attributes like id="foo" exec="true" assert.exit_code=0 extract.lintestor=/Lintestor/
-/// 这个函数解析类似于 id="foo" exec="true" assert.exit_code=0 extract.lintestor=/Lintestor/ 的内联属性
+/// Helper to parse inline attributes like id="foo" exec="true" assert.exit.code=0 extract.lintestor=/Lintestor/
+/// 这个函数解析类似于 id="foo" exec="true" assert.exit.code=0 extract.lintestor=/Lintestor/ 的内联属性
 /// 实现方式是使用有限状态机来解析键值对，内部状态似乎没什么复用的可能性所以 State 就不对外暴露了
 /// 注意我们在状态里没考虑 { 和 } 所以不许传入整个带 {} 的 attr_str
 fn parse_inline_attributes(input: &str) -> HashMap<String, String> {
@@ -642,22 +651,53 @@ fn parse_inline_attributes(input: &str) -> HashMap<String, String> {
                     match ch {
                         '[' => {
                             let new_level = bracket_level + 1;
-                            value.push(ch);
+                            value.push(ch); // [
                             chars.next();
                             state = State::ListValue { bracket_level: new_level };
                         }
                         ']' => {
                             let new_level = bracket_level - 1;
-                            value.push(ch);
+                            value.push(ch); // ]
                             chars.next();
                             if new_level == 0 {
-                                result.insert(key.clone(), value.clone());
+                                result.insert(key.clone(), value.trim().to_string());
                                 state = State::Start;
                             } else {
                                 state = State::ListValue { bracket_level: new_level };
                             }
                         }
+                        ',' => {
+                            // 逗号分隔，直接加入
+                            value.push(ch);
+                            chars.next();
+                        }
+                        '"' => {
+                            // 进入字符串子状态，允许list里有string
+                            chars.next();
+                            value.push('"');
+                            // 读取直到下一个未转义的引号
+                            while let Some(&c) = chars.peek() {
+                                value.push(c);
+                                chars.next();
+                                if c == '"' {
+                                    // 检查是否为转义
+                                    let mut backslash_count = 0;
+                                    let mut iter = value.chars().rev().skip(1);
+                                    while let Some(bc) = iter.next() {
+                                        if bc == '\\' { backslash_count += 1; } else { break; }
+                                    }
+                                    if backslash_count % 2 == 0 {
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                        c if c.is_whitespace() => {
+                            // 跳过空白
+                            chars.next();
+                        }
                         _ => {
+                            // bareword
                             value.push(ch);
                             chars.next();
                         }
@@ -700,7 +740,7 @@ fn parse_inline_attributes(input: &str) -> HashMap<String, String> {
 fn parse_depends_on_str(deps_str: &str, dependencies: &mut HashSet<GlobalStepId>, current_template_id: &str, references: &[TemplateReference]) {
     let deps_list_str = deps_str.trim_matches(|c| c == '[' || c == ']');
     for dep_item_str in deps_list_str.split(',') {
-        let trimmed_dep = dep_item_str.trim().trim_matches(|c| c == '\'' || c == '"');
+        let trimmed_dep = extract_dep_id_from_dep_str(dep_item_str);
         if !trimmed_dep.is_empty() {
             // 收集依赖之把这个 block 显式在 depends_on 声明的的所有依赖都放到 dependencies 里
             dependencies.insert(resolve_dependency_ref(trimmed_dep, current_template_id, references));

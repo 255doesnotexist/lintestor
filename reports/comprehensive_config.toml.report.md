@@ -11,9 +11,9 @@ custom_field: "自定义字段值"
 
 **测试标题:** 综合功能测试
 **执行时间:** 2025-05-16
-**单元名称:** {{metadata.unit}}
+**单元名称:** ComprehensiveTest
 **单元版本:** v1.0.0-test
-**目标环境:** {{metadata.target}}
+**目标环境:** config.toml
 **自定义字段:** {{metadata.custom_field}}
 
 > 本测试模板演示了 Lintestor 的所有主要功能，包括但不限于：变量提取、断言验证、依赖关系、特殊属性等。
@@ -22,7 +22,7 @@ custom_field: "自定义字段值"
 
 创建测试目录和基础文件：
 
-```bash
+```bash {exec="true"}
 # 创建测试目录
 mkdir -p /tmp/comprehensive_test
 cd /tmp/comprehensive_test
@@ -43,10 +43,10 @@ cat version.env
 
 ```output {ref="setup-env"}
 total 8
-drwxrwxr-x 2 ezra ezra 80 May 16 04:22 .
-drwxrwxrwt 164 root root 3820 May 16 04:22 ..
--rw-rw-r-- 1 ezra ezra 20 May 16 04:22 test.txt
--rw-rw-r-- 1 ezra ezra 48 May 16 04:22 version.env
+drwxrwxr-x 2 ezra ezra 80 May 16 09:47 .
+drwxrwxrwt 164 root root 3820 May 16 10:20 ..
+-rw-rw-r-- 1 ezra ezra 20 May 16 10:35 test.txt
+-rw-rw-r-- 1 ezra ezra 48 May 16 10:35 version.env
 This is a test file
 VERSION=1.2.3
 CONFIG=production
@@ -57,7 +57,7 @@ BUILD_NUMBER=42
 
 从版本文件中提取变量：
 
-```bash
+```bash {extract.build="/BUILD_NUMBER=(\d+)/" extract.config="/CONFIG=(\w+)/" depends_on=""setup-env"]" exec="true" extract.version="/VERSION=([0-9.]+)/"}
 cd /tmp/comprehensive_test
 cat version.env
 echo "提取完成"
@@ -76,7 +76,7 @@ BUILD_NUMBER=42
 
 执行一些文件操作并验证结果：
 
-```bash
+```bash {exec="true" depends_on=""setup-env"]"}
 cd /tmp/comprehensive_test
 echo "Additional content" >> test.txt
 wc -l test.txt
@@ -94,7 +94,7 @@ File updated successfully
 
 测试多种断言类型：
 
-```bash
+```bash {exec="true"}
 echo "This test should pass"
 echo "Errors should be present here, expected" >&2
 ```
@@ -109,19 +109,19 @@ This test should pass
 
 使用之前提取的变量：
 
-```bash
-echo "软件版本: {{version}}"
-echo "构建编号: {{build}}"
-echo "配置环境: {{config}}"
+```bash {exec="true" depends_on=""version-extract"]"}
+echo "软件版本: 1.2.3"
+echo "构建编号: 42"
+echo "配置环境: production"
 echo "当前工作目录: $(pwd)"
 ```
 
 **命令输出:**
 
 ```output {ref="use-variables"}
-软件版本: {{version}}
-构建编号: {{build}}
-配置环境: {{config}}
+软件版本: 1.2.3
+构建编号: 42
+配置环境: production
 当前工作目录: /home/ezra/lintestor
 ```
 
@@ -129,13 +129,13 @@ echo "当前工作目录: $(pwd)"
 
 组合多个步骤的结果：
 
-```bash
+```bash {exec="true" depends_on=""version-extract","file-operations"]"}
 cd /tmp/comprehensive_test
 echo "综合报告:"
 echo "----------------------------------------"
-echo "软件版本: {{version}}"
-echo "构建编号: {{build}}"
-echo "配置模式: {{config}}"
+echo "软件版本: 1.2.3"
+echo "构建编号: 42"
+echo "配置模式: production"
 echo "----------------------------------------"
 echo "文件内容:"
 cat test.txt
@@ -147,13 +147,12 @@ echo "----------------------------------------"
 ```output {ref="combined"}
 综合报告:
 ----------------------------------------
-软件版本: {{version}}
-构建编号: {{build}}
-配置模式: {{config}}
+软件版本: 1.2.3
+构建编号: 42
+配置模式: production
 ----------------------------------------
 文件内容:
-Additional content
-Additional content
+This is a test file
 Additional content
 ----------------------------------------
 ```
@@ -162,7 +161,7 @@ Additional content
 
 清理测试环境：
 
-```bash
+```bash {exec="true" depends_on=""combined"]"}
 rm -rf /tmp/comprehensive_test
 echo "测试环境已清理"
 ```
@@ -188,17 +187,17 @@ echo "测试环境已清理"
 | 变量名 | 值 |
 |-------|-----|
 | execution_date | 2025-05-16 |
-| target_info | {{target_info}} |
-| unit_version | {{unit_version}} |
+| target_name | config.toml |
+| unit_version | v1.0.0-test |
 
 ## 测试结果摘要
 
 | 步骤描述 | 状态 |
 |---------|------|
-| 环境准备 | {{status.setup-env}} |
-| 提取版本 | {{status.version-extract}} |
-| 文件操作 | {{status.file-operations}} |
-| 复杂断言 | {{status.complex-assert}} |
-| 使用变量 | {{status.use-variables}} |
-| 组合测试 | {{status.combined}} |
-| 清理环境 | {{status.cleanup-env}} |
+| 环境准备 | Pass |
+| 提取版本 | Pass |
+| 文件操作 | Pass |
+| 复杂断言 | Pass |
+| 使用变量 | Pass |
+| 组合测试 | Pass |
+| 清理环境 | Pass |

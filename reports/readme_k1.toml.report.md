@@ -212,9 +212,9 @@ cd coremark
 ```output {ref="run-coremark-vector"}
 2K performance run parameters for coremark.
 CoreMark Size : 666
-Total ticks : 20014
-Total time (secs): 20.014000
-Iterations/Sec : 5496.152693
+Total ticks : 19994
+Total time (secs): 19.994000
+Iterations/Sec : 5501.650495
 Iterations : 110000
 Compiler version : GCC14.2.0
 Compiler flags : -O2 -march=rv64gcv_zvl256b -mabi=lp64d -lrt
@@ -226,10 +226,10 @@ seedcrc : 0xe9f5
 [0]crcstate : 0x8e3a
 [0]crcfinal : 0x33ff
 Correct operation validated. See readme.txt for run and reporting rules.
-CoreMark 1.0 : 5496.152693 / GCC14.2.0 -O2 -march=rv64gcv_zvl256b -mabi=lp64d -lrt / Heap
+CoreMark 1.0 : 5501.650495 / GCC14.2.0 -O2 -march=rv64gcv_zvl256b -mabi=lp64d -lrt / Heap
 ```
 
-CoreMark 向量扩展优化分数: 5496.152693
+CoreMark 向量扩展优化分数: 5501.650495
 
 ## 8. 测试总结
 
@@ -317,9 +317,9 @@ coremark.exe: ELF 64-bit LSB executable, UCB RISC-V, RVC, double-float ABI, vers
  | |
 | run-coremark-vector | 运行 CoreMark (向量扩展) | Pass | 0 | 2K performance run parameters for coremark.
 CoreMark Size : 666
-Total ticks : 20014
-Total time (secs): 20.014000
-Iterations/Sec : 5496.152693
+Total ticks : 19994
+Total time (secs): 19.994000
+Iterations/Sec : 5501.650495
 Iterations : 110000
 Compiler version : GCC14.2.0
 Compiler flags : -O2 -march=rv64gcv_zvl256b -mabi=lp64d -lrt
@@ -331,7 +331,7 @@ seedcrc : 0xe9f5
 [0]crcstate : 0x8e3a
 [0]crcfinal : 0x33ff
 Correct operation validated. See readme.txt for run and reporting rules.
-CoreMark 1.0 : 5496.152693 / GCC14.2.0 -O2 -march=rv64gcv_zvl256b -mabi=lp64d -lrt / Heap
+CoreMark 1.0 : 5501.650495 / GCC14.2.0 -O2 -march=rv64gcv_zvl256b -mabi=lp64d -lrt / Heap
  | |
 
 ## 9. 性能比较
@@ -339,4 +339,4 @@ CoreMark 1.0 : 5496.152693 / GCC14.2.0 -O2 -march=rv64gcv_zvl256b -mabi=lp64d -l
 | 优化选项 | CoreMark 分数 |
 |---------|-------------|
 | 默认优化 (-O2 -lrt) | 5494.779959 |
-| 向量扩展 (-O2 -march=rv64gcv_zvl256b -mabi=lp64d -lrt) | 5496.152693 |
+| 向量扩展 (-O2 -march=rv64gcv_zvl256b -mabi=lp64d -lrt) | 5501.650495 |

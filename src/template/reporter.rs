@@ -136,46 +136,44 @@ impl Reporter {
                     processed_text.push_str("\n");
                     report_parts.push(processed_text);
                 }
-                ContentBlock::DisplayableCodeBlock { original_content, local_step_id } => {
-                    let mut visible = true;
-                    let mut processed_code_block_content = original_content.clone();
-
-                    if let Some(step_local_id) = local_step_id {
-                        if let Some(exec_step) = template.steps.iter().find(|s| s.local_id == *step_local_id && s.template_id == template_id) {
-                            if let StepType::CodeBlock { attributes, .. } = &exec_step.step_type {
-                                if let Some(visibility_attr) = attributes.get("visible") {
-                                    if visibility_attr.eq_ignore_ascii_case("false") {
-                                        visible = false;
-                                    }
-                                }
-                            }
-                        }
-                    }
-
+                ContentBlock::HeadingBlock { id, level, text, attributes } => {
+                    // 判断visible属性，默认true
+                    let visible = attributes.get("visible").map(|v| v != "false").unwrap_or(true);
                     if visible {
-                        processed_code_block_content = var_manager.replace_variables(
-                            &processed_code_block_content, 
-                            Some(&template_id), 
-                            None
+                        // 变量替换，支持全局和step级变量
+                        let mut processed_text = var_manager.replace_variables(text, Some(&template_id), Some(id));
+                        processed_text = var_manager.replace_variables(&processed_text, Some(&template_id), None);
+                        let heading_line = format!("{} {}\n", "#".repeat(*level as usize), processed_text.trim());
+                        report_parts.push(heading_line);
+                    }
+                }
+                ContentBlock::CodeBlock { id, lang, code, attributes } => {
+                    // 判断visible属性
+                    let visible = attributes.get("visible").map(|v| v != "false").unwrap_or(true);
+                    if visible {
+                        // 变量替换
+                        let mut processed_code = var_manager.replace_variables(code, Some(&template_id), Some(id));
+                        // 也可做全局变量替换（可能不必要我记得 replace_variables 里已经有自适应适配过）
+                        // processed_code = var_manager.replace_variables(&processed_code, Some(&template_id), None);
+                        let code_block_str = format!("```{} {{id=\"{}\"{}}}\n{}\n```\n",
+                            lang,
+                            id,
+                            if attributes.is_empty() {
+                                String::new()
+                            } else {
+                                let mut attrs = attributes.iter()
+                                    .filter(|(k,_)| k != &"id" && k != &"visible")
+                                    .map(|(k,v)| format!("{}=\"{}\"", k, v))
+                                    .collect::<Vec<_>>();
+                                if !attrs.is_empty() {
+                                    format!(" {}", attrs.join(" "))
+                                } else {
+                                    String::new()
+                                }
+                            },
+                            processed_code
                         );
-                        let mut sorted_step_ids_for_code_block: Vec<_> = result.step_results.keys().cloned().collect();
-                        sorted_step_ids_for_code_block.sort();
-                        for step_id_key in &sorted_step_ids_for_code_block {
-                            let local_id_for_lookup = step_id_key.split("::").last().unwrap_or(step_id_key);
-                            if local_step_id.as_deref() == Some(local_id_for_lookup) { // Apply step-specific vars if block is associated with this step
-                                processed_code_block_content = var_manager.replace_variables(
-                                    &processed_code_block_content,
-                                    Some(&template_id),
-                                    Some(local_id_for_lookup),
-                                );
-                            }
-                        }
-                        
-                        processed_code_block_content = self.clean_markdown_markup(&processed_code_block_content)?;
-                        report_parts.push(processed_code_block_content);
-                        if !report_parts.last().map_or(false, |s| s.ends_with('\n')) {
-                            report_parts.push("\n".to_string());
-                        }
+                        report_parts.push(self.clean_markdown_markup(&code_block_str)?);
                     }
                 }
                 ContentBlock::OutputBlock { step_id } => {
@@ -414,7 +412,7 @@ mod tests {
                 references: Vec::<TemplateReference>::new(),
                 custom: HashMap::new(),
             },
-            steps, 
+            steps: steps, 
         })
     }
 
@@ -498,11 +496,23 @@ echo "Hello, {{ execution_time }}"
             raw_content: template_content.to_string(),
             content_blocks: vec![
                 ContentBlock::Metadata("title: Test Report\nunit_name: Test Unit\ntarget_name: Test Target".to_string()),
-                ContentBlock::Text("# {{ metadata.title }}\n\nThis is a test report for {{ metadata.unit_name }} targeting {{ metadata.target_name }}.".to_string()),
+                ContentBlock::HeadingBlock {
+                    id: "heading1".to_string(),
+                    level: 1,
+                    text: "{{ metadata.title }}".to_string(),
+                    attributes: Default::default(),
+                },
+                ContentBlock::Text("This is a test report for {{ metadata.unit_name }} targeting {{ metadata.target_name }}.".to_string()),
                 ContentBlock::OutputBlock { step_id: "code1".to_string() },
-                ContentBlock::DisplayableCodeBlock {
-                    original_content: "```bash {id=\"code1\"}\necho \"Hello, {{ execution_time }}\"\n```".to_string(),
-                    local_step_id: Some("code1".to_string()),
+                ContentBlock::CodeBlock {
+                    id: "code1".to_string(),
+                    lang: "bash".to_string(),
+                    code: "echo \"Hello, {{ execution_time }}\"".to_string(),
+                    attributes: {
+                        let mut m = std::collections::HashMap::new();
+                        m.insert("id".to_string(), "code1".to_string());
+                        m
+                    },
                 },
             ],
             metadata: TemplateMetadata {

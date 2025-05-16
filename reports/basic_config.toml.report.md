@@ -19,7 +19,7 @@ tags: ["basic", "example"]
 
 下面是一个简单的命令示例：
 
-```bash
+```bash {exec="true" extract.lintestor="/Lintestor/"}
 echo "Hello, Lintestor!"
 echo "当前日期: $(date)"
 ```
@@ -28,7 +28,7 @@ echo "当前日期: $(date)"
 
 ```output {ref="echo-cmd"}
 Hello, Lintestor!
-当前日期: Fri May 16 04:22:45 AM CST 2025
+当前日期: Fri May 16 10:39:28 AM CST 2025
 ```
 
 ## 检查系统信息
@@ -37,7 +37,7 @@ Hello, Lintestor!
 （代码块的依赖写 depends_on=["step_id","template_id::step_id"]）
 （以及会自动隐式依赖属于它这一级的标题，（不对吧？应该是标题依赖于底下所有代码块））
 
-```bash
+```bash {depends_on=""echo-cmd"]" exec="true"}
 uname -a
 echo "----------------"
 echo "内存信息:"
@@ -53,7 +53,7 @@ Linux debian 6.11.10-amd64 #1 SMP PREEMPT_DYNAMIC Debian 6.11.10-1 (2024-11-23) 
 ----------------
 内存信息:
  total used free shared buff/cache available
-Mem: 15Gi 10Gi 3.4Gi 75Mi 2.6Gi 5.5Gi
+Mem: 15Gi 9.8Gi 4.6Gi 55Mi 1.7Gi 5.8Gi
 Swap: 0B 0B 0B
 ----------------
 Lintestor
