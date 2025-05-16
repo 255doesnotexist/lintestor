@@ -6,7 +6,7 @@ use ssh2::{Session, Sftp};
 use std::{
     error::Error,
     fs::File,
-    io::{Read, Write},
+    io::Read,
     net::TcpStream,
     path::{Path, PathBuf},
 };
@@ -46,9 +46,7 @@ impl RemoteEnvironment {
         if self.session.is_none() {
             self.connect_ssh()?;
         }
-        self.session
-            .as_ref()
-            .ok_or_else(|| "SSH 会话不可用".into())
+        self.session.as_ref().ok_or_else(|| "SSH 会话不可用".into())
     }
 
     // 获取 SFTP 客户端，如果需要则建立
@@ -58,9 +56,7 @@ impl RemoteEnvironment {
             let sftp = session.sftp()?;
             self.sftp = Some(sftp);
         }
-        self.sftp
-            .as_mut()
-            .ok_or_else(|| "SFTP 客户端不可用".into())
+        self.sftp.as_mut().ok_or_else(|| "SFTP 客户端不可用".into())
     }
 
     // 建立 SSH 连接
@@ -103,16 +99,14 @@ impl RemoteEnvironment {
                 if private_key_path.exists() {
                     match sess.userauth_pubkey_file(&self.username, None, &private_key_path, None) {
                         Ok(_) => {
-                            debug!(
-                                "SSH 公钥文件认证成功 ({})",
-                                private_key_path.display()
-                            );
+                            debug!("SSH 公钥文件认证成功 ({})", private_key_path.display());
                             authenticated = true;
                         }
                         Err(e) => {
                             debug!(
                                 "SSH 公钥文件认证失败 ({}): {}",
-                                private_key_path.display(), e
+                                private_key_path.display(),
+                                e
                             );
                         }
                     }
@@ -274,18 +268,15 @@ impl TestEnvironment for RemoteEnvironment {
         let output = self.run_command(&cat_command)?;
         if output.exit_status == 0 {
             // 从输出中提取内容
-            Ok(output.output
+            Ok(output
+                .output
                 .lines()
                 .find(|line| line.starts_with("stdout:"))
                 .map(|line| line.trim_start_matches("stdout:").trim())
                 .unwrap_or("")
                 .to_string())
         } else {
-            Err(format!(
-                "读取远程文件 '{}' 失败: {}",
-                remote_path, output.output
-            )
-            .into())
+            Err(format!("读取远程文件 '{}' 失败: {}", remote_path, output.output).into())
         }
     }
 
@@ -298,11 +289,7 @@ impl TestEnvironment for RemoteEnvironment {
         if output.exit_status == 0 {
             Ok(())
         } else {
-            Err(format!(
-                "创建远程目录 '{}' 失败: {}",
-                remote_path, output.output
-            )
-            .into())
+            Err(format!("创建远程目录 '{}' 失败: {}", remote_path, output.output).into())
         }
     }
 
@@ -315,11 +302,7 @@ impl TestEnvironment for RemoteEnvironment {
         if output.exit_status == 0 {
             Ok(())
         } else {
-            Err(format!(
-                "删除远程路径 '{}' 失败: {}",
-                remote_path, output.output
-            )
-            .into())
+            Err(format!("删除远程路径 '{}' 失败: {}", remote_path, output.output).into())
         }
     }
 
@@ -327,17 +310,18 @@ impl TestEnvironment for RemoteEnvironment {
         trace!("获取远程操作系统信息");
         let os_version = self.read_remote_file("/proc/version")?;
         let kernel_output = self.run_command("uname -r")?;
-        let kernel_version = kernel_output.output
+        let kernel_version = kernel_output
+            .output
             .lines()
             .find(|line| line.starts_with("stdout:"))
             .map(|line| line.trim_start_matches("stdout:").trim())
             .unwrap_or("")
             .to_string();
-            
+
         if kernel_version.is_empty() && kernel_output.exit_status != 0 {
             return Err(format!("获取内核版本失败: {}", kernel_output.output).into());
         }
-        
+
         Ok((os_version, kernel_version))
     }
 }

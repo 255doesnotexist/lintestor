@@ -6,38 +6,33 @@
 use log::{debug, error, warn};
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
 use std::{
-    collections::{HashMap, HashSet},
+    collections::HashSet,
     error::Error,
     fs,
-    path::{Path, PathBuf}, sync::Arc,
+    path::{Path, PathBuf},
 };
-use std::collections::hash_map::DefaultHasher;
-use std::hash::{Hash, Hasher};
 
-use crate::{config::target_config::TargetConfig, template::{self, TestTemplate}};
-
-/// The remote temporary directory used for operations.
-pub static REMOTE_TMP_DIR: &str = "/tmp/lintestor";
+use crate::config::target_config::TargetConfig;
 
 /// 标准化模板ID
-/// 
+///
 /// 移除末尾的 `.test` 后缀，并确保ID不包含分隔符
-/// 
+///
 /// # 参数
-/// 
+///
 /// - `template_id`: 原始模板ID
-/// 
+///
 /// # 返回值
-/// 
+///
 /// 返回标准化后的模板ID
 pub fn normalize_template_id(template_id: &str) -> String {
     let clean_id = if template_id.ends_with(".test") {
         let len = template_id.len();
-        &template_id[0..len-5]
+        &template_id[0..len - 5]
     } else {
         template_id
     };
-    
+
     if clean_id.contains("::") {
         warn!("模板ID不应包含'::'分隔符: {}, 进行清理", clean_id);
         clean_id.split("::").next().unwrap_or(clean_id).to_string()
@@ -47,33 +42,34 @@ pub fn normalize_template_id(template_id: &str) -> String {
 }
 
 /// 从文件路径获取模板ID
-/// 
+///
 /// 从文件名提取模板ID，移除扩展名和.test后缀
-/// 
+///
 /// # 参数
-/// 
+///
 /// - `file_path`: 文件路径
-/// 
+///
 /// # 返回值
-/// 
+///
 /// 返回提取的模板ID
 pub fn get_template_id_from_path(file_path: &Path) -> String {
-    let file_stem = file_path.file_stem()
+    let file_stem = file_path
+        .file_stem()
         .and_then(|s| s.to_str())
         .unwrap_or("unknown");
-    
+
     normalize_template_id(file_stem)
 }
 
 /// 从模板 Arc 引用和本地步骤 ID 获取 step 对应的 ResultID
-/// 
+///
 /// # 参数
-/// 
+///
 /// - `template`: 模板引用
 /// - `local_step_id`: 本地步骤 ID
-/// 
+///
 /// # 返回值
-/// 
+///
 /// 返回 ResultID
 pub fn get_result_id(template_id: &str, local_step_id: &str) -> String {
     let template_id = template_id.to_string();

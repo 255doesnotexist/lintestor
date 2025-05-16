@@ -3,22 +3,22 @@
 //! 这个模块负责按照依赖关系顺序执行多个测试模板，
 //! 管理代码块级别的依赖并收集执行结果
 
+use anyhow::{anyhow, Result};
+use chrono;
+use log::{debug, error, info, warn};
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use std::time::{Duration, Instant};
-use anyhow::{Result, anyhow};
-use log::{debug, info, warn, error};
-use chrono;
 
 use crate::config::target_config::TargetConfig;
 use crate::connection::ConnectionFactory;
-use crate::template::{StepStatus, TestTemplate, BatchOptions};
+use crate::template::dependency::StepDependencyManager;
+use crate::template::executor::{check_assertion, extract_variable, ExecutionResult};
+use crate::template::reporter::Reporter;
 use crate::template::step::{GlobalStepId, StepType};
 use crate::template::variable::VariableManager;
-use crate::template::reporter::Reporter;
-use crate::template::executor::{ExecutionResult, check_assertion, extract_variable};
-use crate::template::dependency::StepDependencyManager;
+use crate::template::{BatchOptions, StepStatus, TestTemplate};
 use crate::utils;
 
 /// 批量测试执行器
@@ -32,10 +32,7 @@ pub struct BatchExecutor {
 }
 
 impl BatchExecutor {
-    pub fn new(
-        variable_manager: VariableManager,
-        options: Option<BatchOptions>,
-    ) -> Self {
+    pub fn new(variable_manager: VariableManager, options: Option<BatchOptions>) -> Self {
         let report_dir = options.as_ref().and_then(|o| o.report_directory.clone());
         Self {
             variable_manager,
@@ -51,7 +48,8 @@ impl BatchExecutor {
         let template_id = template.get_template_id();
         // 在这里注册一下模板
         if !self.variable_manager.template_id_exists(&template_id) {
-            self.variable_manager.register_template(&template, Some(&template_id));
+            self.variable_manager
+                .register_template(&template, Some(&template_id));
         }
         self.templates.insert(template.get_template_id(), template);
     }
@@ -62,7 +60,12 @@ impl BatchExecutor {
 
         let template_arc = match self.templates.get(template_id) {
             Some(t) => t.clone(),
-            None => return Err(anyhow!("Template {} not found in BatchExecutor", template_id)),
+            None => {
+                return Err(anyhow!(
+                    "Template {} not found in BatchExecutor",
+                    template_id
+                ))
+            }
         };
 
         self.step_dependency_manager = StepDependencyManager::new();
@@ -73,7 +76,13 @@ impl BatchExecutor {
             return Ok(ExecutionResult {
                 template: template_arc.clone(),
                 unit_name: template_arc.metadata.unit_name.clone(),
-                target_name: template_arc.metadata.target_config.file_name().and_then(|n| n.to_str()).unwrap_or("default").to_string(),
+                target_name: template_arc
+                    .metadata
+                    .target_config
+                    .file_name()
+                    .and_then(|n| n.to_str())
+                    .unwrap_or("default")
+                    .to_string(),
                 overall_status: StepStatus::Skipped,
                 step_results: HashMap::new(),
                 variables: self.variable_manager.get_all_variables().clone(),
@@ -82,17 +91,27 @@ impl BatchExecutor {
             });
         }
 
-        self.step_dependency_manager.add_steps(execution_steps_from_template);
+        self.step_dependency_manager
+            .add_steps(execution_steps_from_template);
         self.step_dependency_manager.build_graph();
 
         let execution_order = match self.step_dependency_manager.get_execution_order() {
             Ok(order) => order,
             Err(e) => {
-                error!("Failed to get execution order for template {}: {}", template_id, e);
+                error!(
+                    "Failed to get execution order for template {}: {}",
+                    template_id, e
+                );
                 return Ok(ExecutionResult {
                     template: template_arc.clone(),
                     unit_name: template_arc.metadata.unit_name.clone(),
-                    target_name: template_arc.metadata.target_config.file_name().and_then(|n| n.to_str()).unwrap_or("default").to_string(),
+                    target_name: template_arc
+                        .metadata
+                        .target_config
+                        .file_name()
+                        .and_then(|n| n.to_str())
+                        .unwrap_or("default")
+                        .to_string(),
                     overall_status: StepStatus::Fail,
                     step_results: HashMap::new(),
                     variables: self.variable_manager.get_all_variables().clone(),
@@ -104,17 +123,21 @@ impl BatchExecutor {
 
         info!("Execution order for {}: {:?}", template_id, execution_order);
 
-        let mut current_template_step_results: HashMap<String, crate::template::executor::StepResult> = HashMap::new();
+        let mut current_template_step_results: HashMap<
+            String,
+            crate::template::executor::StepResult,
+        > = HashMap::new();
         let mut template_overall_status = StepStatus::Pass;
         let continue_on_error = self.options.as_ref().map_or(false, |o| o.continue_on_error);
 
         for step_id in execution_order {
-
-
             let step_def = match self.step_dependency_manager.get_step(&step_id) {
                 Some(s) => s,
                 None => {
-                    warn!("Step {} not found in dependency manager, skipping.", step_id);
+                    warn!(
+                        "Step {} not found in dependency manager, skipping.",
+                        step_id
+                    );
                     continue;
                 }
             };
@@ -133,43 +156,78 @@ impl BatchExecutor {
             let step_start_time = Instant::now();
 
             match &step_def.step_type {
-                StepType::CodeBlock { command: cmd_template, .. } => {
+                StepType::CodeBlock {
+                    command: cmd_template,
+                    ..
+                } => {
                     if let Some(parsed_step_details) = parsed_step_details_opt {
-                        if parsed_step_details.executable && parsed_step_details.active.unwrap_or(true) {
+                        if parsed_step_details.executable
+                            && parsed_step_details.active.unwrap_or(true)
+                        {
                             let hydrated_command = self.variable_manager.replace_variables(
                                 cmd_template,
                                 Some(&step_def.template_id),
-                                Some(&step_def.local_id)
+                                Some(&step_def.local_id),
                             );
-                            debug!("Executing command for step {}: {}", step_id, hydrated_command);
+                            debug!(
+                                "Executing command for step {}: {}",
+                                step_id, hydrated_command
+                            );
 
-                            let target_config_path = template_arc.metadata.target_config.to_str()
-                                .ok_or_else(|| anyhow!("Invalid target config path"))?;
+                            let target_config_path =
+                                template_arc
+                                    .metadata
+                                    .target_config
+                                    .to_str()
+                                    .ok_or_else(|| anyhow!("Invalid target config path"))?;
                             let target_config = TargetConfig::from_file(target_config_path)
                                 .map_err(|e| anyhow!("Failed to load target config: {}", e))?;
                             debug!("Executing command on target: {}", target_config_path);
-                            let mut current_connection = ConnectionFactory::create_manager(&target_config)?;
-                                
+                            let mut current_connection =
+                                ConnectionFactory::create_manager(&target_config)?;
+
                             current_connection.setup()?;
 
-                            let step_timeout_opt = parsed_step_details.timeout_ms.map(Duration::from_millis);
-                            let global_timeout_opt = self.options.as_ref()
+                            let step_timeout_opt =
+                                parsed_step_details.timeout_ms.map(Duration::from_millis);
+                            let global_timeout_opt = self
+                                .options
+                                .as_ref()
                                 .and_then(|o| o.command_timeout_seconds.map(Duration::from_secs));
                             let timeout_duration = step_timeout_opt.or(global_timeout_opt);
 
-                            match current_connection.execute_command(&hydrated_command, timeout_duration) {
+                            match current_connection
+                                .execute_command(&hydrated_command, timeout_duration)
+                            {
                                 Ok(output) => {
                                     stdout_val = output.stdout;
                                     stderr_val = output.stderr;
                                     exit_code_val = output.exit_code;
 
-                                    self.variable_manager.set_variable(&step_def.template_id,&step_def.local_id,"stdout", &stdout_val);
-                                    self.variable_manager.set_variable(&step_def.template_id,&step_def.local_id,"stderr", &stderr_val);
-                                    self.variable_manager.set_variable(&step_def.template_id,&step_def.local_id,"exit_code", &exit_code_val.to_string());
+                                    self.variable_manager.set_variable(
+                                        &step_def.template_id,
+                                        &step_def.local_id,
+                                        "stdout",
+                                        &stdout_val,
+                                    );
+                                    self.variable_manager.set_variable(
+                                        &step_def.template_id,
+                                        &step_def.local_id,
+                                        "stderr",
+                                        &stderr_val,
+                                    );
+                                    self.variable_manager.set_variable(
+                                        &step_def.template_id,
+                                        &step_def.local_id,
+                                        "exit_code",
+                                        &exit_code_val.to_string(),
+                                    );
 
                                     if !parsed_step_details.assertions.is_empty() {
                                         assertion_status = StepStatus::Pass;
-                                        for (idx, assertion_details) in parsed_step_details.assertions.iter().enumerate() {
+                                        for (idx, assertion_details) in
+                                            parsed_step_details.assertions.iter().enumerate()
+                                        {
                                             let assertion_result = check_assertion(
                                                 assertion_details,
                                                 &stdout_val,
@@ -180,13 +238,16 @@ impl BatchExecutor {
                                                 Ok(_) => {
                                                     assertion_statuses.push(StepStatus::Pass);
                                                     assertion_error_msgs.push(None);
-                                                },
+                                                }
                                                 Err(e) => {
                                                     step_status = StepStatus::Fail;
                                                     assertion_status = StepStatus::Fail;
                                                     assertion_statuses.push(StepStatus::Fail);
                                                     assertion_error_msgs.push(Some(e.to_string()));
-                                                    error!("Assertion {} failed for step {}: {}", idx, step_id, e);
+                                                    error!(
+                                                        "Assertion {} failed for step {}: {}",
+                                                        idx, step_id, e
+                                                    );
                                                 }
                                             }
                                         }
@@ -197,10 +258,19 @@ impl BatchExecutor {
 
                                     if step_status == StepStatus::Pass {
                                         if !parsed_step_details.extractions.is_empty() {
-                                            for extraction_rule in &parsed_step_details.extractions {
-                                                match extract_variable(&stdout_val, &extraction_rule.regex) {
+                                            for extraction_rule in &parsed_step_details.extractions
+                                            {
+                                                match extract_variable(
+                                                    &stdout_val,
+                                                    &extraction_rule.regex,
+                                                ) {
                                                     Ok(var_value) => {
-                                                        debug!("Extracted variable {}={} for step {}", extraction_rule.variable, var_value, step_id);
+                                                        debug!(
+                                                            "Extracted variable {}={} for step {}",
+                                                            extraction_rule.variable,
+                                                            var_value,
+                                                            step_id
+                                                        );
                                                         self.variable_manager.set_variable(
                                                             &step_def.template_id,
                                                             &step_def.local_id,
@@ -221,19 +291,29 @@ impl BatchExecutor {
                                     step_status = StepStatus::Fail;
                                     assertion_status = StepStatus::Fail;
                                     stderr_val = e.to_string();
-                                    assertion_error_msg = Some(format!("Command execution failed: {}", e));
+                                    assertion_error_msg =
+                                        Some(format!("Command execution failed: {}", e));
                                 }
                             }
                         } else {
-                            info!("Step {} is inactive or not executable, skipping execution.", step_id);
+                            info!(
+                                "Step {} is inactive or not executable, skipping execution.",
+                                step_id
+                            );
                             step_status = StepStatus::Skipped;
                             assertion_status = StepStatus::Skipped;
                         }
                     } else {
-                        error!("CodeBlock step {} is missing original parsed details. Cannot execute.", step_id);
+                        error!(
+                            "CodeBlock step {} is missing original parsed details. Cannot execute.",
+                            step_id
+                        );
                         step_status = StepStatus::Fail;
                         assertion_status = StepStatus::Fail;
-                        stderr_val = format!("Internal error: CodeBlock {} missing parsed details.", step_id);
+                        stderr_val = format!(
+                            "Internal error: CodeBlock {} missing parsed details.",
+                            step_id
+                        );
                         assertion_error_msg = Some(stderr_val.clone());
                     }
                 }
@@ -273,8 +353,12 @@ impl BatchExecutor {
                 duration_ms: Some(duration_ms),
                 assertion_error: assertion_error_msg,
             };
-            current_template_step_results.insert(utils::get_result_id(template_id, step_def.local_id.as_str()), exec_step_result.clone());
-            self.executed_step_results.insert(step_id.clone(), exec_step_result);
+            current_template_step_results.insert(
+                utils::get_result_id(template_id, step_def.local_id.as_str()),
+                exec_step_result.clone(),
+            );
+            self.executed_step_results
+                .insert(step_id.clone(), exec_step_result);
 
             // 注册断言状态变量（整体）
             let _ = self.variable_manager.set_variable(
@@ -310,16 +394,23 @@ impl BatchExecutor {
         }
 
         let total_duration_ms = start_time_total.elapsed().as_millis();
-        info!("Template {} execution finished in {} ms. Overall status: {:?}", template_id, total_duration_ms, template_overall_status);
+        info!(
+            "Template {} execution finished in {} ms. Overall status: {:?}",
+            template_id, total_duration_ms, template_overall_status
+        );
 
         let final_variables = self.variable_manager.get_all_variables().clone();
 
         let mut execution_result = ExecutionResult {
             template: template_arc.clone(),
             unit_name: template_arc.metadata.unit_name.clone(),
-            target_name: template_arc.metadata.target_config.file_name()
+            target_name: template_arc
+                .metadata
+                .target_config
+                .file_name()
                 .and_then(|name| name.to_str())
-                .unwrap_or("default").to_string(),
+                .unwrap_or("default")
+                .to_string(),
             overall_status: template_overall_status,
             step_results: current_template_step_results,
             variables: final_variables,
@@ -328,9 +419,14 @@ impl BatchExecutor {
         };
 
         if let Some(report_dir_path) = self.report_dir.as_ref() {
-            let template_base_dir = template_arc.file_path.parent().unwrap_or_else(|| Path::new(".")).to_path_buf();
+            let template_base_dir = template_arc
+                .file_path
+                .parent()
+                .unwrap_or_else(|| Path::new("."))
+                .to_path_buf();
             let reporter = Reporter::new(template_base_dir, Some(report_dir_path.clone()));
-            match reporter.generate_report(&template_arc, &execution_result, &self.variable_manager) {
+            match reporter.generate_report(&template_arc, &execution_result, &self.variable_manager)
+            {
                 Ok(path) => {
                     info!("Report generated for {}: {:?}", template_id, path);
                     execution_result.report_path = Some(path);
@@ -340,7 +436,10 @@ impl BatchExecutor {
                 }
             }
         } else {
-            warn!("Report directory not configured. Skipping report generation for template {}.", template_id);
+            warn!(
+                "Report directory not configured. Skipping report generation for template {}.",
+                template_id
+            );
         }
 
         Ok(execution_result)
@@ -356,10 +455,10 @@ impl BatchExecutor {
         }
 
         // Create a name for the virtual summary template
-        let summary_template_id = "summary.test.md".to_string(); 
+        let summary_template_id = "summary.test.md".to_string();
 
-        for template_id in &all_template_ids { 
-            match self.execute(template_id) { 
+        for template_id in &all_template_ids {
+            match self.execute(template_id) {
                 Ok(result) => {
                     all_results.push(result);
                 }
@@ -373,9 +472,12 @@ impl BatchExecutor {
         if let Some(report_dir_path) = self.report_dir.as_ref() {
             info!("Generating summary report for all executed templates...");
             if !all_results.is_empty() {
-                let summary_file_name = format!("{}.{}", summary_template_id, "report.md"); 
+                let summary_file_name = format!("{}.{}", summary_template_id, "report.md");
                 let summary_file_path = report_dir_path.join(summary_file_name);
-                let mut summary_content = format!("# Test Execution Summary ({})\n\n", chrono::Local::now().to_rfc3339());
+                let mut summary_content = format!(
+                    "# Test Execution Summary ({})\n\n",
+                    chrono::Local::now().to_rfc3339()
+                );
                 summary_content.push_str("| Template ID | Overall Status | Steps Passed | Steps Failed | Steps Skipped | Steps Blocked | Steps Not Run | Report File |\n");
                 summary_content.push_str("|-------------|----------------|--------------|--------------|---------------|---------------|---------------|-------------|\n");
 
@@ -394,11 +496,19 @@ impl BatchExecutor {
                             StepStatus::NotRun => not_run += 1,
                         }
                     }
-                    let report_link = result.report_path.as_ref()
-                        .map(|p| p.file_name().unwrap_or_default().to_string_lossy().into_owned())
+                    let report_link = result
+                        .report_path
+                        .as_ref()
+                        .map(|p| {
+                            p.file_name()
+                                .unwrap_or_default()
+                                .to_string_lossy()
+                                .into_owned()
+                        })
                         .unwrap_or_else(|| "N/A".to_string());
 
-                    summary_content.push_str(&format!("| {} | {:?} | {} | {} | {} | {} | {} | {} |\n",
+                    summary_content.push_str(&format!(
+                        "| {} | {:?} | {} | {} | {} | {} | {} | {} |\n",
                         result.template.get_template_id(),
                         result.overall_status,
                         passed,
@@ -411,8 +521,15 @@ impl BatchExecutor {
                 }
 
                 match std::fs::write(&summary_file_path, summary_content) {
-                    Ok(_) => info!("Summary report generated at: {}", summary_file_path.display()),
-                    Err(e) => error!("Failed to write summary report {}: {}", summary_file_path.display(), e),
+                    Ok(_) => info!(
+                        "Summary report generated at: {}",
+                        summary_file_path.display()
+                    ),
+                    Err(e) => error!(
+                        "Failed to write summary report {}: {}",
+                        summary_file_path.display(),
+                        e
+                    ),
                 }
             } else {
                 info!("No results to summarize (all template executions might have failed before producing a result object).");

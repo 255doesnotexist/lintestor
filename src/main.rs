@@ -5,8 +5,6 @@ mod connection;
 mod markdown_report;
 mod template;
 mod test_environment;
-mod test_executor;
-mod test_script_manager;
 mod utils;
 
 use crate::config::cli_args::CliArgs;
