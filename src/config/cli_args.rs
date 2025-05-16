@@ -37,6 +37,10 @@ pub struct CliArgs {
     #[clap(long = "boardtest")]
     pub boardtest: bool,
 
+    /// 串口测试模式 - 通过串口执行测试
+    #[clap(long = "serial")]
+    pub serial: bool,
+
     /// 测试模板路径 - 指定单一测试模板的路径
     #[clap(long = "template")]
     pub template: Option<PathBuf>,
@@ -98,7 +102,9 @@ impl CliArgs {
 
     /// 获取测试环境类型
     pub fn get_environment_type(&self) -> Option<String> {
-        if self.local {
+        if self.serial {
+            Some("serial".to_string())
+        } else if self.local {
             Some("local".to_string())
         } else if self.remote {
             Some("remote".to_string())

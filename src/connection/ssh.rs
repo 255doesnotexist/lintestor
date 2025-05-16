@@ -68,7 +68,7 @@ impl SSHConnectionManager {
 
         // 获取连接配置的重试和超时设置
         let max_retries = connection_config.max_retries;
-        let connect_timeout_secs = connection_config.timeout;
+        let connect_timeout_secs = connection_config.timeout.as_secs();
 
         // 处理跳板机连接
         if let Some(jumps) = jump_hosts {

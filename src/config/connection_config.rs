@@ -15,6 +15,7 @@
 /// - `timeout`: A integer representing the connection timeout in seconds.
 ///
 use serde::Deserialize;
+use std::time::Duration;
 
 #[derive(Clone, Debug, Deserialize)]
 pub struct ConnectionConfig {
@@ -26,7 +27,8 @@ pub struct ConnectionConfig {
     pub public_key_path: Option<String>,
     pub jump_hosts: Option<Vec<String>>,
     pub max_retries: u8,
-    pub timeout: u64,
+    #[serde(with = "humantime_serde")]
+    pub timeout: Duration,
 }
 impl Default for ConnectionConfig {
     fn default() -> Self {
@@ -39,7 +41,7 @@ impl Default for ConnectionConfig {
             public_key_path: None,
             jump_hosts: None,
             max_retries: 3,
-            timeout: 15,
+            timeout: Duration::from_secs(15),
         }
     }
 }

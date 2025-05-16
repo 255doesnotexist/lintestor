@@ -75,6 +75,13 @@ impl ConnectionFactory {
 
                 Ok(Box::new(SSHConnectionManager::new(connection)?))
             }
+            "serial" => {
+                let serial = match &config.serial {
+                    Some(s) => s.clone(),
+                    None => bail!("No serial configuration provided for serial mode"),
+                };
+                Ok(Box::new(SerialConnectionManager::new(serial)?))
+            }
             "boardtest" => {
                 // 这里应该实现BoardTest连接类型
                 bail!("Boardtest connection type not yet implemented for template system")
@@ -93,3 +100,7 @@ pub use local::LocalConnectionManager;
 // 实现SSH连接管理器
 mod ssh;
 pub use ssh::SSHConnectionManager;
+
+// 实现串口连接管理器
+mod serial;
+pub use serial::SerialConnectionManager;
