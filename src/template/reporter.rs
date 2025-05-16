@@ -190,13 +190,10 @@ impl Reporter {
                         .unwrap_or(true);
                     if visible {
                         // 变量替换
-                        let mut processed_code = var_manager.replace_variables(code, Some(&template_id), Some(id));
+                        let mut processed_code =
+                            var_manager.replace_variables(code, Some(&template_id), Some(id));
                         // 只输出lang和code内容，不输出任何属性
-                        let code_block_str = format!(
-                            "```{}\n{}\n```",
-                            lang,
-                            processed_code
-                        );
+                        let code_block_str = format!("```{}\n{}\n```", lang, processed_code);
                         report_parts.push(self.clean_markdown_markup(&code_block_str)?);
                     }
                 }
@@ -461,6 +458,7 @@ mod tests {
     use crate::template::{ContentBlock, ExecutionStep, TemplateMetadata, TemplateReference};
     use anyhow::Result;
     use std::collections::HashMap;
+    use std::error::Error;
     use std::fs;
     use std::path::PathBuf;
     use std::sync::Arc;
@@ -541,7 +539,8 @@ mod tests {
     }
 
     #[test]
-    fn test_generate_report_with_variable_substitution_and_output_blocks() -> Result<()> {
+    fn test_generate_report_with_variable_substitution_and_output_blocks(
+    ) -> Result<(), Box<dyn Error>> {
         // 创建临时目录用于测试
         let temp_dir = tempfile::tempdir()?;
         let template_base_dir = temp_dir.path().join("templates");
@@ -632,8 +631,8 @@ echo "Hello, {{ execution_time }}"
 
         // 创建变量管理器并设置变量
         let mut var_manager = VariableManager::new();
-        var_manager.register_template(&template, Some(template.get_template_id().as_str()));
-        var_manager.set_variable("GLOBAL", "GLOBAL", "var.global_var", "World");
+        var_manager.register_template(&template, Some(template.get_template_id().as_str()))?;
+        var_manager.set_variable("GLOBAL", "GLOBAL", "var.global_var", "World")?;
 
         // 创建Reporter实例
         let reporter = Reporter::new(template_base_dir.clone(), Some(report_output_dir.clone()));

@@ -7,6 +7,7 @@
 use log::{debug, info, warn};
 use regex::Regex;
 use std::collections::HashMap;
+use std::error::Error;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
@@ -108,7 +109,7 @@ impl VariableManager {
         &mut self,
         template: &Arc<super::TestTemplate>,
         template_id: Option<&str>,
-    ) {
+    ) -> Result<(), Box<dyn Error>> {
         let template_path = template.file_path.clone();
 
         let template_id = template_id.map(ToString::to_string).unwrap_or_else(|| {
@@ -129,9 +130,10 @@ impl VariableManager {
             self.register_namespace(&as_namespace, &item_template_id);
         }
 
-        self.initialize_system_variables(template, template_id.as_str());
+        self.initialize_system_variables(template, template_id.as_str())?;
         self.template_path_to_id
             .insert(template_path.to_path_buf(), template_id);
+        Ok(())
     }
 
     /// 注册时顺便初始化一些变量
@@ -142,7 +144,7 @@ impl VariableManager {
         &mut self,
         template: &Arc<super::TestTemplate>,
         template_id: &str,
-    ) {
+    ) -> Result<(), Box<dyn Error>> {
         // 做一些基本变量的初始化
         // 从这开始 metadata 组变量就可以被使用了
         // 作用域：当前模板、任意步骤、[title, unit, target]
@@ -151,19 +153,19 @@ impl VariableManager {
             "GLOBAL",
             "metadata.title",
             &template.metadata.title,
-        );
+        )?;
         self.set_variable(
             template_id,
             "GLOBAL",
             "metadata.unit_version",
             &template.metadata.unit_version,
-        );
+        )?;
         self.set_variable(
             template_id,
             "GLOBAL",
             "metadata.unit_name",
             &template.metadata.unit_name,
-        );
+        )?;
         self.set_variable(
             template_id,
             "GLOBAL",
@@ -175,7 +177,8 @@ impl VariableManager {
                 .and_then(|n| n.to_str())
                 .unwrap_or("default")
                 .to_string(),
-        );
+        )?;
+        Ok(())
     }
 
     /// 设置变量
@@ -1099,24 +1102,26 @@ mod tests {
             .set_variable("template1", "GLOBAL", "greeting", "Hello")
             .unwrap();
         manager.register_namespace("t1", "template1");
-        manager.register_template(
-            &Arc::new(TestTemplate {
-                metadata: crate::template::TemplateMetadata {
-                    title: "Test Template".to_string(),
-                    unit_name: "Test Unit".to_string(),
-                    target_config: PathBuf::from("default.cfg"),
-                    unit_version: "1.0.0".to_string(),
-                    tags: vec!["test".to_string()],
-                    references: vec![],
-                    custom: HashMap::new(),
-                },
-                steps: vec![], // Empty vector of ExecutionStep
-                file_path: PathBuf::from("template1_path"),
-                raw_content: "Test content".to_string(),
-                content_blocks: vec![], // Empty vector of ContentBlock
-            }),
-            Some("template1"),
-        );
+        manager
+            .register_template(
+                &Arc::new(TestTemplate {
+                    metadata: crate::template::TemplateMetadata {
+                        title: "Test Template".to_string(),
+                        unit_name: "Test Unit".to_string(),
+                        target_config: PathBuf::from("default.cfg"),
+                        unit_version: "1.0.0".to_string(),
+                        tags: vec!["test".to_string()],
+                        references: vec![],
+                        custom: HashMap::new(),
+                    },
+                    steps: vec![], // Empty vector of ExecutionStep
+                    file_path: PathBuf::from("template1_path"),
+                    raw_content: "Test content".to_string(),
+                    content_blocks: vec![], // Empty vector of ContentBlock
+                }),
+                Some("template1"),
+            )
+            .unwrap();
 
         // 测试替换
         assert_eq!(
@@ -1166,7 +1171,9 @@ mod tests {
         });
 
         // 注册模板（这里吗顺便注册模板默认id对应的命名空间。想要别的自己注册）
-        manager.register_template(&template_obj, Some("template1"));
+        manager
+            .register_template(&template_obj, Some("template1"))
+            .unwrap();
 
         // 设置变量
         manager

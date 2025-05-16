@@ -1,8 +1,7 @@
 use assert_cmd::Command;
 use std::{
-    env, fs,
+    env,
     io::{self, Write},
-    path::Path,
 };
 mod tests {
     use super::*;

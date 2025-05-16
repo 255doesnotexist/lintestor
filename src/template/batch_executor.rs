@@ -7,6 +7,7 @@ use anyhow::{anyhow, Result};
 use chrono;
 use log::{debug, error, info, warn};
 use std::collections::HashMap;
+use std::error::Error;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use std::time::{Duration, Instant};
@@ -44,27 +45,28 @@ impl BatchExecutor {
         }
     }
 
-    pub fn add_template(&mut self, template: Arc<TestTemplate>) {
+    pub fn add_template(&mut self, template: Arc<TestTemplate>) -> Result<(), Box<dyn Error>> {
         let template_id = template.get_template_id();
         // 在这里注册一下模板
         if !self.variable_manager.template_id_exists(&template_id) {
             self.variable_manager
-                .register_template(&template, Some(&template_id));
+                .register_template(&template, Some(&template_id))?;
         }
         self.templates.insert(template.get_template_id(), template);
+        Ok(())
     }
 
-    pub fn execute(&mut self, template_id: &str) -> Result<ExecutionResult> {
+    pub fn execute(
+        &mut self,
+        template_id: &str,
+    ) -> Result<ExecutionResult, Box<dyn std::error::Error>> {
         info!("Executing template: {}", template_id);
         let start_time_total = Instant::now();
 
         let template_arc = match self.templates.get(template_id) {
             Some(t) => t.clone(),
             None => {
-                return Err(anyhow!(
-                    "Template {} not found in BatchExecutor",
-                    template_id
-                ))
+                return Err(anyhow!("Template {} not found in BatchExecutor", template_id).into())
             }
         };
 
@@ -209,19 +211,19 @@ impl BatchExecutor {
                                         &step_def.local_id,
                                         "stdout",
                                         &stdout_val,
-                                    );
+                                    )?;
                                     self.variable_manager.set_variable(
                                         &step_def.template_id,
                                         &step_def.local_id,
                                         "stderr",
                                         &stderr_val,
-                                    );
+                                    )?;
                                     self.variable_manager.set_variable(
                                         &step_def.template_id,
                                         &step_def.local_id,
                                         "exit_code",
                                         &exit_code_val.to_string(),
-                                    );
+                                    )?;
 
                                     if !parsed_step_details.assertions.is_empty() {
                                         assertion_status = StepStatus::Pass;
@@ -276,7 +278,7 @@ impl BatchExecutor {
                                                             &step_def.local_id,
                                                             &extraction_rule.variable,
                                                             &var_value,
-                                                        );
+                                                        )?;
                                                     }
                                                     Err(e) => {
                                                         warn!("Failed to extract variable '{}' for step {}: {}", extraction_rule.variable, step_id, e);

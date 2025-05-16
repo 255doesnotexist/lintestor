@@ -20,7 +20,7 @@ use std::{
 use template::{BatchExecutor, BatchOptions, ExecutionResult, ExecutorOptions};
 
 /// The main function of the application.
-fn main() {
+fn main() -> Result<(), Box<dyn Error>> {
     // 解析命令行参数
     let cli_args = parse_args();
 
@@ -42,14 +42,13 @@ fn main() {
         // 检查是否有指定单个模板文件
         if let Some(template_file) = cli_args.template.as_ref() {
             // 应用环境类型设置
-            run_single_template_test(template_file, &cli_args, &working_dir);
+            run_single_template_test(template_file, &cli_args, &working_dir)?;
         } else {
             // 创建模板过滤器，应用单元和标签过滤
-            if let Err(e) = run_template_tests(&cli_args, &working_dir) {
-                error!("Failed to run template tests: {}", e);
-            }
+            run_template_tests(&cli_args, &working_dir)?
         }
     }
+    Ok(())
 }
 
 /// 解析命令行参数
@@ -65,21 +64,23 @@ fn parse_args() -> CliArgs {
 /// * `template_file` - 模板文件路径
 /// * `cli_args` - 命令行参数
 /// * `working_dir` - 工作目录
-fn run_single_template_test(template_file: &Path, cli_args: &CliArgs, working_dir: &Path) {
+fn run_single_template_test(
+    template_file: &Path,
+    cli_args: &CliArgs,
+    working_dir: &Path,
+) -> Result<String, Box<dyn Error>> {
     info!("Processing single template: {}", template_file.display());
 
     // 解析模板
     let template = match template::TestTemplate::from_file(template_file) {
         Ok(t) => t,
         Err(e) => {
-            error!("Failed to load template from file: {}", e);
-            return;
+            return Err(format!("Failed to load template from file: {}", e).into());
         }
     };
 
     // 如果是仅解析模式，则只验证模板格式并显示信息
     if cli_args.is_parse_only() {
-        info!("Template parsed successfully:");
         info!("  Title: {}", template.metadata.title);
         info!("  Unit: {}", template.metadata.unit_name);
         info!(
@@ -87,7 +88,7 @@ fn run_single_template_test(template_file: &Path, cli_args: &CliArgs, working_di
             template.metadata.target_config.display()
         );
         info!("  Total steps: {}", template.steps.len());
-        return;
+        return Ok("Template parsed successfully".to_string());
     }
 
     // 加载目标配置
@@ -97,8 +98,7 @@ fn run_single_template_test(template_file: &Path, cli_args: &CliArgs, working_di
     let mut target_config: TargetConfig = match utils::read_toml_from_file(&target_config_path) {
         Ok(config) => config,
         Err(e) => {
-            error!("Failed to load target config: {}", e);
-            return;
+            return Err(format!("Failed to load target config: {}", e).into());
         }
     };
 
@@ -141,7 +141,7 @@ fn run_single_template_test(template_file: &Path, cli_args: &CliArgs, working_di
     let mut batch_executor = BatchExecutor::new(variable_manager, Some(batch_options));
 
     // 添加模板到执行器
-    batch_executor.add_template(template.into());
+    batch_executor.add_template(template.into())?;
 
     // 执行模板测试
     match batch_executor.execute_all() {
@@ -152,13 +152,15 @@ fn run_single_template_test(template_file: &Path, cli_args: &CliArgs, working_di
             if !results.is_empty() {
                 // 获取第一个结果，使用迭代器而不是索引
                 if let Some(result) = results.first() {
-                    info!("Test completed with status: {:?}", result.overall_status);
+                    Ok(format!("Test completed with status: {:?}", result.overall_status).into())
+                } else {
+                    Err("Failed to fetch first execution result".to_string().into())
                 }
+            } else {
+                Err("Execution result is empty".to_string().into())
             }
         }
-        Err(e) => {
-            error!("Failed to execute template: {}", e);
-        }
+        Err(e) => Err(format!("Failed to execute template: {}", e).into()),
     }
 }
 
@@ -356,7 +358,7 @@ fn run_template_tests(cli_args: &CliArgs, working_dir: &Path) -> Result<(), Box<
             for template in templates_in_group {
                 let metadata = &template.metadata;
                 debug!("Added template '{}' to batch executor", metadata.title);
-                batch_executor.add_template(template.into());
+                batch_executor.add_template(template.into())?;
             }
 
             info!(
