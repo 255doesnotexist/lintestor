@@ -96,16 +96,6 @@ impl CliArgs {
         Self::parse()
     }
 
-    /// 判断是否需要测试
-    pub fn should_test(&self) -> bool {
-        self.test
-    }
-
-    /// 判断是否为仅解析模式
-    pub fn is_parse_only(&self) -> bool {
-        self.parse_only
-    }
-
     /// 获取测试环境类型
     pub fn get_environment_type(&self) -> Option<String> {
         if self.local {

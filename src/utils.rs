@@ -3,16 +3,13 @@
 //! This module provides common structures and utilities used across the project,
 //! including report structures, temporary file management, and command output handling.
 
-use log::{debug, error, warn};
+use log::{error, warn};
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
 use std::{
-    collections::HashSet,
     error::Error,
     fs,
     path::{Path, PathBuf},
 };
-
-use crate::config::target_config::TargetConfig;
 
 /// 标准化模板ID
 ///
@@ -202,113 +199,3 @@ where
     };
     Ok(config)
 }
-
-/// Discover available distribution test directories under the working directory.
-///
-/// # Parameters
-///
-/// - `dir`: The path of the program's working directory.
-///
-/// # Returns
-///
-/// Returns a vector of strings containing the paths of the discovered distribution
-/// test directories if successful, otherwise returns an error.
-///
-/// # Errors
-///
-/// Returns an error if directory traversal fails.
-pub fn get_targets(dir: &Path) -> Result<Vec<String>, Box<dyn Error>> {
-    let mut targets = Vec::new();
-    debug!("Scanning targets in directory {}", dir.display());
-    for subdir in dir.read_dir()? {
-        let target = subdir?;
-        debug!("Scanning subdirectory {}", target.path().display());
-        let target_dir_path = target.path();
-        if target_dir_path.is_dir() {
-            debug!("Discovered target directory {}", target_dir_path.display());
-            let target_dir_name = target.file_name().into_string().unwrap();
-            let target_config_path = target_dir_path.join("config.toml");
-            let target_config: TargetConfig = match read_toml_from_file(&target_config_path) {
-                Ok(config) => {
-                    debug!(
-                        "Loaded config for target directory {}",
-                        target_dir_path.display()
-                    );
-                    config
-                }
-                Err(_) => {
-                    debug!(
-                        "Cannot load config for target directory {}",
-                        target_dir_path.display()
-                    );
-                    continue;
-                }
-            };
-            debug!(
-                "Loaded config for target {}: \n{:?}",
-                target_dir_name, target_config
-            );
-            if true {
-                targets.push(target_dir_name);
-            }
-        }
-    }
-    Ok(targets)
-}
-
-/// Discover available unit tests of the given distribution.
-///
-/// # Parameters
-///
-/// - `target`: The name of the distribution.
-/// - `dir`: The path of the program's working directory.
-///
-/// # Returns
-///
-/// Returns a vector of strings containing the paths of the discovered unit
-/// test directories under the given distribution's directory if successful, otherwise returns an error.
-///
-/// # Errors
-///
-/// Returns an error if directory traversal fails.
-pub fn get_units(target: &str, dir: &Path) -> Result<Vec<String>, Box<dyn Error>> {
-    let directory = dir.join(target);
-    let mut units = Vec::new();
-    for subdir in directory.read_dir()? {
-        let unit = subdir?;
-        let unit_dir_path = unit.path();
-        if unit_dir_path.is_dir() {
-            let unit_dir_name = unit.file_name().into_string().unwrap();
-            units.push(unit_dir_name);
-        }
-    }
-    Ok(units)
-}
-
-/// Discover available unit test directories under the given distribution directory.
-///
-/// # Parameters
-///
-/// - `targets`: Array of distribution names.
-/// - `dir`: The path of the program's working directory.
-///
-/// # Returns
-///
-/// Returns a vector of strings containing the names of all the unit tests discovered,
-/// otherwise returns an error. Note that duplicates would be removed from the list beforehand.
-///
-/// # Errors
-///
-/// Returns an error if the process fails.
-pub fn get_all_units(targets: &[&str], dir: &Path) -> Result<Vec<String>, Box<dyn Error>> {
-    let mut units = HashSet::new();
-    for target in targets {
-        let current_units = get_units(target, dir).unwrap_or_default();
-        units.extend(current_units);
-    }
-    let mut units_vec: Vec<String> = units.into_iter().collect();
-    units_vec.sort(); // do we really need sorting?
-    Ok(units_vec)
-}
-
-// 这边有一些为 lintestor 0.1.x 保留的代码，兼容性这一块

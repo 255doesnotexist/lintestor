@@ -38,7 +38,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     debug!("Working directory: {}", working_dir.display());
 
     // 执行测试、聚合或汇总操作
-    if cli_args.should_test() {
+    if cli_args.test {
         // 检查是否有指定单个模板文件
         if let Some(template_file) = cli_args.template.as_ref() {
             // 应用环境类型设置
@@ -80,7 +80,7 @@ fn run_single_template_test(
     };
 
     // 如果是仅解析模式，则只验证模板格式并显示信息
-    if cli_args.is_parse_only() {
+    if cli_args.parse_only {
         info!("  Title: {}", template.metadata.title);
         info!("  Unit: {}", template.metadata.unit_name);
         info!(
@@ -214,7 +214,7 @@ fn run_template_tests(cli_args: &CliArgs, working_dir: &Path) -> Result<(), Box<
         loaded_templates.len()
     );
 
-    if cli_args.is_parse_only() {
+    if cli_args.parse_only {
         info!("Parse-only mode. Displaying template information:");
         for template in &loaded_templates {
             info!("  Title: {}", template.metadata.title);
