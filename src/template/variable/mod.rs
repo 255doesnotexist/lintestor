@@ -492,7 +492,12 @@ impl VariableManager {
                     state = State::Normal;
                 }
                 State::VarDollarContent { content, brace_level } => {
-                    if c == '{' {
+                    if c == '\n' || c == '\r' {
+                        // 换行符，降级为原文输出
+                        output.push_str(&format!("${{{}}}", content));
+                        output.push(c);
+                        state = State::Normal;
+                    } else if c == '{' {
                         *brace_level += 1;
                         content.push(c);
                     } else if c == '}' {
@@ -517,7 +522,12 @@ impl VariableManager {
                     }
                 }
                 State::VarDoubleBraceContent { content } => {
-                    if c == '}' && chars.peek() == Some(&'}') {
+                    if c == '\n' || c == '\r' {
+                        // 换行符，降级为原文输出
+                        output.push_str(&format!("{{{{ {} }}}}", content));
+                        output.push(c);
+                        state = State::Normal;
+                    } else if c == '}' && chars.peek() == Some(&'}') {
                         chars.next(); // 跳过第二个 '}'
                         // Unicode安全：用char_indices记录?和:的字节下标
                         let inner = content.trim();
@@ -569,7 +579,12 @@ impl VariableManager {
                     }
                 }
                 State::VarSingleBraceContent { content, brace_level } => {
-                    if c == '{' {
+                    if c == '\n' || c == '\r' {
+                        // 换行符，降级为原文输出
+                        output.push_str(&format!("{{ {} }}", content));
+                        output.push(c);
+                        state = State::Normal;
+                    } else if c == '{' {
                         *brace_level += 1;
                         content.push(c);
                     } else if c == '}' {
