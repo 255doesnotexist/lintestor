@@ -153,24 +153,10 @@ impl Reporter {
                     if visible {
                         // 变量替换
                         let mut processed_code = var_manager.replace_variables(code, Some(&template_id), Some(id));
-                        // 也可做全局变量替换（可能不必要我记得 replace_variables 里已经有自适应适配过）
-                        // processed_code = var_manager.replace_variables(&processed_code, Some(&template_id), None);
-                        let code_block_str = format!("```{} {{id=\"{}\"{}}}\n{}\n```\n",
+                        // 只输出lang和code内容，不输出任何属性
+                        let code_block_str = format!(
+                            "```{}\n{}\n```",
                             lang,
-                            id,
-                            if attributes.is_empty() {
-                                String::new()
-                            } else {
-                                let mut attrs = attributes.iter()
-                                    .filter(|(k,_)| k != &"id" && k != &"visible")
-                                    .map(|(k,v)| format!("{}=\"{}\"", k, v))
-                                    .collect::<Vec<_>>();
-                                if !attrs.is_empty() {
-                                    format!(" {}", attrs.join(" "))
-                                } else {
-                                    String::new()
-                                }
-                            },
                             processed_code
                         );
                         report_parts.push(self.clean_markdown_markup(&code_block_str)?);

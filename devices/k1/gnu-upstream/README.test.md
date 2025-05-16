@@ -73,9 +73,9 @@ echo "环境已激活"
 
 检查编译器版本以确认安装正确。
 
-```bash {id="check-version" exec=true description="检查编译器版本" assert.exit_code=0 assert.stderr_contains="gcc version" extract.gcc_version=/gcc version ([0-9.]+)/ depends_on=["activate-venv"]}
+```bash {id="check-version" exec=true description="检查编译器版本" assert.exit_code=0 assert.stdout_contains="gcc version" extract.gcc_version=/gcc version ([0-9.]+)/ depends_on=["activate-venv"]}
 . ~/venv-gnu-upstream/bin/ruyi-activate
-riscv64-unknown-linux-gnu-gcc -v
+riscv64-unknown-linux-gnu-gcc -v 2>&1
 ```
 
 **结果:**

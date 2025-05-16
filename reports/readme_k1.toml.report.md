@@ -12,7 +12,7 @@ tags: ["toolchain", "gcc", "gnu-upstream", "K1"]
 
 * **测试日期:** `2025-05-16`
 * **目标配置:** `target/k1.toml`
-* **工具链版本:** `{{check-version::gcc_version}}`
+* **工具链版本:** `14.2.0`
 * **单元版本:** `0.1.0`
 
 ## 0. 初始化 ruyi 包管理器
@@ -75,15 +75,23 @@ echo "环境已激活"
 
 ```bash
 . ~/venv-gnu-upstream/bin/ruyi-activate
-riscv64-unknown-linux-gnu-gcc -v
+riscv64-unknown-linux-gnu-gcc -v 2>&1
 ```
 
 **结果:**
 
 ```output {ref="check-version"}
+Using built-in specs.
+COLLECT_GCC=/home/ezra/.local/share/ruyi/binaries/riscv64/gnu-upstream-0.20250401.0/bin/riscv64-unknown-linux-gnu-gcc
+COLLECT_LTO_WRAPPER=/home/ezra/.local/share/ruyi/binaries/riscv64/gnu-upstream-0.20250401.0/bin/../libexec/gcc/riscv64-unknown-linux-gnu/14.2.0/lto-wrapper
+Target: riscv64-unknown-linux-gnu
+Configured with: /work/HOST-riscv64-linux-gnu/riscv64-unknown-linux-gnu/src/gcc/configure --build=x86_64-build_pc-linux-gnu --host=riscv64-host_unknown-linux-gnu --target=riscv64-unknown-linux-gnu --prefix=/opt/ruyi/HOST-riscv64-linux-gnu/riscv64-unknown-linux-gnu --exec_prefix=/opt/ruyi/HOST-riscv64-linux-gnu/riscv64-unknown-linux-gnu --with-sysroot=/opt/ruyi/HOST-riscv64-linux-gnu/riscv64-unknown-linux-gnu/riscv64-unknown-linux-gnu/sysroot --enable-languages=c,c++,fortran,objc,obj-c++ --with-arch=rv64gc --with-abi=lp64d --with-pkgversion='RuyiSDK 20250401 Upstream-Sources' --with-bugurl=https://github.com/ruyisdk/ruyisdk/issues --enable-__cxa_atexit --disable-libmudflap --disable-libgomp --disable-libquadmath --disable-libquadmath-support --disable-libmpx --with-gmp=/work/HOST-riscv64-linux-gnu/riscv64-unknown-linux-gnu/buildtools/complibs-host --with-mpfr=/work/HOST-riscv64-linux-gnu/riscv64-unknown-linux-gnu/buildtools/complibs-host --with-mpc=/work/HOST-riscv64-linux-gnu/riscv64-unknown-linux-gnu/buildtools/complibs-host --with-isl=/work/HOST-riscv64-linux-gnu/riscv64-unknown-linux-gnu/buildtools/complibs-host --enable-lto --enable-threads=posix --enable-target-optspace --enable-linker-build-id --with-linker-hash-style=gnu --enable-plugin --disable-nls --disable-multilib --with-local-prefix=/opt/ruyi/HOST-riscv64-linux-gnu/riscv64-unknown-linux-gnu/riscv64-unknown-linux-gnu/sysroot --enable-long-long
+Thread model: posix
+Supported LTO compression algorithms: zlib zstd
+gcc version 14.2.0 (RuyiSDK 20250401 Upstream-Sources)
 ```
 
-编译器版本: {{check-version::gcc_version}}
+编译器版本: 14.2.0
 
 ## 5. Hello World 测试
 
@@ -93,7 +101,10 @@ riscv64-unknown-linux-gnu-gcc -v
 cat > hello.c << 'EOF'
 #include <stdio.h>
 
-int main() {printf("Hello, world!\n"); return 0;}
+int main()
+ printf("Hello, world!\n");
+ return 0;
+}
 EOF
 ```
 
@@ -154,7 +165,7 @@ Link performed along with compile
 coremark.exe: ELF 64-bit LSB executable, UCB RISC-V, RVC, double-float ABI, version 1 (SYSV), dynamically linked, interpreter /lib/ld-linux-riscv64-lp64d.so.1, BuildID[sha1]=5c8618cf62e0f1f7dd462ba5bddb03479631d0e9, for GNU/Linux 4.15.0, with debug_info, not stripped
 ```
 
-```bash {Sec\s+:\s+([0-9.]+)/}
+```bash
 cd coremark
 ./coremark.exe
 ```
@@ -164,9 +175,9 @@ cd coremark
 ```output {ref="run-coremark"}
 2K performance run parameters for coremark.
 CoreMark Size : 666
-Total ticks : 20019
-Total time (secs): 20.019000
-Iterations/Sec : 5494.779959
+Total ticks : 20005
+Total time (secs): 20.005000
+Iterations/Sec : 5498.625344
 Iterations : 110000
 Compiler version : GCC14.2.0
 Compiler flags : -O2 -march=rv64gcv_zvl256b -mabi=lp64d -lrt
@@ -178,10 +189,10 @@ seedcrc : 0xe9f5
 [0]crcstate : 0x8e3a
 [0]crcfinal : 0x33ff
 Correct operation validated. See readme.txt for run and reporting rules.
-CoreMark 1.0 : 5494.779959 / GCC14.2.0 -O2 -march=rv64gcv_zvl256b -mabi=lp64d -lrt / Heap
+CoreMark 1.0 : 5498.625344 / GCC14.2.0 -O2 -march=rv64gcv_zvl256b -mabi=lp64d -lrt / Heap
 ```
 
-CoreMark 默认优化分数: 5494.779959
+CoreMark 默认优化分数: 5498.625344
 
 ## 7. CoreMark 基准测试 (向量扩展)
 
@@ -202,7 +213,7 @@ Link performed along with compile
 coremark.exe: ELF 64-bit LSB executable, UCB RISC-V, RVC, double-float ABI, version 1 (SYSV), dynamically linked, interpreter /lib/ld-linux-riscv64-lp64d.so.1, BuildID[sha1]=26ed89acf90a9b7d555582be7602c422e6aeccbe, for GNU/Linux 4.15.0, with debug_info, not stripped
 ```
 
-```bash {Sec\s+:\s+([0-9.]+)/}
+```bash
 cd coremark
 ./coremark.exe
 ```
@@ -212,9 +223,9 @@ cd coremark
 ```output {ref="run-coremark-vector"}
 2K performance run parameters for coremark.
 CoreMark Size : 666
-Total ticks : 19994
-Total time (secs): 19.994000
-Iterations/Sec : 5501.650495
+Total ticks : 20009
+Total time (secs): 20.009000
+Iterations/Sec : 5497.526113
 Iterations : 110000
 Compiler version : GCC14.2.0
 Compiler flags : -O2 -march=rv64gcv_zvl256b -mabi=lp64d -lrt
@@ -226,10 +237,10 @@ seedcrc : 0xe9f5
 [0]crcstate : 0x8e3a
 [0]crcfinal : 0x33ff
 Correct operation validated. See readme.txt for run and reporting rules.
-CoreMark 1.0 : 5501.650495 / GCC14.2.0 -O2 -march=rv64gcv_zvl256b -mabi=lp64d -lrt / Heap
+CoreMark 1.0 : 5497.526113 / GCC14.2.0 -O2 -march=rv64gcv_zvl256b -mabi=lp64d -lrt / Heap
 ```
 
-CoreMark 向量扩展优化分数: 5501.650495
+CoreMark 向量扩展优化分数: 5497.526113
 
 ## 8. 测试总结
 
@@ -265,7 +276,7 @@ comments in the files contain usage instructions.
  |
 | activate-venv | 激活虚拟环境 | Pass | 0 | 环境已激活
  | |
-| check-version | 检查编译器版本 | Pass | 0 | | Using built-in specs.
+| check-version | 检查编译器版本 | Pass | 0 | Using built-in specs.
 COLLECT_GCC=/home/ezra/.local/share/ruyi/binaries/riscv64/gnu-upstream-0.20250401.0/bin/riscv64-unknown-linux-gnu-gcc
 COLLECT_LTO_WRAPPER=/home/ezra/.local/share/ruyi/binaries/riscv64/gnu-upstream-0.20250401.0/bin/../libexec/gcc/riscv64-unknown-linux-gnu/14.2.0/lto-wrapper
 Target: riscv64-unknown-linux-gnu
@@ -273,10 +284,19 @@ Configured with: /work/HOST-riscv64-linux-gnu/riscv64-unknown-linux-gnu/src/gcc/
 Thread model: posix
 Supported LTO compression algorithms: zlib zstd
 gcc version 14.2.0 (RuyiSDK 20250401 Upstream-Sources)
- |
+ | |
 | create-hello | 创建 Hello World 源文件 | Pass | 0 | | |
 | compile-hello | 编译 Hello World 程序 | Pass | 0 | hello_upstream: ELF 64-bit LSB executable, UCB RISC-V, RVC, double-float ABI, version 1 (SYSV), dynamically linked, interpreter /lib/ld-linux-riscv64-lp64d.so.1, BuildID[sha1]=3f957a7dffdbebbda3524d8c601b149ef231839c, for GNU/Linux 4.15.0, with debug_info, not stripped
- | |
+ | hello.c:4:12: error: expected declaration specifiers or '...' before string constant
+ 4 | printf("Hello, world!\n");
+ | ^~~~~~~~~~~~~~~~~
+hello.c:5:5: error: expected identifier or '(' before 'return'
+ 5 | return 0;
+ | ^~~~~~
+hello.c:6:1: error: expected identifier or '(' before '}' token
+ 6 | }
+ | ^
+ |
 | run-hello | 运行 Hello World 程序 | Pass | 0 | Hello, world!
  | |
 | extract-coremark | 提取 CoreMark 包 | Pass | 0 | | mkdir: 无法创建目录 "coremark": File exists
@@ -295,9 +315,9 @@ coremark.exe: ELF 64-bit LSB executable, UCB RISC-V, RVC, double-float ABI, vers
  | |
 | run-coremark | 运行 CoreMark (默认优化) | Pass | 0 | 2K performance run parameters for coremark.
 CoreMark Size : 666
-Total ticks : 20019
-Total time (secs): 20.019000
-Iterations/Sec : 5494.779959
+Total ticks : 20005
+Total time (secs): 20.005000
+Iterations/Sec : 5498.625344
 Iterations : 110000
 Compiler version : GCC14.2.0
 Compiler flags : -O2 -march=rv64gcv_zvl256b -mabi=lp64d -lrt
@@ -309,7 +329,7 @@ seedcrc : 0xe9f5
 [0]crcstate : 0x8e3a
 [0]crcfinal : 0x33ff
 Correct operation validated. See readme.txt for run and reporting rules.
-CoreMark 1.0 : 5494.779959 / GCC14.2.0 -O2 -march=rv64gcv_zvl256b -mabi=lp64d -lrt / Heap
+CoreMark 1.0 : 5498.625344 / GCC14.2.0 -O2 -march=rv64gcv_zvl256b -mabi=lp64d -lrt / Heap
  | |
 | build-coremark-vector | 编译 CoreMark (向量扩展) | Pass | 0 | riscv64-unknown-linux-gnu-gcc -O2 -Ilinux64 -I. -DFLAGS_STR=\""-O2 -march=rv64gcv_zvl256b -mabi=lp64d -lrt"\" -DITERATIONS=0 -march=rv64gcv_zvl256b -mabi=lp64d core_list_join.c core_main.c core_matrix.c core_state.c core_util.c linux64/core_portme.c -o ./coremark.exe -lrt
 Link performed along with compile
@@ -317,9 +337,9 @@ coremark.exe: ELF 64-bit LSB executable, UCB RISC-V, RVC, double-float ABI, vers
  | |
 | run-coremark-vector | 运行 CoreMark (向量扩展) | Pass | 0 | 2K performance run parameters for coremark.
 CoreMark Size : 666
-Total ticks : 19994
-Total time (secs): 19.994000
-Iterations/Sec : 5501.650495
+Total ticks : 20009
+Total time (secs): 20.009000
+Iterations/Sec : 5497.526113
 Iterations : 110000
 Compiler version : GCC14.2.0
 Compiler flags : -O2 -march=rv64gcv_zvl256b -mabi=lp64d -lrt
@@ -331,12 +351,12 @@ seedcrc : 0xe9f5
 [0]crcstate : 0x8e3a
 [0]crcfinal : 0x33ff
 Correct operation validated. See readme.txt for run and reporting rules.
-CoreMark 1.0 : 5501.650495 / GCC14.2.0 -O2 -march=rv64gcv_zvl256b -mabi=lp64d -lrt / Heap
+CoreMark 1.0 : 5497.526113 / GCC14.2.0 -O2 -march=rv64gcv_zvl256b -mabi=lp64d -lrt / Heap
  | |
 
 ## 9. 性能比较
 
 | 优化选项 | CoreMark 分数 |
 |---------|-------------|
-| 默认优化 (-O2 -lrt) | 5494.779959 |
-| 向量扩展 (-O2 -march=rv64gcv_zvl256b -mabi=lp64d -lrt) | 5501.650495 |
+| 默认优化 (-O2 -lrt) | 5498.625344 |
+| 向量扩展 (-O2 -march=rv64gcv_zvl256b -mabi=lp64d -lrt) | 5497.526113 |

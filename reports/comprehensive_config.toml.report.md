@@ -22,7 +22,7 @@ custom_field: "自定义字段值"
 
 创建测试目录和基础文件：
 
-```bash {exec="true"}
+```bash
 # 创建测试目录
 mkdir -p /tmp/comprehensive_test
 cd /tmp/comprehensive_test
@@ -43,10 +43,10 @@ cat version.env
 
 ```output {ref="setup-env"}
 total 8
-drwxrwxr-x 2 ezra ezra 80 May 16 09:47 .
-drwxrwxrwt 164 root root 3820 May 16 10:20 ..
--rw-rw-r-- 1 ezra ezra 20 May 16 10:35 test.txt
--rw-rw-r-- 1 ezra ezra 48 May 16 10:35 version.env
+drwxrwxr-x 2 ezra ezra 80 May 16 11:18 .
+drwxrwxrwt 164 root root 3820 May 16 11:18 ..
+-rw-rw-r-- 1 ezra ezra 20 May 16 11:18 test.txt
+-rw-rw-r-- 1 ezra ezra 48 May 16 11:18 version.env
 This is a test file
 VERSION=1.2.3
 CONFIG=production
@@ -57,7 +57,7 @@ BUILD_NUMBER=42
 
 从版本文件中提取变量：
 
-```bash {extract.build="/BUILD_NUMBER=(\d+)/" extract.config="/CONFIG=(\w+)/" depends_on=""setup-env"]" exec="true" extract.version="/VERSION=([0-9.]+)/"}
+```bash
 cd /tmp/comprehensive_test
 cat version.env
 echo "提取完成"
@@ -76,7 +76,7 @@ BUILD_NUMBER=42
 
 执行一些文件操作并验证结果：
 
-```bash {exec="true" depends_on=""setup-env"]"}
+```bash
 cd /tmp/comprehensive_test
 echo "Additional content" >> test.txt
 wc -l test.txt
@@ -94,7 +94,7 @@ File updated successfully
 
 测试多种断言类型：
 
-```bash {exec="true"}
+```bash
 echo "This test should pass"
 echo "Errors should be present here, expected" >&2
 ```
@@ -109,7 +109,7 @@ This test should pass
 
 使用之前提取的变量：
 
-```bash {exec="true" depends_on=""version-extract"]"}
+```bash
 echo "软件版本: 1.2.3"
 echo "构建编号: 42"
 echo "配置环境: production"
@@ -129,7 +129,7 @@ echo "当前工作目录: $(pwd)"
 
 组合多个步骤的结果：
 
-```bash {exec="true" depends_on=""version-extract","file-operations"]"}
+```bash
 cd /tmp/comprehensive_test
 echo "综合报告:"
 echo "----------------------------------------"
@@ -161,7 +161,7 @@ Additional content
 
 清理测试环境：
 
-```bash {exec="true" depends_on=""combined"]"}
+```bash
 rm -rf /tmp/comprehensive_test
 echo "测试环境已清理"
 ```
