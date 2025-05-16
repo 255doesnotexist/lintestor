@@ -56,19 +56,19 @@ pub struct SSHConnectionManager {
 impl SSHConnectionManager {
     /// 创建新的SSH连接管理器
     pub fn new(connection_config: &ConnectionConfig) -> Result<Self> {
-        let host = connection_config.get_ip();
-        let port = connection_config.get_port();
-        let username = connection_config.get_username();
-        let password = connection_config.get_password();
-        let private_key_path = connection_config.get_private_key_path();
-        let public_key_path = connection_config.get_public_key_path();
-        let jump_hosts = connection_config.get_jump_hosts();
+        let host = &connection_config.ip;
+        let port = connection_config.port;
+        let username = &connection_config.username;
+        let password = connection_config.password.as_deref();
+        let private_key_path = connection_config.private_key_path.as_deref();
+        let public_key_path = connection_config.public_key_path.as_deref();
+        let jump_hosts = &connection_config.jump_hosts;
 
         debug!("创建SSH连接: {username}@{host}:{port}");
 
         // 获取连接配置的重试和超时设置
-        let max_retries = connection_config.get_max_retries();
-        let connect_timeout_secs = connection_config.get_connect_timeout_secs();
+        let max_retries = connection_config.max_retries;
+        let connect_timeout_secs = connection_config.timeout;
 
         // 处理跳板机连接
         if let Some(jumps) = jump_hosts {
@@ -80,7 +80,7 @@ impl SSHConnectionManager {
                     host,
                     port,
                     username,
-                    jumps,
+                    &jumps,
                     max_retries as usize,
                     connect_timeout_secs,
                 )?;
