@@ -1,14 +1,14 @@
 //! 提供统一的测试执行逻辑，适用于不同的测试环境
 
 use crate::test_script_manager::TestScriptManager; // 保持对旧版的兼容性（存疑）
-// 疑似并没有保持成功，先留这坨东西在这里吧
+                                                   // 疑似并没有保持成功，先留这坨东西在这里吧
 use crate::test_environment::TestEnvironment;
 use crate::utils::{PackageMetadata, Report, TestResult, REMOTE_TMP_DIR};
+use anyhow::Result;
+use log::{debug, info};
 use std::error::Error;
 use std::path::{Path, PathBuf};
 use std::process::Command;
-use anyhow::{Result};
-use log::{debug, info};
 
 /// 通用测试执行器，实现与测试环境无关的测试逻辑
 pub struct TestExecutor<'a> {
@@ -51,7 +51,7 @@ impl<'a> TestExecutor<'a> {
                 .unwrap_or_default()
                 .to_string_lossy()
                 .to_string();
-            
+
             let command = format!(
                 "cd {} && {} source {}",
                 local_unit_dir.display(),
@@ -74,21 +74,22 @@ impl<'a> TestExecutor<'a> {
             });
         }
 
-        let unit_metadata = if let Some(metadata_template) = template_manager.get_metadata_script() {
+        let unit_metadata = if let Some(metadata_template) = template_manager.get_metadata_script()
+        {
             // 构造元数据命令
             let metadata_command = format!(
                 "source {} && echo $PACKAGE_VERSION && echo $PACKAGE_PRETTY_NAME && echo $PACKAGE_TYPE && echo $PACKAGE_DESCRIPTION",
                 metadata_template
             );
-            
+
             let metadata_output = self.environment.run_command(&metadata_command)?;
-            
+
             // 从输出文本中解析元数据
             let mut version = String::new();
             let mut pretty_name = String::new();
             let mut unit_type = String::new();
             let mut detemplateion = String::new();
-            
+
             let mut lines = metadata_output.output.lines();
             if let Some(stdout_line) = lines.find(|l| l.starts_with("stdout:")) {
                 let mut data_lines = stdout_line.trim_start_matches("stdout:").trim().lines();
@@ -162,12 +163,13 @@ impl<'a> TestExecutor<'a> {
             .arg(&local_unit_dir)
             .arg(".")
             .output()?;
-            
+
         if !tar_output.status.success() {
             return Err(format!(
                 "压缩本地目录失败: {}",
                 String::from_utf8_lossy(&tar_output.stderr)
-            ).into());
+            )
+            .into());
         }
 
         // 使用RAII守卫在函数退出时清理本地tar文件
@@ -187,7 +189,9 @@ impl<'a> TestExecutor<'a> {
             }
         }
 
-        let _local_tar_guard = LocalCleanupGuard { path: local_tar_path.clone() };
+        let _local_tar_guard = LocalCleanupGuard {
+            path: local_tar_path.clone(),
+        };
 
         // --- 准备远程路径 ---
         let remote_unit_dir = format!("{}/{}/{}", REMOTE_TMP_DIR, target, unit);
@@ -202,13 +206,11 @@ impl<'a> TestExecutor<'a> {
 
         // --- 上传文件 ---
         info!("上传 {} 到 {}", tar_filename, remote_tar_path);
-        self.environment.upload_file(&local_tar_path, &remote_tar_path, 0o644)?;
+        self.environment
+            .upload_file(&local_tar_path, &remote_tar_path, 0o644)?;
 
         if prerequisite_template_local_path.exists() {
-            info!(
-                "上传前提条件脚本到 {}",
-                remote_prerequisite_path
-            );
+            info!("上传前提条件脚本到 {}", remote_prerequisite_path);
             self.environment.upload_file(
                 &prerequisite_template_local_path,
                 remote_prerequisite_path,
@@ -222,21 +224,19 @@ impl<'a> TestExecutor<'a> {
             "mkdir -p {} && tar xzf {} -C {} --overwrite",
             remote_unit_dir, remote_tar_path, remote_unit_dir
         );
-        
+
         let extract_output = self.environment.run_command(&extract_command)?;
         if extract_output.exit_status != 0 {
-            return Err(format!(
-                "解压远程存档失败: {}",
-                extract_output.output
-            ).into());
+            return Err(format!("解压远程存档失败: {}", extract_output.output).into());
         }
-        
+
         // 解压后清理远程存档文件
         self.environment.rm_rf(&remote_tar_path)?;
 
         // --- 执行测试 ---
         info!("在远程目录中执行测试: {}", remote_unit_dir);
-        let template_manager = TestScriptManager::new(target, unit, skip_templates, &local_unit_dir)?; // 使用本地目录来发现脚本
+        let template_manager =
+            TestScriptManager::new(target, unit, skip_templates, &local_unit_dir)?; // 使用本地目录来发现脚本
         let mut all_tests_passed = true;
         let mut test_results = Vec::new();
 
@@ -268,20 +268,22 @@ impl<'a> TestExecutor<'a> {
         // --- 获取元数据 ---
         info!("从远程环境收集元数据");
         let (os_version, kernel_version) = self.environment.get_os_info()?;
-        let unit_metadata = if let Some(metadata_template_name) = template_manager.get_metadata_script_name() {
+        let unit_metadata = if let Some(metadata_template_name) =
+            template_manager.get_metadata_script_name()
+        {
             let metadata_command = format!(
                 "cd {} && source {} && echo $PACKAGE_VERSION && echo $PACKAGE_PRETTY_NAME && echo $PACKAGE_TYPE && echo $PACKAGE_DESCRIPTION",
                 remote_unit_dir, metadata_template_name
             );
-            
+
             let metadata_output = self.environment.run_command(&metadata_command)?;
-            
+
             // 解析元数据
             let mut version = String::new();
             let mut pretty_name = String::new();
             let mut unit_type = String::new();
             let mut detemplateion = String::new();
-            
+
             let mut lines = metadata_output.output.lines();
             if let Some(stdout_line) = lines.find(|l| l.starts_with("stdout:")) {
                 let mut data_lines = stdout_line.trim_start_matches("stdout:").trim().lines();
