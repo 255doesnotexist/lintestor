@@ -9,14 +9,6 @@ pub struct CliArgs {
     #[clap(short = 't', long = "test")]
     pub test: bool,
 
-    /// 聚合报告 - 将多个测试报告合并为一个JSON文件
-    #[clap(short = 'a', long = "aggregate")]
-    pub aggregate: bool,
-
-    /// 生成汇总 - 从聚合报告生成Markdown格式汇总报告
-    #[clap(short = 's', long = "summarize")]
-    pub summarize: bool,
-
     /// 仅解析 - 只解析测试模板但不执行命令
     #[clap(short = 'p', long = "parse-only")]
     pub parse_only: bool,
@@ -109,16 +101,6 @@ impl CliArgs {
         self.test
     }
 
-    /// 判断是否需要聚合
-    pub fn should_aggregate(&self) -> bool {
-        self.aggregate
-    }
-
-    /// 判断是否需要汇总
-    pub fn should_summarize(&self) -> bool {
-        self.summarize
-    }
-
     /// 判断是否为仅解析模式
     pub fn is_parse_only(&self) -> bool {
         self.parse_only
@@ -152,6 +134,10 @@ impl CliArgs {
 
     /// 获取筛选条件
     pub fn get_filters(&self) -> (Option<&str>, Option<&str>, Option<&str>) {
-        (self.unit.as_deref(), self.tag.as_deref(), self.target.as_deref().and_then(|p| p.to_str()))
+        (
+            self.unit.as_deref(),
+            self.tag.as_deref(),
+            self.target.as_deref().and_then(|p| p.to_str()),
+        )
     }
 }

@@ -1,8 +1,6 @@
 //! Entry point of whole application
-mod aggregator;
 mod config;
 mod connection;
-mod markdown_report;
 mod template;
 mod test_environment;
 mod utils;
@@ -50,28 +48,6 @@ fn main() {
             if let Err(e) = run_template_tests(&cli_args, &working_dir) {
                 error!("Failed to run template tests: {}", e);
             }
-        }
-    }
-
-    if cli_args.should_aggregate() {
-        info!("Aggregating reports");
-        let reports_dir = cli_args.reports_dir.as_deref();
-        let output_path = cli_args.output.as_deref();
-
-        if let Err(e) = aggregator::aggregate_reports_from_dir(reports_dir, output_path) {
-            error!("Failed to aggregate reports: {}", e);
-        }
-    }
-
-    if cli_args.should_summarize() {
-        info!("Generating summary report");
-        let reports_json = cli_args.reports_json.as_deref();
-        let summary_path = cli_args.summary_path.as_deref();
-
-        if let Err(e) =
-            markdown_report::generate_markdown_summary_from_json(reports_json, summary_path)
-        {
-            error!("Failed to generate markdown report: {}", e);
         }
     }
 }
