@@ -3,8 +3,7 @@
 use crate::test_environment::{CommandOutput, TestEnvironment};
 use log::{debug, log_enabled, Level};
 use std::error::Error;
-use std::fs::{self, read_to_string, File};
-use std::io::Write;
+use std::fs::{self, read_to_string};
 use std::os::unix::fs::PermissionsExt;
 use std::path::Path;
 use std::process::{Command, Stdio};
@@ -76,9 +75,7 @@ impl TestEnvironment for LocalEnvironment {
     ) -> Result<(), Box<dyn Error>> {
         debug!(
             "Uploading local file {:?} to {:?} with mode {:o}",
-            local_path,
-            remote_path,
-            mode
+            local_path, remote_path, mode
         );
         // 确保父目录存在
         if let Some(parent) = Path::new(remote_path).parent() {
@@ -93,7 +90,10 @@ impl TestEnvironment for LocalEnvironment {
     }
 
     fn download_file(&self, remote_path: &str, local_path: &Path) -> Result<(), Box<dyn Error>> {
-        debug!("Downloading local file {:?} to {:?}", remote_path, local_path);
+        debug!(
+            "Downloading local file {:?} to {:?}",
+            remote_path, local_path
+        );
         // 确保父目录存在
         if let Some(parent) = local_path.parent() {
             fs::create_dir_all(parent)?;
@@ -127,15 +127,16 @@ impl TestEnvironment for LocalEnvironment {
         debug!("Getting local OS info");
         let os_version = read_to_string("/proc/version")?;
         let kernel_output = self.run_command("uname -r")?;
-        
+
         // 从输出中提取内核版本
-        let kernel_version = kernel_output.output
+        let kernel_version = kernel_output
+            .output
             .lines()
             .find(|line| line.starts_with("stdout:"))
             .map(|line| line.trim_start_matches("stdout:").trim())
             .unwrap_or("")
             .to_string();
-        
+
         Ok((os_version, kernel_version))
     }
 }

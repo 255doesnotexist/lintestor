@@ -1,35 +1,31 @@
 //! 处理Markdown测试模板的模块。
-//! 
+//!
 //! 这个模块负责解析、验证和管理Markdown格式的测试模板，
 //! 这些模板定义了针对特定单元在特定目标上的测试步骤和预期结果。
 
+use anyhow::{Context, Result};
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
-use std::sync::Arc;
-use anyhow::{Result, Context};
 
-mod parser;
-pub mod executor; // Changed to public
-mod reporter;
-mod discovery;
-mod dependency;
-mod variable;
 mod batch_executor;
+mod dependency;
+mod discovery;
+pub mod executor; // Changed to public
+mod parser;
+mod reporter;
+mod variable;
 
 // Re-export types from step.rs
 pub mod step;
-pub use step::{ExecutionStep, GlobalStepId, StepType};
+pub use step::{ExecutionStep, GlobalStepId};
 
-use log::debug;
 use crate::utils;
 // Import ContentBlock from parser, and the new parsing function
-pub use parser::{parse_template_into_content_blocks_and_steps, ContentBlock};
-pub use executor::{ExecutionResult, ExecutorOptions};
-pub use reporter::Reporter;
-pub use discovery::{discover_templates, filter_templates, TemplateFilter};
-pub use variable::VariableManager;
 pub use batch_executor::BatchExecutor;
-pub use dependency::StepDependencyManager; // Added StepDependencyManager
+pub use discovery::{discover_templates, filter_templates, TemplateFilter};
+pub use executor::{ExecutionResult, ExecutorOptions};
+pub use parser::ContentBlock;
+pub use variable::VariableManager; // Added StepDependencyManager
 
 /// Options for controlling batch execution
 #[derive(Debug, Clone, Default)]
@@ -210,12 +206,12 @@ impl TestTemplate {
         let path = path.as_ref();
         let content = std::fs::read_to_string(path)
             .with_context(|| format!("无法读取模板文件: {}", path.display()))?;
-        
+
         // Use the new parser function that returns content_blocks as well
-        let (metadata, steps, content_blocks) = 
+        let (metadata, steps, content_blocks) =
             parser::parse_template_into_content_blocks_and_steps(&content, path)
                 .with_context(|| format!("解析模板失败: {}", path.display()))?;
-        
+
         Ok(TestTemplate {
             metadata,
             steps,
@@ -225,4 +221,3 @@ impl TestTemplate {
         })
     }
 }
-

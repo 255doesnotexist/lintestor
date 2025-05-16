@@ -4,34 +4,36 @@ mod config;
 mod connection;
 mod markdown_report;
 mod template;
-mod test_runner;
 mod test_environment;
-mod test_executor;
-mod test_script_manager;
 mod utils;
 
-use crate::config::target_config::TargetConfig;
 use crate::config::cli_args::CliArgs;
-use crate::template::{TemplateFilter, discover_templates, filter_templates};
+use crate::config::target_config::TargetConfig;
+use crate::template::{discover_templates, filter_templates, TemplateFilter};
+use crate::template::{StepStatus, TestTemplate};
 use env_logger::Env;
 use log::{debug, error, info, warn};
-use template::{BatchExecutor, BatchOptions, ExecutionResult, ExecutorOptions};
-use std::error::Error;
-use std::{env, path::{Path, PathBuf}};
 use std::collections::HashMap;
-use crate::template::{TestTemplate, StepStatus};
+use std::error::Error;
+use std::{
+    env,
+    path::{Path, PathBuf},
+};
+use template::{BatchExecutor, BatchOptions, ExecutionResult, ExecutorOptions};
 
 /// The main function of the application.
 fn main() {
     // 解析命令行参数
     let cli_args = parse_args();
-    
+
     // 设置日志级别
-    env_logger::Builder::from_env(Env::default().default_filter_or(cli_args.get_log_level())).init();
-    
+    env_logger::Builder::from_env(Env::default().default_filter_or(cli_args.get_log_level()))
+        .init();
+
     // 获取工作目录
     let cwd = env::current_dir().unwrap_or_else(|_| PathBuf::from("."));
-    let working_dir = cli_args.test_dir
+    let working_dir = cli_args
+        .test_dir
         .as_ref()
         .map(|dir| cwd.join(dir))
         .unwrap_or(cwd);
@@ -55,7 +57,7 @@ fn main() {
         info!("Aggregating reports");
         let reports_dir = cli_args.reports_dir.as_deref();
         let output_path = cli_args.output.as_deref();
-        
+
         if let Err(e) = aggregator::aggregate_reports_from_dir(reports_dir, output_path) {
             error!("Failed to aggregate reports: {}", e);
         }
@@ -65,8 +67,10 @@ fn main() {
         info!("Generating summary report");
         let reports_json = cli_args.reports_json.as_deref();
         let summary_path = cli_args.summary_path.as_deref();
-        
-        if let Err(e) = markdown_report::generate_markdown_summary_from_json(reports_json, summary_path) {
+
+        if let Err(e) =
+            markdown_report::generate_markdown_summary_from_json(reports_json, summary_path)
+        {
             error!("Failed to generate markdown report: {}", e);
         }
     }
@@ -79,19 +83,15 @@ fn parse_args() -> CliArgs {
 }
 
 /// 运行单个测试模板文件
-/// 
+///
 /// # Arguments
-/// 
+///
 /// * `template_file` - 模板文件路径
 /// * `cli_args` - 命令行参数
 /// * `working_dir` - 工作目录
-fn run_single_template_test(
-    template_file: &Path,
-    cli_args: &CliArgs,
-    working_dir: &Path,
-) {
+fn run_single_template_test(template_file: &Path, cli_args: &CliArgs, working_dir: &Path) {
     info!("Processing single template: {}", template_file.display());
-    
+
     // 解析模板
     let template = match template::TestTemplate::from_file(template_file) {
         Ok(t) => t,
@@ -100,21 +100,24 @@ fn run_single_template_test(
             return;
         }
     };
-    
+
     // 如果是仅解析模式，则只验证模板格式并显示信息
     if cli_args.is_parse_only() {
         info!("Template parsed successfully:");
         info!("  Title: {}", template.metadata.title);
         info!("  Unit: {}", template.metadata.unit_name);
-        info!("  Target config: {}", template.metadata.target_config.display());
+        info!(
+            "  Target config: {}",
+            template.metadata.target_config.display()
+        );
         info!("  Total steps: {}", template.steps.len());
         return;
     }
-    
+
     // 加载目标配置
     let target_config_path = working_dir.join(&template.metadata.target_config);
     info!("Loading target config: {}", target_config_path.display());
-    
+
     let mut target_config: TargetConfig = match utils::read_toml_from_file(&target_config_path) {
         Ok(config) => config,
         Err(e) => {
@@ -122,7 +125,7 @@ fn run_single_template_test(
             return;
         }
     };
-    
+
     // 如果有环境类型覆盖，则更新目标配置
     let environment_type = cli_args.get_environment_type();
     if let Some(env_type) = &environment_type {
@@ -132,20 +135,21 @@ fn run_single_template_test(
 
     // 创建变量管理器
     let variable_manager = template::VariableManager::new();
-    
+
     // 准备执行选项，从cli_args获取超时和重试设置
     #[allow(dead_code)]
     // TODO: 实现把这个传到 executor 里面，未来有机会的话
     let executor_options = ExecutorOptions {
         command_timeout: cli_args.timeout, // 从cli_args获取超时设置
-        retry_count: cli_args.retry,            // 从cli_args获取重试次数
-        retry_interval: 5,                      // 默认重试间隔5秒
+        retry_count: cli_args.retry,       // 从cli_args获取重试次数
+        retry_interval: 5,                 // 默认重试间隔5秒
         maintain_session: true,
         continue_on_error: cli_args.continue_on_error, // 从cli_args获取错误处理策略
     };
 
     // 定义报告目录
-    let report_dir = cli_args.report_path
+    let report_dir = cli_args
+        .report_path
         .as_ref()
         .map(|p| p.to_path_buf())
         .unwrap_or_else(|| working_dir.join("reports"));
@@ -156,21 +160,18 @@ fn run_single_template_test(
         command_timeout_seconds: Some(executor_options.command_timeout),
         continue_on_error: executor_options.continue_on_error,
     };
-    
+
     // 创建批量执行器
-    let mut batch_executor = BatchExecutor::new(
-        variable_manager,
-        Some(batch_options),
-    );
-    
+    let mut batch_executor = BatchExecutor::new(variable_manager, Some(batch_options));
+
     // 添加模板到执行器
     batch_executor.add_template(template.into());
-    
+
     // 执行模板测试
     match batch_executor.execute_all() {
         Ok(results) => {
             info!("Template execution completed");
-            
+
             // 检查测试结果
             if !results.is_empty() {
                 // 获取第一个结果，使用迭代器而不是索引
@@ -191,10 +192,7 @@ fn run_single_template_test(
 ///
 /// * `cli_args` - Command line arguments.
 /// * `working_dir` - Working directory containing templates and target configs.
-fn run_template_tests(
-    cli_args: &CliArgs,
-    working_dir: &Path,
-) -> Result<(), Box<dyn Error>> {
+fn run_template_tests(cli_args: &CliArgs, working_dir: &Path) -> Result<(), Box<dyn Error>> {
     info!("Discovering Markdown test templates...");
 
     let template_dirs = vec![
@@ -233,40 +231,59 @@ fn run_template_tests(
         warn!("No templates found matching the criteria after filtering.");
         return Ok(());
     }
-    info!("Successfully loaded and filtered {} templates.", loaded_templates.len());
+    info!(
+        "Successfully loaded and filtered {} templates.",
+        loaded_templates.len()
+    );
 
     if cli_args.is_parse_only() {
         info!("Parse-only mode. Displaying template information:");
         for template in &loaded_templates {
             info!("  Title: {}", template.metadata.title);
             info!("  Unit: {}", template.metadata.unit_name);
-            info!("  Target config: {}", template.metadata.target_config.display());
+            info!(
+                "  Target config: {}",
+                template.metadata.target_config.display()
+            );
             info!("  Total steps: {}", template.steps.len());
         }
         return Ok(());
     }
 
     let environment_type_override = cli_args.get_environment_type();
-    let mut grouped_templates: HashMap<(PathBuf, Option<String>), Vec<TestTemplate>> = HashMap::new();
+    let mut grouped_templates: HashMap<(PathBuf, Option<String>), Vec<TestTemplate>> =
+        HashMap::new();
 
     let templates_for_display = loaded_templates.clone();
-    
+
     for template in loaded_templates {
         let target_config_file_path = working_dir.join(&template.metadata.target_config);
         let group_key = (target_config_file_path, environment_type_override.clone());
-        grouped_templates.entry(group_key).or_default().push(template);
+        grouped_templates
+            .entry(group_key)
+            .or_default()
+            .push(template);
     }
 
-    info!("Templates grouped into {} batches based on target configuration and environment override.", grouped_templates.len());
+    info!(
+        "Templates grouped into {} batches based on target configuration and environment override.",
+        grouped_templates.len()
+    );
 
-    let report_dir = cli_args.report_path
+    let report_dir = cli_args
+        .report_path
         .as_ref()
         .map(|p| p.to_path_buf())
         .unwrap_or_else(|| working_dir.join("reports"));
-    
+
     if !report_dir.exists() {
-        std::fs::create_dir_all(&report_dir)
-            .map_err(|e| format!("Failed to create report directory '{}': {}", report_dir.display(), e))?;
+        std::fs::create_dir_all(&report_dir).map_err(|e| {
+            format!(
+                "Failed to create report directory '{}': {}",
+                report_dir.display(),
+                e
+            )
+        })?;
     }
 
     let mut all_results: Vec<(PathBuf, ExecutionResult)> = Vec::new();
@@ -279,32 +296,57 @@ fn run_template_tests(
     }
 
     for ((target_config_path, group_env_override), templates_in_group) in grouped_templates {
-        info!("Processing batch for target_config: {}, env_override: {:?}", 
-              target_config_path.display(), group_env_override);
+        info!(
+            "Processing batch for target_config: {}, env_override: {:?}",
+            target_config_path.display(),
+            group_env_override
+        );
 
         if !target_config_path.exists() {
-            let msg = format!("Target configuration file not found: {}. Skipping {} templates in this group.", 
-                              target_config_path.display(), templates_in_group.len());
+            let msg = format!(
+                "Target configuration file not found: {}. Skipping {} templates in this group.",
+                target_config_path.display(),
+                templates_in_group.len()
+            );
             error!("{}", msg);
-            if !cli_args.continue_on_error { return Err(msg.into()); }
-            warn!("Skipping batch due to missing target configuration: {}", target_config_path.display());
+            if !cli_args.continue_on_error {
+                return Err(msg.into());
+            }
+            warn!(
+                "Skipping batch due to missing target configuration: {}",
+                target_config_path.display()
+            );
             continue;
         }
 
-        let mut target_config: TargetConfig = match utils::read_toml_from_file(&target_config_path) {
+        let mut target_config: TargetConfig = match utils::read_toml_from_file(&target_config_path)
+        {
             Ok(config) => config,
             Err(e) => {
-                let msg = format!("Failed to load target config '{}': {}. Skipping {} templates in this group.", 
-                                  target_config_path.display(), e, templates_in_group.len());
+                let msg = format!(
+                    "Failed to load target config '{}': {}. Skipping {} templates in this group.",
+                    target_config_path.display(),
+                    e,
+                    templates_in_group.len()
+                );
                 error!("{}", msg);
-                if !cli_args.continue_on_error { return Err(msg.into()); }
-                warn!("Skipping batch due to target configuration load failure: {}", target_config_path.display());
+                if !cli_args.continue_on_error {
+                    return Err(msg.into());
+                }
+                warn!(
+                    "Skipping batch due to target configuration load failure: {}",
+                    target_config_path.display()
+                );
                 continue;
             }
         };
 
         if let Some(env_type) = &group_env_override {
-            info!("Overriding environment type to: {} for target config {}", env_type, target_config_path.display());
+            info!(
+                "Overriding environment type to: {} for target config {}",
+                env_type,
+                target_config_path.display()
+            );
             target_config.testing_type = env_type.clone();
         }
 
@@ -328,34 +370,50 @@ fn run_template_tests(
         let variable_manager = template::VariableManager::new();
 
         let batch_execution_results = {
-            let mut batch_executor = BatchExecutor::new(
-                variable_manager,
-                Some(batch_options),
-            );
+            let mut batch_executor = BatchExecutor::new(variable_manager, Some(batch_options));
 
-            info!("Adding {} templates individually to batch for target_config '{}'", templates_in_group.len(), target_config_path.display());
+            info!(
+                "Adding {} templates individually to batch for target_config '{}'",
+                templates_in_group.len(),
+                target_config_path.display()
+            );
             for template in templates_in_group {
                 let metadata = &template.metadata;
                 debug!("Added template '{}' to batch executor", metadata.title);
                 batch_executor.add_template(template.into());
             }
 
-            info!("Executing batch for target_config '{}'...", target_config_path.display());
+            info!(
+                "Executing batch for target_config '{}'...",
+                target_config_path.display()
+            );
             match batch_executor.execute_all() {
                 Ok(results_vec) => {
-                    info!("Batch execution completed for target_config '{}'. {} results.", 
-                          target_config_path.display(), results_vec.len());
+                    info!(
+                        "Batch execution completed for target_config '{}'. {} results.",
+                        target_config_path.display(),
+                        results_vec.len()
+                    );
                     results_vec
                 }
                 Err(e) => {
-                    let msg = format!("Failed to execute template batch for target_config '{}': {}", target_config_path.display(), e);
+                    let msg = format!(
+                        "Failed to execute template batch for target_config '{}': {}",
+                        target_config_path.display(),
+                        e
+                    );
                     error!("{}", msg);
-                    if !cli_args.continue_on_error { return Err(msg.into()); }
-                    warn!("Continuing after batch execution failure for: {}", target_config_path.display());
+                    if !cli_args.continue_on_error {
+                        return Err(msg.into());
+                    }
+                    warn!(
+                        "Continuing after batch execution failure for: {}",
+                        target_config_path.display()
+                    );
                     Vec::new()
                 }
             }
-        }; 
+        };
 
         let converted_results: Vec<(PathBuf, ExecutionResult)> = batch_execution_results
             .into_iter()
@@ -370,15 +428,23 @@ fn run_template_tests(
         match result.overall_status {
             StepStatus::Pass => success_count += 1,
             StepStatus::Fail => fail_count += 1,
-            _ => {} 
+            _ => {}
         }
     }
 
-    info!("Overall test summary: {} successful, {} failed out of {} executed templates/results.", 
-          success_count, fail_count, all_results.len());
+    info!(
+        "Overall test summary: {} successful, {} failed out of {} executed templates/results.",
+        success_count,
+        fail_count,
+        all_results.len()
+    );
 
     if fail_count > 0 && !cli_args.continue_on_error {
-        return Err(format!("{} tests failed and continue_on_error is false.", fail_count).into());
+        return Err(format!(
+            "{} tests failed and continue_on_error is false.",
+            fail_count
+        )
+        .into());
     }
 
     Ok(())
