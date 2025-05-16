@@ -1,7 +1,8 @@
 ---
 title: "基础测试"
-target_config: "../../../targets/local/config.toml"
+target_config: "targets/local/config.toml"
 unit_name: "基础模块"
+unit_version: 0.1.0
 tags: ["base", "foundation"]
 ---
 
@@ -11,7 +12,7 @@ tags: ["base", "foundation"]
 
 ## 系统信息收集 {id="system-info"}
 
-```bash {id="collect-system" exec=true extract.kernel=/Linux\s+(\S+)/}
+```bash {id="collect-system" exec=true extract.kernel=/\b\d+\.\d+\.\d+-\w+\b/}
 uname -a
 ```
 
@@ -47,11 +48,11 @@ sleep 1
 echo "Base score: 85"
 ```
 
-```output {ref="benchmarks"}
+```output {ref="calc-base-values"}
 output
 ```
 
-系统信息: 内核版本 {{ kernel }}
-当前时间: {{ time }}
-当前用户: {{ username }}
-基准分数: {{ base_score }}
+系统信息: 内核版本 {{ collect-system::kernel }}
+当前时间: {{ get-timestamp::time }}
+当前用户: {{ get-user::username }}
+基准分数: {{ calc-base-values::base_score }}

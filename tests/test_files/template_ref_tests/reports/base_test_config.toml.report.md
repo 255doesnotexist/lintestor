@@ -1,10 +1,10 @@
 ---
 title: "基础测试"
-target_config: "../../../targets/local/config.toml"
+target_config: "targets/local/config.toml"
 unit_name: "基础模块"
+unit_version: 0.1.0
 tags: ["base", "foundation"]
 ---
-
 
 # 基础测试
 
@@ -16,9 +16,8 @@ tags: ["base", "foundation"]
 uname -a
 ```
 
-```output
+```output {ref="collect-system"}
 Linux debian 6.11.10-amd64 #1 SMP PREEMPT_DYNAMIC Debian 6.11.10-1 (2024-11-23) x86_64 GNU/Linux
-
 ```
 
 ## 时间戳生成
@@ -27,9 +26,8 @@ Linux debian 6.11.10-amd64 #1 SMP PREEMPT_DYNAMIC Debian 6.11.10-1 (2024-11-23) 
 echo "Current time: $(date '+%Y-%m-%d %H:%M:%S')"
 ```
 
-```output
-Current time: 2025-05-08 22:10:28
-
+```output {ref="get-timestamp"}
+Current time: 2025-05-17 00:23:35
 ```
 
 ## 用户信息获取
@@ -38,9 +36,8 @@ Current time: 2025-05-08 22:10:28
 echo "Current user: $(whoami)"
 ```
 
-```output
+```output {ref="get-user"}
 Current user: ezra
-
 ```
 
 ## 计算基准数值
@@ -51,11 +48,12 @@ sleep 1
 echo "Base score: 85"
 ```
 
-```output
-
+```output {ref="calc-base-values"}
+Performing base calculations...
+Base score: 85
 ```
 
-系统信息: 内核版本 debian
-当前时间: 2025-05-08 22:10:28
+系统信息: 内核版本 6.11.10-amd64
+当前时间: 2025-05-17 00:23:35
 当前用户: ezra
 基准分数: 85
