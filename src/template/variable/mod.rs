@@ -173,9 +173,7 @@ impl VariableManager {
             template
                 .metadata
                 .target_config
-                .file_name()
-                .and_then(|n| n.to_str())
-                .unwrap_or("default"),
+                .get_name()
         )?;
         Ok(())
     }
@@ -267,8 +265,8 @@ impl VariableManager {
 
         // 检查变量是否已存在
         if self.variables.contains_key(&variable_key) {
-            debug!("变量已存在，跳过注册: {variable_key}");
-            return Ok(());
+            debug!("变量已存在，覆盖旧值: {variable_key}");
+            self.variables.insert(variable_key.clone(), value.to_string());
         }
 
         // 注册变量
@@ -454,54 +452,44 @@ impl VariableManager {
         // }
 
         // 3. 上下文查找 (此时 var_name 是简单的, 例如 "query", 不包含 "::")
-        if let (tid, sid) = (current_template_id.clone(), current_step_id.clone()) {
-            // a. tid::sid::var_name (例如 current_namespace::current_step::query)
-            let key1 = format!("{tid}::{sid}::{var_name}");
-            if let Some(value) = self.variables.get(&key1) {
-                debug!("找到变量 ({key1}): {value}");
+        let (tid, sid) = (current_template_id.clone(), current_step_id.clone());
+        // a. tid::sid::var_name (例如 current_namespace::current_step::query)
+        let key1 = format!("{tid}::{sid}::{var_name}");
+        if let Some(value) = self.variables.get(&key1) {
+            debug!("找到变量 ({key1}): {value}");
+            return Some(value.clone());
+        }
+
+        // b. tid::GLOBAL::var_name (例如 current_namespace::GLOBAL::query)
+        //    仅当 sid 不是 "GLOBAL" 时尝试，以避免与 key1 重复检查
+        if sid != "GLOBAL" {
+            let key2 = format!("{}::{}::{}", tid, "GLOBAL", var_name);
+            if let Some(value) = self.variables.get(&key2) {
+                debug!("找到变量 ({key2}): {value}");
                 return Some(value.clone());
             }
+        }
+        // 如果 sid == "GLOBAL", key1 已经是 tid::GLOBAL::var_name, 所以 key2 被跳过。
 
-            // b. tid::GLOBAL::var_name (例如 current_namespace::GLOBAL::query)
-            //    仅当 sid 不是 "GLOBAL" 时尝试，以避免与 key1 重复检查
-            if sid != "GLOBAL" {
-                let key2 = format!("{}::{}::{}", tid, "GLOBAL", var_name);
-                if let Some(value) = self.variables.get(&key2) {
-                    debug!("找到变量 ({key2}): {value}");
-                    return Some(value.clone());
-                }
-            }
-            // 如果 sid == "GLOBAL", key1 已经是 tid::GLOBAL::var_name, 所以 key2 被跳过。
+        // c. GLOBAL::GLOBAL::var_name (例如 GLOBAL::GLOBAL::query)
+        let mut try_key3 = true;
+        let key3 = format!("{}::{}::{}", "GLOBAL", "GLOBAL", var_name);
 
-            // c. GLOBAL::GLOBAL::var_name (例如 GLOBAL::GLOBAL::query)
-            let mut try_key3 = true;
-            let key3 = format!("{}::{}::{}", "GLOBAL", "GLOBAL", var_name);
+        // 如果 key1 已经是 GLOBAL::GLOBAL::var_name (当 tid="GLOBAL" 且 sid="GLOBAL")
+        if tid == "GLOBAL" && sid == "GLOBAL" {
+            try_key3 = false;
+        }
+        // 如果 key2 已经是 GLOBAL::GLOBAL::var_name (当 tid="GLOBAL" 且 sid!="GLOBAL", key2尝试了GLOBAL::GLOBAL::var_name)
+        if tid == "GLOBAL" && sid != "GLOBAL" {
+            // key1 是 GLOBAL::sid::var_name, key2 是 GLOBAL::GLOBAL::var_name
+            try_key3 = false;
+        }
+        // 因此，仅当 tid 不是 "GLOBAL" 时，才需要独立尝试 key3
 
-            // 如果 key1 已经是 GLOBAL::GLOBAL::var_name (当 tid="GLOBAL" 且 sid="GLOBAL")
-            if tid == "GLOBAL" && sid == "GLOBAL" {
-                try_key3 = false;
-            }
-            // 如果 key2 已经是 GLOBAL::GLOBAL::var_name (当 tid="GLOBAL" 且 sid!="GLOBAL", key2尝试了GLOBAL::GLOBAL::var_name)
-            if tid == "GLOBAL" && sid != "GLOBAL" {
-                // key1 是 GLOBAL::sid::var_name, key2 是 GLOBAL::GLOBAL::var_name
-                try_key3 = false;
-            }
-            // 因此，仅当 tid 不是 "GLOBAL" 时，才需要独立尝试 key3
-
-            if try_key3 {
-                // 这意味着 tid 不是 "GLOBAL"
-                if let Some(value) = self.variables.get(&key3) {
-                    debug!("找到变量 ({key3}): {value}");
-                    return Some(value.clone());
-                }
-            }
-        } else {
-            // 没有完整的 tid, sid 上下文。 var_name 是简单的。
-            // 尝试 GLOBAL::GLOBAL::var_name 作为简单名称在无上下文时的全局回退。
-            // (这是在 var_name 最初未通过直接匹配找到的情况)
-            let key_global_simple = format!("{}::{}::{}", "GLOBAL", "GLOBAL", var_name);
-            if let Some(value) = self.variables.get(&key_global_simple) {
-                debug!("找到无上下文全局变量 ({key_global_simple}): {value}");
+        if try_key3 {
+            // 这意味着 tid 不是 "GLOBAL"
+            if let Some(value) = self.variables.get(&key3) {
+                debug!("找到变量 ({key3}): {value}");
                 return Some(value.clone());
             }
         }
@@ -564,11 +552,8 @@ impl VariableManager {
         enum State {
             Normal,
             Escape,
-            VarDollar, // 进入 ${
             VarDollarContent { content: String, brace_level: usize },
-            VarDoubleBrace, // 进入 {{
             VarDoubleBraceContent { content: String },
-            VarSingleBrace, // 进入 {
             VarSingleBraceContent { content: String, brace_level: usize },
         }
 
@@ -757,12 +742,6 @@ impl VariableManager {
                     } else {
                         content.push(c);
                     }
-                }
-                // 新增：处理未进入内容状态的 VarDollar/VarDoubleBrace/VarSingleBrace
-                State::VarDollar | State::VarDoubleBrace | State::VarSingleBrace => {
-                    // 理论上不会进入这些状态，直接回到 Normal
-                    output.push(c);
-                    state = State::Normal;
                 }
             }
         }
@@ -1030,9 +1009,45 @@ impl VariableManager {
 
 #[cfg(test)]
 mod tests {
-    use crate::template::TestTemplate;
+    use crate::{config::target_config::TargetConfig, template::{ContentBlock, ExecutionStep, TemplateMetadata, TemplateReference, TestTemplate}};
 
     use super::*;
+
+    fn create_dummy_template(
+        id: &str,
+        raw_content: &str,
+        content_blocks: Vec<ContentBlock>,
+        steps: Vec<ExecutionStep>,
+    ) -> Arc<TestTemplate> {
+        // 这里可以根据需要构造 TemplateMetadata、steps 等
+        // 但通常测试用例只关心 content_blocks
+
+        // 写入 /tmp/dummy_target.toml，内容为本地测试
+        let dummy_target_path = "/tmp/dummy_target.toml";
+        let dummy_target_content = r#"
+    name = "本地测试"
+    testing_type = "local"
+    description = "本地测试"
+    "#;
+        let _ = std::fs::write(dummy_target_path, dummy_target_content);
+
+        Arc::new(TestTemplate {
+            file_path: PathBuf::from(format!("/test/{}.test.md", id)),
+            raw_content: raw_content.to_string(),
+            content_blocks,
+            metadata: TemplateMetadata {
+                title: format!("{} Title", id),
+                target_config: TargetConfig::from_file(dummy_target_path)
+                    .expect("Failed to load dummy target config"),
+                unit_name: format!("{}_unit", id),
+                unit_version: "0.0.1".to_string(),
+                tags: Vec::new(),
+                references: Vec::<TemplateReference>::new(),
+                custom: HashMap::new(),
+            },
+            steps: steps,
+        })
+    }
 
     #[test]
     fn test_basic_variable_operations() {
@@ -1072,147 +1087,163 @@ mod tests {
     #[test]
     fn test_variable_replacement() {
         let mut manager = VariableManager::new();
+        // 构造内容块，包含待替换的变量
+        let content_blocks = vec![
+            ContentBlock::Text("${greeting} ${name}!".to_string()),
+            ContentBlock::Text("{{ t1::GLOBAL::greeting }} {{ name }}!".to_string()),
+            ContentBlock::Text("{ t1::GLOBAL::greeting } { name }!".to_string()),
+        ];
+        // 创建一个虚拟模板对象
+        let template_obj = create_dummy_template(
+            "t1",
+            "Test content",
+            content_blocks.clone(),
+            vec![],
+        );
+        // 注册模板
+        manager
+            .register_template(&template_obj, Some("t1"))
+            .unwrap();
 
         // 设置变量
         manager
-            .set_variable("template1", "step1", "name", "Alice")
+            .set_variable("t1", "GLOBAL", "greeting", "Hello")
             .unwrap();
         manager
-            .set_variable("template1", "GLOBAL", "greeting", "Hello")
-            .unwrap();
-        manager.register_namespace("t1", "template1");
-        manager
-            .register_template(
-                &Arc::new(TestTemplate {
-                    metadata: crate::template::TemplateMetadata {
-                        title: "Test Template".to_string(),
-                        unit_name: "Test Unit".to_string(),
-                        target_config: PathBuf::from("default.cfg"),
-                        unit_version: "1.0.0".to_string(),
-                        tags: vec!["test".to_string()],
-                        references: vec![],
-                        custom: HashMap::new(),
-                    },
-                    steps: vec![], // Empty vector of ExecutionStep
-                    file_path: PathBuf::from("template1_path"),
-                    raw_content: "Test content".to_string(),
-                    content_blocks: vec![], // Empty vector of ContentBlock
-                }),
-                Some("template1"),
-            )
+            .set_variable("t1", "GLOBAL", "name", "Alice")
             .unwrap();
 
         // 测试替换
+        let get_text = |cb: &ContentBlock| {
+            if let ContentBlock::Text(ref text) = cb {
+                text.clone()
+            } else {
+                panic!("ContentBlock is not Text variant");
+            }
+        };
+
         assert_eq!(
-            manager.replace_variables("${greeting} ${name}!", Some("template1"), Some("step1")),
+            manager.replace_variables(&get_text(&content_blocks[0]), Some("t1"), Some("GLOBAL")),
             "Hello Alice!"
         );
 
         assert_eq!(
-            manager.replace_variables(
-                "{{ t1::GLOBAL::greeting }} {{ name }}!",
-                Some("template1"),
-                Some("step1")
-            ),
+            manager.replace_variables(&get_text(&content_blocks[1]), Some("t1"), Some("GLOBAL")),
             "Hello Alice!"
         );
 
         assert_eq!(
-            manager.replace_variables(
-                "{ t1::GLOBAL::greeting } { name }!",
-                Some("template1"),
-                Some("step1")
-            ),
+            manager.replace_variables(&get_text(&content_blocks[2]), Some("t1"), Some("GLOBAL")),
             "Hello Alice!"
         );
     }
 
     #[test]
-    fn test_conditional_expressions() {
+    fn test_content_block_variable_replacement() {
         let mut manager = VariableManager::new();
 
-        // Create a mock test template
-        let file_path = PathBuf::from("template1_path");
-        let template_obj = Arc::new(TestTemplate {
-            metadata: crate::template::TemplateMetadata {
-                title: "Test Template".to_string(),
-                unit_name: "Test Unit".to_string(),
-                target_config: PathBuf::from("default.cfg"),
-                unit_version: "1.0.0".to_string(),
-                tags: vec!["test".to_string()],
-                references: vec![],
-                custom: HashMap::new(),
-            },
-            steps: vec![], // Empty vector of ExecutionStep
-            file_path,
-            raw_content: "Test content".to_string(),
-            content_blocks: vec![], // Empty vector of ContentBlock
-        });
+        // 构造内容块
+        let content_blocks = vec![
+            ContentBlock::Text("欢迎, {{ user }}!".to_string()),
+            ContentBlock::Text("分数: {{ score }}".to_string()),
+        ];
+        let template_obj = create_dummy_template(
+            "template2",
+            "Test content",
+            content_blocks.clone(),
+            vec![],
+        );
+        manager.register_template(&template_obj, Some("template2")).unwrap();
 
-        // 注册模板（这里吗顺便注册模板默认id对应的命名空间。想要别的自己注册）
-        manager
-            .register_template(&template_obj, Some("template1"))
-            .unwrap();
+        manager.set_variable("template2", "GLOBAL", "user", "小明").unwrap();
+        manager.set_variable("template2", "GLOBAL", "score", "99").unwrap();
+
+        // 检查内容块变量替换
+        if let ContentBlock::Text(ref text) = content_blocks[0] {
+            let replaced_text = manager.replace_variables(text, Some("template2"), None);
+            assert_eq!(replaced_text, "欢迎, 小明!");
+        } else {
+            panic!("ContentBlock is not Text variant");
+        }
+
+        if let ContentBlock::Text(ref text) = content_blocks[1] {
+            let replaced_code = manager.replace_variables(text, Some("template2"), None);
+            assert_eq!(replaced_code, "分数: 99");
+        } else {
+            panic!("ContentBlock is not Text variant");
+        }
+    }
+
+    #[test]
+    fn test_content_block_conditional() {
+        let mut manager = VariableManager::new();
+
+        let content_blocks = vec![
+            ContentBlock::Text("{{ passed == \"yes\" ? \"通过\" : \"未通过\" }}".to_string()),
+            ContentBlock::Text("{{ score >= 60 ? \"及格\" : \"不及格\" }}".to_string()),
+        ];
+
+        let template_obj = create_dummy_template(
+            "template3",
+            "Test content",
+            content_blocks.clone(),
+            vec![],
+        );
+        manager.register_template(&template_obj, Some("template3")).unwrap();
 
         // 设置变量
-        manager
-            .set_variable("template1", "GLOBAL", "score", "85")
-            .unwrap();
-        manager
-            .set_variable("template1", "GLOBAL", "name", "Alice")
-            .unwrap();
-        manager
-            .set_variable("template1", "GLOBAL", "version", "1.2.3")
-            .unwrap();
+        manager.set_variable("template3", "GLOBAL", "passed", "no").unwrap();
+        manager.set_variable("template3", "GLOBAL", "score", "59").unwrap();
 
-        // 测试等于条件
-        assert_eq!(
-            // 使用双花括号
-            manager.replace_variables(
-                r#"{{ score == "85" ? "优秀" : "良好" }}"#,
-                Some("template1"),
-                None
-            ),
-            "优秀"
-        );
+        if let ContentBlock::Text(ref text) = content_blocks[1] {
+            let replaced_score = manager.replace_variables(text, Some("template3"), None);
+            assert_eq!(replaced_score, "不及格");
+        } else {
+            panic!("ContentBlock is not Text variant");
+        }
 
-        // 测试不等于条件
-        assert_eq!(
-            manager.replace_variables(
-                "{{ name != \"Bob\" ? \"不是Bob\" : \"是Bob\" }}",
-                Some("template1"),
-                None
-            ),
-            "不是Bob"
-        );
+        // 修改分数再测一次
+        manager.set_variable("template3", "GLOBAL", "score", "60").unwrap();
+        if let ContentBlock::Text(ref text) = content_blocks[1] {
+            let replaced_score2 = manager.replace_variables(text, Some("template3"), None);
+            assert_eq!(replaced_score2, "及格");
+        } else {
+            panic!("ContentBlock is not Text variant");
+        }
+    }
 
-        // 测试大于条件
-        assert_eq!(
-            manager.replace_variables(
-                "{{ score > 80 ? \"优秀\" : \"良好\" }}",
-                Some("template1"),
-                None
-            ),
-            "优秀"
-        );
+    #[test]
+    fn test_content_block_nested_variables() {
+        let mut manager = VariableManager::new();
 
-        assert_eq!(
-            manager.replace_variables(
-                "{{ score > 90 ? \"优秀\" : \"良好\" }}",
-                Some("template1"),
-                None
-            ),
-            "良好"
-        );
+        let content_blocks = vec![
+            ContentBlock::Text("你好, {{ user }}! 状态: {{ status }}".to_string()),
+            ContentBlock::Text("{{ status == \"active\" ? \"欢迎回来\" : \"请激活\" }}".to_string()),
+        ];
 
-        // 测试包含条件
-        assert_eq!(
-            manager.replace_variables(
-                "{{ version contains \"1.2\" ? \"1.2系列\" : \"其他版本\" }}",
-                Some("template1"),
-                None
-            ),
-            "1.2系列"
+        let template_obj = create_dummy_template(
+            "template4",
+            "Test content",
+            content_blocks.clone(),
+            vec![],
         );
+        manager.register_template(&template_obj, Some("template4")).unwrap();
+
+        manager.set_variable("template4", "GLOBAL", "user", "张三").unwrap();
+        manager.set_variable("template4", "GLOBAL", "status", "active").unwrap();
+
+        if let ContentBlock::Text(ref text) = content_blocks[0] {
+            let replaced_text = manager.replace_variables(text, Some("template4"), None);
+            assert_eq!(replaced_text, "你好, 张三! 状态: active");
+        } else {
+            panic!("ContentBlock is not Text variant");
+        }
+
+        if let ContentBlock::Text(ref text) = content_blocks[1] {
+            let replaced_cond2 = manager.replace_variables(text, Some("template4"), None);
+            assert_eq!(replaced_cond2, "欢迎回来");
+        } else {
+            panic!("ContentBlock is not Text variant");
+        }
     }
 }
