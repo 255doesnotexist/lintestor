@@ -227,11 +227,12 @@ impl BatchExecutor {
                                         for line in stdout_val.lines() {
                                             if line_count >= 5 { break; }
                                             if !summary.is_empty() { summary.push(' '); }
+                                            let line = line.replace('\n', " ").replace('\r', " ");
                                             if line.len() > 200 {
                                                 summary.push_str(&line[..200]);
                                                 summary.push_str("...");
                                             } else {
-                                                summary.push_str(line);
+                                                summary.push_str(&line);
                                             }
                                             line_count += 1;
                                         }
@@ -259,11 +260,12 @@ impl BatchExecutor {
                                         for line in stderr_val.lines() {
                                             if line_count >= 5 { break; }
                                             if !summary.is_empty() { summary.push(' '); }
+                                            let line = line.replace('\n', " ").replace('\r', " ");
                                             if line.len() > 200 {
                                                 summary.push_str(&line[..200]);
                                                 summary.push_str("...");
                                             } else {
-                                                summary.push_str(line);
+                                                summary.push_str(&line);
                                             }
                                             line_count += 1;
                                         }
