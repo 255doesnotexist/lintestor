@@ -318,8 +318,10 @@ impl BatchExecutor {
                                         && !parsed_step_details.extractions.is_empty() {
                                             for extraction_rule in &parsed_step_details.extractions
                                             {
+                                                // 不知道为什么 ruyi 喜欢把一些信息打到 stderr 里，为了匹配先拼起来
+                                                // 以后可以改成 extract 里可以指定 stdout 和 stderr 或者 both(concat)
                                                 match extract_variable(
-                                                    &stdout_val,
+                                                    &format!("{stdout_val}\n{stderr_val}"),
                                                     &extraction_rule.regex,
                                                 ) {
                                                     Ok(var_value) => {
