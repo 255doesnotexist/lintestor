@@ -295,7 +295,7 @@ Makefile (Vector) configuration status (based on `assert.exit_code`): {{ config-
 ```bash {id="build-coremark-vector" exec=true description="Compile CoreMark (Vector Extension Opt.)" assert.exit_code=0 assert.stdout_contains="coremark.exe: ELF 64-bit LSB executable" workdir="/tmp/coremark_vector" depends_on=["config-coremark-vector"]}
 . ~/venv-gnu-upstream/bin/ruyi-activate
 cd /tmp/coremark_vector
-make PORT_DIR=linux64 XCFLAGS="-march=rv64gcv_zvl256b -mabi=lp64d" link
+make PORT_DIR=linux64 link
 file coremark.exe
 ```
 
