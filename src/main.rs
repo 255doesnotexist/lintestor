@@ -4,6 +4,7 @@ mod connection;
 mod template;
 mod test_environment;
 mod utils;
+mod pool;
 
 use crate::config::cli_args::CliArgs;
 use crate::config::target_config::TargetConfig;
@@ -112,6 +113,9 @@ fn run_single_template_test(
     // 创建变量管理器
     let variable_manager = template::VariableManager::new();
 
+    // 创建连接池
+    let mut connection_pool = pool::ConnectionManagerPool::new();
+
     // 准备执行选项，从cli_args获取超时和重试设置
     #[allow(dead_code)]
     // TODO: 实现把这个传到 executor 里面，未来有机会的话
@@ -138,7 +142,7 @@ fn run_single_template_test(
     };
 
     // 创建批量执行器
-    let mut batch_executor = BatchExecutor::new(variable_manager, Some(batch_options));
+    let mut batch_executor = BatchExecutor::new(variable_manager, connection_pool,Some(batch_options));
 
     // 添加模板到执行器
     batch_executor.add_template(template.into())?;
@@ -346,9 +350,10 @@ fn run_template_tests(cli_args: &CliArgs, working_dir: &Path) -> Result<(), Box<
         };
 
         let variable_manager = template::VariableManager::new();
-
+        // 创建连接池
+        let mut connection_pool = pool::ConnectionManagerPool::new();
         let batch_execution_results = {
-            let mut batch_executor = BatchExecutor::new(variable_manager, Some(batch_options));
+            let mut batch_executor = BatchExecutor::new(variable_manager, connection_pool, Some(batch_options));
 
             info!(
                 "Adding {} templates individually to batch for target_config '{}'",

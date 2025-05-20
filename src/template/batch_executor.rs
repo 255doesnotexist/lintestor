@@ -13,6 +13,7 @@ use std::time::{Duration, Instant};
 
 use crate::config::target_config::TargetConfig;
 use crate::connection::ConnectionFactory;
+use crate::pool::ConnectionManagerPool;
 use crate::template::dependency::StepDependencyManager;
 use crate::template::executor::{check_assertion, extract_variable, ExecutionResult};
 use crate::template::reporter::Reporter;
@@ -25,6 +26,7 @@ use crate::utils;
 pub struct BatchExecutor {
     variable_manager: VariableManager,
     step_dependency_manager: StepDependencyManager,
+    connection_manager_pool: ConnectionManagerPool,
     executed_step_results: HashMap<GlobalStepId, crate::template::executor::StepResult>,
     templates: HashMap<String, Arc<TestTemplate>>,
     options: Option<BatchOptions>,
@@ -32,11 +34,12 @@ pub struct BatchExecutor {
 }
 
 impl BatchExecutor {
-    pub fn new(variable_manager: VariableManager, options: Option<BatchOptions>) -> Self {
+    pub fn new(variable_manager: VariableManager, connection_manager_pool: ConnectionManagerPool, options: Option<BatchOptions>) -> Self {
         let report_dir = options.as_ref().and_then(|o| o.report_directory.clone());
         Self {
             variable_manager,
             step_dependency_manager: StepDependencyManager::new(),
+            connection_manager_pool: connection_manager_pool,
             executed_step_results: HashMap::new(),
             templates: HashMap::new(),
             options,
@@ -186,7 +189,7 @@ impl BatchExecutor {
                                     .target_config;
                             debug!("Executing command on target: {:?}", target_config);
                             let mut current_connection =
-                                ConnectionFactory::create_manager(&target_config)?;
+                                self.connection_manager_pool.get_or_create(target_config)?;
 
                             current_connection.setup()?;
 
