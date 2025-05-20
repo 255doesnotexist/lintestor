@@ -131,8 +131,7 @@ fn parse_markdown_to_steps_and_content_blocks(
     let all_depends_refs: Vec<(String, String)> = Vec::new(); // (当前step global_id, depends_on的原始id)
     let heading_re = Regex::new(r"(?m)^(#+)\s+(.*?)(?:\s+\{([^}]*)\}\s*|\s*)$")?;
     let code_block_re = Regex::new(r"(?ms)```(\w*)\s*(\{([^}]*)\})?\n(.*?)```")?;
-    let output_block_re =
-        Regex::new(r#"(?ms)```output\s+\{ref=(?:\"([^\"]+)\"|'([^']+)')\}\n(?:.*?)```"#)?;
+    let output_block_re = Regex::new(r#"(?m)^```output\s*\{([^}]*)\}"#)?;
     let summary_table_re = Regex::new(r#"(?im)^\s*<!--\s*LINTESOR_SUMMARY_TABLE\s*-->\s*$"#)?;
 
     let mut current_heading_stack: Vec<(GlobalStepId, u8, Vec<GlobalStepId>)> = Vec::new(); // (id, level, children)
@@ -224,13 +223,12 @@ fn parse_markdown_to_steps_and_content_blocks(
             }
         } else if let Some(output_match) = captures.name("output_block") {
             if let Some(caps) = output_block_re.captures(output_match.as_str()) {
-                let ref_id_attr = caps
-                    .get(1)
-                    .or_else(|| caps.get(2))
-                    .map_or("", |m| m.as_str())
-                    .to_string();
-                let attributes_str = caps.get(3).map_or("", |m| m.as_str());
+                debug!("发现 output_block: {}", output_match.as_str());
+                let attributes_str = caps.get(0).map_or("", |m| m.as_str());
                 let attributes = parse_inline_attributes(attributes_str);
+                let ref_id_attr = attributes
+                    .get("ref")
+                    .ok_or_else(|| anyhow!("output_block 缺少 ref 属性"))?;
                 let stream = match attributes.get("stream") {
                     Some(stream) => stream.to_string(),
                     _ => "stdout".to_string(),
