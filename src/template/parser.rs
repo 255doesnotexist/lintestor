@@ -131,7 +131,7 @@ fn parse_markdown_to_steps_and_content_blocks(
     let all_depends_refs: Vec<(String, String)> = Vec::new(); // (当前step global_id, depends_on的原始id)
     let heading_re = Regex::new(r"(?m)^(#+)\s+(.*?)(?:\s+\{([^}]*)\}\s*|\s*)$")?;
     let code_block_re = Regex::new(r"(?ms)```(bash)\s*(\{([^}]*)\})?\n(.*?)```")?;
-    let output_block_re = match Regex::new(r#"(?m)^```output\s*\{([^\r\n}]*)\}"#) {
+    let output_block_re = match Regex::new(r#"(?ms)^```output\s*\{([^\r\n}]*)\}.*?^```\s*$"#) {
         Ok(re) => re,
         Err(e) => {
             error!("正则表达式编译失败: {}", e);
