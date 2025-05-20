@@ -92,9 +92,7 @@ impl BatchExecutor {
                 target_name: template_arc
                     .metadata
                     .target_config
-                    .file_name()
-                    .and_then(|n| n.to_str())
-                    .unwrap_or("default")
+                    .get_name()
                     .to_string(),
                 overall_status: StepStatus::Skipped,
                 step_results: HashMap::new(),
@@ -120,9 +118,7 @@ impl BatchExecutor {
                     target_name: template_arc
                         .metadata
                         .target_config
-                        .file_name()
-                        .and_then(|n| n.to_str())
-                        .unwrap_or("default")
+                        .get_name()
                         .to_string(),
                     overall_status: StepStatus::Fail,
                     step_results: HashMap::new(),
@@ -184,15 +180,11 @@ impl BatchExecutor {
                                 "Executing command for step {step_id}: {hydrated_command}"
                             );
 
-                            let target_config_path =
-                                template_arc
+                            let target_config = 
+                                &template_arc
                                     .metadata
-                                    .target_config
-                                    .to_str()
-                                    .ok_or_else(|| anyhow!("Invalid target config path"))?;
-                            let target_config = TargetConfig::from_file(target_config_path)
-                                .map_err(|e| anyhow!("Failed to load target config: {}", e))?;
-                            debug!("Executing command on target: {target_config_path}");
+                                    .target_config;
+                            debug!("Executing command on target: {:?}", target_config);
                             let mut current_connection =
                                 ConnectionFactory::create_manager(&target_config)?;
 
@@ -465,9 +457,7 @@ impl BatchExecutor {
             target_name: template_arc
                 .metadata
                 .target_config
-                .file_name()
-                .and_then(|name| name.to_str())
-                .unwrap_or("default")
+                .get_name()
                 .to_string(),
             overall_status: template_overall_status,
             step_results: current_template_step_results,

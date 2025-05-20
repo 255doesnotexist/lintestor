@@ -8,6 +8,7 @@ use regex::Regex;
 use std::collections::{HashMap, HashSet};
 use std::path::{Path, PathBuf};
 
+use crate::config::target_config::TargetConfig;
 // Import the new ExecutionStep related types
 use crate::template::step::{ExecutionStep, GlobalStepId, StepType};
 // Import ParsedTestStep directly, ContentBlock is defined in this file
@@ -418,7 +419,8 @@ fn parse_metadata(yaml: &str) -> Result<TemplateMetadata> {
         .ok_or_else(|| anyhow!("元数据缺少'target_config'字段"))?;
     debug!("提取target_config: {target_config_str}");
 
-    let target_config = PathBuf::from(target_config_str);
+    let target_config = TargetConfig::from_file(target_config_str)
+            .unwrap_or_else(|_| panic!("无法加载 target_config 文件: {target_config_str}"));
 
     let unit_name = yaml_value["unit_name"]
         .as_str()
@@ -944,7 +946,7 @@ unit_name: "MyUnit"
     fn test_parse_metadata() {
         let yaml = r#"
 title: "Test Template"
-target_config: "targets/my_target/config.toml"
+target_config: "tests/test_files/local_target.toml"
 unit_name: "MyUnit"
 unit_version: "1.0.0"
 tags:
@@ -961,8 +963,8 @@ custom_field: "custom value"
         let metadata = parse_metadata(yaml).unwrap();
         assert_eq!(metadata.title, "Test Template");
         assert_eq!(
-            metadata.target_config,
-            PathBuf::from("targets/my_target/config.toml")
+            metadata.target_config.get_name(),
+            "Local Test"
         );
         assert_eq!(metadata.unit_name, "MyUnit");
         assert_eq!(metadata.unit_version, "1.0.0");

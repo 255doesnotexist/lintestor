@@ -104,16 +104,8 @@ pub fn filter_templates(
 fn matches_filter(template: &TestTemplate, filter: &TemplateFilter) -> bool {
     // 检查目标名称
     if let Some(ref target) = filter.target {
-        // 从target_config路径中提取目标名称
-        let template_target = template.metadata.target_config
-            .components()
-            .filter_map(|comp| match comp {
-                std::path::Component::Normal(s) => Some(s.to_string_lossy().into_owned()),
-                _ => None,
-            })
-            .find(|s| s == "targets" || s == target);
-        
-        if template_target.is_none() || template_target.unwrap() != *target {
+        // 直接通过 get_name() 获取目标名称进行比较
+        if template.metadata.target_config.get_name() != *target {
             return false;
         }
     }

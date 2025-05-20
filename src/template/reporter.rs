@@ -451,6 +451,7 @@ impl Reporter {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::config::target_config::TargetConfig;
     use crate::template::executor::{ExecutionResult, StepResult};
     use crate::template::{ContentBlock, ExecutionStep, TemplateMetadata, TemplateReference};
     use anyhow::Result;
@@ -467,13 +468,26 @@ mod tests {
         content_blocks: Vec<ContentBlock>,
         steps: Vec<ExecutionStep>,
     ) -> Arc<TestTemplate> {
+        // 这里可以根据需要构造 TemplateMetadata、steps 等
+        // 但通常测试用例只关心 content_blocks
+
+        // 写入 /tmp/dummy_target.toml，内容为本地测试
+        let dummy_target_path = "/tmp/dummy_target.toml";
+        let dummy_target_content = r#"
+    name = "本地测试"
+    testing_type = "local"
+    description = "本地测试"
+    "#;
+        let _ = std::fs::write(dummy_target_path, dummy_target_content);
+
         Arc::new(TestTemplate {
             file_path: PathBuf::from(format!("/test/{}.test.md", id)),
             raw_content: raw_content.to_string(),
             content_blocks,
             metadata: TemplateMetadata {
                 title: format!("{} Title", id),
-                target_config: PathBuf::from("dummy_target.toml"),
+                target_config: TargetConfig::from_file(dummy_target_path)
+                    .expect("Failed to load dummy target config"),
                 unit_name: format!("{}_unit", id),
                 unit_version: "0.0.1".to_string(),
                 tags: Vec::new(),
@@ -554,7 +568,7 @@ unit_name: Test Unit
 
 # {{ metadata.title }}
 
-This is a test report for {{ metadata.unit }} targeting {{ metadata.target }}.
+This is a test report for {{ metadata.unit_name }} targeting {{ metadata.target_name }}.
 
 ```output {ref="code1"}
 Placeholder for code1 output.
@@ -566,41 +580,32 @@ echo "Hello, {{ execution_time }}"
 "#;
 
         // 创建测试模板
-        let template = Arc::new(TestTemplate {
-            file_path: template_base_dir.join(format!("{}.md", template_id)),
-            raw_content: template_content.to_string(),
-            content_blocks: vec![
-                ContentBlock::Metadata("title: Test Report\nunit_name: Test Unit\ntarget_name: Test Target".to_string()),
-                ContentBlock::HeadingBlock {
-                    id: "heading1".to_string(),
-                    level: 1,
-                    text: "{{ metadata.title }}".to_string(),
-                    attributes: Default::default(),
-                },
-                ContentBlock::Text("This is a test report for {{ metadata.unit_name }} targeting {{ metadata.target_name }}.".to_string()),
-                ContentBlock::OutputBlock { step_id: "code1".to_string() },
-                ContentBlock::CodeBlock {
-                    id: "code1".to_string(),
-                    lang: "bash".to_string(),
-                    code: "echo \"Hello, {{ execution_time }}\"".to_string(),
-                    attributes: {
-                        let mut m = std::collections::HashMap::new();
-                        m.insert("id".to_string(), "code1".to_string());
-                        m
-                    },
-                },
-            ],
-            metadata: TemplateMetadata {
-                title: "Test Report".to_string(),
-                target_config: PathBuf::new(),
-                unit_name: "Test Unit".to_string(),
-                unit_version: "0.0.1".to_string(),
-                tags: vec![],
-                references: vec![],
-                custom: HashMap::new(),
+        let template = create_dummy_template(
+            template_id,
+            template_content,
+            vec![
+            ContentBlock::Metadata("title: Test Report\nunit_name: Test Unit\ntarget_name: Test Target".to_string()),
+            ContentBlock::HeadingBlock {
+                id: "heading1".to_string(),
+                level: 1,
+                text: "{{ metadata.title }}".to_string(),
+                attributes: Default::default(),
             },
-            steps: vec![],
-        });
+            ContentBlock::Text("This is a test report for {{ metadata.unit_name }} targeting {{ metadata.target_name }}.".to_string()),
+            ContentBlock::OutputBlock { step_id: "code1".to_string() },
+            ContentBlock::CodeBlock {
+                id: "code1".to_string(),
+                lang: "bash".to_string(),
+                code: "echo \"Hello, {{ execution_time }}\"".to_string(),
+                attributes: {
+                let mut m = std::collections::HashMap::new();
+                m.insert("id".to_string(), "code1".to_string());
+                m
+                },
+            },
+            ],
+            vec![],
+        );
 
         // 创建执行结果
         let execution_result = ExecutionResult {
@@ -642,7 +647,7 @@ echo "Hello, {{ execution_time }}"
         let report_content = fs::read_to_string(report_path)?;
         debug!("报告内容:\n{}", report_content);
         assert!(report_content.contains("Test Report"));
-        assert!(report_content.contains("This is a test report for Test Unit targeting default."));
+        assert!(report_content.contains("This is a test report for test_template_unit targeting 本地测试."));
         assert!(report_content.contains("Hello"));
 
         Ok(())

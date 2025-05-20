@@ -19,6 +19,7 @@ mod variable;
 pub mod step;
 pub use step::{ExecutionStep, GlobalStepId};
 
+use crate::config::target_config::TargetConfig;
 use crate::utils;
 // Import ContentBlock from parser, and the new parsing function
 pub use batch_executor::BatchExecutor;
@@ -56,7 +57,7 @@ pub struct TemplateMetadata {
     /// 测试标题
     pub title: String,
     /// 目标配置文件路径（相对于工作区根目录）
-    pub target_config: PathBuf,
+    pub target_config: TargetConfig,
     /// 测试单元名称
     pub unit_name: String,
     /// 单元版本字符串

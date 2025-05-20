@@ -1,5 +1,7 @@
 //! Represents the configuration for each target.
 
+use std::path::PathBuf;
+
 use crate::config::connection_config::ConnectionConfig;
 use crate::config::serial_config::SerialConfig;
 use crate::utils;
@@ -40,6 +42,9 @@ fn is_not_serial(value: &String) -> bool {
 pub struct TargetConfig {
     pub testing_type: String, // 'locally' or 'remote' or 'qemu-based-remote' or 'boardtest' or 'serial'
 
+    name: String, // target name
+    description: String, // target description
+
     #[serde(rename = "connection")]
     #[serde(default, skip_serializing_if = "is_not_remote")]
     pub connection: Option<ConnectionConfig>,
@@ -47,6 +52,9 @@ pub struct TargetConfig {
     #[serde(rename = "serial")]
     #[serde(default, skip_serializing_if = "is_not_serial")]
     pub serial: Option<SerialConfig>,
+
+    #[serde(skip)]
+    path: PathBuf, // target path
 }
 
 impl TargetConfig {
@@ -62,11 +70,30 @@ impl TargetConfig {
         self.connection.as_ref()
     }
 
+    /// 获取配置路径
+    #[allow(dead_code)]
+    pub fn get_path(&self) -> &PathBuf {
+        &self.path
+    }
+
+    /// 获取目标名称
+    #[allow(dead_code)]
+    pub fn get_name(&self) -> &str {
+        &self.name
+    }
+
+    /// 获取目标描述
+    #[allow(dead_code)]
+    pub fn get_description(&self) -> &str {
+        &self.description
+    }
+
     /// 从文件中读取
     pub fn from_file(file_path: &str) -> std::result::Result<Self, Box<dyn std::error::Error>> {
         use std::path::PathBuf;
         let path = PathBuf::from(file_path);
-        let config: Self = utils::read_toml_from_file(&path)?;
+        let mut config: Self = utils::read_toml_from_file(&path)?;
+        config.path = path; // 更新路径
         Ok(config)
     }
 }
