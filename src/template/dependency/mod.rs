@@ -7,6 +7,7 @@ use std::collections::{HashMap, HashSet, VecDeque};
 use anyhow::{Result};
 use log::{debug, warn};
 use regex::Regex;
+use serde::de;
 
 use crate::template::step::{ExecutionStep, GlobalStepId, StepType};
 
@@ -102,6 +103,14 @@ impl StepDependencyManager {
         for step_id in self.nodes.keys() {
             self.graph.entry(step_id.clone()).or_default();
         }
+        // 检查所有依赖节点是否都已定义
+        let undefined_nodes: Vec<_> = self.graph.keys()
+            .filter(|id| !self.nodes.contains_key(*id))
+            .cloned()
+            .collect();
+        if !undefined_nodes.is_empty() {
+            panic!("存在未定义的依赖节点：{undefined_nodes:?}。请检查文档，确保所有依赖的步骤都已定义。");
+        }
     }
 
     pub fn get_execution_order(&self) -> Result<Vec<GlobalStepId>, String> {
@@ -168,6 +177,9 @@ impl StepDependencyManager {
                 self.graph,
                 in_degree
             );
+            debug!("{}", in_degree.len());
+            debug!("{}", self.graph.len());
+            debug!("{}", self.nodes.len());
             Err(format!("Circular dependency detected or graph inconsistency. Processed {} nodes, expected {}. Missing: {:?}", sorted_order.len(), self.nodes.len(), missing_nodes))
         } else {
             Ok(sorted_order)
