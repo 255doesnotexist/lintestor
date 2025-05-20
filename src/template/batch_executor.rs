@@ -5,6 +5,7 @@
 
 use anyhow::{anyhow, Result};
 use log::{debug, error, info, warn};
+use serde::de;
 use std::collections::HashMap;
 use std::error::Error;
 use std::path::{Path, PathBuf};
@@ -21,6 +22,7 @@ use crate::template::step::{GlobalStepId, StepType};
 use crate::template::variable::VariableManager;
 use crate::template::{BatchOptions, StepStatus, TestTemplate};
 use crate::utils;
+use std::io::{self, Write};
 
 /// 批量测试执行器
 pub struct BatchExecutor {
@@ -31,10 +33,11 @@ pub struct BatchExecutor {
     templates: HashMap<String, Arc<TestTemplate>>,
     options: Option<BatchOptions>,
     report_dir: Option<PathBuf>,
+    pub interactive: bool, // 新增字段
 }
 
 impl BatchExecutor {
-    pub fn new(variable_manager: VariableManager, connection_manager_pool: ConnectionManagerPool, options: Option<BatchOptions>) -> Self {
+    pub fn new(variable_manager: VariableManager, connection_manager_pool: ConnectionManagerPool, options: Option<BatchOptions>, interactive: bool) -> Self {
         let report_dir = options.as_ref().and_then(|o| o.report_directory.clone());
         Self {
             variable_manager,
@@ -44,6 +47,7 @@ impl BatchExecutor {
             templates: HashMap::new(),
             options,
             report_dir,
+            interactive,
         }
     }
 
@@ -306,6 +310,50 @@ impl BatchExecutor {
                                                     error!(
                                                         "Assertion {idx} failed for step {step_id}: {e}"
                                                     );
+                                                    if self.interactive {
+                                                        info!("Assertion failed, please input a new value (or press Enter to skip):");
+                                                        loop {
+                                                            print!("Enter new value for assertion (or Enter to skip): ");
+                                                            io::stdout().flush().unwrap();
+                                                            let mut new_val = String::new();
+                                                            io::stdin().read_line(&mut new_val).unwrap();
+                                                            let new_val = new_val.trim();
+                                                            if new_val.is_empty() {
+                                                                info!("User chose to skip assertion correction.");
+                                                                break;
+                                                            }
+                                                            // 根据断言类型构造新断言
+                                                            use crate::template::AssertionType;
+                                                            let new_assertion = match assertion_details {
+                                                                AssertionType::ExitCode(_) => match new_val.parse::<i32>() {
+                                                                    Ok(code) => AssertionType::ExitCode(code),
+                                                                    Err(_) => {
+                                                                        warn!("Invalid exit code, must be integer");
+                                                                        continue;
+                                                                    }
+                                                                },
+                                                                AssertionType::StdoutContains(_) => AssertionType::StdoutContains(new_val.to_string()),
+                                                                AssertionType::StdoutNotContains(_) => AssertionType::StdoutNotContains(new_val.to_string()),
+                                                                AssertionType::StdoutMatches(_) => AssertionType::StdoutMatches(new_val.to_string()),
+                                                                AssertionType::StderrContains(_) => AssertionType::StderrContains(new_val.to_string()),
+                                                                AssertionType::StderrNotContains(_) => AssertionType::StderrNotContains(new_val.to_string()),
+                                                                AssertionType::StderrMatches(_) => AssertionType::StderrMatches(new_val.to_string()),
+                                                            };
+                                                            match check_assertion(&new_assertion, &stdout_val, &stderr_val, exit_code_val) {
+                                                                Ok(_) => {
+                                                                    assertion_statuses.pop();
+                                                                    assertion_error_msgs.pop();
+                                                                    assertion_statuses.push(StepStatus::Pass);
+                                                                    assertion_error_msgs.push(None);
+                                                                    info!("Assertion passed with user-provided value.");
+                                                                    break;
+                                                                }
+                                                                Err(e) => {
+                                                                    warn!("Still failed: {}", e);
+                                                                }
+                                                            }
+                                                        }
+                                                    }
                                                 }
                                             }
                                         }
@@ -340,6 +388,43 @@ impl BatchExecutor {
                                                     }
                                                     Err(e) => {
                                                         warn!("Failed to extract variable '{}' for step {}: {}", extraction_rule.variable, step_id, e);
+                                                        debug!("Extraction rule: {:?}", extraction_rule);
+                                                        debug!("Command output: \n{}", &format!("{stdout_val}\n{stderr_val}"));
+                                                        info!(
+                                                            "Extraction failed for variable '{}', please input a new regex (or empty to skip):",
+                                                            extraction_rule.variable
+                                                        );
+                                                        loop {
+                                                            print!("Enter new regex for '{}': ", extraction_rule.variable);
+                                                            io::stdout().flush().unwrap();
+                                                            let mut new_regex = String::new();
+                                                            io::stdin().read_line(&mut new_regex).unwrap();
+                                                            let new_regex = new_regex.trim();
+                                                            if new_regex.is_empty() {
+                                                                info!("User chose to skip extraction for '{}'.", extraction_rule.variable);
+                                                                break;
+                                                            }
+                                                            match extract_variable(&format!("{stdout_val}\n{stderr_val}"), new_regex) {
+                                                                Ok(var_value) => {
+                                                                    debug!(
+                                                                        "Extracted variable {}={} for step {} (user provided regex)",
+                                                                        extraction_rule.variable,
+                                                                        var_value,
+                                                                        step_id
+                                                                    );
+                                                                    self.variable_manager.set_variable(
+                                                                        &step_def.template_id,
+                                                                        &step_def.local_id,
+                                                                        &extraction_rule.variable,
+                                                                        &var_value,
+                                                                    )?;
+                                                                    break;
+                                                                }
+                                                                Err(e) => {
+                                                                    warn!("Still failed to extract variable '{}': {}", extraction_rule.variable, e);
+                                                                }
+                                                            }
+                                                        }
                                                     }
                                                 }
                                             }

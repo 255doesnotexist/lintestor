@@ -142,7 +142,7 @@ fn run_single_template_test(
     };
 
     // 创建批量执行器
-    let mut batch_executor = BatchExecutor::new(variable_manager, connection_pool,Some(batch_options));
+    let mut batch_executor = BatchExecutor::new(variable_manager, connection_pool,Some(batch_options), !cli_args.continue_on_error);
 
     // 添加模板到执行器
     batch_executor.add_template(template.into())?;
@@ -353,7 +353,7 @@ fn run_template_tests(cli_args: &CliArgs, working_dir: &Path) -> Result<(), Box<
         // 创建连接池
         let mut connection_pool = pool::ConnectionManagerPool::new();
         let batch_execution_results = {
-            let mut batch_executor = BatchExecutor::new(variable_manager, connection_pool, Some(batch_options));
+            let mut batch_executor = BatchExecutor::new(variable_manager, connection_pool, Some(batch_options), !cli_args.continue_on_error);
 
             info!(
                 "Adding {} templates individually to batch for target_config '{}'",
