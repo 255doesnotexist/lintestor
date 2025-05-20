@@ -197,7 +197,7 @@ impl Reporter {
                         report_parts.push(self.clean_markdown_markup(&code_block_str)?);
                     }
                 }
-                ContentBlock::OutputBlock { step_id } => {
+                ContentBlock::OutputBlock { step_id, stream } => {
                     // The step_id here is the *local* ID referenced in the template (e.g., {ref="local_step_id"})
                     // We need to find the corresponding StepResult using the global ID.
                     let global_step_id_to_find =
@@ -205,13 +205,41 @@ impl Reporter {
                     if let Some(step_result) = result.step_results.get(&global_step_id_to_find) {
                         let mut output_block_content =
                             format!("```output {{ref=\"{step_id}\"}}\n");
-                        // stdout is String, not Option<String> in executor::StepResult
-                        let stdout_content = step_result.stdout.trim_end_matches('\n');
-                        output_block_content.push_str(stdout_content);
-                        if !stdout_content.is_empty() {
-                            // Add newline only if there was content
-                            output_block_content.push('\n');
+                        
+                        match stream.as_str() {
+                            "stdout" => {
+                                let stdout_content = step_result.stdout.trim_end_matches('\n');
+                                output_block_content.push_str(stdout_content);
+                                if !stdout_content.is_empty() {
+                                    output_block_content.push('\n');
+                                }
+                            }
+                            "stderr" => {
+                                let stderr_content = step_result.stderr.trim_end_matches('\n');
+                                output_block_content.push_str(stderr_content);
+                                if !stderr_content.is_empty() {
+                                    output_block_content.push('\n');
+                                }
+                            }
+                            "both" => {
+                                let stdout_content = step_result.stdout.trim_end_matches('\n');
+                                let stderr_content = step_result.stderr.trim_end_matches('\n');
+                                if !stdout_content.is_empty() {
+                                    output_block_content.push_str("[stdout]\n");
+                                    output_block_content.push_str(stdout_content);
+                                    output_block_content.push('\n');
+                                }
+                                if !stderr_content.is_empty() {
+                                    output_block_content.push_str("[stderr]\n");
+                                    output_block_content.push_str(stderr_content);
+                                    output_block_content.push('\n');
+                                }
+                            }
+                            _ => {
+                                output_block_content.push_str("[Invalid stream specified]\n");
+                            }
                         }
+
                         output_block_content.push_str("```\n");
                         report_parts.push(output_block_content);
                     } else {
@@ -592,7 +620,7 @@ echo "Hello, {{ execution_time }}"
                 attributes: Default::default(),
             },
             ContentBlock::Text("This is a test report for {{ metadata.unit_name }} targeting {{ metadata.target_name }}.".to_string()),
-            ContentBlock::OutputBlock { step_id: "code1".to_string() },
+            ContentBlock::OutputBlock { step_id: "code1".to_string(), stream: "stdout".to_string() },
             ContentBlock::CodeBlock {
                 id: "code1".to_string(),
                 lang: "bash".to_string(),

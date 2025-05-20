@@ -51,7 +51,7 @@ pub enum ContentBlock {
 
     /// 代表一个步骤输出的占位符。
     /// 例如 ` ```output {ref="step_id"} ... ``` `。
-    OutputBlock { step_id: String },
+    OutputBlock { step_id: String, stream: String },
 
     /// 通用 Markdown 文本块。
     /// 这可以包含任何 Markdown内容，包括原始的步骤定义文本（如果它们不被特殊处理为其他类型的块）。
@@ -229,8 +229,15 @@ fn parse_markdown_to_steps_and_content_blocks(
                     .or_else(|| caps.get(2))
                     .map_or("", |m| m.as_str())
                     .to_string();
+                let attributes_str = caps.get(3).map_or("", |m| m.as_str());
+                let attributes = parse_inline_attributes(attributes_str);
+                let stream = match attributes.get("stream") {
+                    Some(stream) => stream.to_string(),
+                    _ => "stdout".to_string(),
+                };
                 content_blocks.push(ContentBlock::OutputBlock {
                     step_id: ref_id_attr.clone(),
+                    stream,
                 });
                 let local_id = format!("{ref_id_attr}-outputplaceholder");
                 all_local_ids.insert(local_id.clone());
