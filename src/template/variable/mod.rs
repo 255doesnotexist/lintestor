@@ -175,6 +175,15 @@ impl VariableManager {
                 .target_config
                 .get_name()
         )?;
+        self.set_variable(
+            template_id,
+            "GLOBAL",
+            "metadata.target_description",
+            template
+                .metadata
+                .target_config
+                .get_description()
+        )?;
         Ok(())
     }
 
