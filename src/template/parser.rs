@@ -130,8 +130,14 @@ fn parse_markdown_to_steps_and_content_blocks(
     let mut all_local_ids: HashSet<String> = HashSet::new();
     let all_depends_refs: Vec<(String, String)> = Vec::new(); // (当前step global_id, depends_on的原始id)
     let heading_re = Regex::new(r"(?m)^(#+)\s+(.*?)(?:\s+\{([^}]*)\}\s*|\s*)$")?;
-    let code_block_re = Regex::new(r"(?ms)```(\w*)\s*(\{([^}]*)\})?\n(.*?)```")?;
-    let output_block_re = Regex::new(r#"(?m)^```output\s*\{([^}]*)\}"#)?;
+    let code_block_re = Regex::new(r"(?ms)```(bash)\s*(\{([^}]*)\})?\n(.*?)```")?;
+    let output_block_re = match Regex::new(r#"(?m)^```output\s*\{([^\r\n}]*)\}"#) {
+        Ok(re) => re,
+        Err(e) => {
+            error!("正则表达式编译失败: {}", e);
+            return Err(anyhow!("正则表达式编译失败: {}", e));
+        }
+    };
     let summary_table_re = Regex::new(r#"(?im)^\s*<!--\s*LINTESOR_SUMMARY_TABLE\s*-->\s*$"#)?;
 
     let mut current_heading_stack: Vec<(GlobalStepId, u8, Vec<GlobalStepId>)> = Vec::new(); // (id, level, children)
@@ -224,7 +230,7 @@ fn parse_markdown_to_steps_and_content_blocks(
         } else if let Some(output_match) = captures.name("output_block") {
             if let Some(caps) = output_block_re.captures(output_match.as_str()) {
                 debug!("发现 output_block: {}", output_match.as_str());
-                let attributes_str = caps.get(0).map_or("", |m| m.as_str());
+                let attributes_str = caps.get(1).map_or("", |m| m.as_str());
                 let attributes = parse_inline_attributes(attributes_str);
                 let ref_id_attr = attributes
                     .get("ref")
@@ -543,6 +549,8 @@ fn extract_dep_id_from_dep_str(dep_str: &str) -> &str {
 /// 实现方式是使用有限状态机来解析键值对，内部状态似乎没什么复用的可能性所以 State 就不对外暴露了
 /// 注意我们在状态里没考虑 { 和 } 所以不许传入整个带 {} 的 attr_str
 fn parse_inline_attributes(input: &str) -> HashMap<String, String> {
+    debug!("解析内联属性: {}", input);
+    
     let mut result = HashMap::new();
     let mut chars = input.chars().peekable();
     let mut key = String::new();
