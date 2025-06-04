@@ -194,7 +194,7 @@ impl VariableManager {
     /// - 非空
     /// - 不包含 "::"
     /// - template_id 不能以 ".test" 结尾 (特殊值 "GLOBAL" 除外)
-    /// 否则将返回错误。
+    ///   否则将返回错误。
     pub fn set_variable(
         &mut self,
         _template_id: &str,
@@ -528,7 +528,7 @@ impl VariableManager {
     /// - {{ namespace.variable_name }} - 带命名空间的模板风格双花括号变量引用
     /// - { variable_name } - 模板风格的单花括号变量引用
     /// - { namespace.variable_name } - 带命名空间的模板风格单花括号变量引用
-    /// 必须有两个 { 和 } 才是三元表达式
+    ///   必须有两个 { 和 } 才是三元表达式
     /// - {{ variable == "value" ? "true_result" : "false_result" }} - 三元条件表达式
     /// - {{ variable > 100 ? "high" : "low" }} - 数值比较条件表达式
     pub fn replace_variables(
@@ -1054,7 +1054,7 @@ mod tests {
                 references: Vec::<TemplateReference>::new(),
                 custom: HashMap::new(),
             },
-            steps: steps,
+            steps,
         })
     }
 

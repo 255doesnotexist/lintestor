@@ -30,6 +30,7 @@ pub use variable::VariableManager; // Added StepDependencyManager
 
 /// Options for controlling batch execution
 #[derive(Debug, Clone)]
+#[derive(Default)]
 pub struct BatchOptions {
     /// Directory where reports should be saved.
     pub report_directory: Option<PathBuf>,
@@ -37,14 +38,6 @@ pub struct BatchOptions {
     pub executor_options: ExecutorOptions,
 }
 
-impl Default for BatchOptions {
-    fn default() -> Self {
-        Self {
-            report_directory: None,
-            executor_options: ExecutorOptions::default(),
-        }
-    }
-}
 
 /// 外部模板引用
 #[derive(Debug, Clone)]

@@ -92,7 +92,7 @@ fn run_single_template_test(
     }
 
     // 加载目标配置
-    let target_config_path = working_dir.join(&template.metadata.target_config.get_path());
+    let target_config_path = working_dir.join(template.metadata.target_config.get_path());
     info!("Loading target config: {}", target_config_path.display());
 
     let mut target_config: TargetConfig = match utils::read_toml_from_file(&target_config_path) {
@@ -246,7 +246,7 @@ fn run_template_tests(cli_args: &CliArgs, working_dir: &Path) -> Result<(), Box<
     let templates_for_display = loaded_templates.clone();
 
     for template in loaded_templates {
-        let target_config_file_path = working_dir.join(&template.metadata.target_config.get_path());
+        let target_config_file_path = working_dir.join(template.metadata.target_config.get_path());
         let group_key = (target_config_file_path, environment_type_override.clone());
         grouped_templates
             .entry(group_key)

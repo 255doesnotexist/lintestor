@@ -410,7 +410,7 @@ mod tests {
     use std::fs;
     use std::path::PathBuf;
     use std::sync::Arc;
-    use tempfile;
+    
 
     fn create_dummy_template(
         id: &str,
@@ -444,7 +444,7 @@ mod tests {
                 references: Vec::<TemplateReference>::new(),
                 custom: HashMap::new(),
             },
-            steps: steps,
+            steps,
         })
     }
 

@@ -248,7 +248,7 @@ fn parse_markdown_to_steps_and_content_blocks(
                 let global_id = format!("{template_id}::{local_id}");
                 let mut dependencies = HashSet::new();
                 let ref_global_id =
-                    resolve_dependency_ref(&ref_id_attr, template_id, &metadata.references);
+                    resolve_dependency_ref(ref_id_attr, template_id, &metadata.references);
                 dependencies.insert(ref_global_id.clone());
                 let parsed_step_info = ParsedTestStep {
                     id: local_id.clone(),

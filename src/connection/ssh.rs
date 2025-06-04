@@ -85,7 +85,7 @@ impl SSHConnectionManager {
                     host,
                     port,
                     username,
-                    &jumps,
+                    jumps,
                     max_retries as usize,
                     connect_timeout_secs,
                 )?;
@@ -159,7 +159,7 @@ impl SSHConnectionManager {
         final_host: &str,
         final_port: u16,
         final_username: &str,
-        jump_hosts: &Vec<String>,
+        jump_hosts: &[String],
         max_retries: usize,
         connect_timeout_secs: u64,
     ) -> Result<u16> {

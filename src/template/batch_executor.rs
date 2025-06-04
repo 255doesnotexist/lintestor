@@ -39,7 +39,7 @@ impl BatchExecutor {
         Self {
             variable_manager,
             step_dependency_manager: StepDependencyManager::new(),
-            connection_manager_pool: connection_manager_pool,
+            connection_manager_pool,
             executed_step_results: HashMap::new(),
             templates: HashMap::new(),
             options,
@@ -213,8 +213,7 @@ impl BatchExecutor {
                                     parsed_step_details.timeout_ms.map(Duration::from_millis);
                                 let global_timeout_opt = self
                                     .options
-                                    .as_ref()
-                                    .and_then(|o| Some(o.executor_options.command_timeout));
+                                    .as_ref().map(|o| o.executor_options.command_timeout);
                                 let step_timeout_opt = max(
                                     step_timeout_opt,
                                     global_timeout_opt.map(Duration::from_secs)
@@ -255,18 +254,16 @@ impl BatchExecutor {
                             // 新增 stdout_summary 变量，取前 5 行，每行不超过 200 字符，合并为单行
                             let stdout_summary = {
                                 let mut summary = String::new();
-                                let mut line_count = 0;
-                                for line in stdout_val.lines() {
+                                for (line_count, line) in stdout_val.lines().enumerate() {
                                     if line_count >= 5 { break; }
                                     if !summary.is_empty() { summary.push(' '); }
-                                    let line = line.replace('\n', " ").replace('\r', " ");
+                                    let line = line.replace(['\n', '\r'], " ");
                                     if line.len() > 200 {
                                         summary.push_str(&line[..200]);
                                         summary.push_str("...");
                                     } else {
                                         summary.push_str(&line);
                                     }
-                                    line_count += 1;
                                 }
                                 if stdout_val.lines().count() > 5 || stdout_val.len() > 200 {
                                     summary.push_str(" ...");
@@ -288,18 +285,16 @@ impl BatchExecutor {
                             // 新增 stderr_summary 变量，取前 5 行，每行不超过 200 字符，合并为单行
                             let stderr_summary = {
                                 let mut summary = String::new();
-                                let mut line_count = 0;
-                                for line in stderr_val.lines() {
+                                for (line_count, line) in stderr_val.lines().enumerate() {
                                     if line_count >= 5 { break; }
                                     if !summary.is_empty() { summary.push(' '); }
-                                    let line = line.replace('\n', " ").replace('\r', " ");
+                                    let line = line.replace(['\n', '\r'], " ");
                                     if line.len() > 200 {
                                         summary.push_str(&line[..200]);
                                         summary.push_str("...");
                                     } else {
                                         summary.push_str(&line);
                                     }
-                                    line_count += 1;
                                 }
                                 if stderr_val.lines().count() > 5 || stderr_val.len() > 200 {
                                     summary.push_str(" ...");
