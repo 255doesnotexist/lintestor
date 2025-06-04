@@ -27,8 +27,6 @@ pub struct ExecutionResult {
     pub step_results: HashMap<String, StepResult>,
     /// 从该模板执行中提取的变量（临时存储，查询还是请去 VariableManager）
     pub variables: HashMap<String, String>,
-    /// 特殊环境变量 (如执行日期等)
-    pub special_vars: HashMap<String, String>,
     /// 报告文件路径
     pub report_path: Option<PathBuf>,
 }

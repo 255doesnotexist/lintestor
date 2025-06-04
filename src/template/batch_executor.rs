@@ -5,15 +5,12 @@
 
 use anyhow::{anyhow, Result};
 use log::{debug, error, info, warn};
-use serde::de;
 use std::collections::HashMap;
 use std::error::Error;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use std::time::{Duration, Instant};
 
-use crate::config::target_config::TargetConfig;
-use crate::connection::ConnectionFactory;
 use crate::pool::ConnectionManagerPool;
 use crate::template::dependency::StepDependencyManager;
 use crate::template::executor::{check_assertion, extract_variable, ExecutionResult};
@@ -104,7 +101,6 @@ impl BatchExecutor {
                 overall_status: StepStatus::Skipped,
                 step_results: HashMap::new(),
                 variables: self.variable_manager.get_all_variables().clone(),
-                special_vars: HashMap::new(),
                 report_path: None,
             });
         }
@@ -130,7 +126,6 @@ impl BatchExecutor {
                     overall_status: StepStatus::Fail,
                     step_results: HashMap::new(),
                     variables: self.variable_manager.get_all_variables().clone(),
-                    special_vars: HashMap::new(),
                     report_path: None,
                 });
             }
@@ -192,7 +187,7 @@ impl BatchExecutor {
                                     .metadata
                                     .target_config;
                             debug!("Executing command on target: {:?}", target_config);
-                            let mut current_connection =
+                            let current_connection =
                                 self.connection_manager_pool.get_or_create(target_config)?;
 
                             current_connection.setup()?;
@@ -554,7 +549,6 @@ impl BatchExecutor {
             overall_status: template_overall_status,
             step_results: current_template_step_results,
             variables: final_variables,
-            special_vars: HashMap::new(),
             report_path: None,
         };
 

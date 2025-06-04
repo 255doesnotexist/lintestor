@@ -3,11 +3,9 @@
 //! 该模块实现了通过串口执行Linux命令的连接管理器
 
 use anyhow::{Context, Result};
-use log::{debug, warn};
-use mio_serial::{SerialStream, SerialPortBuilderExt};
+use log::{debug};
 use mio_serial::SerialPort;
-use std::io::{Read, Write};
-use std::sync::{Arc, Mutex};
+use std::io::Read;
 use std::thread;
 use std::time::{Duration, Instant};
 
@@ -66,7 +64,7 @@ impl ConnectionManager for SerialConnectionManager {
     /// 建立串口连接并登录shell
     fn setup(&mut self) -> Result<()> {
         debug!("串口setup: 打开串口并等待shell");
-        let mut port = self.open_port()?;
+        let mut port: Box<dyn SerialPort + Send + 'static> = self.open_port()?;
         let timeout = self.config.timeout;
         // 登录流程
         if let Some(ref user_pat) = self.config.user_prompt {

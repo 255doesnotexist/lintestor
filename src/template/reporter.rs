@@ -572,7 +572,6 @@ mod tests {
             overall_status: status,
             step_results,
             variables: HashMap::new(),
-            special_vars: HashMap::new(),
             report_path: None,
         }
     }
@@ -655,7 +654,6 @@ echo "Hello, {{ execution_time }}"
                 },
             )]),
             variables: HashMap::new(),
-            special_vars: HashMap::new(),
             report_path: None,
         };
 

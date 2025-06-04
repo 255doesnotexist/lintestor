@@ -114,7 +114,7 @@ fn run_single_template_test(
     let variable_manager = template::VariableManager::new();
 
     // 创建连接池
-    let mut connection_pool = pool::ConnectionManagerPool::new();
+    let connection_pool = pool::ConnectionManagerPool::new();
 
     // 准备执行选项，从cli_args获取超时和重试设置
     #[allow(dead_code)]
@@ -351,7 +351,7 @@ fn run_template_tests(cli_args: &CliArgs, working_dir: &Path) -> Result<(), Box<
 
         let variable_manager = template::VariableManager::new();
         // 创建连接池
-        let mut connection_pool = pool::ConnectionManagerPool::new();
+        let connection_pool = pool::ConnectionManagerPool::new();
         let batch_execution_results = {
             let mut batch_executor = BatchExecutor::new(variable_manager, connection_pool, Some(batch_options), !cli_args.continue_on_error);
 

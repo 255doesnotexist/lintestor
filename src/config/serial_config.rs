@@ -9,7 +9,6 @@ pub struct SerialConfig {
     pub baud_rate: u32,
     pub username: Option<String>,
     pub password: Option<String>,
-    pub login_prompt: Option<String>, // 进入shell的pattern
     pub user_prompt: Option<String>,  // 输入用户名的pattern
     pub pass_prompt: Option<String>,  // 输入密码的pattern
     pub shell_prompt: String,         // shell提示符pattern
