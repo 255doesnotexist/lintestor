@@ -524,6 +524,13 @@ impl BatchExecutor {
                     );
                 }
             }
+            // 注册本步骤的执行时长 (毫秒) 通过 template_id::step_id::duration_ms 变量调用
+            let _ = self.variable_manager.set_variable(
+                &step_def.template_id,
+                &step_def.local_id,
+                "duration_ms",
+                &duration_ms.to_string(),
+            );
 
             if template_overall_status == StepStatus::Fail && !continue_on_error {
                 info!("Stopping execution of template {template_id} due to step failure and continue_on_error=false.");

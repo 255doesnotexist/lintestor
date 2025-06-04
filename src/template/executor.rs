@@ -17,6 +17,7 @@ use crate::template::{
 pub struct ExecutionResult {
     /// 模板引用
     pub template: Arc<TestTemplate>,
+    #[allow(dead_code)]
     /// 测试单元名称
     pub unit_name: String,
     /// 目标名称
@@ -25,7 +26,10 @@ pub struct ExecutionResult {
     pub overall_status: StepStatus,
     /// 步骤结果 - Keyed by Step ID (e.g., "SECTION_ID" or "BLOCK_ID")
     pub step_results: HashMap<String, StepResult>,
+    #[allow(dead_code)]
     /// 从该模板执行中提取的变量（临时存储，查询还是请去 VariableManager）
+    /// 非常不建议在这里查询变量，我们生成模板的时候已经传入了完整的上下文 VariableManager，那里面的变量包括跨其他模板的变量
+    /// 而这里只有 **本模板执行后** 提取的本模板内的变量
     pub variables: HashMap<String, String>,
     /// 报告文件路径
     pub report_path: Option<PathBuf>,
@@ -42,6 +46,7 @@ impl ExecutionResult {
         &self.template.metadata.title
     }
     
+    #[allow(dead_code)] // 呃说不准有天生成 summary 的时候可以用到（这是不是也该注册到模板变量里）
     /// 获取模板文件路径
     pub fn template_path(&self) -> &Path {
         &self.template.file_path
@@ -52,7 +57,7 @@ impl ExecutionResult {
 #[derive(Debug, Clone)]
 pub struct StepResult {
     /// 步骤ID
-    pub id: String,
+    pub id: String, 
     /// 步骤描述 (可选)
     pub description: Option<String>,
     /// 状态
