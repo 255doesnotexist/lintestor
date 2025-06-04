@@ -83,15 +83,23 @@ pub struct CliArgs {
 
     /// 出错继续 - 即使测试失败也继续执行其余测试
     #[clap(long = "continue-on-error")]
-    pub continue_on_error: bool,
+    pub continue_on_error: Option<bool>,
 
     /// 执行命令超时时间（秒）
     #[clap(long = "timeout", default_value = "300")]
-    pub timeout: u64,
+    pub timeout: Option<u64>,
 
     /// 命令失败后重试次数
     #[clap(long = "retry", default_value = "3")]
-    pub retry: u32,
+    pub retry: Option<u32>,
+
+    /// 重试间隔时间（秒）
+    #[clap(long = "retry-interval", default_value = "5")]
+    pub retry_interval: Option<u64>,
+
+    /// 保持会话连接
+    #[clap(long = "maintain-session", default_value = "true")]
+    pub maintain_session: Option<bool>,
 }
 
 impl CliArgs {

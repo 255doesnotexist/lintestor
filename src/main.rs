@@ -2,7 +2,6 @@
 mod config;
 mod connection;
 mod template;
-mod test_environment;
 mod utils;
 mod pool;
 
@@ -116,15 +115,24 @@ fn run_single_template_test(
     // 创建连接池
     let connection_pool = pool::ConnectionManagerPool::new();
 
-    // 准备执行选项，从cli_args获取超时和重试设置
-    #[allow(dead_code)]
-    // TODO: 实现把这个传到 executor 里面，未来有机会的话
+    // 准备执行选项，优先级顺序: CLI参数 > target_config.executor > 默认值
+    let default_options = ExecutorOptions::default();
     let executor_options = ExecutorOptions {
-        command_timeout: cli_args.timeout, // 从cli_args获取超时设置
-        retry_count: cli_args.retry,       // 从cli_args获取重试次数
-        retry_interval: 5,                 // 默认重试间隔5秒
-        maintain_session: true,
-        continue_on_error: cli_args.continue_on_error, // 从cli_args获取错误处理策略
+        command_timeout: cli_args.timeout
+            .or(target_config.executor.command_timeout.map(|d| d.as_secs()))
+            .unwrap_or(default_options.command_timeout),
+        retry_count: cli_args.retry
+            .or(target_config.executor.retry_count)
+            .unwrap_or(default_options.retry_count),
+        retry_interval: cli_args.retry_interval
+            .or(target_config.executor.retry_interval)
+            .unwrap_or(default_options.retry_interval),
+        maintain_session: cli_args.maintain_session
+            .or(target_config.executor.maintain_session)
+            .unwrap_or(default_options.maintain_session),
+        continue_on_error: cli_args.continue_on_error
+            .or(target_config.executor.continue_on_error)
+            .unwrap_or(default_options.continue_on_error),
     };
 
     // 定义报告目录
@@ -137,12 +145,11 @@ fn run_single_template_test(
     // 准备批量选项
     let batch_options = BatchOptions {
         report_directory: Some(report_dir.clone()),
-        command_timeout_seconds: Some(executor_options.command_timeout),
-        continue_on_error: executor_options.continue_on_error,
+        executor_options: executor_options.clone(),
     };
 
     // 创建批量执行器
-    let mut batch_executor = BatchExecutor::new(variable_manager, connection_pool,Some(batch_options), !cli_args.continue_on_error);
+    let mut batch_executor = BatchExecutor::new(variable_manager, connection_pool,Some(batch_options));
 
     // 添加模板到执行器
     batch_executor.add_template(template.into())?;
@@ -291,9 +298,6 @@ fn run_template_tests(cli_args: &CliArgs, working_dir: &Path) -> Result<(), Box<
                 templates_in_group.len()
             );
             error!("{msg}");
-            if !cli_args.continue_on_error {
-                return Err(msg.into());
-            }
             warn!(
                 "Skipping batch due to missing target configuration: {}",
                 target_config_path.display()
@@ -312,9 +316,6 @@ fn run_template_tests(cli_args: &CliArgs, working_dir: &Path) -> Result<(), Box<
                     templates_in_group.len()
                 );
                 error!("{msg}");
-                if !cli_args.continue_on_error {
-                    return Err(msg.into());
-                }
                 warn!(
                     "Skipping batch due to target configuration load failure: {}",
                     target_config_path.display()
@@ -332,28 +333,37 @@ fn run_template_tests(cli_args: &CliArgs, working_dir: &Path) -> Result<(), Box<
             target_config.testing_type = env_type.clone();
         }
 
-        // 执行器选项
-        #[allow(dead_code)]
+        // 执行器选项，优先级顺序: CLI参数 > target_config.executor > 默认值
+        let default_options = ExecutorOptions::default();
         let executor_options = ExecutorOptions {
-            command_timeout: cli_args.timeout,
-            retry_count: cli_args.retry,
-            retry_interval: 5,
-            maintain_session: true,
-            continue_on_error: cli_args.continue_on_error,
+            command_timeout: cli_args.timeout
+                .or(target_config.executor.command_timeout.map(|d| d.as_secs()))
+                .unwrap_or(default_options.command_timeout),
+            retry_count: cli_args.retry
+                .or(target_config.executor.retry_count)
+                .unwrap_or(default_options.retry_count),
+            retry_interval: cli_args.retry_interval
+                .or(target_config.executor.retry_interval)
+                .unwrap_or(default_options.retry_interval),
+            maintain_session: cli_args.maintain_session
+                .or(target_config.executor.maintain_session)
+                .unwrap_or(default_options.maintain_session),
+            continue_on_error: cli_args.continue_on_error
+                .or(target_config.executor.continue_on_error)
+                .unwrap_or(default_options.continue_on_error),
         };
 
         // 批量执行选项
         let batch_options = BatchOptions {
             report_directory: Some(report_dir.clone()),
-            command_timeout_seconds: Some(executor_options.command_timeout),
-            continue_on_error: executor_options.continue_on_error,
+            executor_options: executor_options.clone(),
         };
 
         let variable_manager = template::VariableManager::new();
         // 创建连接池
         let connection_pool = pool::ConnectionManagerPool::new();
         let batch_execution_results = {
-            let mut batch_executor = BatchExecutor::new(variable_manager, connection_pool, Some(batch_options), !cli_args.continue_on_error);
+            let mut batch_executor = BatchExecutor::new(variable_manager, connection_pool, Some(batch_options));
 
             info!(
                 "Adding {} templates individually to batch for target_config '{}'",
@@ -386,9 +396,6 @@ fn run_template_tests(cli_args: &CliArgs, working_dir: &Path) -> Result<(), Box<
                         e
                     );
                     error!("{msg}");
-                    if !cli_args.continue_on_error {
-                        return Err(msg.into());
-                    }
                     warn!(
                         "Continuing after batch execution failure for: {}",
                         target_config_path.display()
@@ -422,7 +429,7 @@ fn run_template_tests(cli_args: &CliArgs, working_dir: &Path) -> Result<(), Box<
         all_results.len()
     );
 
-    if fail_count > 0 && !cli_args.continue_on_error {
+    if fail_count > 0 {
         return Err(format!(
             "{fail_count} tests failed and continue_on_error is false."
         )

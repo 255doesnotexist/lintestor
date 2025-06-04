@@ -41,6 +41,8 @@ use std::time::{Duration, Instant};
 use crate::config::connection_config::ConnectionConfig;
 use crate::connection::{CommandOutput, ConnectionManager};
 
+use crate::template::ExecutorOptions;
+
 /// SSH连接管理器
 pub struct SSHConnectionManager {
     /// SSH会话
@@ -51,11 +53,14 @@ pub struct SSHConnectionManager {
     maintain_session: bool,
     /// 环境变量
     env_vars: Vec<(String, String)>,
+    #[allow(dead_code)]
+    /// 执行器选项
+    executor_options: ExecutorOptions,
 }
 
 impl SSHConnectionManager {
     /// 创建新的SSH连接管理器
-    pub fn new(connection_config: &ConnectionConfig) -> Result<Self> {
+    pub fn new(connection_config: &ConnectionConfig, _executor_options: &ExecutorOptions) -> Result<Self> {
         let host = &connection_config.ip;
         let port = connection_config.port;
         let username = &connection_config.username;
@@ -66,9 +71,9 @@ impl SSHConnectionManager {
 
         debug!("创建SSH连接: {username}@{host}:{port}");
 
-        // 获取连接配置的重试和超时设置
-        let max_retries = connection_config.max_retries;
-        let connect_timeout_secs = connection_config.timeout.as_secs();
+        // 从executor_options获取重试和超时设置
+        let max_retries = _executor_options.retry_count;
+        let connect_timeout_secs = _executor_options.command_timeout;
 
         // 处理跳板机连接
         if let Some(jumps) = jump_hosts {
@@ -113,6 +118,7 @@ impl SSHConnectionManager {
                     connected: true,
                     maintain_session: true,
                     env_vars: Vec::new(),
+                    executor_options: _executor_options.clone(),
                 });
             }
         }
@@ -144,6 +150,7 @@ impl SSHConnectionManager {
             connected: true,
             maintain_session: true,
             env_vars: Vec::new(),
+            executor_options: _executor_options.clone(),
         })
     }
 

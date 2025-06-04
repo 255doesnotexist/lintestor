@@ -56,6 +56,7 @@ impl ExecutionResult {
 /// 单个测试步骤的执行结果
 #[derive(Debug, Clone)]
 pub struct StepResult {
+    #[allow(dead_code)]
     /// 步骤ID
     pub id: String, 
     /// 步骤描述 (可选)
@@ -68,9 +69,11 @@ pub struct StepResult {
     pub stderr: String,
     /// 退出码
     pub exit_code: i32,
-    /// 执行耗时 (可选)
+    #[allow(dead_code)]
+    /// 执行耗时
     pub duration_ms: Option<u128>,
-    /// 断言失败信息 (可选)
+    #[allow(dead_code)]
+    /// 断言失败信息
     pub assertion_error: Option<String>,
 }
 

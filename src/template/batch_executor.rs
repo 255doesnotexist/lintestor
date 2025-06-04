@@ -5,6 +5,7 @@
 
 use anyhow::{anyhow, Result};
 use log::{debug, error, info, warn};
+use std::cmp::max;
 use std::collections::HashMap;
 use std::error::Error;
 use std::path::{Path, PathBuf};
@@ -30,11 +31,10 @@ pub struct BatchExecutor {
     templates: HashMap<String, Arc<TestTemplate>>,
     options: Option<BatchOptions>,
     report_dir: Option<PathBuf>,
-    pub interactive: bool, // 新增字段
 }
 
 impl BatchExecutor {
-    pub fn new(variable_manager: VariableManager, connection_manager_pool: ConnectionManagerPool, options: Option<BatchOptions>, interactive: bool) -> Self {
+    pub fn new(variable_manager: VariableManager, connection_manager_pool: ConnectionManagerPool, options: Option<BatchOptions>) -> Self {
         let report_dir = options.as_ref().and_then(|o| o.report_directory.clone());
         Self {
             variable_manager,
@@ -44,8 +44,11 @@ impl BatchExecutor {
             templates: HashMap::new(),
             options,
             report_dir,
-            interactive,
         }
+    }
+
+    pub fn get_options(&self) -> &Option<BatchOptions> {
+        &self.options
     }
 
     pub fn add_template(&mut self, template: Arc<TestTemplate>) -> Result<(), Box<dyn Error>> {
@@ -138,7 +141,7 @@ impl BatchExecutor {
             crate::template::executor::StepResult,
         > = HashMap::new();
         let mut template_overall_status = StepStatus::Pass;
-        let continue_on_error = self.options.as_ref().is_some_and(|o| o.continue_on_error);
+        let continue_on_error = self.options.as_ref().is_some_and(|o| o.executor_options.continue_on_error);
 
         for step_id in execution_order {
             let step_def = match self.step_dependency_manager.get_step(&step_id) {
@@ -187,255 +190,279 @@ impl BatchExecutor {
                                     .metadata
                                     .target_config;
                             debug!("Executing command on target: {:?}", target_config);
-                            let current_connection =
-                                self.connection_manager_pool.get_or_create(target_config)?;
 
-                            current_connection.setup()?;
+                            // 获取执行器选项
+                            let default_options = crate::template::executor::ExecutorOptions::default();
+                            let executor_options = match &self.options {
+                                Some(opts) => &opts.executor_options,
+                                None => &default_options
+                            };
+                            let mut last_err = None;
+                            let mut retry_success = false;
+                            
+                            for attempt in 0..=executor_options.retry_count {
+                                // 根据 maintain_session 决定是否复用连接
+                                let current_connection = self.connection_manager_pool.get_or_create(
+                                    target_config,
+                                    executor_options.maintain_session,
+                                    executor_options
+                                )?;
+                                current_connection.setup()?;
 
-                            let step_timeout_opt =
-                                parsed_step_details.timeout_ms.map(Duration::from_millis);
-                            let global_timeout_opt = self
-                                .options
-                                .as_ref()
-                                .and_then(|o| o.command_timeout_seconds.map(Duration::from_secs));
-                            let timeout_duration = step_timeout_opt.or(global_timeout_opt);
+                                let step_timeout_opt =
+                                    parsed_step_details.timeout_ms.map(Duration::from_millis);
+                                let global_timeout_opt = self
+                                    .options
+                                    .as_ref()
+                                    .and_then(|o| Some(o.executor_options.command_timeout));
+                                let step_timeout_opt = max(
+                                    step_timeout_opt,
+                                    global_timeout_opt.map(Duration::from_secs)
+                                );
 
-                            match current_connection
-                                .execute_command(&hydrated_command, timeout_duration)
-                            {
-                                Ok(output) => {
-                                    stdout_val = output.stdout;
-                                    stderr_val = output.stderr;
-                                    exit_code_val = output.exit_code;
+                                let timeout_duration = step_timeout_opt.unwrap_or(Duration::from_secs(executor_options.command_timeout));
 
-                                    self.variable_manager.set_variable(
-                                        &step_def.template_id,
-                                        &step_def.local_id,
-                                        "stdout",
-                                        &stdout_val,
-                                    )?;
-                                    // OMG 我们又加了一个硬编码。。
-                                    // 新增 stdout_summary 变量，取前 5 行，每行不超过 200 字符，合并为单行
-                                    let stdout_summary = {
-                                        let mut summary = String::new();
-                                        let mut line_count = 0;
-                                        for line in stdout_val.lines() {
-                                            if line_count >= 5 { break; }
-                                            if !summary.is_empty() { summary.push(' '); }
-                                            let line = line.replace('\n', " ").replace('\r', " ");
-                                            if line.len() > 200 {
-                                                summary.push_str(&line[..200]);
-                                                summary.push_str("...");
-                                            } else {
-                                                summary.push_str(&line);
-                                            }
-                                            line_count += 1;
-                                        }
-                                        if stdout_val.lines().count() > 5 || stdout_val.len() > 200 {
-                                            summary.push_str(" ...");
-                                        }
-                                        summary
-                                    };
-                                    self.variable_manager.set_variable(
-                                        &step_def.template_id,
-                                        &step_def.local_id,
-                                        "stdout_summary",
-                                        &stdout_summary,
-                                    )?;
-                                    self.variable_manager.set_variable(
-                                        &step_def.template_id,
-                                        &step_def.local_id,
-                                        "stderr",
-                                        &stderr_val,
-                                    )?;
-                                    // 新增 stderr_summary 变量，取前 5 行，每行不超过 200 字符，合并为单行
-                                    let stderr_summary = {
-                                        let mut summary = String::new();
-                                        let mut line_count = 0;
-                                        for line in stderr_val.lines() {
-                                            if line_count >= 5 { break; }
-                                            if !summary.is_empty() { summary.push(' '); }
-                                            let line = line.replace('\n', " ").replace('\r', " ");
-                                            if line.len() > 200 {
-                                                summary.push_str(&line[..200]);
-                                                summary.push_str("...");
-                                            } else {
-                                                summary.push_str(&line);
-                                            }
-                                            line_count += 1;
-                                        }
-                                        if stderr_val.lines().count() > 5 || stderr_val.len() > 200 {
-                                            summary.push_str(" ...");
-                                        }
-                                        summary
-                                    };
-                                    self.variable_manager.set_variable(
-                                        &step_def.template_id,
-                                        &step_def.local_id,
-                                        "stderr_summary",
-                                        &stderr_summary,
-                                    )?;
-
-                                    self.variable_manager.set_variable(
-                                        &step_def.template_id,
-                                        &step_def.local_id,
-                                        "exit_code",
-                                        &exit_code_val.to_string(),
-                                    )?;
-
-                                    if !parsed_step_details.assertions.is_empty() {
-                                        assertion_status = StepStatus::Pass;
-                                        for (idx, assertion_details) in
-                                            parsed_step_details.assertions.iter().enumerate()
-                                        {
-                                            let assertion_result = check_assertion(
-                                                assertion_details,
-                                                &stdout_val,
-                                                &stderr_val,
-                                                exit_code_val,
-                                            );
-                                            match assertion_result {
-                                                Ok(_) => {
-                                                    assertion_statuses.push(StepStatus::Pass);
-                                                    assertion_error_msgs.push(None);
-                                                }
-                                                Err(e) => {
-                                                    step_status = StepStatus::Fail;
-                                                    assertion_status = StepStatus::Fail;
-                                                    assertion_statuses.push(StepStatus::Fail);
-                                                    assertion_error_msgs.push(Some(e.to_string()));
-                                                    error!(
-                                                        "Assertion {idx} failed for step {step_id}: {e}"
-                                                    );
-                                                    if self.interactive {
-                                                        info!("Assertion failed, please input a new value (or press Enter to skip):");
-                                                        loop {
-                                                            print!("Enter new value for assertion (or Enter to skip): ");
-                                                            io::stdout().flush().unwrap();
-                                                            let mut new_val = String::new();
-                                                            io::stdin().read_line(&mut new_val).unwrap();
-                                                            let new_val = new_val.trim();
-                                                            if new_val.is_empty() {
-                                                                info!("User chose to skip assertion correction.");
-                                                                break;
-                                                            }
-                                                            // 根据断言类型构造新断言
-                                                            use crate::template::AssertionType;
-                                                            let new_assertion = match assertion_details {
-                                                                AssertionType::ExitCode(_) => match new_val.parse::<i32>() {
-                                                                    Ok(code) => AssertionType::ExitCode(code),
-                                                                    Err(_) => {
-                                                                        warn!("Invalid exit code, must be integer");
-                                                                        continue;
-                                                                    }
-                                                                },
-                                                                AssertionType::StdoutContains(_) => AssertionType::StdoutContains(new_val.to_string()),
-                                                                AssertionType::StdoutNotContains(_) => AssertionType::StdoutNotContains(new_val.to_string()),
-                                                                AssertionType::StdoutMatches(_) => AssertionType::StdoutMatches(new_val.to_string()),
-                                                                AssertionType::StderrContains(_) => AssertionType::StderrContains(new_val.to_string()),
-                                                                AssertionType::StderrNotContains(_) => AssertionType::StderrNotContains(new_val.to_string()),
-                                                                AssertionType::StderrMatches(_) => AssertionType::StderrMatches(new_val.to_string()),
-                                                            };
-                                                            match check_assertion(&new_assertion, &stdout_val, &stderr_val, exit_code_val) {
-                                                                Ok(_) => {
-                                                                    assertion_statuses.pop();
-                                                                    assertion_error_msgs.pop();
-                                                                    assertion_statuses.push(StepStatus::Pass);
-                                                                    assertion_error_msgs.push(None);
-                                                                    info!("Assertion passed with user-provided value.");
-                                                                    break;
-                                                                }
-                                                                Err(e) => {
-                                                                    warn!("Still failed: {}", e);
-                                                                }
-                                                            }
-                                                        }
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    } else {
-                                        assertion_statuses.clear();
-                                        assertion_error_msgs.clear();
+                                match current_connection.execute_command(&hydrated_command, Some(timeout_duration)) {
+                                    Ok(output) => {
+                                        retry_success = true;
+                                        stdout_val = output.stdout;
+                                        stderr_val = output.stderr;
+                                        exit_code_val = output.exit_code;
+                                        break;
                                     }
-
-                                    if step_status == StepStatus::Pass
-                                        && !parsed_step_details.extractions.is_empty() {
-                                            for extraction_rule in &parsed_step_details.extractions
-                                            {
-                                                // 不知道为什么 ruyi 喜欢把一些信息打到 stderr 里，为了匹配先拼起来
-                                                // 以后可以改成 extract 里可以指定 stdout 和 stderr 或者 both(concat)
-                                                match extract_variable(
-                                                    &format!("{stdout_val}\n{stderr_val}"),
-                                                    &extraction_rule.regex,
-                                                ) {
-                                                    Ok(var_value) => {
-                                                        debug!(
-                                                            "Extracted variable {}={} for step {}",
-                                                            extraction_rule.variable,
-                                                            var_value,
-                                                            step_id
-                                                        );
-                                                        self.variable_manager.set_variable(
-                                                            &step_def.template_id,
-                                                            &step_def.local_id,
-                                                            &extraction_rule.variable,
-                                                            &var_value,
-                                                        )?;
-                                                    }
-                                                    Err(e) => {
-                                                        warn!("Failed to extract variable '{}' for step {}: {}", extraction_rule.variable, step_id, e);
-                                                        debug!("Extraction rule: {:?}", extraction_rule);
-                                                        debug!("Command output: \n{}", &format!("{stdout_val}\n{stderr_val}"));
-                                                        info!(
-                                                            "Extraction failed for variable '{}', please input a new regex (or empty to skip):",
-                                                            extraction_rule.variable
-                                                        );
-                                                        loop {
-                                                            print!("Enter new regex for '{}': ", extraction_rule.variable);
-                                                            io::stdout().flush().unwrap();
-                                                            let mut new_regex = String::new();
-                                                            io::stdin().read_line(&mut new_regex).unwrap();
-                                                            let new_regex = new_regex.trim();
-                                                            if new_regex.is_empty() {
-                                                                info!("User chose to skip extraction for '{}'.", extraction_rule.variable);
-                                                                break;
-                                                            }
-                                                            match extract_variable(&format!("{stdout_val}\n{stderr_val}"), new_regex) {
-                                                                Ok(var_value) => {
-                                                                    debug!(
-                                                                        "Extracted variable {}={} for step {} (user provided regex)",
-                                                                        extraction_rule.variable,
-                                                                        var_value,
-                                                                        step_id
-                                                                    );
-                                                                    self.variable_manager.set_variable(
-                                                                        &step_def.template_id,
-                                                                        &step_def.local_id,
-                                                                        &extraction_rule.variable,
-                                                                        &var_value,
-                                                                    )?;
-                                                                    break;
-                                                                }
-                                                                Err(e) => {
-                                                                    warn!("Still failed to extract variable '{}': {}", extraction_rule.variable, e);
-                                                                }
-                                                            }
-                                                        }
-                                                    }
-                                                }
-                                            }
+                                    Err(e) => {
+                                        last_err = Some(e);
+                                        if attempt < executor_options.retry_count {
+                                            std::thread::sleep(Duration::from_secs(executor_options.retry_interval));
                                         }
-                                }
-                                Err(e) => {
-                                    error!("Command execution failed for step {step_id}: {e}");
-                                    step_status = StepStatus::Fail;
-                                    assertion_status = StepStatus::Fail;
-                                    stderr_val = e.to_string();
-                                    assertion_error_msg =
-                                        Some(format!("Command execution failed: {e}"));
+                                    }
                                 }
                             }
+
+                            if !retry_success {
+                                let e = last_err.unwrap();
+                                error!("Command execution failed for step {step_id}: {e}");
+                                continue;
+                            }
+
+                            self.variable_manager.set_variable(
+                                &step_def.template_id,
+                                &step_def.local_id,
+                                "stdout",
+                                &stdout_val,
+                            )?;
+                            // OMG 我们又加了一个硬编码。。
+                            // 新增 stdout_summary 变量，取前 5 行，每行不超过 200 字符，合并为单行
+                            let stdout_summary = {
+                                let mut summary = String::new();
+                                let mut line_count = 0;
+                                for line in stdout_val.lines() {
+                                    if line_count >= 5 { break; }
+                                    if !summary.is_empty() { summary.push(' '); }
+                                    let line = line.replace('\n', " ").replace('\r', " ");
+                                    if line.len() > 200 {
+                                        summary.push_str(&line[..200]);
+                                        summary.push_str("...");
+                                    } else {
+                                        summary.push_str(&line);
+                                    }
+                                    line_count += 1;
+                                }
+                                if stdout_val.lines().count() > 5 || stdout_val.len() > 200 {
+                                    summary.push_str(" ...");
+                                }
+                                summary
+                            };
+                            self.variable_manager.set_variable(
+                                &step_def.template_id,
+                                &step_def.local_id,
+                                "stdout_summary",
+                                &stdout_summary,
+                            )?;
+                            self.variable_manager.set_variable(
+                                &step_def.template_id,
+                                &step_def.local_id,
+                                "stderr",
+                                &stderr_val,
+                            )?;
+                            // 新增 stderr_summary 变量，取前 5 行，每行不超过 200 字符，合并为单行
+                            let stderr_summary = {
+                                let mut summary = String::new();
+                                let mut line_count = 0;
+                                for line in stderr_val.lines() {
+                                    if line_count >= 5 { break; }
+                                    if !summary.is_empty() { summary.push(' '); }
+                                    let line = line.replace('\n', " ").replace('\r', " ");
+                                    if line.len() > 200 {
+                                        summary.push_str(&line[..200]);
+                                        summary.push_str("...");
+                                    } else {
+                                        summary.push_str(&line);
+                                    }
+                                    line_count += 1;
+                                }
+                                if stderr_val.lines().count() > 5 || stderr_val.len() > 200 {
+                                    summary.push_str(" ...");
+                                }
+                                summary
+                            };
+                            self.variable_manager.set_variable(
+                                &step_def.template_id,
+                                &step_def.local_id,
+                                "stderr_summary",
+                                &stderr_summary,
+                            )?;
+
+                            self.variable_manager.set_variable(
+                                &step_def.template_id,
+                                &step_def.local_id,
+                                "exit_code",
+                                &exit_code_val.to_string(),
+                            )?;
+
+                            if !parsed_step_details.assertions.is_empty() {
+                                assertion_status = StepStatus::Pass;
+                                for (idx, assertion_details) in
+                                    parsed_step_details.assertions.iter().enumerate()
+                                {
+                                    let assertion_result = check_assertion(
+                                        assertion_details,
+                                        &stdout_val,
+                                        &stderr_val,
+                                        exit_code_val,
+                                    );
+                                    match assertion_result {
+                                        Ok(_) => {
+                                            assertion_statuses.push(StepStatus::Pass);
+                                            assertion_error_msgs.push(None);
+                                        }
+                                        Err(e) => {
+                                            step_status = StepStatus::Fail;
+                                            assertion_status = StepStatus::Fail;
+                                            assertion_statuses.push(StepStatus::Fail);
+                                            assertion_error_msgs.push(Some(e.to_string()));
+                                            error!(
+                                                "Assertion {idx} failed for step {step_id}: {e}"
+                                            );
+                                            if !self.get_options().as_ref().is_some_and(|o| o.executor_options.continue_on_error) {
+                                                info!("Assertion failed, please input a new value (or press Enter to skip):");
+                                                loop {
+                                                    print!("Enter new value for assertion (or Enter to skip): ");
+                                                    io::stdout().flush().unwrap();
+                                                    let mut new_val = String::new();
+                                                    io::stdin().read_line(&mut new_val).unwrap();
+                                                    let new_val = new_val.trim();
+                                                    if new_val.is_empty() {
+                                                        info!("User chose to skip assertion correction.");
+                                                        break;
+                                                    }
+                                                    // 根据断言类型构造新断言
+                                                    use crate::template::AssertionType;
+                                                    let new_assertion = match assertion_details {
+                                                        AssertionType::ExitCode(_) => match new_val.parse::<i32>() {
+                                                            Ok(code) => AssertionType::ExitCode(code),
+                                                            Err(_) => {
+                                                                warn!("Invalid exit code, must be integer");
+                                                                continue;
+                                                            }
+                                                        },
+                                                        AssertionType::StdoutContains(_) => AssertionType::StdoutContains(new_val.to_string()),
+                                                        AssertionType::StdoutNotContains(_) => AssertionType::StdoutNotContains(new_val.to_string()),
+                                                        AssertionType::StdoutMatches(_) => AssertionType::StdoutMatches(new_val.to_string()),
+                                                        AssertionType::StderrContains(_) => AssertionType::StderrContains(new_val.to_string()),
+                                                        AssertionType::StderrNotContains(_) => AssertionType::StderrNotContains(new_val.to_string()),
+                                                        AssertionType::StderrMatches(_) => AssertionType::StderrMatches(new_val.to_string()),
+                                                    };
+                                                    match check_assertion(&new_assertion, &stdout_val, &stderr_val, exit_code_val) {
+                                                        Ok(_) => {
+                                                            assertion_statuses.pop();
+                                                            assertion_error_msgs.pop();
+                                                            assertion_statuses.push(StepStatus::Pass);
+                                                            assertion_error_msgs.push(None);
+                                                            info!("Assertion passed with user-provided value.");
+                                                            break;
+                                                        }
+                                                        Err(e) => {
+                                                            warn!("Still failed: {}", e);
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            } else {
+                                assertion_statuses.clear();
+                                assertion_error_msgs.clear();
+                            }
+
+                            if step_status == StepStatus::Pass
+                                && !parsed_step_details.extractions.is_empty() {
+                                    for extraction_rule in &parsed_step_details.extractions
+                                    {
+                                        // 不知道为什么 ruyi 喜欢把一些信息打到 stderr 里，为了匹配先拼起来
+                                        // 以后可以改成 extract 里可以指定 stdout 和 stderr 或者 both(concat)
+                                        match extract_variable(
+                                            &format!("{stdout_val}\n{stderr_val}"),
+                                            &extraction_rule.regex,
+                                        ) {
+                                            Ok(var_value) => {
+                                                debug!(
+                                                    "Extracted variable {}={} for step {}",
+                                                    extraction_rule.variable,
+                                                    var_value,
+                                                    step_id
+                                                );
+                                                self.variable_manager.set_variable(
+                                                    &step_def.template_id,
+                                                    &step_def.local_id,
+                                                    &extraction_rule.variable,
+                                                    &var_value,
+                                                )?;
+                                            }
+                                            Err(e) => {
+                                                warn!("Failed to extract variable '{}' for step {}: {}", extraction_rule.variable, step_id, e);
+                                                debug!("Extraction rule: {:?}", extraction_rule);
+                                                debug!("Command output: \n{}", &format!("{stdout_val}\n{stderr_val}"));
+                                                info!(
+                                                    "Extraction failed for variable '{}', please input a new regex (or empty to skip):",
+                                                    extraction_rule.variable
+                                                );
+                                                loop {
+                                                    print!("Enter new regex for '{}': ", extraction_rule.variable);
+                                                    io::stdout().flush().unwrap();
+                                                    let mut new_regex = String::new();
+                                                    io::stdin().read_line(&mut new_regex).unwrap();
+                                                    let new_regex = new_regex.trim();
+                                                    if new_regex.is_empty() {
+                                                        info!("User chose to skip extraction for '{}'.", extraction_rule.variable);
+                                                        break;
+                                                    }
+                                                    match extract_variable(&format!("{stdout_val}\n{stderr_val}"), new_regex) {
+                                                        Ok(var_value) => {
+                                                            debug!(
+                                                                "Extracted variable {}={} for step {} (user provided regex)",
+                                                                extraction_rule.variable,
+                                                                var_value,
+                                                                step_id
+                                                            );
+                                                            self.variable_manager.set_variable(
+                                                                &step_def.template_id,
+                                                                &step_def.local_id,
+                                                                &extraction_rule.variable,
+                                                                &var_value,
+                                                            )?;
+                                                            break;
+                                                        }
+                                                        Err(e) => {
+                                                            warn!("Still failed to extract variable '{}': {}", extraction_rule.variable, e);
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
                         } else {
                             info!(
                                 "Step {step_id} is inactive or not executable, skipping execution."
@@ -524,13 +551,6 @@ impl BatchExecutor {
                     );
                 }
             }
-            // 注册本步骤的执行时长 (毫秒) 通过 template_id::step_id::duration_ms 变量调用
-            let _ = self.variable_manager.set_variable(
-                &step_def.template_id,
-                &step_def.local_id,
-                "duration_ms",
-                &duration_ms.to_string(),
-            );
 
             if template_overall_status == StepStatus::Fail && !continue_on_error {
                 info!("Stopping execution of template {template_id} due to step failure and continue_on_error=false.");

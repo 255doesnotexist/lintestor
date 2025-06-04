@@ -200,6 +200,8 @@ impl Reporter {
                 ContentBlock::OutputBlock { step_id, stream } => {
                     // The step_id here is the *local* ID referenced in the template (e.g., {ref="local_step_id"})
                     // We need to find the corresponding StepResult using the global ID.
+                    // 因为我们这边直接用 HashMap 通过 id 得到 results 了，不是原本那种 map 然后 id == id 的方式了
+                    // 所以 Result 那边的 id 就成 dead_code 了需要 allow 一下
                     let global_step_id_to_find =
                         utils::get_result_id(template_id.as_str(), step_id);
                     if let Some(step_result) = result.step_results.get(&global_step_id_to_find) {
@@ -394,86 +396,6 @@ impl Reporter {
             }
         }
     }
-
-    /// 生成包含多个模板执行结果的摘要报告
-    pub fn generate_summary_report(
-        &self,
-        results: &[&ExecutionResult],
-        output_path_option: Option<PathBuf>,
-        var_manager: &VariableManager,
-    ) -> Result<PathBuf> {
-        if results.is_empty() {
-            info!("没有执行结果可供生成摘要报告。");
-            return Ok(self.report_output_dir.join("empty_summary.md"));
-        }
-
-        info!("开始生成摘要报告，包含 {} 个模板的结果。", results.len());
-
-        let output_path = output_path_option
-            .unwrap_or_else(|| self.report_output_dir.join("lintestor_summary.md"));
-
-        let mut summary_content = String::new();
-        summary_content.push_str(&format!(
-            "# Lintestor 测试执行摘要 ({})\n\n",
-            chrono::Local::now().format("%Y-%m-%d %H:%M:%S")
-        ));
-
-        summary_content.push_str("| 模板ID | 单元名称 | 目标名称 | 总体状态 | 报告路径 |\n");
-        summary_content.push_str("|--------|----------|----------|----------|----------|\n");
-
-        let mut overall_passed_count = 0;
-        let mut overall_failed_count = 0;
-
-        for result in results {
-            let status_text = match result.overall_status {
-                StepStatus::Pass => {
-                    overall_passed_count += 1;
-                    "✅ Pass"
-                }
-                StepStatus::Fail => {
-                    overall_failed_count += 1;
-                    "❌ Fail"
-                }
-                StepStatus::Skipped => "⚠️ Skipped",
-                StepStatus::Blocked => "❓ Blocked",
-                StepStatus::NotRun => "❓ Not Run",
-            };
-            let report_link = result
-                .report_path
-                .as_ref()
-                .and_then(|p| p.file_name().and_then(|name| name.to_str()))
-                .map(|name| format!("[查看报告](./{name})"))
-                .unwrap_or_else(|| "-".to_string());
-
-            summary_content.push_str(&format!(
-                "| {} | {} | {} | {} | {} |\n",
-                result.template_id().replace("|", "\\|"),
-                result.unit_name.replace("|", "\\|"),
-                result.target_name.replace("|", "\\|"),
-                status_text,
-                report_link
-            ));
-        }
-        summary_content.push('\n');
-        summary_content.push_str(&format!(
-            "**总结: 总计 {} 个模板, 通过 {}, 失败 {}.**\n",
-            results.len(),
-            overall_passed_count,
-            overall_failed_count
-        ));
-
-        let final_summary_content = var_manager.replace_variables(
-            &summary_content,
-            Some("lintestor_summary_context"),
-            None,
-        );
-
-        fs::write(&output_path, final_summary_content)
-            .with_context(|| format!("无法写入摘要报告文件: {}", output_path.display()))?;
-
-        info!("已成功生成摘要报告: {}", output_path.display());
-        Ok(output_path)
-    }
 }
 
 #[cfg(test)]
@@ -526,6 +448,7 @@ mod tests {
         })
     }
 
+    #[allow(dead_code)]
     fn create_dummy_execution_result(
         template_arc: Arc<TestTemplate>,
         target_name: &str,

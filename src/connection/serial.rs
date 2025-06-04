@@ -12,21 +12,28 @@ use std::time::{Duration, Instant};
 use crate::connection::{CommandOutput, ConnectionManager};
 use crate::config::serial_config::SerialConfig;
 
+use crate::template::ExecutorOptions;
+
 /// 串口连接管理器
 pub struct SerialConnectionManager {
     config: SerialConfig,
+    executor_options: ExecutorOptions,
     port: Option<Box<dyn SerialPort + Send>>, // 线程安全
 }
 
 impl SerialConnectionManager {
-    pub fn new(config: SerialConfig) -> Result<Self> {
-        Ok(Self { config, port: None })
+    pub fn new(config: SerialConfig, executor_options: ExecutorOptions) -> Result<Self> {
+        Ok(Self { 
+            config,
+            executor_options,
+            port: None 
+        })
     }
 
     /// 打开串口（使用mio-serial）
     fn open_port(&self) -> Result<Box<dyn SerialPort + Send>> {
         let mut builder = mio_serial::new(&self.config.port, self.config.baud_rate);
-        builder = builder.timeout(self.config.timeout);
+        builder = builder.timeout(Duration::from_secs(self.executor_options.command_timeout));
         let stream = builder.open_native().with_context(|| format!("无法打开串口: {}", self.config.port))?;
         Ok(Box::new(stream))
     }
@@ -65,7 +72,7 @@ impl ConnectionManager for SerialConnectionManager {
     fn setup(&mut self) -> Result<()> {
         debug!("串口setup: 打开串口并等待shell");
         let mut port: Box<dyn SerialPort + Send + 'static> = self.open_port()?;
-        let timeout = self.config.timeout;
+        let timeout = Duration::from_secs(self.executor_options.command_timeout);
         // 登录流程
         if let Some(ref user_pat) = self.config.user_prompt {
             let _ = Self::wait_for_pattern(&mut *port, user_pat, timeout)?;
@@ -97,7 +104,7 @@ impl ConnectionManager for SerialConnectionManager {
 
     /// 执行命令
     fn execute_command(&mut self, command: &str, timeout: Option<Duration>) -> Result<CommandOutput> {
-        let timeout = timeout.unwrap_or(self.config.timeout);
+        let timeout = timeout.unwrap_or(Duration::from_secs(self.executor_options.command_timeout));
         let shell_prompt = &self.config.shell_prompt;
         let port = self.port.as_mut().ok_or_else(|| anyhow::anyhow!("串口未连接，请先setup"))?;
         debug!("串口执行命令: {command}");

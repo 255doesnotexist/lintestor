@@ -17,7 +17,7 @@ mod variable;
 
 // Re-export types from step.rs
 pub mod step;
-pub use step::{ExecutionStep, GlobalStepId};
+pub use step::{ExecutionStep};
 
 use crate::config::target_config::TargetConfig;
 use crate::utils;
@@ -29,15 +29,21 @@ pub use parser::ContentBlock;
 pub use variable::VariableManager; // Added StepDependencyManager
 
 /// Options for controlling batch execution
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone)]
 pub struct BatchOptions {
     /// Directory where reports should be saved.
     pub report_directory: Option<PathBuf>,
-    /// Default command timeout in seconds for steps in the batch.
-    /// Can be overridden by individual step timeouts.
-    pub command_timeout_seconds: Option<u64>,
-    /// Whether to continue executing other steps in a template if one step fails.
-    pub continue_on_error: bool,
+    /// 执行器选项（包含重试、会话等参数）
+    pub executor_options: ExecutorOptions,
+}
+
+impl Default for BatchOptions {
+    fn default() -> Self {
+        Self {
+            report_directory: None,
+            executor_options: ExecutorOptions::default(),
+        }
+    }
 }
 
 /// 外部模板引用
@@ -157,29 +163,6 @@ impl StepStatus {
 // 这个 StepStatus 的实现是为了方便在报告中输出状态字符串，会把状态关联到 template_id::step_id::status.execution/assertion 的格式
 // 变量名允许带点（如 status.execution），查找时整体作为变量名处理，不做特殊分割
 
-/// 步骤执行结果
-#[derive(Debug, Clone)]
-pub struct StepResult {
-    /// 步骤ID (全局唯一)
-    pub id: GlobalStepId,
-    /// 步骤描述
-    pub description: Option<String>,
-    /// 执行状态
-    pub status: StepStatus,
-    /// 标准输出
-    pub stdout: Option<String>,
-    /// 标准错误
-    pub stderr: Option<String>,
-    /// 退出码
-    pub exit_code: Option<i32>,
-    /// 执行耗时 (毫秒)
-    pub duration_ms: Option<u128>,
-    /// 断言错误信息
-    pub assertion_error: Option<String>,
-    /// 提取的变量
-    pub extracted_vars: HashMap<String, String>,
-}
-
 /// Markdown测试模板
 #[derive(Debug, Clone)]
 pub struct TestTemplate {
@@ -189,6 +172,7 @@ pub struct TestTemplate {
     pub steps: Vec<ExecutionStep>,
     /// 模板文件路径
     pub file_path: PathBuf,
+    #[allow(dead_code)]
     /// 原始模板内容
     pub raw_content: String, // Keep for now, might be useful for debugging or other purposes
     /// 结构化的内容块，用于报告生成

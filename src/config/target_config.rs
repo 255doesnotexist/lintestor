@@ -3,6 +3,7 @@
 use std::path::PathBuf;
 
 use crate::config::connection_config::ConnectionConfig;
+use crate::config::executor_config::ExecutorConfig;
 use crate::config::serial_config::SerialConfig;
 use crate::utils;
 /// This struct is used to deserialize the configuration from a file using the `utils::read_toml_from_file` method.
@@ -52,6 +53,9 @@ pub struct TargetConfig {
     #[serde(rename = "serial")]
     #[serde(default, skip_serializing_if = "is_not_serial")]
     pub serial: Option<SerialConfig>,
+
+    #[serde(default)]
+    pub executor: ExecutorConfig, // 执行器配置(超时、重试等参数)
 
     #[serde(skip)]
     path: PathBuf, // target path

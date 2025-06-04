@@ -160,18 +160,6 @@ impl Drop for TempFile {
     }
 }
 
-/// Represents the output of a command execution.
-
-#[derive(Debug, Clone)]
-pub struct CommandOutput {
-    /// The command executed.
-    pub command: String,
-    /// The exit status of the command.
-    pub exit_status: i32,
-    /// The output (stdout and stderr) of the command.
-    pub output: String,
-}
-
 /// Reads a TOML file into an arbitrary struct.
 ///
 /// # Parameters

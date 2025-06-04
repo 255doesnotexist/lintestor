@@ -6,7 +6,7 @@ use anyhow::{anyhow, bail, Context, Result};
 use log::{debug, error, info, warn};
 use regex::Regex;
 use std::collections::{HashMap, HashSet};
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
 use crate::config::target_config::TargetConfig;
 // Import the new ExecutionStep related types
