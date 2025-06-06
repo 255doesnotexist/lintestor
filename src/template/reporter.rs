@@ -23,25 +23,23 @@ use crate::utils;
 /// 负责将执行结果转换为Markdown格式的测试报告
 pub struct Reporter {
     /// 测试模板文件所在的目录，用于解析相对路径等
-    template_base_dir: PathBuf,
+    test_dir: PathBuf,
     /// 报告最终输出的目录
-    report_output_dir: PathBuf,
+    report_dir: PathBuf,
 }
 
 impl Reporter {
     /// 创建新的报告生成器
     ///
     /// # 参数
-    /// * `template_base_dir`: 当前处理的测试模板文件所在的目录。
+    /// * `test_dir`: 当前处理的测试模板文件所在的目录。
     ///   用于解析模板中可能存在的相对路径引用，或作为报告中相对路径的基础。
-    /// * `report_output_dir`: 所有生成的报告文件最终应存放的目录。
-    ///   如果为 `None`，可能会使用 `template_base_dir` 下的 "reports" 子目录或其他默认逻辑。
-    pub fn new(template_base_dir: PathBuf, report_output_dir: Option<PathBuf>) -> Self {
-        let final_report_output_dir =
-            report_output_dir.unwrap_or_else(|| template_base_dir.join("reports"));
+    /// * `report_dir`: 所有生成的报告文件最终应存放的目录。
+    ///   如果为 `None`，可能会使用 `test_dir` 下的 "reports" 子目录或其他默认逻辑。
+    pub fn new(test_dir: Option<PathBuf>, report_dir: Option<PathBuf>) -> Self {
         Self {
-            template_base_dir,
-            report_output_dir: final_report_output_dir,
+            test_dir: test_dir.unwrap(),
+            report_dir: report_dir.unwrap(),
         }
     }
 
@@ -64,30 +62,22 @@ impl Reporter {
         debug!("模板标题: {}", result.template_title());
         debug!(
             "模板文件所在目录 (基准目录): {}",
-            self.template_base_dir.display()
+            self.test_dir.display()
         );
-        debug!("报告计划输出目录: {}", self.report_output_dir.display());
+        debug!("报告计划输出目录: {}", self.report_dir.display());
 
         // 确保报告输出目录存在
-        fs::create_dir_all(&self.report_output_dir).with_context(|| {
-            format!("无法创建报告输出目录: {}", self.report_output_dir.display())
+        fs::create_dir_all(&self.report_dir).with_context(|| {
+            format!("无法创建报告输出目录: {}", self.report_dir.display())
         })?;
 
-        // 确定报告文件名 (可以基于模板ID和目标名称)
-        let report_filename = format!(
-            "{}_{}.report.md",
-            result
-                .template_id()
-                .replace(['/', '\\', ':', ' '], "_")
-                .to_lowercase(),
-            result
-                .target_name
-                .replace(['/', '\\', ':', ' '], "_")
-                .to_lowercase()
-        );
-
-        // 构建报告文件的完整路径
-        let report_path = self.report_output_dir.join(&report_filename);
+        // 构建报告文件的完整路径 (result 传过来的)
+        let report_path = match result.report_path {
+            Some(ref path) => {
+                path.clone()
+            }
+            None => panic!("No report path provided in ExecutionResult, this should not happen"),
+        };
 
         // 生成报告的Markdown内容
         let report_content = self.generate_report_content(template, result, var_manager)?;
@@ -403,7 +393,7 @@ mod tests {
     use super::*;
     use crate::config::target_config::TargetConfig;
     use crate::template::executor::{ExecutionResult, StepResult};
-    use crate::template::{ContentBlock, ExecutionStep, TemplateMetadata, TemplateReference};
+    use crate::template::{BatchOptions, ContentBlock, ExecutionStep, TemplateMetadata, TemplateReference};
     use anyhow::Result;
     use std::collections::HashMap;
     use std::error::Error;
@@ -504,10 +494,10 @@ mod tests {
     ) -> Result<(), Box<dyn Error>> {
         // 创建临时目录用于测试
         let temp_dir = tempfile::tempdir()?;
-        let template_base_dir = temp_dir.path().join("templates");
-        let report_output_dir = temp_dir.path().join("reports");
-        fs::create_dir_all(&template_base_dir)?;
-        fs::create_dir_all(&report_output_dir)?;
+        let test_dir = temp_dir.path().join("templates");
+        let report_dir = temp_dir.path().join("reports");
+        fs::create_dir_all(&test_dir)?;
+        fs::create_dir_all(&report_dir)?;
 
         // 定义模板ID和内容
         let template_id = "test_template";
@@ -577,7 +567,15 @@ echo "Hello, {{ execution_time }}"
                 },
             )]),
             variables: HashMap::new(),
-            report_path: None,
+            report_path: Some(utils::generate_report_path(
+                &Some(BatchOptions {
+                    report_directory: Some(report_dir.clone()),
+                    test_directory: Some(test_dir.clone()),
+                    executor_options: Default::default(),
+                    keep_template_directory_structure: true,
+                }),
+                &Arc::clone(&template),
+            )?),
         };
 
         // 创建变量管理器并设置变量
@@ -586,7 +584,7 @@ echo "Hello, {{ execution_time }}"
         var_manager.set_variable("GLOBAL", "GLOBAL", "var.global_var", "World")?;
 
         // 创建Reporter实例
-        let reporter = Reporter::new(template_base_dir.clone(), Some(report_output_dir.clone()));
+        let reporter = Reporter::new(Some(test_dir), Some(report_dir.clone()));
 
         // 生成报告
         let report_path = reporter.generate_report(&template, &execution_result, &var_manager)?;
@@ -605,7 +603,7 @@ echo "Hello, {{ execution_time }}"
     #[test]
     fn test_clean_markdown_markup_removes_attributes() -> Result<()> {
         let temp_dir = tempfile::tempdir()?;
-        let reporter = Reporter::new(temp_dir.path().to_path_buf(), None);
+        let reporter = Reporter::new(Some(temp_dir.path().to_path_buf()), Some("./reports".into()));
 
         let input7 = "Start {id=\"id1\"} then {exec=true} finally {description=\"desc\"} end";
         assert_eq!(

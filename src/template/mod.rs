@@ -32,10 +32,16 @@ pub use variable::VariableManager; // Added StepDependencyManager
 #[derive(Debug, Clone)]
 #[derive(Default)]
 pub struct BatchOptions {
+    /// Test directory to search for templates. 
+    /// (For single template, this is the directory containing the template file)
+    pub test_directory: Option<PathBuf>,
     /// Directory where reports should be saved.
     pub report_directory: Option<PathBuf>,
-    /// 执行器选项（包含重试、会话等参数）
+    /// Executor options for controlling how tests are executed
     pub executor_options: ExecutorOptions,
+    /// Report should be generated report directory in flat structure
+    /// or keep the original directory structure
+    pub keep_template_directory_structure: bool,
 }
 
 

@@ -33,10 +33,6 @@ pub struct CliArgs {
     #[clap(long = "qemu")]
     pub qemu: bool,
 
-    /// 板测试模式 - 在目标板上执行测试
-    #[clap(long = "boardtest")]
-    pub boardtest: bool,
-
     /// 串口测试模式 - 通过串口执行测试
     #[clap(long = "serial")]
     pub serial: bool,
@@ -56,18 +52,6 @@ pub struct CliArgs {
     /// 聚合报告输出 - 指定聚合报告的输出文件路径
     #[clap(long = "output", short = 'o')]
     pub output: Option<PathBuf>,
-
-    /// 报告JSON路径 - 指定包含报告数据的JSON文件路径
-    #[clap(long = "reports-json")]
-    pub reports_json: Option<PathBuf>,
-
-    /// 汇总报告路径 - 指定汇总报告的输出路径
-    #[clap(long = "summary-path")]
-    pub summary_path: Option<PathBuf>,
-
-    /// 报告路径 - 指定单一测试报告的输出路径
-    #[clap(long = "report-path")]
-    pub report_path: Option<PathBuf>,
 
     /// 单元名称 - 通过单元名称筛选测试
     #[clap(long = "unit")]
@@ -100,6 +84,10 @@ pub struct CliArgs {
     /// 保持会话连接
     #[clap(long = "maintain-session", default_value = "true")]
     pub maintain_session: Option<bool>,
+
+    /// 输出报告时保持模板的原始目录结构
+    #[clap(short = 'k', long, default_value = "true")]
+    pub keep_template_directory_structure: bool,
 }
 
 impl CliArgs {
@@ -118,8 +106,6 @@ impl CliArgs {
             Some("remote".to_string())
         } else if self.qemu {
             Some("qemu".to_string())
-        } else if self.boardtest {
-            Some("boardtest".to_string())
         } else {
             None
         }

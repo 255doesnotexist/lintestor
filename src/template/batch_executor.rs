@@ -8,7 +8,7 @@ use log::{debug, error, info, warn};
 use std::cmp::max;
 use std::collections::HashMap;
 use std::error::Error;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use std::sync::Arc;
 use std::time::{Duration, Instant};
 
@@ -571,16 +571,21 @@ impl BatchExecutor {
             overall_status: template_overall_status,
             step_results: current_template_step_results,
             variables: final_variables,
-            report_path: None,
+            report_path: match utils::generate_report_path(
+                &self.options,
+                &template_arc,
+            ) {
+                Ok(path) => Some(path),
+                Err(e) => {
+                    error!("Failed to generate report path for template {template_id}: {e}");
+                    None
+                }
+            },
         };
 
         if let Some(report_dir_path) = self.report_dir.as_ref() {
-            let template_base_dir = template_arc
-                .file_path
-                .parent()
-                .unwrap_or_else(|| Path::new("."))
-                .to_path_buf();
-            let reporter = Reporter::new(template_base_dir, Some(report_dir_path.clone()));
+            let test_dir = self.options.clone().unwrap().test_directory;
+            let reporter = Reporter::new(test_dir, Some(report_dir_path.clone()));
             match reporter.generate_report(&template_arc, &execution_result, &self.variable_manager)
             {
                 Ok(path) => {

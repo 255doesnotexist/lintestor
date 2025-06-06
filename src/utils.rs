@@ -10,6 +10,7 @@ use std::{
     fs,
     path::{Path, PathBuf},
 };
+use crate::template::{self, BatchOptions};
 
 /// 标准化模板ID
 ///
@@ -186,4 +187,86 @@ where
         }
     };
     Ok(config)
+}
+
+/// Generate report file path (supports keeping directory structure or flat structure)
+///
+/// # Parameters
+/// * `batch_options` - Batch execution options
+/// * `report_dir` - Report output directory
+/// * `template_path` - Template file path
+/// * `template_id` - Template ID
+/// * `test_dir_root` - Test directory root path (optional)
+///
+/// # Returns
+/// Returns the generated report file path
+pub fn generate_report_path(
+    batch_options: &Option<BatchOptions>,
+    template_arc: &std::sync::Arc<template::TestTemplate>,
+) -> anyhow::Result<PathBuf> {
+    let options = match batch_options {
+        Some(options) => options,
+        None => {
+            warn!("Batch options not provided, defaulting to default BatchOptions.");
+            &BatchOptions::default()
+        }
+    };
+    let (report_dir, test_dir) = (
+        options.report_directory.as_deref(),
+        options.test_directory.as_deref(),
+    );
+    let report_dir = match report_dir {
+        Some(dir) => dir,
+        None => {
+            return Err(anyhow::anyhow!("report_directory is not set in BatchOptions"));
+        }
+    };
+    let template_path = template_arc.file_path
+        .as_path();
+
+    let file_stem = template_path.file_stem().and_then(|s| s.to_str()).unwrap_or("unknown");
+    let report_file_name = format!("{}.report.md", file_stem.trim_end_matches(".test.md"));
+    let keep_structure = options.keep_template_directory_structure;
+
+    let final_report_path = if keep_structure {
+        if let Some(test_dir_root) = test_dir {
+            match template_path.strip_prefix(test_dir_root) {
+                Ok(relative_template_path) => {
+                    if let Some(relative_template_dir) = relative_template_path.parent() {
+                        report_dir.join(relative_template_dir).join(&report_file_name)
+                    } else {
+                        report_dir.join(&report_file_name)
+                    }
+                }
+                Err(_) => {
+                    warn!(
+                        "Template path {} is not relative to test_dir_root {}. Falling back to flat report structure.",
+                        template_path.display(),
+                        test_dir_root.display()
+                    );
+                    report_dir.join(&report_file_name)
+                }
+            }
+        } else {
+            warn!(
+                "test_dir_root not provided but keep_template_directory_structure is true. Falling back to flat report structure."
+            );
+            report_dir.join(&report_file_name)
+        }
+    } else {
+        report_dir.join(&report_file_name)
+    };
+    // Ensure the parent directory of the report file exists
+    if let Some(parent_dir) = final_report_path.parent() {
+        if !parent_dir.exists() {
+            std::fs::create_dir_all(parent_dir).map_err(|e| {
+                anyhow::anyhow!(
+                    "Failed to create report directory {}: {}",
+                    parent_dir.display(),
+                    e
+                )
+            })?;
+        }
+    }
+    Ok(final_report_path)
 }

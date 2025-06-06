@@ -20,6 +20,7 @@ pub struct ExecutionResult {
     #[allow(dead_code)]
     /// 测试单元名称
     pub unit_name: String,
+    #[allow(dead_code)]
     /// 目标名称
     pub target_name: String,
     /// 总体状态

@@ -30,22 +30,28 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     // 获取工作目录
     let cwd = env::current_dir().unwrap_or_else(|_| PathBuf::from("."));
-    let working_dir = cli_args
+    let test_dir = cli_args
         .test_dir
         .as_ref()
         .map(|dir| cwd.join(dir))
-        .unwrap_or(cwd);
-    debug!("Working directory: {}", working_dir.display());
+        .unwrap_or(match cli_args.template.as_ref() {
+                Some(template_file) => {
+                    // 如果指定了单个模板文件，则使用该文件所在目录作为工作目录
+                    template_file.parent().unwrap_or(&cwd).to_path_buf()
+                }
+                None => cwd.clone(), // 如果没有指定模板文件，则使用当前工作目录
+        });
+    debug!("Working directory: {}", test_dir.display());
 
     // 执行测试、聚合或汇总操作
     if cli_args.test {
         // 检查是否有指定单个模板文件
         if let Some(template_file) = cli_args.template.as_ref() {
             // 应用环境类型设置
-            run_single_template_test(template_file, &cli_args, &working_dir)?;
+            run_single_template_test(template_file, &cli_args, &test_dir)?;
         } else {
             // 创建模板过滤器，应用单元和标签过滤
-            run_template_tests(&cli_args, &working_dir)?
+            run_template_tests(&cli_args, &test_dir)?
         }
     }
     Ok(())
@@ -63,11 +69,11 @@ fn parse_args() -> CliArgs {
 ///
 /// * `template_file` - 模板文件路径
 /// * `cli_args` - 命令行参数
-/// * `working_dir` - 工作目录
+/// * `test_dir` - 工作目录
 fn run_single_template_test(
     template_file: &Path,
     cli_args: &CliArgs,
-    working_dir: &Path,
+    test_dir: &Path,
 ) -> Result<String, Box<dyn Error>> {
     info!("Processing single template: {}", template_file.display());
 
@@ -92,7 +98,7 @@ fn run_single_template_test(
     }
 
     // 加载目标配置
-    let target_config_path = working_dir.join(template.metadata.target_config.get_path());
+    let target_config_path = test_dir.join(template.metadata.target_config.get_path());
     info!("Loading target config: {}", target_config_path.display());
 
     let mut target_config: TargetConfig = match utils::read_toml_from_file(&target_config_path) {
@@ -137,15 +143,17 @@ fn run_single_template_test(
 
     // 定义报告目录
     let report_dir = cli_args
-        .report_path
+        .reports_dir
         .as_ref()
         .map(|p| p.to_path_buf())
-        .unwrap_or_else(|| working_dir.join("reports"));
+        .unwrap_or_else(|| test_dir.join("reports"));
 
     // 准备批量选项
     let batch_options = BatchOptions {
+        test_directory: Some(test_dir.to_path_buf()),
         report_directory: Some(report_dir.clone()),
         executor_options: executor_options.clone(),
+        keep_template_directory_structure: cli_args.keep_template_directory_structure,
     };
 
     // 创建批量执行器
@@ -180,14 +188,16 @@ fn run_single_template_test(
 /// # Arguments
 ///
 /// * `cli_args` - Command line arguments.
-/// * `working_dir` - Working directory containing templates and target configs.
-fn run_template_tests(cli_args: &CliArgs, working_dir: &Path) -> Result<(), Box<dyn Error>> {
+/// * `test_dir` - Working directory containing templates and target configs.
+fn run_template_tests(cli_args: &CliArgs, test_dir: &Path) -> Result<(), Box<dyn Error>> {
     info!("Discovering Markdown test templates...");
 
+    // Guess the template directories in "tests" and "templates" subdirectories
+    // Hardcoded LOL...
     let template_dirs = vec![
-        working_dir.to_path_buf(),
-        working_dir.join("tests"),
-        working_dir.join("templates"),
+        test_dir.to_path_buf(),
+        test_dir.join("tests"),
+        test_dir.join("templates"),
     ];
     let mut all_template_paths = Vec::new();
     for dir in &template_dirs {
@@ -246,7 +256,7 @@ fn run_template_tests(cli_args: &CliArgs, working_dir: &Path) -> Result<(), Box<
     let templates_for_display = loaded_templates.clone();
 
     for template in loaded_templates {
-        let target_config_file_path = working_dir.join(template.metadata.target_config.get_path());
+        let target_config_file_path = test_dir.join(template.metadata.target_config.get_path());
         let group_key = (target_config_file_path, environment_type_override.clone());
         grouped_templates
             .entry(group_key)
@@ -260,10 +270,10 @@ fn run_template_tests(cli_args: &CliArgs, working_dir: &Path) -> Result<(), Box<
     );
 
     let report_dir = cli_args
-        .report_path
+        .reports_dir
         .as_ref()
         .map(|p| p.to_path_buf())
-        .unwrap_or_else(|| working_dir.join("reports"));
+        .unwrap_or_else(|| test_dir.join("reports"));
 
     if !report_dir.exists() {
         std::fs::create_dir_all(&report_dir).map_err(|e| {
@@ -355,8 +365,10 @@ fn run_template_tests(cli_args: &CliArgs, working_dir: &Path) -> Result<(), Box<
 
         // 批量执行选项
         let batch_options = BatchOptions {
+            test_directory: Some(test_dir.to_path_buf()),
             report_directory: Some(report_dir.clone()),
             executor_options: executor_options.clone(),
+            keep_template_directory_structure: cli_args.keep_template_directory_structure,
         };
 
         let variable_manager = template::VariableManager::new();
