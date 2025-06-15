@@ -189,7 +189,7 @@ impl BatchExecutor {
                                 &template_arc
                                     .metadata
                                     .target_config;
-                            debug!("Executing command on target: {:?}", target_config);
+                            debug!("Executing command on target: {target_config:?}");
 
                             // 获取执行器选项
                             let default_options = crate::template::executor::ExecutorOptions::default();
@@ -378,7 +378,7 @@ impl BatchExecutor {
                                                             break;
                                                         }
                                                         Err(e) => {
-                                                            warn!("Still failed: {}", e);
+                                                            warn!("Still failed: {e}");
                                                         }
                                                     }
                                                 }
@@ -417,7 +417,7 @@ impl BatchExecutor {
                                             }
                                             Err(e) => {
                                                 warn!("Failed to extract variable '{}' for step {}: {}", extraction_rule.variable, step_id, e);
-                                                debug!("Extraction rule: {:?}", extraction_rule);
+                                                debug!("Extraction rule: {extraction_rule:?}");
                                                 debug!("Command output: \n{}", &format!("{stdout_val}\n{stderr_val}"));
                                                 info!(
                                                     "Extraction failed for variable '{}', please input a new regex (or empty to skip):",

@@ -134,7 +134,7 @@ fn parse_markdown_to_steps_and_content_blocks(
     let output_block_re = match Regex::new(r#"(?ms)^```output\s*\{([^\r\n}]*)\}.*?^```\s*$"#) {
         Ok(re) => re,
         Err(e) => {
-            error!("正则表达式编译失败: {}", e);
+            error!("正则表达式编译失败: {e}");
             return Err(anyhow!("正则表达式编译失败: {}", e));
         }
     };
@@ -549,7 +549,7 @@ fn extract_dep_id_from_dep_str(dep_str: &str) -> &str {
 /// 实现方式是使用有限状态机来解析键值对，内部状态似乎没什么复用的可能性所以 State 就不对外暴露了
 /// 注意我们在状态里没考虑 { 和 } 所以不许传入整个带 {} 的 attr_str
 fn parse_inline_attributes(input: &str) -> HashMap<String, String> {
-    debug!("解析内联属性: {}", input);
+    debug!("解析内联属性: {input}");
     
     let mut result = HashMap::new();
     let mut chars = input.chars().peekable();
