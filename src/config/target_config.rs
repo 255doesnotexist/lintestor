@@ -43,7 +43,7 @@ fn is_not_serial(value: &String) -> bool {
 pub struct TargetConfig {
     pub testing_type: String, // 'locally' or 'remote' or 'qemu-based-remote' or 'boardtest' or 'serial'
 
-    name: String, // target name
+    name: String,        // target name
     description: String, // target description
 
     #[serde(rename = "connection")]
@@ -67,7 +67,7 @@ impl TargetConfig {
     pub fn get_testing_type(&self) -> &str {
         &self.testing_type
     }
-    
+
     /// 获取连接配置
     #[allow(dead_code)]
     pub fn get_connection(&self) -> Option<&ConnectionConfig> {
@@ -94,7 +94,6 @@ impl TargetConfig {
 
     /// 从文件中读取
     pub fn from_file(file_path: &str) -> std::result::Result<Self, Box<dyn std::error::Error>> {
-        use std::path::PathBuf;
         let path = PathBuf::from(file_path);
         let mut config: Self = utils::read_toml_from_file(&path)?;
         config.path = path; // 更新路径

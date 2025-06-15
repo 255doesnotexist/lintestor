@@ -3,6 +3,7 @@
 //! This module provides common structures and utilities used across the project,
 //! including report structures, temporary file management, and command output handling.
 
+use crate::template::{self, BatchOptions};
 use log::{error, warn};
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
 use std::{
@@ -10,7 +11,6 @@ use std::{
     fs,
     path::{Path, PathBuf},
 };
-use crate::template::{self, BatchOptions};
 
 /// 标准化模板ID
 ///
@@ -178,7 +178,11 @@ pub fn read_toml_from_file<T>(path: &PathBuf) -> Result<T, Box<dyn Error>>
 where
     T: DeserializeOwned,
 {
-    let content = fs::read_to_string(path)?;
+    let content: String = fs::read_to_string(path)?
+        .lines()
+        .filter(|line| !line.trim_start().starts_with('#'))
+        .collect::<Vec<&str>>()
+        .join("\n");
     let config: T = match toml::de::from_str(&content) {
         Ok(config) => config,
         Err(e) => {
@@ -218,13 +222,17 @@ pub fn generate_report_path(
     let report_dir = match report_dir {
         Some(dir) => dir,
         None => {
-            return Err(anyhow::anyhow!("report_directory is not set in BatchOptions"));
+            return Err(anyhow::anyhow!(
+                "report_directory is not set in BatchOptions"
+            ));
         }
     };
-    let template_path = template_arc.file_path
-        .as_path();
+    let template_path = template_arc.file_path.as_path();
 
-    let file_stem = template_path.file_stem().and_then(|s| s.to_str()).unwrap_or("unknown");
+    let file_stem = template_path
+        .file_stem()
+        .and_then(|s| s.to_str())
+        .unwrap_or("unknown");
     let report_file_name = format!("{}.report.md", file_stem.trim_end_matches(".test.md"));
     let keep_structure = options.keep_template_directory_structure;
 
@@ -233,7 +241,9 @@ pub fn generate_report_path(
             match template_path.strip_prefix(test_dir_root) {
                 Ok(relative_template_path) => {
                     if let Some(relative_template_dir) = relative_template_path.parent() {
-                        report_dir.join(relative_template_dir).join(&report_file_name)
+                        report_dir
+                            .join(relative_template_dir)
+                            .join(&report_file_name)
                     } else {
                         report_dir.join(&report_file_name)
                     }

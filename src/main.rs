@@ -1,9 +1,9 @@
 //! Entry point of whole application
 mod config;
 mod connection;
+mod pool;
 mod template;
 mod utils;
-mod pool;
 
 use crate::config::cli_args::CliArgs;
 use crate::config::target_config::TargetConfig;
@@ -35,24 +35,21 @@ fn main() -> Result<(), Box<dyn Error>> {
         .as_ref()
         .map(|dir| cwd.join(dir))
         .unwrap_or(match cli_args.template.as_ref() {
-                Some(template_file) => {
-                    // 如果指定了单个模板文件，则使用该文件所在目录作为工作目录
-                    template_file.parent().unwrap_or(&cwd).to_path_buf()
-                }
-                None => cwd.clone(), // 如果没有指定模板文件，则使用当前工作目录
+            Some(template_file) => {
+                // 如果指定了单个模板文件，则使用该文件所在目录作为工作目录
+                template_file.parent().unwrap_or(&cwd).to_path_buf()
+            }
+            None => cwd.clone(), // 如果没有指定模板文件，则使用当前工作目录
         });
     debug!("Working directory: {}", test_dir.display());
 
-    // 执行测试、聚合或汇总操作
-    if cli_args.test {
-        // 检查是否有指定单个模板文件
-        if let Some(template_file) = cli_args.template.as_ref() {
-            // 应用环境类型设置
-            run_single_template_test(template_file, &cli_args, &test_dir)?;
-        } else {
-            // 创建模板过滤器，应用单元和标签过滤
-            run_template_tests(&cli_args, &test_dir)?
-        }
+    // 检查是否有指定单个模板文件
+    if let Some(template_file) = cli_args.template.as_ref() {
+        // 应用环境类型设置
+        run_single_template_test(template_file, &cli_args, &test_dir)?;
+    } else {
+        // 创建模板过滤器，应用单元和标签过滤
+        run_template_tests(&cli_args, &test_dir)?
     }
     Ok(())
 }
@@ -85,23 +82,25 @@ fn run_single_template_test(
         }
     };
 
+    let target_config_path = template.metadata.target_config.get_path();
+
     // 如果是仅解析模式，则只验证模板格式并显示信息
     if cli_args.parse_only {
         info!("  Title: {}", template.metadata.title);
         info!("  Unit: {}", template.metadata.unit_name);
-        info!(
-            "  Target config: {}",
-            template.metadata.target_config.get_path().display()
-        );
+        info!("  Target config: {}", target_config_path.display());
         info!("  Total steps: {}", template.steps.len());
         return Ok("Template parsed successfully".to_string());
     }
 
     // 加载目标配置
-    let target_config_path = test_dir.join(template.metadata.target_config.get_path());
     info!("Loading target config: {}", target_config_path.display());
 
-    let mut target_config: TargetConfig = match utils::read_toml_from_file(&target_config_path) {
+    let mut target_config: TargetConfig = match TargetConfig::from_file(
+        &target_config_path
+            .to_str()
+            .expect("Target path does not exist"),
+    ) {
         Ok(config) => config,
         Err(e) => {
             return Err(format!("Failed to load target config: {e}").into());
@@ -124,19 +123,24 @@ fn run_single_template_test(
     // 准备执行选项，优先级顺序: CLI参数 > target_config.executor > 默认值
     let default_options = ExecutorOptions::default();
     let executor_options = ExecutorOptions {
-        command_timeout: cli_args.timeout
+        command_timeout: cli_args
+            .timeout
             .or(target_config.executor.command_timeout.map(|d| d.as_secs()))
             .unwrap_or(default_options.command_timeout),
-        retry_count: cli_args.retry
+        retry_count: cli_args
+            .retry
             .or(target_config.executor.retry_count)
             .unwrap_or(default_options.retry_count),
-        retry_interval: cli_args.retry_interval
+        retry_interval: cli_args
+            .retry_interval
             .or(target_config.executor.retry_interval)
             .unwrap_or(default_options.retry_interval),
-        maintain_session: cli_args.maintain_session
+        maintain_session: cli_args
+            .maintain_session
             .or(target_config.executor.maintain_session)
             .unwrap_or(default_options.maintain_session),
-        continue_on_error: cli_args.continue_on_error
+        continue_on_error: cli_args
+            .continue_on_error
             .or(target_config.executor.continue_on_error)
             .unwrap_or(default_options.continue_on_error),
     };
@@ -157,7 +161,8 @@ fn run_single_template_test(
     };
 
     // 创建批量执行器
-    let mut batch_executor = BatchExecutor::new(variable_manager, connection_pool,Some(batch_options));
+    let mut batch_executor =
+        BatchExecutor::new(variable_manager, connection_pool, Some(batch_options));
 
     // 添加模板到执行器
     batch_executor.add_template(template.into())?;
@@ -171,7 +176,10 @@ fn run_single_template_test(
             if !results.is_empty() {
                 // 获取第一个结果，使用迭代器而不是索引
                 if let Some(result) = results.first() {
-                    Ok(format!("Test completed with status: {:?}", result.overall_status))
+                    Ok(format!(
+                        "Test completed with status: {:?}",
+                        result.overall_status
+                    ))
                 } else {
                     Err("Failed to fetch first execution result".to_string().into())
                 }
@@ -290,7 +298,10 @@ fn run_template_tests(cli_args: &CliArgs, test_dir: &Path) -> Result<(), Box<dyn
         let metadata = &template.metadata;
         info!("Template: {}", metadata.title);
         info!("  Unit: {}", metadata.unit_name);
-        info!("  Target config: {}", metadata.target_config.get_path().display());
+        info!(
+            "  Target config: {}",
+            metadata.target_config.get_path().display()
+        );
         info!("  Total steps: {}", template.steps.len());
     }
 
@@ -346,19 +357,24 @@ fn run_template_tests(cli_args: &CliArgs, test_dir: &Path) -> Result<(), Box<dyn
         // 执行器选项，优先级顺序: CLI参数 > target_config.executor > 默认值
         let default_options = ExecutorOptions::default();
         let executor_options = ExecutorOptions {
-            command_timeout: cli_args.timeout
+            command_timeout: cli_args
+                .timeout
                 .or(target_config.executor.command_timeout.map(|d| d.as_secs()))
                 .unwrap_or(default_options.command_timeout),
-            retry_count: cli_args.retry
+            retry_count: cli_args
+                .retry
                 .or(target_config.executor.retry_count)
                 .unwrap_or(default_options.retry_count),
-            retry_interval: cli_args.retry_interval
+            retry_interval: cli_args
+                .retry_interval
                 .or(target_config.executor.retry_interval)
                 .unwrap_or(default_options.retry_interval),
-            maintain_session: cli_args.maintain_session
+            maintain_session: cli_args
+                .maintain_session
                 .or(target_config.executor.maintain_session)
                 .unwrap_or(default_options.maintain_session),
-            continue_on_error: cli_args.continue_on_error
+            continue_on_error: cli_args
+                .continue_on_error
                 .or(target_config.executor.continue_on_error)
                 .unwrap_or(default_options.continue_on_error),
         };
@@ -375,7 +391,8 @@ fn run_template_tests(cli_args: &CliArgs, test_dir: &Path) -> Result<(), Box<dyn
         // 创建连接池
         let connection_pool = pool::ConnectionManagerPool::new();
         let batch_execution_results = {
-            let mut batch_executor = BatchExecutor::new(variable_manager, connection_pool, Some(batch_options));
+            let mut batch_executor =
+                BatchExecutor::new(variable_manager, connection_pool, Some(batch_options));
 
             info!(
                 "Adding {} templates individually to batch for target_config '{}'",
@@ -442,10 +459,7 @@ fn run_template_tests(cli_args: &CliArgs, test_dir: &Path) -> Result<(), Box<dyn
     );
 
     if fail_count > 0 {
-        return Err(format!(
-            "{fail_count} tests failed and continue_on_error is false."
-        )
-        .into());
+        return Err(format!("{fail_count} tests failed and continue_on_error is false.").into());
     }
 
     Ok(())

@@ -66,7 +66,7 @@ pub struct CliArgs {
     pub target: Option<PathBuf>,
 
     /// 出错继续 - 即使测试失败也继续执行其余测试
-    #[clap(long = "continue-on-error")]
+    #[clap(long = "continue-on-error", default_value = "false")]
     pub continue_on_error: Option<bool>,
 
     /// 执行命令超时时间（秒）
