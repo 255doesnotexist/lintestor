@@ -1,5 +1,0 @@
-enabled = true
-testing_type = "locally"
-# startup_template = "prerequisite.sh"
-# stop_template = "prerequisite.sh"
-skip_units = ["docker"]
