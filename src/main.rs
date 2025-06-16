@@ -45,7 +45,7 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     // 检查是否有指定单个模板文件
     if let Some(template_file) = cli_args.template.as_ref() {
-        // 应用环境类型设置
+        // 应用环境类型设置--
         run_single_template_test(template_file, &cli_args, &test_dir)?;
     } else {
         // 创建模板过滤器，应用单元和标签过滤
@@ -97,7 +97,7 @@ fn run_single_template_test(
     info!("Loading target config: {}", target_config_path.display());
 
     let mut target_config: TargetConfig = match TargetConfig::from_file(
-        &target_config_path
+        target_config_path
             .to_str()
             .expect("Target path does not exist"),
     ) {
@@ -209,11 +209,15 @@ fn run_template_tests(cli_args: &CliArgs, test_dir: &Path) -> Result<(), Box<dyn
     ];
     let mut all_template_paths = Vec::new();
     for dir in &template_dirs {
-        if let Ok(paths) = discover_templates(dir, true) {
+        if let Ok(mut paths) = discover_templates(dir, true) {
+            paths.retain(|path| !all_template_paths.contains(path));
             all_template_paths.extend(paths);
         }
     }
-    info!("Found {} template files", all_template_paths.len());
+    info!(
+        "Found {} template files (deduplicated)",
+        all_template_paths.len()
+    );
     if all_template_paths.is_empty() {
         warn!("No template files found in the specified directories.");
         return Ok(());
@@ -226,7 +230,7 @@ fn run_template_tests(cli_args: &CliArgs, test_dir: &Path) -> Result<(), Box<dyn
         tags: tag_filter.map_or_else(Vec::new, |t| vec![t.to_string()]),
     };
 
-    let loaded_templates: Vec<TestTemplate> = match filter_templates(&all_template_paths, &filter) {
+    let loaded_templates: Vec<TestTemplate> = match filter_templates(all_template_paths, &filter) {
         Ok(t) => t,
         Err(e) => {
             error!("Failed to load or filter templates: {e}");

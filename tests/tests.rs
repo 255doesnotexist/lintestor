@@ -13,6 +13,7 @@ mod tests {
         let mut cmd = Command::cargo_bin(env!("CARGO_PKG_NAME")).unwrap();
         let output = cmd
             .env("RUST_LOG", "debug")
+            .args(["-p"])
             .output()
             .expect("failed to execute process");
 

@@ -431,7 +431,7 @@ fn parse_metadata(yaml: &str) -> Result<TemplateMetadata> {
     debug!("提取target_config: {target_config_str}");
 
     let target_config = TargetConfig::from_file(target_config_str)
-            .unwrap_or_else(|_| panic!("无法加载 target_config 文件: {target_config_str}"));
+        .unwrap_or_else(|_| panic!("无法加载 target_config 文件: {target_config_str}"));
 
     let unit_name = yaml_value["unit_name"]
         .as_str()
@@ -550,7 +550,7 @@ fn extract_dep_id_from_dep_str(dep_str: &str) -> &str {
 /// 注意我们在状态里没考虑 { 和 } 所以不许传入整个带 {} 的 attr_str
 fn parse_inline_attributes(input: &str) -> HashMap<String, String> {
     debug!("解析内联属性: {input}");
-    
+
     let mut result = HashMap::new();
     let mut chars = input.chars().peekable();
     let mut key = String::new();
@@ -591,7 +591,7 @@ fn parse_inline_attributes(input: &str) -> HashMap<String, String> {
                     }
                 } else {
                     // EOF reached, exit the loop
-                    info!("Reached EOF in Start state, exiting loop");
+                    debug!("Reached EOF in Start state, exiting loop");
                     break;
                 }
             }
@@ -975,10 +975,7 @@ custom_field: "custom value"
 
         let metadata = parse_metadata(yaml).unwrap();
         assert_eq!(metadata.title, "Test Template");
-        assert_eq!(
-            metadata.target_config.get_name(),
-            "Local Test"
-        );
+        assert_eq!(metadata.target_config.get_name(), "Local Test");
         assert_eq!(metadata.unit_name, "MyUnit");
         assert_eq!(metadata.unit_version, "1.0.0");
         assert_eq!(
