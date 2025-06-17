@@ -1,11 +1,6 @@
-name: Publish to crates.io
 
 on:
-  push:
-    branches:
-      - main
-    paths:
-      - "Cargo.toml"
+  workflow_dispatch:
 
 jobs:
   publish:
