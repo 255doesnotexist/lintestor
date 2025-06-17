@@ -235,9 +235,9 @@ fn run_template_tests(cli_args: &CliArgs, test_dir: &Path) -> Result<(), Box<dyn
             Ok(t) => t,
             Err(e) => {
                 error!("Failed to load or filter templates: {e}");
-            return Err(e.into()); // Propagate error
-        }
-    };
+                return Err(e.into()); // Propagate error
+            }
+        };
 
     if loaded_templates.is_empty() {
         warn!("No templates found matching the criteria after filtering.");
