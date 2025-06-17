@@ -18,7 +18,7 @@ jobs:
           - riscv64gc-unknown-linux-gnu
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
 
     - name: Pull Docker image from Docker Hub
       run: docker pull 255doesnotexist/lintestor-cross-compile:latest
@@ -48,7 +48,7 @@ jobs:
     permissions:
       contents: write
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
 
     - name: Get current date
       id: date
