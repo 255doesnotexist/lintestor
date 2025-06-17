@@ -21,6 +21,7 @@ regex = "1.11.1"
 humantime-serde = "1.1.1"
 mio-serial = "5.0.6"
 test-log = "0.2.17"
+openssl = { version = "0.10.73", features = ["vendored"] }
 
 [dev-dependencies]
 assert_cmd = "2.0.17"
