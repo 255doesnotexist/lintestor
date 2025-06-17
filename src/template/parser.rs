@@ -461,7 +461,7 @@ fn parse_metadata(yaml: &str) -> Result<TemplateMetadata> {
         serde_yaml::Value::Sequence(ref seq) => {
             let mut refs = Vec::new();
             for ref_value in seq {
-                if let serde_yaml::Value::Mapping(ref mapping) = ref_value {
+                if let serde_yaml::Value::Mapping(mapping) = ref_value {
                     // 为了在模板里看起来舒服，我们实际上的对应是按下面这样的
                     // template -> template_path
                     // as -> namespace

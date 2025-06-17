@@ -1124,7 +1124,7 @@ mod tests {
 
         // 测试替换
         let get_text = |cb: &ContentBlock| {
-            if let ContentBlock::Text(ref text) = cb {
+            if let ContentBlock::Text(text) = cb {
                 text.clone()
             } else {
                 panic!("ContentBlock is not Text variant");
