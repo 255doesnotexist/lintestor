@@ -1,0 +1,3 @@
+name = "local_runner"
+description = "when it works on my machine"
+testing_type = "locally"

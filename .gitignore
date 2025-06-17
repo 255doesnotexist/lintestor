@@ -2,3 +2,5 @@
 *report.json
 *reports.json
 *summary.md
+.vscode/launch.json
+REFACTORING_PLAN.md

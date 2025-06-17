@@ -1,88 +1,222 @@
-# Usage Guide
-## Setup Tests
-### Distro setup
-Each distribution should have all their test files stored in separate subdirectories (`./<distro>`) under the working directory (defaults to the program's CWD; set with the `-D`/`--directory` flag). Specify distro-specifc options in their respective config files (`./<distro>/config.toml`) as follows:
-  
+# Usage Guide (v0.2.0+)
+
+Lintestor v0.2.0+ uses Markdown (`.test.md`) files as test templates, replacing the old Shell script model.
+
+## Configuring Tests
+
+### 1. Target Configuration
+
+Each test target environment (e.g., QEMU VM, remote server, local environment) requires a TOML configuration file. It is recommended to store these files in a `targets/` subdirectory within the working directory, for example, `targets/my_qemu_vm/config.toml`.
+
+**Example `targets/<target_name>/config.toml`:**
 ```toml
-enabled = true # Enable tests for this distribution. Its folder will not be discovered if set to false
-testing_type = "qemu-based-remote" # or "locally"、"remote"
+# testing_type: Defines the type of testing environment.
+# Possible values: "locally", "remote", "qemu-based-remote", "serial"
+testing_type = "remote"
 
-startup_script = "./debian/start_qemu.sh" # path to QEMU startup script. IGNORED when testing_type is set to "locally" or "remote"
-stop_script = "./debian/stop_qemu.sh" # path to QEMU stop script. IGNORED when testing_type is set to "locally" or "remote"
-skip_packages = ["docker"] # Skip testing for these packages
-
-[connection] # Valid for "remote"/"qemu-based-remote". Only SSH is supported at the moment
+# [connection]: Required when testing_type is "remote", "qemu-based-remote", or "serial".
+[connection]
+# For "remote" and "qemu-based-remote":
 method = "ssh"
 ip = "localhost"
 port = 2222
-username = "root"
-password = "root"
+username = "tester"
+# private_key_path = "~/.ssh/id_rsa_tester" # Path to SSH private key
+password = "your_password"               # Or use a password
 
-[boardtest] # Valid for "boardtest"
-token = "your_boardtest_server_token" # Auth credentials
-board_config = "boards/bpif3.toml" # Path to board config TOML file (on the boardtest server)
-serial = "sdwirec_alpha" # Serial number for SD Mux device
-mi_sdk_enabled = false # Optional: Enable Mi SDK controller
-api_url = "http://yourserver:23333/" # API server URL
-timeout_secs = 300 # Test timeout in seconds
+# For "serial":
+# device = "/dev/ttyUSB0" # Serial device path
+# baud_rate = 115200      # Baud rate
+
+# [executor]: Optional, for controlling command execution behavior.
+[executor]
+command_timeout = 300  # Command timeout in seconds, default 300
+retry_count = 1        # Number of retries on command failure (initial execution not counted), default 1
+retry_interval = 5     # Retry interval in seconds, default 5
+maintain_session = true # Whether to maintain the session for consecutive steps on the same target (mainly for SSH), default true
+continue_on_error = false # Whether to continue executing other independent steps in the template after a step fails, default false
 ```
 
-### Package setup
-Each subdirectory corresponding to a package should contain at least one `metadata.sh` script for storing the package's metadata to be used in the generated reports. Please define the following variables in the script:
+### 2. Test Template Configuration (`.test.md`)
+
+Create a `.test.md` file for each test of a Unit on a specific Target. The recommended structure is `tests/<unit_name>/<target_name>.test.md`, or place it directly in a scanned path (like the project root, `tests/`, or `templates/`).
+
+**Example Test Template (`example.test.md`):**
+```markdown
+---
+# YAML Front Matter: Defines test metadata
+title: "Example Unit Functional Test"
+target_config: "targets/my_qemu_vm/config.toml" # **Required**, points to the target configuration file
+unit_name: "example_unit"
+tags: ["core", "smoke"]
+# references: # Optional, reference other templates
+#   - template_path: "common/setup.test.md"
+#     namespace: "common_setup"
+---
+
+# {{ title }}
+
+*   **Test Date:** `{{ execution_date }}`
+*   **Target Info:** `{{ target_info }}`
+*   **Unit Version:** `{{ unit_version }}`
+
+## 1. Installation Step {id="install_step"}
+
+```bash {id="install_cmd" exec=true description="Install dependencies" assert.exit_code=0}
+echo "Installing dependencies..."
+# sudo apt-get install -y some-package
+echo "Dependencies installed."
 ```
-PACKAGE_VERSION="3.30.3" # Package version. Either specify manually or fetch with commands
-# e.g. get version of a package installed through `dpkg/apt` on Debian-based distros
-# PACKAGE_VERSION=$(dpkg -l | grep $PACKAGE_NAME | awk '{print $3}')
-PACKAGE_PRETTY_NAME="CMake" # A "pretty name" for the package (otherwise the name of the subdirectory would be used as package name)
-PACKAGE_TYPE="Build System" # Package type
-PACKAGE_DESCRIPTION="Cross-platform make" # Brief description of the package (variable currently unused)
+**Result:**
+```output {ref="install_cmd"}
+# The output of install_cmd will be automatically inserted here
 ```
-Any other `.sh` scripts (except `metadata.sh`) in the subdirectory would be run as tests. Each script represents an individual "test case" for the package. For writing the respective test scripts, refer to existing ones under the `debian` folder to get you started.
 
-If certain commands need to be run globally prior each test script (eg. `export DEBIAN_FRONTEND=noninteractive` may be used on Debian-based systems to prevent apt interactive prompts), put them in `prerequisite.sh` under the distro directory. 
+## 2. Functional Test {id="functional_test" depends_on=["install_cmd"]}
 
-## Run tests
+```bash {id="run_test_cmd" exec=true description="Run functional test" assert.stdout_contains="Test Passed" extract.value=/Result: (\w+)/}
+echo "Running test..."
+echo "Test Passed"
+echo "Result: Success"
+```
+**Result:**
+```output {ref="run_test_cmd"}
+```
+Extracted value: `{{ value }}`
 
-Configure the tests following the steps above and run
+## 3. Summary {id="summary_section" generate_summary=true}
+<!-- A heading section with generate_summary=true will automatically generate a step summary table -->
+<!-- Alternatively, use <!-- LINTESOR_SUMMARY_TABLE --> to manually specify the location -->
+```
+
+**Key Template Syntax:**
+-   **YAML Front Matter:**
+    -   `target_config`: (Required) Path to the target configuration file.
+    -   Other optional fields like `title`, `unit_name`, `tags`, `unit_version_command`, `references`.
+-   **Markdown Code Block Attributes (`{...}`):**
+    -   `id="unique-id"`: Unique ID for the step.
+    -   `exec=true`: Marks the block as executable.
+    -   `description="Description"`: Used in reports.
+    -   `assert.exit_code=0`: Asserts the exit code.
+    -   `assert.stdout_contains="text"`: Asserts that standard output contains the given text.
+    -   `extract.variable_name=/regex/`: Extracts data from output into a variable.
+    -   `depends_on=["id1", "namespace::id2"]`: Declares dependencies.
+-   **Variable Reference:** Use `{{ variable_name }}` or `{{ step_id::variable_name }}`.
+-   **Output Block:** `output {ref="command_id"}` is used to display command output.
+
+## Running Tests
+
+Use the `--test` (or `-t`) argument to execute tests. Lintestor will automatically discover and execute test templates, and generate reports.
 
 ```bash
-./lintestor --test --aggr --summ
+# Run all tests in the current directory and its subdirectories (tests/, templates/)
+./lintestor --test
+
+# Run a specific template file
+./lintestor --test --template ./path/to/specific.test.md
+
+# Run test templates in a specific directory
+./lintestor --test --test-dir ./path/to/tests
+
+# Output reports to a specific directory (defaults to ./reports)
+./lintestor --test --reports-dir ./my_custom_reports
+
+# Keep the original directory structure of templates in the report directory
+./lintestor --test --keep-report-structure
 ```
-or simply
-```bash
-./lintestor -tas
-```
 
-A `report.json` report would be generated for each package under their respective subfolders under the program's working directory. Now that the tests are done, check out the aggregated `reports.json` and the Markdown result matrix `summary.md` in the current directory.
+**Output:**
+-   Each successfully executed test template will generate a corresponding `.report.md` file in the reports directory.
+-   After all tests are completed, a `summary.test.md.report.md` file will be generated at the root of the reports directory, summarizing all test results.
 
-To toggle logging levels, set the `RUST_LOG` environment variable to one of the following: debug, warn, info, error. `info` is the default logging level.
+**Filtering Tests:**
+-   `--target <TARGET_NAME>`: Filter by target name (from the `target_config` filename or its internal `name` field).
+-   `--unit <UNIT_NAME>`: Filter by unit name (from the `unit_name` in template metadata).
+-   `--tag <TAG_NAME>`: Filter by tag (from the `tags` in template metadata).
 
-### Specify distros or packages to test
+**Log Level:**
+Use `--verbose` to increase log verbosity, or `--quiet` to reduce log output. The default log level is `info`.
 
-Append the `--distro` and the `--package` flag respectively, e.g.:
-```bash
---distro debian --package apache
---distro debian,bianbu,openkylin --package apache,clang,cmake
-```
-This is optional and will override the settings defined in the main config file.
-
-## Full CLI parameters
+## Main Command-line Arguments
 
 ```bash
 ./lintestor --help
 ```
 
-```bash
-Usage: lintestor [OPTIONS]
+```text
+Execute and manage tests embedded in Markdown files
+
+Usage: lintestor [OPTIONS] { --test | --parse-only }
+       lintestor --test [TEST_OPTIONS]
+       lintestor --parse-only [PARSE_OPTIONS]
 
 Options:
-  -t, --test                           Run tests (for all distributions by default)
-  -a, --aggr                           Aggregate multiple report.json files into a single reports.json
-  -s, --summ                           Generate a summary report
-  -D, --directory <working_directory>  Specify working directory with preconfigured test files
-  -d, --distro <distro>                Specify distributions to test
-  -p, --package <package>              Specify packages to test
-      --skip-successful                Skip previous successful tests (instead of overwriting their results)
-  -h, --help                           Print help
-  -V, --version                        Print version
+  -t, --test
+          Execute test templates
+  -p, --parse-only
+          Parse templates without execution
+  -v, --verbose
+          Enable verbose logging
+  -q, --quiet
+          Suppress non-essential output
+      --local
+          Execute in local environment
+      --remote
+          Execute on remote target via SSH
+      --qemu
+          Execute in QEMU virtual machine
+      --serial
+          Execute via serial connection
+      --template <TEMPLATE>
+          Path to test template file
+  -D, --test-dir <TEST_DIR>
+          Directory containing test templates
+      --reports-dir <REPORTS_DIR>
+          Output directory for test reports
+  -o, --output <OUTPUT>
+          Output file for aggregate report
+      --unit <UNIT>
+          Filter tests by unit name
+      --tag <TAG>
+          Filter tests by tag
+      --target <TARGET>
+          Target configuration file
+      --continue-on-error <CONTINUE_ON_ERROR>
+          Continue on test failures [default: false] [possible values: true, false]
+      --timeout <TIMEOUT>
+          Command timeout in seconds [default: 300]
+      --retry <RETRY>
+          Number of retries on failure [default: 3]
+      --retry-interval <RETRY_INTERVAL>
+          Retry interval in seconds [default: 5]
+      --maintain-session <MAINTAIN_SESSION>
+          Keep session alive between commands [default: true] [possible values: true, false]
+  -k, --keep-template-directory-structure
+          Preserve directory structure in reports
+  -h, --help
+          Print help
+  -V, --version
+          Print version
+
+EXECUTION MODES:
+  --test                 Execute test templates
+  --parse-only           Parse templates without execution
+
+ENVIRONMENT TYPES:
+  --local                Execute in local environment
+  --remote               Execute on remote target via SSH
+  --qemu                 Execute in QEMU virtual machine
+  --serial               Execute via serial connection
+
+FILTER OPTIONS:
+  --unit <NAME>          Filter tests by unit name
+  --tag <TAG>            Filter tests by tag
+  --target <FILE>        Use specific target configuration
+
+EXAMPLES:
+  lintestor --test --template T.test.md
+  lintestor --test --test-dir tests/ --local
+  lintestor --test --remote --target prod.toml --unit integration
+  lintestor --parse-only --template test.md
+  lintestor --test --qemu --continue-on-error --timeout 600
 ```

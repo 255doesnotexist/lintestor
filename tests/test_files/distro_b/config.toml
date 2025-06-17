@@ -1,5 +1,0 @@
-enabled = true
-testing_type = "locally"
-# startup_script = "prerequisite.sh"
-# stop_script = "prerequisite.sh"
-skip_packages = ["docker"]

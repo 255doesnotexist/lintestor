@@ -1,4 +1,0 @@
-PACKAGE_VERSION="1.9.19-8"
-PACKAGE_PRETTY_NAME="Test-4"
-PACKAGE_TYPE="testtype4"
-PACKAGE_DESCRIPTION="I failed you im sorry!!2"

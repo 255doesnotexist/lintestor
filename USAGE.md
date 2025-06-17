@@ -1,97 +1,290 @@
-# 使用说明
-## 配置测试
+# Lintestor 使用指南 (v0.2.0+)
 
-### 发行版配置
-对于每个发行版，在工作目录（默认为程序所在目录， 可使用 `-D`/`--directory` 参数指定）下分别为其创建一个 `./<distro>` 目录，`./<distro>/config.toml` 是它的发行版配置文件，示例如下：
-  
+Lintestor 使用 Markdown (`.test.md`) 文件作为测试模板。本文档说明了如何配置测试环境和编写测试模板。
+
+## 1. 目标配置 (Target Configuration)
+
+在编写测试模板之前，需要先为测试目标（如QEMU虚拟机、远程服务器等）创建一个 TOML 配置文件。建议将这些文件存放于工作目录下的 `targets/` 子目录中。
+
+**`targets/my_qemu_vm/config.toml` 示例:**
 ```toml
-enabled = true # 启用该发行版的测试；为 false 则该目录将不会被检测到
-testing_type = "qemu-based-remote" # 或 "locally"、"remote"、"boardtest"
-# 指定测试环境类型。在参数为 locally、remote 时不需求 qemu 启动脚本。在 locally 时不需求连接信息。
-startup_script = "./debian/start_qemu.sh" # qemu 启动脚本；如果测试环境类型为 locally 或 remote 则无需此项
-stop_script = "./debian/stop_qemu.sh" # qemu 停止脚本；如果测试环境类型为 locally 或 remote 则无需此项
-skip_packages = ["docker"] # 应跳过测试的包
+# testing_type: 定义测试环境类型。
+# 可选值: "locally", "remote", "qemu-based-remote", "serial"
+testing_type = "remote"
 
-[connection] # 仅 "remote"/"qemu-based-remote" 适用；目前仅支持 SSH
+# [connection]: 当 testing_type 为 "remote", "qemu-based-remote", "serial" 时需要。
+[connection]
+# 对于 "remote" 和 "qemu-based-remote":
 method = "ssh"
 ip = "localhost"
 port = 2222
-username = "root"
-password = "root"
+username = "tester"
+# private_key_path = "~/.ssh/id_rsa_tester" # SSH 私钥路径
+password = "your_password"               # 或使用密码
 
-[boardtest] # 仅 "boardtest" 适用
-token = "your_boardtest_server_token" # 验证凭据
-board_config = "boards/bpif3.toml" # 在 Boardtest Server 上的板配置信息路径
-serial = "sdwirec_alpha" # SDWireC 设备的串号
-mi_sdk_enabled = false # 可选：利用米家 API 自动上电
-api_url = "http://yourserver:23333/" # API 基地址
-timeout_secs = 300 # Boardtest 中单个测试的超时时长（包括传输时间因此长一些好）
+# 对于 "serial":
+# device = "/dev/ttyUSB0" # 串口设备路径
+# baud_rate = 115200      # 波特率
 
+# [executor]: 可选，用于控制命令执行行为。
+[executor]
+command_timeout = 300  # 命令超时时间（秒），默认 300
+retry_count = 1        # 命令失败重试次数（首次执行不计入），默认 1
+retry_interval = 5     # 重试间隔（秒），默认 5
+maintain_session = true # 是否为同一目标上的连续步骤保持会话（主要用于SSH），默认 true
+continue_on_error = false # 步骤失败后是否继续执行模板中其他独立步骤，默认 false
 ```
 
-### 软件包配置
-发行版目录下，每个软件包对应一个子目录，其中至少各存放一个 `metadata.sh` 存放该软件包对应的元数据。请在其中定义好以下变量：
+---
+
+## 2. 模板结构与元数据 (YAML Front Matter)
+
+一个 `.test.md` 文件由文件顶部的 **YAML Front Matter** (元数据) 和下方的 **Markdown 正文**组成。
+
+元数据区域位于 `---` 分隔符之间，用于定义测试的基本信息。
+
+```yaml
+---
+# 报告中显示的主标题
+title: "示例单元功能测试"
+
+# [必需] 指向目标环境的配置文件，路径相对于工作目录
+target_config: "targets/my_qemu_vm/config.toml"
+
+# 被测单元的名称，用于测试筛选
+unit_name: "example_unit"
+
+# 标签，用于测试筛选
+tags: ["core", "smoke"]
+
+# [可选] 引用其他模板，用于跨文件依赖
+references:
+  - template: "common/setup.test.md"
+    as: "common_setup" # 定义一个命名空间，用于引用该模板中的步骤
+
+# [可选] 自定义字段，可以在模板中作为变量引用
+custom_field: "some_value"
+---
 ```
-PACKAGE_VERSION="3.30.3" # 软件包版本，可手动指定也可使用命令获取。
-# 例：Debian 下获取通过 `dpkg/apt` 安装的软件包的版本
-# PACKAGE_VERSION=$(dpkg -l | grep $PACKAGE_NAME | awk '{print $3}')
-PACKAGE_PRETTY_NAME="CMake" # 软件包别名 (pretty 包名；普通包名即子目录名)
-PACKAGE_TYPE="Build System" # 软件包类型
-PACKAGE_DESCRIPTION="Cross-platform make" # 软件包的简要说明（此项暂时未使用）
+
+~~不建议使用 YAML 的非引号包裹字符串功能，不然非预期的爆炸是可能发生的。~~
+
+---
+
+## 3. 模板正文 (Markdown Body)
+
+正文由一系列 Markdown 块组成，用于定义测试的具体步骤和报告的最终样式。
+
+### 标题 (Headings)
+
+标题用于组织报告结构，它本身也是依赖管理中的一个步骤。
+
+```markdown
+## 1. 安装步骤 {id="install_step"}
 ```
-一个子目录中可附带多个脚本，除上述 `metadata.sh` 外的其他 `.sh` 脚本均将视为测试脚本并运行（一个脚本即一个子测试）。脚本编写可参考 `debian` 目录下的现有示例。
 
-如果有需要在每个测试脚本前全局执行的命令（如 Debian 下为避免交互式安装造成的干扰需添加 `export DEBIAN_FRONTEND=noninteractive` 环境变量），可在发行版目录下的 `prerequisite.sh` 中指定。
+-   `id`: 为标题步骤提供一个唯一的局部ID，以便其他步骤可以依赖它。
+-   `generate_summary=true`: 如果给一个标题添加此属性，Lintestor 会在该标题下方自动生成整个模板的步骤执行摘要表。
 
-## 运行
-附加任意命令行参数，将按附加的参数增量执行对应功能。
+### 文本 (Text)
 
-`--test` 参数将执行全部发行版的测试。
+标准 Markdown 文本会直接呈现在报告中。可以在文本中使用 `{{ variable_name }}` 来引用变量。
 
-`--aggr` 参数将使复数个 report.json 聚合为 reports.json。
+```markdown
+这是一个描述性文本。测试将在目标 `{{ target_info.name }}` 上运行。
+```
 
-`--summ` 参数将执行生成结果操作。
+### 代码块 (Code Blocks)
 
-`--directory` 参数指定测试文件所在的工作目录（如上文所述）。
+代码块用于定义要执行的命令、断言和数据提取规则。
 
-`--distro` 参数指定要测试的发行版（可选，将覆盖掉总配置文件）；语法形如 `--distro debian` 或 `--distro debian,bianbu,openkylin`。
+````markdown
+```bash {id="install_cmd", exec=true, description="安装依赖", assert.exit_code=0}
+echo "正在安装依赖..."
+# sudo apt-get install -y some-package
+echo "依赖安装完成。"
+```
+````
 
-`--package` 参数指定要测试的软件包（可选，将覆盖掉总配置文件）；语法形如 `--package apache` 或 `--package apache,clang,cmake`。
+**关键属性:**
 
-可使用 `RUST_LOG=(debug, warn, info, error)` 环境变量指定日志输出等级（包括ssh连接日志），默认为 `info`。
+-   `id`: **必需**，步骤的唯一局部ID。
+-   `exec=true`: **必需**，标记此代码块为可执行。
+-   `description`: [可选] 步骤的描述，将用于报告中。
+-   `depends_on`: [可选] 声明依赖关系，值为一个步骤ID的数组。例如: `depends_on=["step1", "common_setup::step2"]`。
+-   `visible`: [可选] 默认为 `true`。设为 `false` 可在最终报告中隐藏此代码块本身（但命令仍会执行）。
 
-### 运行全部测试并生成结果汇总
+可以在代码块中使用其他代码块执行后产生的变量，但这个支持是实验性的。建议手动加一下 depends_on，因为代码块中的隐式依赖还有一些问题。
 
-参考上文配置好测试后运行
+**断言 (Assertions):**
+
+用于验证命令的执行结果是否符合预期。
+
+-   `assert.exit_code=0`: 断言命令的退出码。
+-   `assert.stdout_contains="some text"`: 断言标准输出包含指定文本。
+-   `assert.stderr_contains="error message"`: 断言标准错误输出包含指定文本。
+-   `assert.stdout_not_contains="forbidden text"`: 断言标准输出**不**包含指定文本。
+-   `assert.stderr_not_contains="unexpected error"`: 断言标准错误输出**不**包含指定文本。
+-   `assert.stderr_not_matches=/pattern/`: 断言标准错误输出**不**匹配指定的正则表达式。
+-   `assert.stdout_not_matches=/pattern/`: 断言标准输出**不**匹配指定的正则表达式。
+
+
+**数据提取 (Data Extraction):**
+
+从命令输出中提取值并存入变量。
+
+-   `extract.my_var=/Result: (\w+)/`: 使用正则表达式从标准输出中提取内容，并将第一个捕获组的值存入名为 `my_var` 的变量中。你可以在后续步骤中通过 `{{ my_var }}` 或 `{{ install_cmd::my_var }}` 来引用它。
+- 默认提取的都是字符串因为内部并没有类型系统，只是用了简单的 `HashMap<key, value>` 来存提取的东西。
+
+### 输出块 (Output Blocks)
+
+用于在报告中显式地展示某个已执行命令的输出。
+
+````markdown
+**安装结果:**
+```output {ref="install_cmd"}
+# 此处将自动插入 install_cmd 的输出
+```
+````
+
+-   `ref`: **必需**，指向要显示输出的步骤的 `id`。
+-   `stream`: [可选] 指定要显示的输出流。
+    -   `stdout` (默认): 只显示标准输出。
+    -   `stderr`: 只显示标准错误。
+    -   `both`: 同时显示标准输出和标准错误。目前实现方式是将两个流粗暴地拼接。（注意 serial 目标无法区分两种流因此本选项无效。）
+
+### 摘要表 (Summary Table)
+
+有两种方式在报告中插入所有步骤的执行摘要：
+
+1.  在任意标题上添加 `{generate_summary=true}` 属性。
+2.  在 Markdown 的任意位置使用 HTML 注释 `<!-- LINTESOR_SUMMARY_TABLE -->` 作为占位符。
+
+---
+
+## 4. 变量系统
+
+-   **内部存储**: 所有变量都以 `模板ID::步骤ID::变量名` 的形式唯一存储，确保无冲突。
+-   **变量引用**: 使用 `{{ variable_name }}` 或 `{{ step_id::variable_name }}`。当存在命名冲突时，建议使用后者以明确指定作用域。
+-   **内置变量**:
+    -   `execution_date`: 测试执行日期。
+    -   `target_info`: 包含目标配置信息的对象 (例如 `{{ target_info.name }}` )。
+    -   `unit_version`: 一个写死的测试单元版本号。
+
+---
+
+## 5. 依赖管理
+
+Lintestor 会根据步骤间的依赖关系构建执行顺序。
+
+-   **显式依赖**: 通过在代码块或标题上使用 `depends_on=["step_id"]` 属性来明确声明。
+-   **结构依赖**: 父标题会自动依赖其下的所有子步骤（子标题、代码块等），这主要用于保证报告的结构完整性。
+-   **隐式依赖**: 如果步骤A的命令中引用了步骤B提取的变量 (例如 `{{ B::my_var }}`), Lintestor 会自动推断出A依赖于B。（实验性的，不要过度信任这个。）
+
+---
+
+## 6. 运行测试
+
+使用 `--test` (或 `-t`) 参数执行测试。
 
 ```bash
-./lintestor --test --aggr --summ
+# 运行当前目录及子目录中的所有 .test.md 文件
+./lintestor --test
+
+# 运行指定的模板文件
+./lintestor --test --template ./path/to/specific.test.md
+
+# 运行指定目录下的所有模板
+./lintestor --test --test-dir ./path/to/tests
+
+# 将报告输出到自定义目录 (默认为 ./reports)
+./lintestor --test --reports-dir ./my_custom_reports
 ```
 
-或者
+**筛选测试:**
 
-```bash
-./lintestor -tas
-```
-将在发行版目录下的每个软件包子目录中各生成一个 report.json 作为该软件包的测试结果，并在当前**工作目录下**生成聚合后的总报告 reports.json 和 summary.md。
-
-## 全部命令行参数
+-   `--target <TARGET_NAME>`: 按目标名称筛选。
+-   `--unit <UNIT_NAME>`: 按单元名称 (`unit_name` 元数据) 筛选。
+-   `--tag <TAG_NAME>`: 按标签 (`tags` 元数据) 筛选。
 
 ```bash
 ./lintestor --help
 ```
 
-```bash
-Usage: lintestor [OPTIONS]
+```text
+Execute and manage tests embedded in Markdown files
+
+Usage: lintestor [OPTIONS] { --test | --parse-only }
+       lintestor --test [TEST_OPTIONS]
+       lintestor --parse-only [PARSE_OPTIONS]
 
 Options:
-  -t, --test                           Run tests (for all distributions by default)
-  -a, --aggr                           Aggregate multiple report.json files into a single reports.json
-  -s, --summ                           Generate a summary report
-  -D, --directory <working_directory>  Specify working directory with preconfigured test files
-  -d, --distro <distro>                Specify distributions to test
-  -p, --package <package>              Specify packages to test
-      --skip-successful                Skip previous successful tests (instead of overwriting their results)
-  -h, --help                           Print help
-  -V, --version                        Print version
+  -t, --test
+          Execute test templates
+  -p, --parse-only
+          Parse templates without execution
+  -v, --verbose
+          Enable verbose logging
+  -q, --quiet
+          Suppress non-essential output
+      --local
+          Execute in local environment
+      --remote
+          Execute on remote target via SSH
+      --qemu
+          Execute in QEMU virtual machine
+      --serial
+          Execute via serial connection
+      --template <TEMPLATE>
+          Path to test template file
+  -D, --test-dir <TEST_DIR>
+          Directory containing test templates
+      --reports-dir <REPORTS_DIR>
+          Output directory for test reports
+  -o, --output <OUTPUT>
+          Output file for aggregate report
+      --unit <UNIT>
+          Filter tests by unit name
+      --tag <TAG>
+          Filter tests by tag
+      --target <TARGET>
+          Target configuration file
+      --continue-on-error <CONTINUE_ON_ERROR>
+          Continue on test failures [default: false] [possible values: true, false]
+      --timeout <TIMEOUT>
+          Command timeout in seconds [default: 300]
+      --retry <RETRY>
+          Number of retries on failure [default: 3]
+      --retry-interval <RETRY_INTERVAL>
+          Retry interval in seconds [default: 5]
+      --maintain-session <MAINTAIN_SESSION>
+          Keep session alive between commands [default: true] [possible values: true, false]
+  -k, --keep-template-directory-structure
+          Preserve directory structure in reports
+  -h, --help
+          Print help
+  -V, --version
+          Print version
+
+EXECUTION MODES:
+  --test                 Execute test templates
+  --parse-only           Parse templates without execution
+
+ENVIRONMENT TYPES:
+  --local                Execute in local environment
+  --remote               Execute on remote target via SSH
+  --qemu                 Execute in QEMU virtual machine
+  --serial               Execute via serial connection
+
+FILTER OPTIONS:
+  --unit <NAME>          Filter tests by unit name
+  --tag <TAG>            Filter tests by tag
+  --target <FILE>        Use specific target configuration
+
+EXAMPLES:
+  lintestor --test --template T.test.md
+  lintestor --test --test-dir tests/ --local
+  lintestor --test --remote --target prod.toml --unit integration
+  lintestor --parse-only --template test.md
+  lintestor --test --qemu --continue-on-error --timeout 600
 ```

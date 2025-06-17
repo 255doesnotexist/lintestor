@@ -1,0 +1,4 @@
+enabled = true
+testing_type = "locally"
+name = "Local Test"
+description = "Local Test"

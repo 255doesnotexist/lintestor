@@ -1,22 +1,25 @@
-# Lintestor
+# Lintestor (v0.2.0+)
 
-[Docs](https://255doesnotexist.github.io/lintestor/) | [Example Summary](https://github.com/255doesnotexist/lintestor/blob/dirty/summary.md) | [Chinese README](README.md)
+[Docs](https://255doesnotexist.github.io/lintestor/) | [中文 README](README.md)
 
-`lintestor` is a Rust framework for automated software package availability testing, tailored for RISC-V platforms, with (theoretical) multi-distribution support.
+Lintestor is a Rust-based testing tool that uses partially executable Markdown files to define and execute automated tests.
 
 ## Features
 
-- Automatic management of test environments 
-- Provision and run predefined test jobs
-- Automatic aggregation of test reports
-- Intuitive test result matrix in Markdown format
+-   Define tests using Markdown: Integrate test descriptions, commands, assertions, and report structure into `.test.md` files.
+-   Configure environments via TOML: Manage different test targets (e.g., QEMU, remote SSH, local).
+-   Handle dependencies: Automatically execute test steps in order.
+-   Assertions and Data Extraction: Supports validating command exit codes and output, and can extract variables using regular expressions.
+-   Generate reports: Create Markdown-format test reports and summaries for each execution.
+-   Test filtering: Select tests to run based on target, unit, or tags.
 
 ## Usage
 
-See [USAGE_en.md](USAGE_en.md).
+For instructions on how to configure and write tests, please see:
 
-中文使用说明参见 [USAGE.md](USAGE.md).
+-   [使用指南 (USAGE.md)](USAGE.md)
+-   [Usage Guide (USAGE_en.md)](USAGE_en.md)
 
 ## Prebuilt binaries
 
-Check out [Releases](https://github.com/255doesnotexist/lintestor/releases) for some experimental nightly builds.
+For experimental Nightly builds, see [Releases](https://github.com/255doesnotexist/lintestor/releases).
