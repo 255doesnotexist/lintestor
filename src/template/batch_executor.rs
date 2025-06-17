@@ -700,7 +700,7 @@ impl BatchExecutor {
         if let Some(report_dir_path) = self.report_dir.as_ref() {
             info!("Generating summary report for all executed templates...");
             if !all_results.is_empty() {
-                let summary_file_name = format!("{}.{}", summary_template_id, "report.md");
+                let summary_file_name = format!("{}.{}", "summary", "report.md");
                 let summary_file_path = report_dir_path.join(summary_file_name);
                 let mut summary_content = format!(
                     "# Test Execution Summary ({})\n\n",
