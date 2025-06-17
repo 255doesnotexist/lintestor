@@ -126,7 +126,9 @@ impl VariableManager {
         for item in template.metadata.references.iter() {
             let template_path = item.template_path.clone();
             let as_namespace = item.namespace.clone();
-            let item_template_id = utils::get_template_id_from_path(Path::new(&template_path));
+            // 使用 template 自身的 tests_dir 来解析引用的模板ID
+            let item_template_id =
+                utils::get_template_id_from_path(&template.tests_dir, Path::new(&template_path));
             self.register_namespace(&as_namespace, &item_template_id);
         }
 
@@ -1050,6 +1052,7 @@ mod tests {
 
         Arc::new(TestTemplate {
             file_path: PathBuf::from(format!("/test/{}.test.md", id)),
+            tests_dir: PathBuf::from("/test/"),
             raw_content: raw_content.to_string(),
             content_blocks,
             metadata: TemplateMetadata {

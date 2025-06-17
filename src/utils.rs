@@ -41,22 +41,29 @@ pub fn normalize_template_id(template_id: &str) -> String {
 
 /// 从文件路径获取模板ID
 ///
-/// 从文件名提取模板ID，移除扩展名和.test后缀
+/// 从文件路径提取模板ID，考虑相对路径以避免冲突，移除扩展名和.test后缀
+/// 路径分割符会被替换为点（.），以符合模板ID的规范。
 ///
 /// # 参数
 ///
+/// - `tests_dir`: 测试模板的根目录
 /// - `file_path`: 文件路径
 ///
 /// # 返回值
 ///
 /// 返回提取的模板ID
-pub fn get_template_id_from_path(file_path: &Path) -> String {
-    let file_stem = file_path
-        .file_stem()
-        .and_then(|s| s.to_str())
-        .unwrap_or("unknown");
-
-    normalize_template_id(file_stem)
+pub fn get_template_id_from_path(tests_dir: &Path, file_path: &Path) -> String {
+    let relative_path = file_path.strip_prefix(tests_dir).unwrap_or(file_path);
+    let path_str = relative_path.to_string_lossy().to_string();
+    let cleaned_id = if let Some(stripped) = path_str.strip_suffix(".test.md") {
+        stripped.to_string()
+    } else if let Some(stripped) = path_str.strip_suffix(".test") {
+        stripped.to_string()
+    } else {
+        path_str
+    };
+    let final_id = cleaned_id.replace(std::path::MAIN_SEPARATOR, ".");
+    normalize_template_id(&final_id)
 }
 
 /// 从模板 Arc 引用和本地步骤 ID 获取 step 对应的 ResultID

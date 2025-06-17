@@ -77,11 +77,12 @@ fn walk_directory(dir: &Path, templates: &mut Vec<PathBuf>, recursive: bool) -> 
 pub fn filter_templates(
     template_paths: Vec<PathBuf>,
     filter: &TemplateFilter,
+    tests_dir: &Path,
 ) -> Result<Vec<TestTemplate>> {
     let mut filtered_templates = Vec::new();
 
     for path in &template_paths {
-        match TestTemplate::from_file(path) {
+        match TestTemplate::from_file(path, tests_dir) {
             Ok(template) => {
                 // 应用过滤条件
                 if matches_filter(&template, filter) {

@@ -65,6 +65,7 @@ pub enum ContentBlock {
 pub fn parse_template_into_content_blocks_and_steps(
     content: &str,
     file_path: &Path,
+    tests_dir: &Path,
 ) -> Result<(TemplateMetadata, Vec<ExecutionStep>, Vec<ContentBlock>)> {
     info!(
         "Starting to parse test template (structured content and steps): {}", // 开始解析测试模板 (结构化内容和步骤): {}
@@ -88,7 +89,7 @@ pub fn parse_template_into_content_blocks_and_steps(
         metadata.title, metadata.unit_name
     );
 
-    let template_id = utils::get_template_id_from_path(file_path);
+    let template_id = utils::get_template_id_from_path(tests_dir, file_path);
     debug!("Generated template ID: {template_id}"); // 生成的模板 ID: {template_id}
 
     // 同时解析步骤和内容块

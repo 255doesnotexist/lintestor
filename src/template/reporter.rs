@@ -437,6 +437,7 @@ mod tests {
 
         Arc::new(TestTemplate {
             file_path: PathBuf::from(format!("/test/{}.test.md", id)),
+            tests_dir: PathBuf::from("/test/"),
             raw_content: raw_content.to_string(),
             content_blocks,
             metadata: TemplateMetadata {

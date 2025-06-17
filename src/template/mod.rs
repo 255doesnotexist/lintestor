@@ -169,6 +169,8 @@ pub struct TestTemplate {
     pub steps: Vec<ExecutionStep>,
     /// 模板文件路径
     pub file_path: PathBuf,
+    /// 测试根目录
+    pub tests_dir: PathBuf,
     #[allow(dead_code)]
     /// 原始模板内容
     pub raw_content: String, // Keep for now, might be useful for debugging or other purposes
@@ -179,24 +181,25 @@ pub struct TestTemplate {
 impl TestTemplate {
     /// 获取模板ID（文件名，转换为纯字母和下划线格式）
     pub fn get_template_id(&self) -> String {
-        utils::get_template_id_from_path(&self.file_path)
+        utils::get_template_id_from_path(&self.tests_dir, &self.file_path)
     }
 
     /// 从模板文件路径创建测试模板
-    pub fn from_file<P: AsRef<Path>>(path: P) -> Result<Self> {
+    pub fn from_file<P: AsRef<Path>>(path: P, tests_dir: &Path) -> Result<Self> {
         let path = path.as_ref();
         let content = std::fs::read_to_string(path)
             .with_context(|| format!("Unable to read template file: {}", path.display()))?; // 无法读取模板文件: {}
 
         // Use the new parser function that returns content_blocks as well
         let (metadata, steps, content_blocks) =
-            parser::parse_template_into_content_blocks_and_steps(&content, path)
+            parser::parse_template_into_content_blocks_and_steps(&content, path, tests_dir)
                 .with_context(|| format!("Failed to parse template: {}", path.display()))?; // 解析模板失败: {}
 
         Ok(TestTemplate {
             metadata,
             steps,
             file_path: path.to_path_buf(),
+            tests_dir: tests_dir.to_path_buf(),
             raw_content: content.to_string(),
             content_blocks, // Store the parsed content blocks
         })

@@ -75,7 +75,7 @@ fn run_single_template_test(
     info!("Processing single template: {}", template_file.display());
 
     // 解析模板
-    let template = match template::TestTemplate::from_file(template_file) {
+    let template = match template::TestTemplate::from_file(template_file, test_dir) {
         Ok(t) => t,
         Err(e) => {
             return Err(format!("Failed to load template from file: {e}").into());
@@ -230,10 +230,11 @@ fn run_template_tests(cli_args: &CliArgs, test_dir: &Path) -> Result<(), Box<dyn
         tags: tag_filter.map_or_else(Vec::new, |t| vec![t.to_string()]),
     };
 
-    let loaded_templates: Vec<TestTemplate> = match filter_templates(all_template_paths, &filter) {
-        Ok(t) => t,
-        Err(e) => {
-            error!("Failed to load or filter templates: {e}");
+    let loaded_templates: Vec<TestTemplate> =
+        match filter_templates(all_template_paths, &filter, test_dir) {
+            Ok(t) => t,
+            Err(e) => {
+                error!("Failed to load or filter templates: {e}");
             return Err(e.into()); // Propagate error
         }
     };
