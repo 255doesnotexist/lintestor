@@ -24,6 +24,12 @@ RUN rm -f /etc/apt/sources.list /etc/apt/sources.list.d/*.list /etc/apt/sources.
     git \
     pkg-config \
     cmake \
+    musl-tools \
+    musl-dev \
+    musl-dev:arm64 \
+    musl-dev:armhf \
+    musl-dev:riscv64 \
+    musl-dev:ppc64el \
     gcc-aarch64-linux-gnu \
     g++-aarch64-linux-gnu \
     gcc-arm-linux-gnueabihf \
@@ -87,6 +93,13 @@ RUN rustup target add \
     powerpc64-unknown-linux-gnu \
     && rustup component add rust-src # Add rust source for cross-compilation features if needed
 
+RUN rustup target add \
+    x86_64-unknown-linux-musl \
+    aarch64-unknown-linux-musl \
+    armv7-unknown-linux-musleabihf \
+    riscv64gc-unknown-linux-musl \
+    powerpc64-unknown-linux-musl \ # Add MUSL targets for static linking
+
 # Configure Cargo for cross-compilation linkers AND environment variables for C dependencies
 # This is the key change to handle openssl-sys and similar crates gracefully.
 RUN mkdir -p /root/.cargo && echo '\
@@ -121,6 +134,25 @@ rustflags = ["-C", "link-arg=-lgcc"]\n\
 OPENSSL_LIB_DIR = "/usr/lib/powerpc64-linux-gnu"\n\
 OPENSSL_INCLUDE_DIR = "/usr/include"\n\
 PKG_CONFIG_PATH = "/usr/lib/powerpc64-linux-gnu/pkgconfig"\n\
+\n\
+[target.x86_64-unknown-linux-musl]\n\
+linker = "musl-gcc"\n\
+\n\
+[target.aarch64-unknown-linux-musl]\n\
+linker = "aarch64-linux-gnu-gcc"\n\
+rustflags = ["-C", "target-feature=+crt-static"]\n\
+\n\
+[target.armv7-unknown-linux-musleabihf]\n\
+linker = "arm-linux-gnueabihf-gcc"\n\
+rustflags = ["-C", "target-feature=+crt-static"]\n\
+\n\
+[target.riscv64gc-unknown-linux-musl]\n\
+linker = "riscv64-linux-gnu-gcc"\n\
+rustflags = ["-C", "target-feature=+crt-static"]\n\
+\n\
+[target.powerpc64-unknown-linux-musl]\n\
+linker = "powerpc64-linux-gnu-gcc"\n\
+rustflags = ["-C", "target-feature=+crt-static"]\n\
 ' > /root/.cargo/config.toml
 
 # You can add a CMD here to hint users how to use it, or just leave it for an interactive shell

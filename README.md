@@ -4,6 +4,12 @@
 
 Lintestor 是一个基于 Rust 的测试工具，它使用部分可执行的 Markdown 文件来定义和执行自动化测试。
 
+## 静态构建
+
+```
+cargo build --release --target x86_64-unknown-linux-musl
+```
+
 ## 主要功能
 
 -   使用 Markdown 定义测试: 将测试描述、命令、断言和报告结构整合在 `.test.md` 文件中。
