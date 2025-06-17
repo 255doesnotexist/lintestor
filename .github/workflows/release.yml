@@ -10,10 +10,11 @@ jobs:
       matrix:
         target:
           - x86_64-unknown-linux-gnu
-          - i686-unknown-linux-gnu
+          # - i686-unknown-linux-gnu
           - aarch64-unknown-linux-gnu
           - armv7-unknown-linux-gnueabihf
           - riscv64gc-unknown-linux-gnu
+          # - powerpc64-unknown-linux-gnu
 
     steps:
     - uses: actions/checkout@v4
@@ -32,12 +33,52 @@ jobs:
 
     - name: Cross compile
       run: |
-        docker run --rm -v ${{ github.workspace }}:/root/src 255doesnotexist/lintestor-cross-compile:latest \
-          sh -c "cd /root/src && cargo build --release --target ${{ matrix.target }} && mv target/${{ matrix.target }}/release/lintestor target/${{ matrix.target }}/release/lintestor-${{ matrix.target }}-${{ steps.version.outputs.release_name }}"
+        TARGET="${{ matrix.target }}"
+        
+        # Build the Docker command with conditional environment variables
+        DOCKER_CMD="docker run --rm -v ${{ github.workspace }}:/root/src"
+        
+        # Add target-specific environment variables for C dependencies
+        case "$TARGET" in
+          aarch64-unknown-linux-gnu)
+            DOCKER_CMD="$DOCKER_CMD -e OPENSSL_LIB_DIR=/usr/lib/aarch64-linux-gnu"
+            DOCKER_CMD="$DOCKER_CMD -e OPENSSL_INCLUDE_DIR=/usr/include"
+            DOCKER_CMD="$DOCKER_CMD -e PKG_CONFIG_PATH=/usr/lib/aarch64-linux-gnu/pkgconfig"
+            DOCKER_CMD="$DOCKER_CMD -e PKG_CONFIG_SYSROOT_DIR=/"
+            ;;
+          armv7-unknown-linux-gnueabihf)
+            DOCKER_CMD="$DOCKER_CMD -e OPENSSL_LIB_DIR=/usr/lib/arm-linux-gnueabihf"
+            DOCKER_CMD="$DOCKER_CMD -e OPENSSL_INCLUDE_DIR=/usr/include"
+            DOCKER_CMD="$DOCKER_CMD -e PKG_CONFIG_PATH=/usr/lib/arm-linux-gnueabihf/pkgconfig"
+            DOCKER_CMD="$DOCKER_CMD -e PKG_CONFIG_SYSROOT_DIR=/"
+            ;;
+          riscv64gc-unknown-linux-gnu)
+            DOCKER_CMD="$DOCKER_CMD -e OPENSSL_LIB_DIR=/usr/lib/riscv64-linux-gnu"
+            DOCKER_CMD="$DOCKER_CMD -e OPENSSL_INCLUDE_DIR=/usr/include"
+            DOCKER_CMD="$DOCKER_CMD -e PKG_CONFIG_PATH=/usr/lib/riscv64-linux-gnu/pkgconfig"
+            DOCKER_CMD="$DOCKER_CMD -e PKG_CONFIG_SYSROOT_DIR=/"
+            ;;
+          # powerpc64-unknown-linux-gnu)
+          #   DOCKER_CMD="$DOCKER_CMD -e OPENSSL_LIB_DIR=/usr/lib/powerpc64-linux-gnu"
+          #   DOCKER_CMD="$DOCKER_CMD -e OPENSSL_INCLUDE_DIR=/usr/include"
+          #   DOCKER_CMD="$DOCKER_CMD -e PKG_CONFIG_PATH=/usr/lib/powerpc64-linux-gnu/pkgconfig"
+          #   DOCKER_CMD="$DOCKER_CMD -e PKG_CONFIG_SYSROOT_DIR=/"
+          #   ;;
+          *)
+            # For host builds (x86_64) or targets without specific C deps, no special env vars needed
+            ;;
+        esac
+        
+        # Complete the Docker command
+        DOCKER_CMD="$DOCKER_CMD 255doesnotexist/lintestor-cross-compile:latest"
+        DOCKER_CMD="$DOCKER_CMD sh -c \"cd /root/src && cargo build --release --target ${TARGET} && mv target/${TARGET}/release/lintestor target/${TARGET}/release/lintestor-${TARGET}-${{ steps.version.outputs.release_name }}\""
+        
+        # Execute the Docker command
+        eval "$DOCKER_CMD"
 
     - name: Listing targets
       run: |
-        ls target/${{ matrix.target }}/release/ # 不是我 binary 呢让我看看编译了吗
+        ls target/${{ matrix.target }}/release/
 
     - name: Upload artifact
       uses: actions/upload-artifact@v4
@@ -81,7 +122,7 @@ jobs:
 
     - name: Listing artifacts
       run: |
-        ls artifacts # 不是我 binary 呢让我看看啥情况
+        ls artifacts
 
     - name: Upload Release Assets
       run: |
