@@ -17,22 +17,21 @@ mod variable;
 
 // Re-export types from step.rs
 pub mod step;
-pub use step::{ExecutionStep};
+pub use step::ExecutionStep;
 
 use crate::config::target_config::TargetConfig;
 use crate::utils;
 // Import ContentBlock from parser, and the new parsing function
 pub use batch_executor::BatchExecutor;
-pub use discovery::{discover_templates, filter_templates, TemplateFilter};
+pub use discovery::{TemplateFilter, discover_templates, filter_templates};
 pub use executor::{ExecutionResult, ExecutorOptions};
 pub use parser::ContentBlock;
 pub use variable::VariableManager; // Added StepDependencyManager
 
 /// Options for controlling batch execution
-#[derive(Debug, Clone)]
-#[derive(Default)]
+#[derive(Debug, Clone, Default)]
 pub struct BatchOptions {
-    /// Test directory to search for templates. 
+    /// Test directory to search for templates.
     /// (For single template, this is the directory containing the template file)
     pub test_directory: Option<PathBuf>,
     /// Directory where reports should be saved.
@@ -43,7 +42,6 @@ pub struct BatchOptions {
     /// or keep the original directory structure
     pub keep_template_directory_structure: bool,
 }
-
 
 /// 外部模板引用
 #[derive(Debug, Clone)]
@@ -181,7 +179,6 @@ pub struct TestTemplate {
 impl TestTemplate {
     /// 获取模板ID（文件名，转换为纯字母和下划线格式）
     pub fn get_template_id(&self) -> String {
-        
         utils::get_template_id_from_path(&self.file_path)
     }
 

@@ -4,7 +4,7 @@
 
 use crate::config::target_config::TargetConfig;
 use crate::template::ExecutorOptions;
-use anyhow::{bail, Result};
+use anyhow::{Result, bail};
 use std::time::Duration;
 
 /// 命令执行结果
@@ -52,7 +52,10 @@ pub struct ConnectionFactory;
 
 impl ConnectionFactory {
     /// 根据目标配置创建适当类型的连接管理器
-    pub fn create_manager(config: &TargetConfig, executor_options: &ExecutorOptions) -> Result<Box<dyn ConnectionManager>> {
+    pub fn create_manager(
+        config: &TargetConfig,
+        executor_options: &ExecutorOptions,
+    ) -> Result<Box<dyn ConnectionManager>> {
         match config.testing_type.as_str() {
             "remote" | "ssh" => {
                 // 创建SSH连接
@@ -61,7 +64,10 @@ impl ConnectionFactory {
                     None => bail!("No connection configuration provided for remote/SSH"),
                 };
 
-                Ok(Box::new(SSHConnectionManager::new(connection, executor_options)?))
+                Ok(Box::new(SSHConnectionManager::new(
+                    connection,
+                    executor_options,
+                )?))
             }
             "local" | "locally" => {
                 // 创建本地执行环境
@@ -74,14 +80,20 @@ impl ConnectionFactory {
                     None => bail!("No connection configuration provided for QEMU"),
                 };
 
-                Ok(Box::new(SSHConnectionManager::new(connection, executor_options)?))
+                Ok(Box::new(SSHConnectionManager::new(
+                    connection,
+                    executor_options,
+                )?))
             }
             "serial" => {
                 let serial = match &config.serial {
                     Some(s) => s.clone(),
                     None => bail!("No serial configuration provided for serial mode"),
                 };
-                Ok(Box::new(SerialConnectionManager::new(serial, executor_options.clone())?))
+                Ok(Box::new(SerialConnectionManager::new(
+                    serial,
+                    executor_options.clone(),
+                )?))
             }
             "boardtest" => {
                 // 这里应该实现BoardTest连接类型

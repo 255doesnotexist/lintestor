@@ -170,19 +170,13 @@ impl VariableManager {
             template_id,
             "GLOBAL",
             "metadata.target_name",
-            template
-                .metadata
-                .target_config
-                .get_name()
+            template.metadata.target_config.get_name(),
         )?;
         self.set_variable(
             template_id,
             "GLOBAL",
             "metadata.target_description",
-            template
-                .metadata
-                .target_config
-                .get_description()
+            template.metadata.target_config.get_description(),
         )?;
         Ok(())
     }
@@ -220,9 +214,13 @@ impl VariableManager {
         {
             // 如果 template_id 是命名空间，获取对应的模板ID
             if let Some(tid) = self.get_template_id_by_namespace(template_id.as_str()) {
-                warn!("Theoretically you shouldn't use namespace instead of specific ID during assignment, but namespace {template_id} is automatically resolved to template ID {tid} here"); // 理论上你不该在赋值时还用的命名空间而不是具体 ID，但是命名空间 {template_id} 这里自动被解析为模板ID {tid}
+                warn!(
+                    "Theoretically you shouldn't use namespace instead of specific ID during assignment, but namespace {template_id} is automatically resolved to template ID {tid} here"
+                ); // 理论上你不该在赋值时还用的命名空间而不是具体 ID，但是命名空间 {template_id} 这里自动被解析为模板ID {tid}
                 if template_id == tid {
-                    warn!("Namespace {template_id} and template ID {tid} are the same, avoiding infinite loop, breaking out"); // 命名空间 {template_id} 和模板ID {tid} 相同，避免死循环，跳出
+                    warn!(
+                        "Namespace {template_id} and template ID {tid} are the same, avoiding infinite loop, breaking out"
+                    ); // 命名空间 {template_id} 和模板ID {tid} 相同，避免死循环，跳出
                     break; // 避免死循环
                 }
                 template_id = tid;
@@ -275,7 +273,8 @@ impl VariableManager {
         // 检查变量是否已存在
         if self.variables.contains_key(&variable_key) {
             debug!("Variable already exists, overwriting old value: {variable_key}"); // 变量已存在，覆盖旧值: {variable_key}
-            self.variables.insert(variable_key.clone(), value.to_string());
+            self.variables
+                .insert(variable_key.clone(), value.to_string());
         }
 
         // 注册变量
@@ -415,7 +414,9 @@ impl VariableManager {
             if let Some(tid) = self.get_template_id_by_namespace(current_template_id.as_str()) {
                 debug!("Namespace {current_template_id} resolved to template ID {tid}"); // 命名空间 {current_template_id} 被解析为模板ID {tid}
                 if current_template_id == tid {
-                    warn!("Namespace {current_template_id} and template ID {tid} are the same, avoiding infinite loop"); // 命名空间 {current_template_id} 和模板ID {tid} 相同，避免死循环，跳出
+                    warn!(
+                        "Namespace {current_template_id} and template ID {tid} are the same, avoiding infinite loop"
+                    ); // 命名空间 {current_template_id} 和模板ID {tid} 相同，避免死循环，跳出
                     break; // 避免死循环
                 }
                 current_template_id = tid;
@@ -650,7 +651,7 @@ impl VariableManager {
                         state = State::Normal;
                     } else if c == '}' && chars.peek() == Some(&'}') {
                         chars.next(); // 跳过第二个 '}'
-                                      // Unicode安全：用char_indices记录?和:的字节下标
+                        // Unicode安全：用char_indices记录?和:的字节下标
                         let inner = content.trim();
                         let mut qmark_byte = None;
                         let mut colon_byte = None;
@@ -1012,13 +1013,20 @@ impl VariableManager {
             }
         }
 
-        Err(format!("Unable to parse conditional expression: {condition}")) // 无法解析条件表达式: {condition}
+        Err(format!(
+            "Unable to parse conditional expression: {condition}"
+        )) // 无法解析条件表达式: {condition}
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::{config::target_config::TargetConfig, template::{ContentBlock, ExecutionStep, TemplateMetadata, TemplateReference, TestTemplate}};
+    use crate::{
+        config::target_config::TargetConfig,
+        template::{
+            ContentBlock, ExecutionStep, TemplateMetadata, TemplateReference, TestTemplate,
+        },
+    };
 
     use super::*;
 
@@ -1103,12 +1111,8 @@ mod tests {
             ContentBlock::Text("{ t1::GLOBAL::greeting } { name }!".to_string()),
         ];
         // 创建一个虚拟模板对象
-        let template_obj = create_dummy_template(
-            "t1",
-            "Test content",
-            content_blocks.clone(),
-            vec![],
-        );
+        let template_obj =
+            create_dummy_template("t1", "Test content", content_blocks.clone(), vec![]);
         // 注册模板
         manager
             .register_template(&template_obj, Some("t1"))
@@ -1154,18 +1158,20 @@ mod tests {
         // 构造内容块
         let content_blocks = vec![
             ContentBlock::Text("Welcome, {{ user }}!".to_string()), // 欢迎, {{ user }}!
-            ContentBlock::Text("Score: {{ score }}".to_string()), // 分数: {{ score }}
+            ContentBlock::Text("Score: {{ score }}".to_string()),   // 分数: {{ score }}
         ];
-        let template_obj = create_dummy_template(
-            "template2",
-            "Test content",
-            content_blocks.clone(),
-            vec![],
-        );
-        manager.register_template(&template_obj, Some("template2")).unwrap();
+        let template_obj =
+            create_dummy_template("template2", "Test content", content_blocks.clone(), vec![]);
+        manager
+            .register_template(&template_obj, Some("template2"))
+            .unwrap();
 
-        manager.set_variable("template2", "GLOBAL", "user", "XiaoMing").unwrap(); // 小明
-        manager.set_variable("template2", "GLOBAL", "score", "99").unwrap();
+        manager
+            .set_variable("template2", "GLOBAL", "user", "XiaoMing")
+            .unwrap(); // 小明
+        manager
+            .set_variable("template2", "GLOBAL", "score", "99")
+            .unwrap();
 
         // 检查内容块变量替换
         if let ContentBlock::Text(ref text) = content_blocks[0] {
@@ -1192,17 +1198,19 @@ mod tests {
             ContentBlock::Text("{{ score >= 60 ? \"Pass\" : \"Fail\" }}".to_string()), // {{ score >= 60 ? \"及格\" : \"不及格\" }}
         ];
 
-        let template_obj = create_dummy_template(
-            "template3",
-            "Test content",
-            content_blocks.clone(),
-            vec![],
-        );
-        manager.register_template(&template_obj, Some("template3")).unwrap();
+        let template_obj =
+            create_dummy_template("template3", "Test content", content_blocks.clone(), vec![]);
+        manager
+            .register_template(&template_obj, Some("template3"))
+            .unwrap();
 
         // 设置变量
-        manager.set_variable("template3", "GLOBAL", "passed", "no").unwrap();
-        manager.set_variable("template3", "GLOBAL", "score", "59").unwrap();
+        manager
+            .set_variable("template3", "GLOBAL", "passed", "no")
+            .unwrap();
+        manager
+            .set_variable("template3", "GLOBAL", "score", "59")
+            .unwrap();
 
         if let ContentBlock::Text(ref text) = content_blocks[1] {
             let replaced_score = manager.replace_variables(text, Some("template3"), None);
@@ -1212,7 +1220,9 @@ mod tests {
         }
 
         // 修改分数再测一次
-        manager.set_variable("template3", "GLOBAL", "score", "60").unwrap();
+        manager
+            .set_variable("template3", "GLOBAL", "score", "60")
+            .unwrap();
         if let ContentBlock::Text(ref text) = content_blocks[1] {
             let replaced_score2 = manager.replace_variables(text, Some("template3"), None);
             assert_eq!(replaced_score2, "Pass"); // 及格
@@ -1227,19 +1237,23 @@ mod tests {
 
         let content_blocks = vec![
             ContentBlock::Text("Hello, {{ user }}! Status: {{ status }}".to_string()), // 你好, {{ user }}! 状态: {{ status }}
-            ContentBlock::Text("{{ status == \"active\" ? \"Welcome back\" : \"Please activate\" }}".to_string()), // {{ status == \"active\" ? \"欢迎回来\" : \"请激活\" }}
+            ContentBlock::Text(
+                "{{ status == \"active\" ? \"Welcome back\" : \"Please activate\" }}".to_string(),
+            ), // {{ status == \"active\" ? \"欢迎回来\" : \"请激活\" }}
         ];
 
-        let template_obj = create_dummy_template(
-            "template4",
-            "Test content",
-            content_blocks.clone(),
-            vec![],
-        );
-        manager.register_template(&template_obj, Some("template4")).unwrap();
+        let template_obj =
+            create_dummy_template("template4", "Test content", content_blocks.clone(), vec![]);
+        manager
+            .register_template(&template_obj, Some("template4"))
+            .unwrap();
 
-        manager.set_variable("template4", "GLOBAL", "user", "ZhangSan").unwrap(); // 张三
-        manager.set_variable("template4", "GLOBAL", "status", "active").unwrap();
+        manager
+            .set_variable("template4", "GLOBAL", "user", "ZhangSan")
+            .unwrap(); // 张三
+        manager
+            .set_variable("template4", "GLOBAL", "status", "active")
+            .unwrap();
 
         if let ContentBlock::Text(ref text) = content_blocks[0] {
             let replaced_text = manager.replace_variables(text, Some("template4"), None);

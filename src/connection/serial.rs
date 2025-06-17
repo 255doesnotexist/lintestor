@@ -3,14 +3,14 @@
 //! 该模块实现了通过串口执行Linux命令的连接管理器
 
 use anyhow::{Context, Result};
-use log::{debug};
+use log::debug;
 use mio_serial::SerialPort;
 use std::io::Read;
 use std::thread;
 use std::time::{Duration, Instant};
 
-use crate::connection::{CommandOutput, ConnectionManager};
 use crate::config::serial_config::SerialConfig;
+use crate::connection::{CommandOutput, ConnectionManager};
 
 use crate::template::ExecutorOptions;
 
@@ -23,10 +23,10 @@ pub struct SerialConnectionManager {
 
 impl SerialConnectionManager {
     pub fn new(config: SerialConfig, executor_options: ExecutorOptions) -> Result<Self> {
-        Ok(Self { 
+        Ok(Self {
             config,
             executor_options,
-            port: None 
+            port: None,
         })
     }
 
@@ -34,12 +34,18 @@ impl SerialConnectionManager {
     fn open_port(&self) -> Result<Box<dyn SerialPort + Send>> {
         let mut builder = mio_serial::new(&self.config.port, self.config.baud_rate);
         builder = builder.timeout(Duration::from_secs(self.executor_options.command_timeout));
-        let stream = builder.open_native().with_context(|| format!("Unable to open serial port: {}", self.config.port))?; // 无法打开串口: {}
+        let stream = builder
+            .open_native()
+            .with_context(|| format!("Unable to open serial port: {}", self.config.port))?; // 无法打开串口: {}
         Ok(Box::new(stream))
     }
 
     /// 等待特定pattern出现
-    fn wait_for_pattern(port: &mut dyn SerialPort, pattern: &str, timeout: Duration) -> Result<String> {
+    fn wait_for_pattern(
+        port: &mut dyn SerialPort,
+        pattern: &str,
+        timeout: Duration,
+    ) -> Result<String> {
         let start = Instant::now();
         let mut buf = vec![0u8; 4096];
         let mut output = String::new();
@@ -103,15 +109,24 @@ impl ConnectionManager for SerialConnectionManager {
     }
 
     /// 执行命令
-    fn execute_command(&mut self, command: &str, timeout: Option<Duration>) -> Result<CommandOutput> {
+    fn execute_command(
+        &mut self,
+        command: &str,
+        timeout: Option<Duration>,
+    ) -> Result<CommandOutput> {
         let timeout = timeout.unwrap_or(Duration::from_secs(self.executor_options.command_timeout));
         let shell_prompt = &self.config.shell_prompt;
-        let port = self.port.as_mut().ok_or_else(|| anyhow::anyhow!("Serial port not connected, please setup first"))?; // 串口未连接，请先setup
+        let port = self
+            .port
+            .as_mut()
+            .ok_or_else(|| anyhow::anyhow!("Serial port not connected, please setup first"))?; // 串口未连接，请先setup
         debug!("Serial executing command: {command}"); // 串口执行命令: {command}
         // 清空缓冲区
         let mut buf = [0u8; 4096];
         while let Ok(n) = port.read(&mut buf) {
-            if n == 0 { break; }
+            if n == 0 {
+                break;
+            }
         }
         // 发送命令
         Self::send_line(&mut **port, command)?;
@@ -129,7 +144,7 @@ impl ConnectionManager for SerialConnectionManager {
         Ok(CommandOutput {
             stdout,
             stderr: String::new(), // 串口无法区分
-            exit_code: 0, // 串口一般无法获取退出码
+            exit_code: 0,          // 串口一般无法获取退出码
         })
     }
 

@@ -3,10 +3,10 @@
 //! 这个模块负责分析和管理测试模板之间的依赖关系，确保它们以正确的顺序执行。
 //! 当一个模板引用了另一个模板的变量时，它必须在被引用模板执行完成后才能执行。
 
-use std::collections::{HashMap, HashSet, VecDeque};
-use anyhow::{Result};
+use anyhow::Result;
 use log::{debug, warn};
 use regex::Regex;
+use std::collections::{HashMap, HashSet, VecDeque};
 
 use crate::template::step::{ExecutionStep, GlobalStepId, StepType};
 
@@ -36,9 +36,18 @@ impl StepDependencyManager {
     pub fn add_steps(&mut self, steps: Vec<ExecutionStep>) {
         for step in steps {
             self.graph.entry(step.id.clone()).or_default(); // Ensure node exists in graph
-            for dep_id in &step.dependencies { // dependencies is HashSet<GlobalStepId>
-                self.graph.entry(step.id.clone()).or_default().dependencies.insert(dep_id.clone());
-                self.graph.entry(dep_id.clone()).or_default().dependents.insert(step.id.clone());
+            for dep_id in &step.dependencies {
+                // dependencies is HashSet<GlobalStepId>
+                self.graph
+                    .entry(step.id.clone())
+                    .or_default()
+                    .dependencies
+                    .insert(dep_id.clone());
+                self.graph
+                    .entry(dep_id.clone())
+                    .or_default()
+                    .dependents
+                    .insert(step.id.clone());
             }
             self.extract_dependencies_from_step(&step); // Implicit dependencies
             self.nodes.insert(step.id.clone(), step);
@@ -66,12 +75,14 @@ impl StepDependencyManager {
                     let var_name_in_command = var_match.as_str(); // Variable name as used in the command
 
                     for (potential_source_global_id, source_step) in &self.nodes {
-                        if source_step.template_id == step.template_id { // Implicit dependencies are within the same template
-                            let defines_var = if let Some(parsed_source) = &source_step.original_parsed_step {
+                        if source_step.template_id == step.template_id {
+                            // Implicit dependencies are within the same template
+                            let defines_var = if let Some(parsed_source) =
+                                &source_step.original_parsed_step
+                            {
                                 parsed_source.extractions.iter().any(|ext| {
                                     // ext.variable is the actual name of the variable defined by source_step
                                     // var_name_in_command is the name used in the current step's command
-                                    
                                     // Case 1: Command uses a simple variable name (e.g., ${my_var})
                                     (ext.variable == var_name_in_command) ||
                                     // Case 2: Command uses a local_id qualified variable name (e.g., ${step_local_id::my_var})
@@ -79,7 +90,9 @@ impl StepDependencyManager {
                                     // Case 3: Command uses a fully qualified variable name (e.g., ${template_id::step_local_id::my_var})
                                     (format!("{}::{}::{}", source_step.template_id, source_step.local_id, ext.variable) == var_name_in_command)
                                 })
-                            } else { false };
+                            } else {
+                                false
+                            };
 
                             if defines_var {
                                 // Ensure a step does not depend on itself implicitly.
@@ -87,8 +100,16 @@ impl StepDependencyManager {
                                     debug!(
                                         "Found implicit dependency: {current_step_id} depends on {potential_source_global_id} due to variable {var_name_in_command}"
                                     );
-                                    self.graph.entry(current_step_id.clone()).or_default().dependencies.insert(potential_source_global_id.clone());
-                                    self.graph.entry(potential_source_global_id.clone()).or_default().dependents.insert(current_step_id.clone());
+                                    self.graph
+                                        .entry(current_step_id.clone())
+                                        .or_default()
+                                        .dependencies
+                                        .insert(potential_source_global_id.clone());
+                                    self.graph
+                                        .entry(potential_source_global_id.clone())
+                                        .or_default()
+                                        .dependents
+                                        .insert(current_step_id.clone());
                                 }
                             }
                         }
@@ -103,12 +124,16 @@ impl StepDependencyManager {
             self.graph.entry(step_id.clone()).or_default();
         }
         // 检查所有依赖节点是否都已定义
-        let undefined_nodes: Vec<_> = self.graph.keys()
+        let undefined_nodes: Vec<_> = self
+            .graph
+            .keys()
             .filter(|id| !self.nodes.contains_key(*id))
             .cloned()
             .collect();
         if !undefined_nodes.is_empty() {
-            panic!("Undefined dependency nodes exist: {undefined_nodes:?}. Please check documentation to ensure all dependent steps are defined."); // 存在未定义的依赖节点：{undefined_nodes:?}。请检查文档，确保所有依赖的步骤都已定义。
+            panic!(
+                "Undefined dependency nodes exist: {undefined_nodes:?}. Please check documentation to ensure all dependent steps are defined."
+            ); // 存在未定义的依赖节点：{undefined_nodes:?}。请检查文档，确保所有依赖的步骤都已定义。
         }
     }
 
@@ -128,18 +153,30 @@ impl StepDependencyManager {
                 queue.push_back(node_id.clone());
             }
         }
-        
+
         if self.nodes.is_empty() {
             return Ok(sorted_order);
         }
-        
-        if queue.is_empty() && !self.nodes.is_empty() && self.graph.values().any(|nd| !nd.dependencies.is_empty()) {
+
+        if queue.is_empty()
+            && !self.nodes.is_empty()
+            && self.graph.values().any(|nd| !nd.dependencies.is_empty())
+        {
             let all_nodes_have_deps = self.graph.iter().all(|(id, data)| {
-                !data.dependencies.is_empty() || self.graph.values().all(|other_data| !other_data.dependents.contains(id))
+                !data.dependencies.is_empty()
+                    || self
+                        .graph
+                        .values()
+                        .all(|other_data| !other_data.dependents.contains(id))
             });
             if all_nodes_have_deps && self.graph.len() > 1 {
-                warn!("Topological sort: Queue is empty but nodes exist, possible cycle. Graph: {:?}", self.graph);
-                return Err("Circular dependency detected or all nodes have dependencies.".to_string());
+                warn!(
+                    "Topological sort: Queue is empty but nodes exist, possible cycle. Graph: {:?}",
+                    self.graph
+                );
+                return Err(
+                    "Circular dependency detected or all nodes have dependencies.".to_string(),
+                );
             }
         }
 
@@ -154,7 +191,9 @@ impl StepDependencyManager {
                             queue.push_back(v_id.clone());
                         }
                     } else {
-                        warn!("Topological sort: Dependent node {v_id} not found in in_degree map.");
+                        warn!(
+                            "Topological sort: Dependent node {v_id} not found in in_degree map."
+                        );
                     }
                 }
             }
@@ -179,7 +218,12 @@ impl StepDependencyManager {
             debug!("{}", in_degree.len());
             debug!("{}", self.graph.len());
             debug!("{}", self.nodes.len());
-            Err(format!("Circular dependency detected or graph inconsistency. Processed {} nodes, expected {}. Missing: {:?}", sorted_order.len(), self.nodes.len(), missing_nodes))
+            Err(format!(
+                "Circular dependency detected or graph inconsistency. Processed {} nodes, expected {}. Missing: {:?}",
+                sorted_order.len(),
+                self.nodes.len(),
+                missing_nodes
+            ))
         } else {
             Ok(sorted_order)
         }
@@ -198,7 +242,9 @@ impl StepDependencyManager {
 
         loop {
             let current_node = self.nodes.get(&current_id_to_check);
-            if current_node.is_none() { break; }
+            if current_node.is_none() {
+                break;
+            }
 
             let mut found_parent_heading = false;
             if let Some(node_data) = self.graph.get(&current_id_to_check) {
@@ -208,12 +254,14 @@ impl StepDependencyManager {
                             parents.push(dep_id.clone());
                             current_id_to_check = dep_id.clone();
                             found_parent_heading = true;
-                            break; 
+                            break;
                         }
                     }
                 }
             }
-            if !found_parent_heading { break; }
+            if !found_parent_heading {
+                break;
+            }
         }
         parents.reverse();
         parents
@@ -223,14 +271,14 @@ impl StepDependencyManager {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::template::{step::StepType, ParsedTestStep};
+    use crate::template::{ParsedTestStep, step::StepType};
 
     fn create_test_execution_step(
         template_id: &str,
         local_id: &str,
         step_type: StepType,
         dependencies: Vec<GlobalStepId>,
-        original_parsed: Option<ParsedTestStep>
+        original_parsed: Option<ParsedTestStep>,
     ) -> ExecutionStep {
         ExecutionStep {
             id: format!("{}::{}", template_id, local_id),
@@ -241,9 +289,13 @@ mod tests {
             original_parsed_step: original_parsed,
         }
     }
-    
+
     use crate::template::DataExtraction;
-    fn create_mock_parsed_step(id: &str, command: Option<&str>, extractions: Vec<DataExtraction>) -> ParsedTestStep {
+    fn create_mock_parsed_step(
+        id: &str,
+        command: Option<&str>,
+        extractions: Vec<DataExtraction>,
+    ) -> ParsedTestStep {
         ParsedTestStep {
             id: id.to_string(),
             description: Some(format!("Parsed step {}", id)),
@@ -254,7 +306,7 @@ mod tests {
             executable: command.is_some(),
             ref_command: None,
             raw_content: String::new(),
-            active: None, // Added missing field
+            active: None,     // Added missing field
             timeout_ms: None, // Added missing field
         }
     }
@@ -262,14 +314,34 @@ mod tests {
     #[test]
     fn test_add_steps_and_get_order_simple_linear() {
         let mut manager = StepDependencyManager::new();
-        let step1 = create_test_execution_step("t1", "s1", StepType::CodeBlock { lang: "bash".into(), command: "echo s1".into(), attributes: HashMap::new() }, vec![], None);
+        let step1 = create_test_execution_step(
+            "t1",
+            "s1",
+            StepType::CodeBlock {
+                lang: "bash".into(),
+                command: "echo s1".into(),
+                attributes: HashMap::new(),
+            },
+            vec![],
+            None,
+        );
         let step2_id = format!("{}::s1", "t1");
-        let step2 = create_test_execution_step("t1", "s2", StepType::CodeBlock { lang: "bash".into(), command: "echo s2".into(), attributes: HashMap::new() }, vec![step2_id], None);
-        
+        let step2 = create_test_execution_step(
+            "t1",
+            "s2",
+            StepType::CodeBlock {
+                lang: "bash".into(),
+                command: "echo s2".into(),
+                attributes: HashMap::new(),
+            },
+            vec![step2_id],
+            None,
+        );
+
         manager.add_steps(vec![step1.clone(), step2.clone()]);
         manager.build_graph();
         let order = manager.get_execution_order().unwrap();
-        
+
         assert_eq!(order, vec![step1.id, step2.id]);
     }
 
@@ -277,16 +349,41 @@ mod tests {
     fn test_circular_dependency() {
         let mut manager = StepDependencyManager::new();
         let step1_id = format!("{}::s2", "t1");
-        let step1 = create_test_execution_step("t1", "s1", StepType::CodeBlock { lang: "bash".into(), command: "echo s1".into(), attributes: HashMap::new() }, vec![step1_id], None);
-        
+        let step1 = create_test_execution_step(
+            "t1",
+            "s1",
+            StepType::CodeBlock {
+                lang: "bash".into(),
+                command: "echo s1".into(),
+                attributes: HashMap::new(),
+            },
+            vec![step1_id],
+            None,
+        );
+
         let step2_id = format!("{}::s1", "t1");
-        let step2 = create_test_execution_step("t1", "s2", StepType::CodeBlock { lang: "bash".into(), command: "echo s2".into(), attributes: HashMap::new() }, vec![step2_id], None);
+        let step2 = create_test_execution_step(
+            "t1",
+            "s2",
+            StepType::CodeBlock {
+                lang: "bash".into(),
+                command: "echo s2".into(),
+                attributes: HashMap::new(),
+            },
+            vec![step2_id],
+            None,
+        );
 
         manager.add_steps(vec![step1.clone(), step2.clone()]);
         manager.build_graph();
         let result = manager.get_execution_order();
         assert!(result.is_err());
-        assert!(result.unwrap_err().to_lowercase().contains("circular dependency"));
+        assert!(
+            result
+                .unwrap_err()
+                .to_lowercase()
+                .contains("circular dependency")
+        );
     }
 
     #[test_log::test]
@@ -294,46 +391,98 @@ mod tests {
         use crate::template::DataExtraction;
         let mut manager = StepDependencyManager::new();
 
-        let extraction_s1 = vec![DataExtraction { variable: "my_var".to_string(), regex: ".*".to_string() }];
+        let extraction_s1 = vec![DataExtraction {
+            variable: "my_var".to_string(),
+            regex: ".*".to_string(),
+        }];
         let parsed_s1 = create_mock_parsed_step("s1", Some("echo 'output_for_s1'"), extraction_s1);
         let step1 = create_test_execution_step(
-            "t1", "s1", 
-            StepType::CodeBlock { lang: "bash".into(), command: "echo 'output_for_s1'".into(), attributes: HashMap::new() }, 
-            vec![], 
-            Some(parsed_s1)
+            "t1",
+            "s1",
+            StepType::CodeBlock {
+                lang: "bash".into(),
+                command: "echo 'output_for_s1'".into(),
+                attributes: HashMap::new(),
+            },
+            vec![],
+            Some(parsed_s1),
         );
 
         let step2 = create_test_execution_step(
-            "t1", "s2", 
-            StepType::CodeBlock { lang: "bash".into(), command: "echo ${my_var}".into(), attributes: HashMap::new() }, 
-            vec![], 
-            None
+            "t1",
+            "s2",
+            StepType::CodeBlock {
+                lang: "bash".into(),
+                command: "echo ${my_var}".into(),
+                attributes: HashMap::new(),
+            },
+            vec![],
+            None,
         );
-        
+
         manager.add_steps(vec![step1.clone(), step2.clone()]);
         manager.build_graph();
-        
-        let order = manager.get_execution_order().unwrap_or_else(|e| panic!("Execution order failed: {}", e));
+
+        let order = manager
+            .get_execution_order()
+            .unwrap_or_else(|e| panic!("Execution order failed: {}", e));
         for step in &order {
             debug!("Execution order: {}", step);
         }
-        
+
         assert_eq!(order.len(), 2);
         assert_eq!(order[0], step1.id);
         assert_eq!(order[1], step2.id);
-        assert!(manager.graph.get(&step2.id).unwrap().dependencies.contains(&step1.id));
+        assert!(
+            manager
+                .graph
+                .get(&step2.id)
+                .unwrap()
+                .dependencies
+                .contains(&step1.id)
+        );
     }
-    
+
     #[test]
     fn test_identify_parent_headings_simple_case() {
         let mut manager = StepDependencyManager::new();
 
-        let h1 = create_test_execution_step("doc", "h1", StepType::Heading { level: 1, text: "H1".into(), attributes: HashMap::new() }, vec![], None);
+        let h1 = create_test_execution_step(
+            "doc",
+            "h1",
+            StepType::Heading {
+                level: 1,
+                text: "H1".into(),
+                attributes: HashMap::new(),
+            },
+            vec![],
+            None,
+        );
         let h2_id = h1.id.clone();
-        let h2 = create_test_execution_step("doc", "h2", StepType::Heading { level: 2, text: "H2".into(), attributes: HashMap::new() }, vec![h2_id], None);
+        let h2 = create_test_execution_step(
+            "doc",
+            "h2",
+            StepType::Heading {
+                level: 2,
+                text: "H2".into(),
+                attributes: HashMap::new(),
+            },
+            vec![h2_id],
+            None,
+        );
         let code_id = h2.id.clone();
-        let code = create_test_execution_step("doc", "code1", StepType::CodeBlock { lang: "sh".into(), command: "ls".into(), attributes: HashMap::new() }, vec![code_id], None);
-        
+        let code = create_test_execution_step(
+            "doc",
+            "code1",
+            StepType::CodeBlock {
+                lang: "sh".into(),
+                command: "ls".into(),
+                attributes: HashMap::new(),
+            },
+            vec![code_id],
+            None,
+        );
+
         manager.add_steps(vec![h1.clone(), h2.clone(), code.clone()]);
         manager.build_graph();
 

@@ -2,7 +2,7 @@
 //!
 //! 这个模块负责解析Markdown格式的测试模板内容，识别其中的元数据、可执行代码块和特殊属性。
 
-use anyhow::{anyhow, bail, Context, Result};
+use anyhow::{Context, Result, anyhow, bail};
 use log::{debug, error, info, warn};
 use regex::Regex;
 use std::collections::{HashMap, HashSet};
@@ -74,7 +74,10 @@ pub fn parse_template_into_content_blocks_and_steps(
     let mut content_blocks = Vec::new();
 
     let (yaml_front_matter, markdown_content) = extract_front_matter(content)?;
-    debug!("YAML front matter length: {} bytes", yaml_front_matter.len()); // YAML前置数据长度: {} 字节
+    debug!(
+        "YAML front matter length: {} bytes",
+        yaml_front_matter.len()
+    ); // YAML前置数据长度: {} 字节
     debug!("Markdown content length: {} bytes", markdown_content.len()); // Markdown内容长度: {} 字节
 
     content_blocks.push(ContentBlock::Metadata(yaml_front_matter.clone()));
@@ -124,7 +127,9 @@ fn parse_markdown_to_steps_and_content_blocks(
     template_id: &str,
     metadata: &TemplateMetadata,
 ) -> Result<(Vec<ExecutionStep>, Vec<ContentBlock>)> {
-    debug!("Starting to parse Markdown content into ExecutionSteps and ContentBlocks (template_id: {template_id})"); // 开始将Markdown内容解析为 ExecutionSteps 和 ContentBlocks (template_id: {template_id})
+    debug!(
+        "Starting to parse Markdown content into ExecutionSteps and ContentBlocks (template_id: {template_id})"
+    ); // 开始将Markdown内容解析为 ExecutionSteps 和 ContentBlocks (template_id: {template_id})
     let mut execution_steps: Vec<ExecutionStep> = Vec::new();
     let mut content_blocks = Vec::new();
     let mut all_local_ids: HashSet<String> = HashSet::new();
@@ -421,7 +426,7 @@ fn parse_metadata(yaml: &str) -> Result<TemplateMetadata> {
 
     let title = yaml_value["title"]
         .as_str()
-        .ok_or_else(|| anyhow!("Metadata missing 'title' field"))?  // 元数据缺少'title'字段
+        .ok_or_else(|| anyhow!("Metadata missing 'title' field"))? // 元数据缺少'title'字段
         .to_string();
     debug!("Extracted title: {title}"); // 提取title: {title}
 
@@ -477,9 +482,13 @@ fn parse_metadata(yaml: &str) -> Result<TemplateMetadata> {
                         .get(serde_yaml::Value::String("as".to_string()))
                         .and_then(|v| v.as_str())
                         .map(|s| s.to_string())
-                        .ok_or_else(|| anyhow!("Item in references missing 'as(namespace)' field"))?; // references中的项缺少'as(namespace)'字段
+                        .ok_or_else(|| {
+                            anyhow!("Item in references missing 'as(namespace)' field")
+                        })?; // references中的项缺少'as(namespace)'字段
 
-                    debug!("Extracted template reference: template_path={template_path}, namespace={namespace}"); // 提取模板引用: template_path={template_path}, namespace={namespace}
+                    debug!(
+                        "Extracted template reference: template_path={template_path}, namespace={namespace}"
+                    ); // 提取模板引用: template_path={template_path}, namespace={namespace}
                     refs.push(TemplateReference {
                         template_path,
                         namespace,
@@ -492,7 +501,10 @@ fn parse_metadata(yaml: &str) -> Result<TemplateMetadata> {
     };
 
     if !references.is_empty() {
-        debug!("Extracted {} external template references in total", references.len()); // 共提取到 {} 个外部模板引用
+        debug!(
+            "Extracted {} external template references in total",
+            references.len()
+        ); // 共提取到 {} 个外部模板引用
     }
 
     let mut custom = HashMap::new();
@@ -607,9 +619,13 @@ fn parse_inline_attributes(input: &str) -> HashMap<String, String> {
                         state = State::ExpectEq;
                     } else {
                         if key.is_empty() {
-                            panic!("Unexpected character '{ch}' at start of key or empty key before '='");
+                            panic!(
+                                "Unexpected character '{ch}' at start of key or empty key before '='"
+                            );
                         }
-                        panic!("Unexpected character '{ch}' after key '{key}', expected '=' or whitespace or '}}'");
+                        panic!(
+                            "Unexpected character '{ch}' after key '{key}', expected '=' or whitespace or '}}'"
+                        );
                     }
                 } else {
                     if !key.is_empty() {

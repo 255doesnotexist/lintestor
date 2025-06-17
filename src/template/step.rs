@@ -4,8 +4,8 @@
 //! 也可以是可执行的代码块。步骤之间存在依赖关系，执行器会按照
 //! 依赖关系顺序执行这些步骤。
 
+use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
-use serde::{Serialize, Deserialize};
 
 use crate::template::ParsedTestStep; // Import the original ParsedTestStep from template module // 从 template 模块导入原始的 ParsedTestStep
 
@@ -75,9 +75,12 @@ impl ExecutionStep {
     /// 对于标题，描述就是其文本。
     pub fn description(&self) -> String {
         match &self.step_type {
-            StepType::Heading { text, attributes, .. } => {
-                attributes.get("description").cloned().unwrap_or_else(|| text.clone())
-            }
+            StepType::Heading {
+                text, attributes, ..
+            } => attributes
+                .get("description")
+                .cloned()
+                .unwrap_or_else(|| text.clone()),
             StepType::CodeBlock { attributes, .. } => {
                 if let Some(desc) = attributes.get("description") {
                     return desc.clone();
@@ -98,7 +101,7 @@ impl ExecutionStep {
                         format!("Code Block ({})", self.local_id)
                     }
                 } else {
-                     // Should not happen if step_type is CodeBlock
+                    // Should not happen if step_type is CodeBlock
                     "Code Block".to_string()
                 }
             }

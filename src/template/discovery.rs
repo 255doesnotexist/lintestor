@@ -38,7 +38,7 @@ pub fn discover_templates<P: AsRef<Path>>(dir: P, recursive: bool) -> Result<Vec
     walk_directory(dir, &mut templates, recursive)?;
 
     info!(
-        "Found {} test templates under {}",  // 在 {} 下发现了 {} 个测试模板
+        "Found {} test templates under {}", // 在 {} 下发现了 {} 个测试模板
         templates.len(),
         dir.display()
     );
@@ -95,7 +95,10 @@ pub fn filter_templates(
         }
     }
 
-    info!("Remaining {} test templates after filtering", filtered_templates.len()); // 过滤后剩余 {} 个测试模板
+    info!(
+        "Remaining {} test templates after filtering",
+        filtered_templates.len()
+    ); // 过滤后剩余 {} 个测试模板
 
     Ok(filtered_templates)
 }

@@ -7,8 +7,8 @@ mod utils;
 
 use crate::config::cli_args::CliArgs;
 use crate::config::target_config::TargetConfig;
-use crate::template::{discover_templates, filter_templates, TemplateFilter};
 use crate::template::{StepStatus, TestTemplate};
+use crate::template::{TemplateFilter, discover_templates, filter_templates};
 use env_logger::Env;
 use log::{debug, error, info, warn};
 use std::collections::HashMap;

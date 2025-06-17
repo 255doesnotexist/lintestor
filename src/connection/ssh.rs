@@ -29,7 +29,7 @@
 //! 在此示例中，连接会首先通过jumphost1，然后通过jumphost2，最后到达target-server。
 //! 跳板机的认证将使用本地SSH客户端的配置。
 
-use anyhow::{bail, Context, Result};
+use anyhow::{Context, Result, bail};
 use log::{debug, error, warn};
 use ssh2::{Channel, Session};
 use std::fs::File;
@@ -60,7 +60,10 @@ pub struct SSHConnectionManager {
 
 impl SSHConnectionManager {
     /// 创建新的SSH连接管理器
-    pub fn new(connection_config: &ConnectionConfig, _executor_options: &ExecutorOptions) -> Result<Self> {
+    pub fn new(
+        connection_config: &ConnectionConfig,
+        _executor_options: &ExecutorOptions,
+    ) -> Result<Self> {
         let host = &connection_config.ip;
         let port = connection_config.port;
         let username = &connection_config.username;
@@ -102,7 +105,9 @@ impl SSHConnectionManager {
                 // 创建SSH会话
                 let mut session = Session::new().with_context(|| "Unable to create SSH session")?; // 无法创建SSH会话
                 session.set_tcp_stream(tcp);
-                session.handshake().with_context(|| "SSH handshake failed")?; // SSH握手失败
+                session
+                    .handshake()
+                    .with_context(|| "SSH handshake failed")?; // SSH握手失败
 
                 // 身份验证
                 Self::authenticate_session(
@@ -134,7 +139,9 @@ impl SSHConnectionManager {
         // 创建SSH会话
         let mut session = Session::new().with_context(|| "Unable to create SSH session")?; // 无法创建SSH会话
         session.set_tcp_stream(tcp);
-        session.handshake().with_context(|| "SSH handshake failed")?; // SSH握手失败
+        session
+            .handshake()
+            .with_context(|| "SSH handshake failed")?; // SSH握手失败
 
         // 身份验证
         Self::authenticate_session(
@@ -293,7 +300,9 @@ impl SSHConnectionManager {
         }
 
         // 所有重试都失败了
-        Err(anyhow::anyhow!("Failed to establish SSH jump host connection, maximum retries reached")) // 无法建立SSH跳板机连接，达到最大重试次数
+        Err(anyhow::anyhow!(
+            "Failed to establish SSH jump host connection, maximum retries reached"
+        )) // 无法建立SSH跳板机连接，达到最大重试次数
     }
 
     /// 使用密钥文件进行认证
@@ -448,16 +457,22 @@ impl ConnectionManager for SSHConnectionManager {
             .with_context(|| format!("Unable to execute remote command: {actual_command}"))?; // 无法执行远程命令: {actual_command}
 
         // 关闭标准输入
-        channel.send_eof().with_context(|| "Unable to close stdin")?; // 无法关闭标准输入
+        channel
+            .send_eof()
+            .with_context(|| "Unable to close stdin")?; // 无法关闭标准输入
 
         // 读取输出（带超时）
         let (stdout, stderr) = read_channel_with_timeout(&mut channel, timeout)?;
 
         // 获取退出码
-        let exit_code = channel.exit_status().with_context(|| "Unable to get exit code")?; // 无法获取退出码
+        let exit_code = channel
+            .exit_status()
+            .with_context(|| "Unable to get exit code")?; // 无法获取退出码
 
         // 关闭通道
-        channel.wait_close().with_context(|| "Failed to wait for channel close")?; // 等待通道关闭失败
+        channel
+            .wait_close()
+            .with_context(|| "Failed to wait for channel close")?; // 等待通道关闭失败
 
         debug!("SSH command execution completed: exit_code={exit_code}"); // SSH命令执行完成: exit_code={exit_code}
 
@@ -495,7 +510,8 @@ impl ConnectionManager for SSHConnectionManager {
 impl Drop for SSHConnectionManager {
     fn drop(&mut self) {
         if self.connected {
-            if let Err(e) = self.session.disconnect(None, "Connection dropped", None) { // 连接被丢弃
+            if let Err(e) = self.session.disconnect(None, "Connection dropped", None) {
+                // 连接被丢弃
                 error!("Failed to close SSH connection: {e}"); // 关闭SSH连接失败: {e}
             }
         }

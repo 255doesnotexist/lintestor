@@ -2,15 +2,13 @@
 //!
 //! 这个模块包含执行结果、选项，以及命令断言和变量提取的辅助逻辑。
 
+use anyhow::{Context, Result, bail};
+use regex::Regex;
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
-use anyhow::{Result, Context, bail};
-use regex::Regex;
 
-use crate::template::{
-    StepStatus, AssertionType, TestTemplate
-};
+use crate::template::{AssertionType, StepStatus, TestTemplate};
 
 /// 测试执行结果
 #[derive(Debug, Clone)]
@@ -41,13 +39,14 @@ impl ExecutionResult {
     pub fn template_id(&self) -> String {
         self.template.get_template_id()
     }
-    
+
     /// 获取模板标题
     pub fn template_title(&self) -> &str {
         &self.template.metadata.title
     }
-    
-    #[allow(dead_code)] // 呃说不准有天生成 summary 的时候可以用到（这是不是也该注册到模板变量里）
+
+    #[allow(dead_code)]
+    // 呃说不准有天生成 summary 的时候可以用到（这是不是也该注册到模板变量里）
     /// 获取模板文件路径
     pub fn template_path(&self) -> &Path {
         &self.template.file_path
@@ -59,7 +58,7 @@ impl ExecutionResult {
 pub struct StepResult {
     #[allow(dead_code)]
     /// 步骤ID
-    pub id: String, 
+    pub id: String,
     /// 步骤描述 (可选)
     pub description: Option<String>,
     /// 状态
@@ -116,11 +115,20 @@ impl Default for ExecutorOptions {
 /// # Returns
 /// * `Ok(())` - 如果断言通过
 /// * `Err(anyhow::Error)` - 如果断言失败，包含失败信息
-pub fn check_assertion(assertion: &AssertionType, stdout: &str, stderr: &str, exit_code: i32) -> Result<()> {
+pub fn check_assertion(
+    assertion: &AssertionType,
+    stdout: &str,
+    stderr: &str,
+    exit_code: i32,
+) -> Result<()> {
     match assertion {
         AssertionType::ExitCode(expected) => {
             if exit_code != *expected {
-                bail!("Exit code mismatch: expected {}, actual {}", expected, exit_code); // 退出码不匹配: 期望 {}, 实际 {}
+                bail!(
+                    "Exit code mismatch: expected {}, actual {}",
+                    expected,
+                    exit_code
+                ); // 退出码不匹配: 期望 {}, 实际 {}
             }
         }
         AssertionType::StdoutContains(pattern) => {
@@ -136,7 +144,7 @@ pub fn check_assertion(assertion: &AssertionType, stdout: &str, stderr: &str, ex
         AssertionType::StdoutMatches(pattern) => {
             let re = Regex::new(pattern)
                 .with_context(|| format!("Invalid regex (stdout): {pattern}"))?; // 无效的正则表达式 (stdout): {pattern}
-            
+
             if !re.is_match(stdout) {
                 bail!("Stdout does not match regex: '{}'", pattern); // 标准输出不匹配正则表达式: '{}'
             }
@@ -154,7 +162,7 @@ pub fn check_assertion(assertion: &AssertionType, stdout: &str, stderr: &str, ex
         AssertionType::StderrMatches(pattern) => {
             let re = Regex::new(pattern)
                 .with_context(|| format!("Invalid regex (stderr): {pattern}"))?; // 无效的正则表达式 (stderr): {pattern}
-            
+
             if !re.is_match(stderr) {
                 bail!("Stderr does not match regex: '{}'", pattern); // 标准错误不匹配正则表达式: '{}'
             }
@@ -173,9 +181,9 @@ pub fn check_assertion(assertion: &AssertionType, stdout: &str, stderr: &str, ex
 /// * `Ok(String)` - 提取到的变量值
 /// * `Err(anyhow::Error)` - 如果正则表达式无效或没有匹配
 pub fn extract_variable(text: &str, regex_str: &str) -> Result<String> {
-    let re = Regex::new(regex_str)
-        .with_context(|| format!("Invalid extraction regex: {regex_str}"))?; // 无效的提取正则表达式: {regex_str}
-    
+    let re =
+        Regex::new(regex_str).with_context(|| format!("Invalid extraction regex: {regex_str}"))?; // 无效的提取正则表达式: {regex_str}
+
     match re.captures(text) {
         Some(caps) => {
             if caps.len() > 1 && caps.get(1).is_some() {
@@ -185,9 +193,12 @@ pub fn extract_variable(text: &str, regex_str: &str) -> Result<String> {
                 // 使用整个匹配
                 Ok(caps.get(0).unwrap().as_str().to_string())
             } else {
-                bail!("Regex '{}' matched successfully but failed to extract capture group", regex_str) // 正则表达式 '{}' 匹配成功，但无法提取捕获组
+                bail!(
+                    "Regex '{}' matched successfully but failed to extract capture group",
+                    regex_str
+                ) // 正则表达式 '{}' 匹配成功，但无法提取捕获组
             }
-        },
+        }
         None => bail!("Regex '{}' has no match in text", regex_str), // 正则表达式 '{}' 在文本中没有匹配
     }
 }
@@ -205,19 +216,38 @@ mod tests {
     fn test_check_assertion_exit_code_fail() {
         let result = check_assertion(&AssertionType::ExitCode(0), "", "", 1);
         assert!(result.is_err());
-        assert_eq!(result.unwrap_err().to_string(), "Exit code mismatch: expected 0, actual 1"); // 退出码不匹配: 期望 0, 实际 1
+        assert_eq!(
+            result.unwrap_err().to_string(),
+            "Exit code mismatch: expected 0, actual 1"
+        ); // 退出码不匹配: 期望 0, 实际 1
     }
 
     #[test]
     fn test_check_assertion_stdout_contains_pass() {
-        assert!(check_assertion(&AssertionType::StdoutContains("hello".to_string()), "hello world", "", 0).is_ok());
+        assert!(
+            check_assertion(
+                &AssertionType::StdoutContains("hello".to_string()),
+                "hello world",
+                "",
+                0
+            )
+            .is_ok()
+        );
     }
 
     #[test]
     fn test_check_assertion_stdout_contains_fail() {
-        let result = check_assertion(&AssertionType::StdoutContains("goodbye".to_string()), "hello world", "", 0);
+        let result = check_assertion(
+            &AssertionType::StdoutContains("goodbye".to_string()),
+            "hello world",
+            "",
+            0,
+        );
         assert!(result.is_err());
-        assert_eq!(result.unwrap_err().to_string(), "Stdout does not contain expected pattern: 'goodbye'"); // 标准输出不包含期望的模式: 'goodbye'
+        assert_eq!(
+            result.unwrap_err().to_string(),
+            "Stdout does not contain expected pattern: 'goodbye'"
+        ); // 标准输出不包含期望的模式: 'goodbye'
     }
 
     #[test]

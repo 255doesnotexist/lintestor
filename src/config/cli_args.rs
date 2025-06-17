@@ -18,7 +18,11 @@ pub struct CliArgs {
 
     // Parse only - Parse test templates without executing commands
     // 仅解析 - 只解析测试模板但不执行命令
-    #[clap(short = 'p', long = "parse-only", help = "Parse templates without execution")]
+    #[clap(
+        short = 'p',
+        long = "parse-only",
+        help = "Parse templates without execution"
+    )]
     pub parse_only: bool,
 
     // Verbose mode - Show more log information
@@ -58,7 +62,11 @@ pub struct CliArgs {
 
     // Test directory - Specify directory containing test templates
     // 测试目录 - 指定包含测试模板的目录
-    #[clap(short = 'D', long = "test-dir", help = "Directory containing test templates")]
+    #[clap(
+        short = 'D',
+        long = "test-dir",
+        help = "Directory containing test templates"
+    )]
     pub test_dir: Option<PathBuf>,
 
     // Reports directory - Specify directory for test reports
@@ -68,7 +76,11 @@ pub struct CliArgs {
 
     // Aggregate report output - Specify output file path for aggregate report
     // 聚合报告输出 - 指定聚合报告的输出文件路径
-    #[clap(long = "output", short = 'o', help = "Output file for aggregate report")]
+    #[clap(
+        long = "output",
+        short = 'o',
+        help = "Output file for aggregate report"
+    )]
     pub output: Option<PathBuf>,
 
     // Unit name - Filter tests by unit name
@@ -88,32 +100,57 @@ pub struct CliArgs {
 
     // Continue on error - Continue executing remaining tests even if some fail
     // 出错继续 - 即使测试失败也继续执行其余测试
-    #[clap(long = "continue-on-error", default_value = "false", help = "Continue on test failures")]
+    #[clap(
+        long = "continue-on-error",
+        default_value = "false",
+        help = "Continue on test failures"
+    )]
     pub continue_on_error: Option<bool>,
 
     // Command execution timeout (seconds)
     // 执行命令超时时间（秒）
-    #[clap(long = "timeout", default_value = "300", help = "Command timeout in seconds")]
+    #[clap(
+        long = "timeout",
+        default_value = "300",
+        help = "Command timeout in seconds"
+    )]
     pub timeout: Option<u64>,
 
     // Number of retries after command failure
     // 命令失败后重试次数
-    #[clap(long = "retry", default_value = "3", help = "Number of retries on failure")]
+    #[clap(
+        long = "retry",
+        default_value = "3",
+        help = "Number of retries on failure"
+    )]
     pub retry: Option<u32>,
 
     // Retry interval (seconds)
     // 重试间隔时间（秒）
-    #[clap(long = "retry-interval", default_value = "5", help = "Retry interval in seconds")]
+    #[clap(
+        long = "retry-interval",
+        default_value = "5",
+        help = "Retry interval in seconds"
+    )]
     pub retry_interval: Option<u64>,
 
     // Maintain session connection
     // 保持会话连接
-    #[clap(long = "maintain-session", default_value = "true", help = "Keep session alive between commands")]
+    #[clap(
+        long = "maintain-session",
+        default_value = "true",
+        help = "Keep session alive between commands"
+    )]
     pub maintain_session: Option<bool>,
 
     // Keep template directory structure when outputting reports
     // 输出报告时保持模板的原始目录结构
-    #[clap(short = 'k', long, default_value = "true", help = "Preserve directory structure in reports")]
+    #[clap(
+        short = 'k',
+        long,
+        default_value = "true",
+        help = "Preserve directory structure in reports"
+    )]
     pub keep_template_directory_structure: bool,
 }
 

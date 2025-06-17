@@ -1,9 +1,9 @@
-use std::collections::HashMap;
-use std::path::PathBuf;
 use crate::config::target_config::TargetConfig;
-use crate::connection::{ConnectionManager, ConnectionFactory};
+use crate::connection::{ConnectionFactory, ConnectionManager};
 use crate::template::ExecutorOptions;
 use anyhow::Result;
+use std::collections::HashMap;
+use std::path::PathBuf;
 
 /// 连接管理池，复用ConnectionManager实例
 pub struct ConnectionManagerPool {
@@ -19,7 +19,12 @@ impl ConnectionManagerPool {
     }
 
     /// 获取或创建指定TargetConfig的ConnectionManager
-    pub fn get_or_create(&mut self, config: &TargetConfig, allow_reuse: bool, executor_options: &ExecutorOptions) -> Result<&mut Box<dyn ConnectionManager>> {
+    pub fn get_or_create(
+        &mut self,
+        config: &TargetConfig,
+        allow_reuse: bool,
+        executor_options: &ExecutorOptions,
+    ) -> Result<&mut Box<dyn ConnectionManager>> {
         let key = config.get_path().clone();
         if !allow_reuse {
             // 不允许多次复用，直接创建新连接
@@ -30,9 +35,10 @@ impl ConnectionManagerPool {
             let manager = ConnectionFactory::create_manager(config, executor_options)?;
             self.pool.insert(key.clone(), manager);
         }
-        self.pool.get_mut(&key).ok_or_else(|| anyhow::anyhow!("Failed to get or create ConnectionManager"))
+        self.pool
+            .get_mut(&key)
+            .ok_or_else(|| anyhow::anyhow!("Failed to get or create ConnectionManager"))
     }
-
 
     #[allow(dead_code)]
     /// 移除指定TargetConfig的ConnectionManager

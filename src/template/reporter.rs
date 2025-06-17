@@ -58,24 +58,31 @@ impl Reporter {
         result: &ExecutionResult,
         var_manager: &VariableManager,
     ) -> Result<PathBuf> {
-        debug!("Starting to generate test report for template: {}", result.template_id()); // 开始为模板生成测试报告: {}
+        debug!(
+            "Starting to generate test report for template: {}",
+            result.template_id()
+        ); // 开始为模板生成测试报告: {}
         debug!("Template title: {}", result.template_title()); // 模板标题: {}
         debug!(
             "Template file directory (base directory): {}", // 模板文件所在目录 (基准目录): {}
             self.test_dir.display()
         );
-        debug!("Report planned output directory: {}", self.report_dir.display()); // 报告计划输出目录: {}
+        debug!(
+            "Report planned output directory: {}",
+            self.report_dir.display()
+        ); // 报告计划输出目录: {}
 
         // 确保报告输出目录存在
         fs::create_dir_all(&self.report_dir).with_context(|| {
-            format!("Unable to create report output directory: {}", self.report_dir.display()) // 无法创建报告输出目录: {}
+            format!(
+                "Unable to create report output directory: {}",
+                self.report_dir.display()
+            ) // 无法创建报告输出目录: {}
         })?;
 
         // 构建报告文件的完整路径 (result 传过来的)
         let report_path = match result.report_path {
-            Some(ref path) => {
-                path.clone()
-            }
+            Some(ref path) => path.clone(),
             None => panic!("No report path provided in ExecutionResult, this should not happen"),
         };
 
@@ -86,7 +93,10 @@ impl Reporter {
         fs::write(&report_path, &report_content)
             .with_context(|| format!("Unable to write report file: {}", report_path.display()))?; // 无法写入报告文件: {}
 
-        info!("Successfully generated test report: {}", report_path.display()); // 已成功生成测试报告: {}
+        info!(
+            "Successfully generated test report: {}",
+            report_path.display()
+        ); // 已成功生成测试报告: {}
         Ok(report_path)
     }
 
@@ -124,7 +134,7 @@ impl Reporter {
                     // Global and step-specific variable replacement (ensure correct step_id context if needed)
                     processed_text =
                         var_manager.replace_variables(&processed_text, Some(&template_id), None); // Broad pass
-                                                                                                  // More specific passes if text can contain step-scoped variables:
+                    // More specific passes if text can contain step-scoped variables:
                     let mut sorted_step_ids: Vec<_> = result.step_results.keys().cloned().collect();
                     sorted_step_ids.sort();
                     for step_id_key in &sorted_step_ids {
@@ -195,9 +205,8 @@ impl Reporter {
                     let global_step_id_to_find =
                         utils::get_result_id(template_id.as_str(), step_id);
                     if let Some(step_result) = result.step_results.get(&global_step_id_to_find) {
-                        let mut output_block_content =
-                            format!("```output {{ref=\"{step_id}\"}}\n");
-                        
+                        let mut output_block_content = format!("```output {{ref=\"{step_id}\"}}\n");
+
                         match stream.as_str() {
                             "stdout" => {
                                 let stdout_content = step_result.stdout.trim_end_matches('\n');
@@ -254,9 +263,10 @@ impl Reporter {
             let yaml_part_end = captures.get(0).unwrap().end();
             if final_content.len() > yaml_part_end
                 && !final_content[yaml_part_end..].starts_with('\n')
-                && !final_content[yaml_part_end..].starts_with("\n\n") {
-                    final_content.insert(yaml_part_end, '\n');
-                }
+                && !final_content[yaml_part_end..].starts_with("\n\n")
+            {
+                final_content.insert(yaml_part_end, '\n');
+            }
         }
 
         final_content = self.clean_markdown_markup(&final_content)?;
@@ -272,8 +282,12 @@ impl Reporter {
         template_id: &str,
     ) -> Result<String> {
         let mut table = String::new();
-        table.push_str("| Step ID | Description | Status | Exit Code | Output Summary | Error Message |\n"); // | 步骤ID | 描述 | 状态 | 退出码 | 输出摘要 | 错误信息 |
-        table.push_str("|---------|-------------|--------|-----------|----------------|---------------|\n");
+        table.push_str(
+            "| Step ID | Description | Status | Exit Code | Output Summary | Error Message |\n",
+        ); // | 步骤ID | 描述 | 状态 | 退出码 | 输出摘要 | 错误信息 |
+        table.push_str(
+            "|---------|-------------|--------|-----------|----------------|---------------|\n",
+        );
 
         let mut sorted_step_global_ids: Vec<_> = result.step_results.keys().cloned().collect();
         sorted_step_global_ids.sort();
@@ -393,14 +407,15 @@ mod tests {
     use super::*;
     use crate::config::target_config::TargetConfig;
     use crate::template::executor::{ExecutionResult, StepResult};
-    use crate::template::{BatchOptions, ContentBlock, ExecutionStep, TemplateMetadata, TemplateReference};
+    use crate::template::{
+        BatchOptions, ContentBlock, ExecutionStep, TemplateMetadata, TemplateReference,
+    };
     use anyhow::Result;
     use std::collections::HashMap;
     use std::error::Error;
     use std::fs;
     use std::path::PathBuf;
     use std::sync::Arc;
-    
 
     fn create_dummy_template(
         id: &str,
@@ -490,8 +505,8 @@ mod tests {
     }
 
     #[test]
-    fn test_generate_report_with_variable_substitution_and_output_blocks(
-    ) -> Result<(), Box<dyn Error>> {
+    fn test_generate_report_with_variable_substitution_and_output_blocks()
+    -> Result<(), Box<dyn Error>> {
         // 创建临时目录用于测试
         let temp_dir = tempfile::tempdir()?;
         let test_dir = temp_dir.path().join("templates");
@@ -594,7 +609,10 @@ echo "Hello, {{ execution_time }}"
         let report_content = fs::read_to_string(report_path)?;
         debug!("Report content:\n{}", report_content); // 报告内容:\n{}
         assert!(report_content.contains("Test Report"));
-        assert!(report_content.contains("This is a test report for test_template_unit targeting Local Test.")); // This is a test report for test_template_unit targeting 本地测试.
+        assert!(
+            report_content
+                .contains("This is a test report for test_template_unit targeting Local Test.")
+        ); // This is a test report for test_template_unit targeting 本地测试.
         assert!(report_content.contains("Hello"));
 
         Ok(())
@@ -603,7 +621,10 @@ echo "Hello, {{ execution_time }}"
     #[test]
     fn test_clean_markdown_markup_removes_attributes() -> Result<()> {
         let temp_dir = tempfile::tempdir()?;
-        let reporter = Reporter::new(Some(temp_dir.path().to_path_buf()), Some("./reports".into()));
+        let reporter = Reporter::new(
+            Some(temp_dir.path().to_path_buf()),
+            Some("./reports".into()),
+        );
 
         let input7 = "Start {id=\"id1\"} then {exec=true} finally {description=\"desc\"} end";
         assert_eq!(

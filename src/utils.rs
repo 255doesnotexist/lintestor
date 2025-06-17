@@ -5,7 +5,7 @@
 
 use crate::template::{self, BatchOptions};
 use log::{error, warn};
-use serde::{de::DeserializeOwned, Deserialize, Serialize};
+use serde::{Deserialize, Serialize, de::DeserializeOwned};
 use std::{
     error::Error,
     fs,
