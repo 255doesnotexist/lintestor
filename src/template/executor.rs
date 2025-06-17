@@ -120,43 +120,43 @@ pub fn check_assertion(assertion: &AssertionType, stdout: &str, stderr: &str, ex
     match assertion {
         AssertionType::ExitCode(expected) => {
             if exit_code != *expected {
-                bail!("退出码不匹配: 期望 {}, 实际 {}", expected, exit_code);
+                bail!("Exit code mismatch: expected {}, actual {}", expected, exit_code); // 退出码不匹配: 期望 {}, 实际 {}
             }
         }
         AssertionType::StdoutContains(pattern) => {
             if !stdout.contains(pattern) {
-                bail!("标准输出不包含期望的模式: '{}'", pattern);
+                bail!("Stdout does not contain expected pattern: '{}'", pattern); // 标准输出不包含期望的模式: '{}'
             }
         }
         AssertionType::StdoutNotContains(pattern) => {
             if stdout.contains(pattern) {
-                bail!("标准输出包含了不期望的模式: '{}'", pattern);
+                bail!("Stdout contains unexpected pattern: '{}'", pattern); // 标准输出包含了不期望的模式: '{}'
             }
         }
         AssertionType::StdoutMatches(pattern) => {
             let re = Regex::new(pattern)
-                .with_context(|| format!("无效的正则表达式 (stdout): {pattern}"))?;
+                .with_context(|| format!("Invalid regex (stdout): {pattern}"))?; // 无效的正则表达式 (stdout): {pattern}
             
             if !re.is_match(stdout) {
-                bail!("标准输出不匹配正则表达式: '{}'", pattern);
+                bail!("Stdout does not match regex: '{}'", pattern); // 标准输出不匹配正则表达式: '{}'
             }
         }
         AssertionType::StderrContains(pattern) => {
             if !stderr.contains(pattern) {
-                bail!("标准错误不包含期望的模式: '{}'", pattern);
+                bail!("Stderr does not contain expected pattern: '{}'", pattern); // 标准错误不包含期望的模式: '{}'
             }
         }
         AssertionType::StderrNotContains(pattern) => {
             if stderr.contains(pattern) {
-                bail!("标准错误包含了不期望的模式: '{}'", pattern);
+                bail!("Stderr contains unexpected pattern: '{}'", pattern); // 标准错误包含了不期望的模式: '{}'
             }
         }
         AssertionType::StderrMatches(pattern) => {
             let re = Regex::new(pattern)
-                .with_context(|| format!("无效的正则表达式 (stderr): {pattern}"))?;
+                .with_context(|| format!("Invalid regex (stderr): {pattern}"))?; // 无效的正则表达式 (stderr): {pattern}
             
             if !re.is_match(stderr) {
-                bail!("标准错误不匹配正则表达式: '{}'", pattern);
+                bail!("Stderr does not match regex: '{}'", pattern); // 标准错误不匹配正则表达式: '{}'
             }
         }
     }
@@ -174,7 +174,7 @@ pub fn check_assertion(assertion: &AssertionType, stdout: &str, stderr: &str, ex
 /// * `Err(anyhow::Error)` - 如果正则表达式无效或没有匹配
 pub fn extract_variable(text: &str, regex_str: &str) -> Result<String> {
     let re = Regex::new(regex_str)
-        .with_context(|| format!("无效的提取正则表达式: {regex_str}"))?;
+        .with_context(|| format!("Invalid extraction regex: {regex_str}"))?; // 无效的提取正则表达式: {regex_str}
     
     match re.captures(text) {
         Some(caps) => {
@@ -185,10 +185,10 @@ pub fn extract_variable(text: &str, regex_str: &str) -> Result<String> {
                 // 使用整个匹配
                 Ok(caps.get(0).unwrap().as_str().to_string())
             } else {
-                bail!("正则表达式 '{}' 匹配成功，但无法提取捕获组", regex_str)
+                bail!("Regex '{}' matched successfully but failed to extract capture group", regex_str) // 正则表达式 '{}' 匹配成功，但无法提取捕获组
             }
         },
-        None => bail!("正则表达式 '{}' 在文本中没有匹配", regex_str),
+        None => bail!("Regex '{}' has no match in text", regex_str), // 正则表达式 '{}' 在文本中没有匹配
     }
 }
 
@@ -205,7 +205,7 @@ mod tests {
     fn test_check_assertion_exit_code_fail() {
         let result = check_assertion(&AssertionType::ExitCode(0), "", "", 1);
         assert!(result.is_err());
-        assert_eq!(result.unwrap_err().to_string(), "退出码不匹配: 期望 0, 实际 1");
+        assert_eq!(result.unwrap_err().to_string(), "Exit code mismatch: expected 0, actual 1"); // 退出码不匹配: 期望 0, 实际 1
     }
 
     #[test]
@@ -217,7 +217,7 @@ mod tests {
     fn test_check_assertion_stdout_contains_fail() {
         let result = check_assertion(&AssertionType::StdoutContains("goodbye".to_string()), "hello world", "", 0);
         assert!(result.is_err());
-        assert_eq!(result.unwrap_err().to_string(), "标准输出不包含期望的模式: 'goodbye'");
+        assert_eq!(result.unwrap_err().to_string(), "Stdout does not contain expected pattern: 'goodbye'"); // 标准输出不包含期望的模式: 'goodbye'
     }
 
     #[test]

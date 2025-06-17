@@ -79,7 +79,7 @@ impl VariableManager {
     ///
     /// 将命名空间映射到模板ID
     pub fn register_namespace(&mut self, namespace: &str, template_id: &str) {
-        debug!("为命名空间 {namespace} 建立映射到模板ID {template_id}");
+        debug!("Establishing mapping for namespace {namespace} to template ID {template_id}"); // 为命名空间 {namespace} 建立映射到模板ID {template_id}
         self.namespace_to_template_id
             .insert(namespace.to_string(), template_id.to_string());
     }
@@ -220,9 +220,9 @@ impl VariableManager {
         {
             // 如果 template_id 是命名空间，获取对应的模板ID
             if let Some(tid) = self.get_template_id_by_namespace(template_id.as_str()) {
-                warn!("理论上你不该在赋值时还用的命名空间而不是具体 ID，但是命名空间 {template_id} 这里自动被解析为模板ID {tid}");
+                warn!("Theoretically you shouldn't use namespace instead of specific ID during assignment, but namespace {template_id} is automatically resolved to template ID {tid} here"); // 理论上你不该在赋值时还用的命名空间而不是具体 ID，但是命名空间 {template_id} 这里自动被解析为模板ID {tid}
                 if template_id == tid {
-                    warn!("命名空间 {template_id} 和模板ID {tid} 相同，避免死循环，跳出");
+                    warn!("Namespace {template_id} and template ID {tid} are the same, avoiding infinite loop, breaking out"); // 命名空间 {template_id} 和模板ID {tid} 相同，避免死循环，跳出
                     break; // 避免死循环
                 }
                 template_id = tid;
@@ -262,26 +262,26 @@ impl VariableManager {
         let variable_key = format!("{template_id}::{step_id}::{name}");
 
         debug!(
-            "构建变量标识符: {variable_key} (template_id='{template_id}', step_id='{step_id}', name='{name}')"
+            "Building variable identifier: {variable_key} (template_id='{template_id}', step_id='{step_id}', name='{name}')" // 构建变量标识符: {variable_key} (template_id='{template_id}', step_id='{step_id}', name='{name}')
         );
 
         // 使用一个简单的访问记录集合来避免递归引用
         let mut visited_vars = std::collections::HashSet::new();
         if self.has_recursive_reference(&variable_key, value, &mut visited_vars) {
-            debug!("检测到递归引用，跳过变量注册: {variable_key}");
+            debug!("Detected recursive reference, skipping variable registration: {variable_key}"); // 检测到递归引用，跳过变量注册: {variable_key}
             return Ok(());
         }
 
         // 检查变量是否已存在
         if self.variables.contains_key(&variable_key) {
-            debug!("变量已存在，覆盖旧值: {variable_key}");
+            debug!("Variable already exists, overwriting old value: {variable_key}"); // 变量已存在，覆盖旧值: {variable_key}
             self.variables.insert(variable_key.clone(), value.to_string());
         }
 
         // 注册变量
         self.variables
             .insert(variable_key.clone(), value.to_string());
-        debug!("注册变量: {variable_key} = {value}");
+        debug!("Registered variable: {variable_key} = {value}"); // 注册变量: {variable_key} = {value}
         Ok(())
     }
 
@@ -413,9 +413,9 @@ impl VariableManager {
         {
             // 如果 template_id 是命名空间，获取对应的模板ID
             if let Some(tid) = self.get_template_id_by_namespace(current_template_id.as_str()) {
-                debug!("命名空间 {current_template_id} 被解析为模板ID {tid}");
+                debug!("Namespace {current_template_id} resolved to template ID {tid}"); // 命名空间 {current_template_id} 被解析为模板ID {tid}
                 if current_template_id == tid {
-                    warn!("命名空间 {current_template_id} 和模板ID {tid} 相同，避免死循环，跳出");
+                    warn!("Namespace {current_template_id} and template ID {tid} are the same, avoiding infinite loop"); // 命名空间 {current_template_id} 和模板ID {tid} 相同，避免死循环，跳出
                     break; // 避免死循环
                 }
                 current_template_id = tid;
@@ -430,11 +430,11 @@ impl VariableManager {
         }
         // 这里的 current_template_id 和 current_step_id 已经是经过处理的
         debug!(
-            "变量查询: '{var_name}' (当前模板: {current_template_id:?}, 当前步骤: {current_step_id:?})"
+            "Variable query: '{var_name}' (current template: {current_template_id:?}, current step: {current_step_id:?})" // 变量查询: '{var_name}' (当前模板: {current_template_id:?}, 当前步骤: {current_step_id:?})
         );
 
         if current_template_id == "GLOBAL" && current_step_id != "GLOBAL" {
-            panic!("不允许 /wildcard_namespace/::step::var_name 这种格式的变量引用");
+            panic!("Variable reference format /wildcard_namespace/::step::var_name is not allowed"); // 不允许 /wildcard_namespace/::step::var_name 这种格式的变量引用
         }
 
         // 变量名允许带点（如 status.execution），查找时整体作为变量名处理，不做特殊分割
@@ -442,7 +442,7 @@ impl VariableManager {
         // 1. 尝试直接作为完全限定变量名查找 (e.g., "T1::S1::V1", "GLOBAL::GLOBAL::V1", "T1::GLOBAL::V1")
         // 或简单名称（如果它们是这样存储的，例如旧版全局变量）
         if let Some(value) = self.variables.get(&var_name) {
-            debug!("直接匹配找到变量 '{var_name}': {value}");
+            debug!("Direct match found variable '{var_name}': {value}"); // 直接匹配找到变量 '{var_name}': {value}
             return Some(value.clone());
         }
 
@@ -465,7 +465,7 @@ impl VariableManager {
         // a. tid::sid::var_name (例如 current_namespace::current_step::query)
         let key1 = format!("{tid}::{sid}::{var_name}");
         if let Some(value) = self.variables.get(&key1) {
-            debug!("找到变量 ({key1}): {value}");
+            debug!("Found variable ({key1}): {value}"); // 找到变量 ({key1}): {value}
             return Some(value.clone());
         }
 
@@ -474,7 +474,7 @@ impl VariableManager {
         if sid != "GLOBAL" {
             let key2 = format!("{}::{}::{}", tid, "GLOBAL", var_name);
             if let Some(value) = self.variables.get(&key2) {
-                debug!("找到变量 ({key2}): {value}");
+                debug!("Found variable ({key2}): {value}"); // 找到变量 ({key2}): {value}
                 return Some(value.clone());
             }
         }
@@ -498,12 +498,12 @@ impl VariableManager {
         if try_key3 {
             // 这意味着 tid 不是 "GLOBAL"
             if let Some(value) = self.variables.get(&key3) {
-                debug!("找到变量 ({key3}): {value}");
+                debug!("Found variable ({key3}): {value}"); // 找到变量 ({key3}): {value}
                 return Some(value.clone());
             }
         }
 
-        debug!("未找到变量 '{var_name}'");
+        debug!("Variable not found '{var_name}'"); // 未找到变量 '{var_name}'
         None
     }
 
@@ -546,7 +546,7 @@ impl VariableManager {
         } else {
             if input_ns_or_template_id.is_some() {
                 warn!(
-                    "这个命名空间或者模板 ID 疑似没有被注册，请检查: {}",
+                    "This namespace or template ID appears to not be registered, please check: {}", // 这个命名空间或者模板 ID 疑似没有被注册，请检查: {}
                     input_ns_or_template_id.unwrap_or("GLOBAL")
                 );
             }
@@ -683,7 +683,7 @@ impl VariableManager {
                                 Ok(true) => tval.to_string(),
                                 Ok(false) => fval.to_string(),
                                 Err(e) => {
-                                    warn!("条件表达式求值错误: {cond} - {e}");
+                                    warn!("Conditional expression evaluation error: {cond} - {e}"); // 条件表达式求值错误: {cond} - {e}
                                     format!("{{{{ {cond} ? {tval} : {fval} }}}}")
                                 }
                             };
@@ -794,7 +794,7 @@ impl VariableManager {
         current_template_id: Option<&str>,
         current_step_id: Option<&str>,
     ) -> Result<bool, String> {
-        info!("求值条件表达式: {condition}");
+        info!("Evaluating conditional expression: {condition}"); // 求值条件表达式: {condition}
         let trimmed = condition.trim();
 
         // 处理相等比较 (var == value)
@@ -829,7 +829,7 @@ impl VariableManager {
                 }
             };
 
-            debug!("比较: '{left_value}' == '{right_value}'");
+            debug!("Comparing: '{left_value}' == '{right_value}'"); // 比较: '{left_value}' == '{right_value}'
             return Ok(left_value == right_value);
         }
 
@@ -843,7 +843,7 @@ impl VariableManager {
 
             let left_value = match self.get_variable(left, current_template_id, current_step_id) {
                 Some(value) => value,
-                None => return Err(format!("左侧变量不存在: {left}")),
+                None => return Err(format!("Left variable does not exist: {left}")), // 左侧变量不存在: {left}
             };
 
             let right_value = if right.starts_with('"') && right.ends_with('"') {
@@ -855,7 +855,7 @@ impl VariableManager {
                 }
             };
 
-            debug!("比较: '{left_value}' != '{right_value}'");
+            debug!("Comparison: '{left_value}' != '{right_value}'"); // 比较: '{left_value}' != '{right_value}'
             return Ok(left_value != right_value);
         }
 
@@ -870,7 +870,7 @@ impl VariableManager {
 
             let left_value = match self.get_variable(left, current_template_id, current_step_id) {
                 Some(value) => value,
-                None => return Err(format!("左侧变量不存在: {left}")),
+                None => return Err(format!("Left variable does not exist: {left}")), // 左侧变量不存在: {left}
             };
 
             let right_value = if right.starts_with('"') && right.ends_with('"') {
@@ -885,22 +885,22 @@ impl VariableManager {
             // 尝试转换为数值进行比较
             let left_num = match left_value.parse::<f64>() {
                 Ok(n) => n,
-                Err(_) => return Err(format!("左侧值不是有效数字: {left_value}")),
+                Err(_) => return Err(format!("Left value is not a valid number: {left_value}")), // 左侧值不是有效数字: {left_value}
             };
 
             let right_num = match right_value.parse::<f64>() {
                 Ok(n) => n,
-                Err(_) => return Err(format!("右侧值不是有效数字: {right_value}")),
+                Err(_) => return Err(format!("Right value is not a valid number: {right_value}")), // 右侧值不是有效数字: {right_value}
             };
 
-            debug!("数值比较: {left_num} {op} {right_num}");
+            debug!("Numerical comparison: {left_num} {op} {right_num}"); // 数值比较: {left_num} {op} {right_num}
 
             match op {
                 ">" => return Ok(left_num > right_num),
                 "<" => return Ok(left_num < right_num),
                 ">=" => return Ok(left_num >= right_num),
                 "<=" => return Ok(left_num <= right_num),
-                _ => return Err(format!("不支持的操作符: {op}")),
+                _ => return Err(format!("Unsupported operator: {op}")), // 不支持的操作符: {op}
             }
         }
 
@@ -914,7 +914,7 @@ impl VariableManager {
 
             let left_value = match self.get_variable(left, current_template_id, current_step_id) {
                 Some(value) => value,
-                None => return Err(format!("左侧变量不存在: {left}")),
+                None => return Err(format!("Left variable does not exist: {left}")), // 左侧变量不存在: {left}
             };
 
             let right_value = if right.starts_with('"') && right.ends_with('"') {
@@ -926,7 +926,7 @@ impl VariableManager {
                 }
             };
 
-            debug!("检查包含: '{left_value}' contains '{right_value}'");
+            debug!("Check contains: '{left_value}' contains '{right_value}'"); // 检查包含: '{left_value}' contains '{right_value}'
             return Ok(left_value.contains(&right_value));
         }
 
@@ -940,7 +940,7 @@ impl VariableManager {
 
             let left_value = match self.get_variable(left, current_template_id, current_step_id) {
                 Some(value) => value,
-                None => return Err(format!("左侧变量不存在: {left}")),
+                None => return Err(format!("Left variable does not exist: {left}")), // 左侧变量不存在: {left}
             };
 
             let right_value = if right.starts_with('"') && right.ends_with('"') {
@@ -952,7 +952,7 @@ impl VariableManager {
                 }
             };
 
-            debug!("检查不包含: '{left_value}' not_contains '{right_value}'");
+            debug!("Check not contains: '{left_value}' not_contains '{right_value}'"); // 检查不包含: '{left_value}' not_contains '{right_value}'
             return Ok(!left_value.contains(&right_value));
         }
 
@@ -966,15 +966,15 @@ impl VariableManager {
 
             let left_value = match self.get_variable(left, current_template_id, current_step_id) {
                 Some(value) => value,
-                None => return Err(format!("左侧变量不存在: {left}")),
+                None => return Err(format!("Left variable does not exist: {left}")), // 左侧变量不存在: {left}
             };
 
             match Regex::new(pattern) {
                 Ok(re) => {
-                    debug!("正则匹配: '{left_value}' matches /{pattern}/");
+                    debug!("Regex match: '{left_value}' matches /{pattern}/"); // 正则匹配: '{left_value}' matches /{pattern}/
                     return Ok(re.is_match(&left_value));
                 }
-                Err(e) => return Err(format!("无效的正则表达式: {pattern} - {e}")),
+                Err(e) => return Err(format!("Invalid regex: {pattern} - {e}")), // 无效的正则表达式: {pattern} - {e}
             }
         }
 
@@ -988,15 +988,15 @@ impl VariableManager {
 
             let left_value = match self.get_variable(left, current_template_id, current_step_id) {
                 Some(value) => value,
-                None => return Err(format!("左侧变量不存在: {left}")),
+                None => return Err(format!("Left variable does not exist: {left}")), // 左侧变量不存在: {left}
             };
 
             match Regex::new(pattern) {
                 Ok(re) => {
-                    debug!("正则不匹配: '{left_value}' not_matches /{pattern}/");
+                    debug!("Regex not match: '{left_value}' not_matches /{pattern}/"); // 正则不匹配: '{left_value}' not_matches /{pattern}/
                     return Ok(!re.is_match(&left_value));
                 }
-                Err(e) => return Err(format!("无效的正则表达式: {pattern} - {e}")),
+                Err(e) => return Err(format!("Invalid regex: {pattern} - {e}")), // 无效的正则表达式: {pattern} - {e}
             }
         }
 
@@ -1012,7 +1012,7 @@ impl VariableManager {
             }
         }
 
-        Err(format!("无法解析条件表达式: {condition}"))
+        Err(format!("Unable to parse conditional expression: {condition}")) // 无法解析条件表达式: {condition}
     }
 }
 
@@ -1034,9 +1034,9 @@ mod tests {
         // 写入 /tmp/dummy_target.toml，内容为本地测试
         let dummy_target_path = "/tmp/dummy_target.toml";
         let dummy_target_content = r#"
-    name = "本地测试"
+    name = "Local Test" # 本地测试
     testing_type = "local"
-    description = "本地测试"
+    description = "Local Test" # 本地测试
     "#;
         let _ = std::fs::write(dummy_target_path, dummy_target_content);
 
@@ -1153,8 +1153,8 @@ mod tests {
 
         // 构造内容块
         let content_blocks = vec![
-            ContentBlock::Text("欢迎, {{ user }}!".to_string()),
-            ContentBlock::Text("分数: {{ score }}".to_string()),
+            ContentBlock::Text("Welcome, {{ user }}!".to_string()), // 欢迎, {{ user }}!
+            ContentBlock::Text("Score: {{ score }}".to_string()), // 分数: {{ score }}
         ];
         let template_obj = create_dummy_template(
             "template2",
@@ -1164,20 +1164,20 @@ mod tests {
         );
         manager.register_template(&template_obj, Some("template2")).unwrap();
 
-        manager.set_variable("template2", "GLOBAL", "user", "小明").unwrap();
+        manager.set_variable("template2", "GLOBAL", "user", "XiaoMing").unwrap(); // 小明
         manager.set_variable("template2", "GLOBAL", "score", "99").unwrap();
 
         // 检查内容块变量替换
         if let ContentBlock::Text(ref text) = content_blocks[0] {
             let replaced_text = manager.replace_variables(text, Some("template2"), None);
-            assert_eq!(replaced_text, "欢迎, 小明!");
+            assert_eq!(replaced_text, "Welcome, XiaoMing!"); // 欢迎, 小明!
         } else {
             panic!("ContentBlock is not Text variant");
         }
 
         if let ContentBlock::Text(ref text) = content_blocks[1] {
             let replaced_code = manager.replace_variables(text, Some("template2"), None);
-            assert_eq!(replaced_code, "分数: 99");
+            assert_eq!(replaced_code, "Score: 99"); // 分数: 99
         } else {
             panic!("ContentBlock is not Text variant");
         }
@@ -1188,8 +1188,8 @@ mod tests {
         let mut manager = VariableManager::new();
 
         let content_blocks = vec![
-            ContentBlock::Text("{{ passed == \"yes\" ? \"通过\" : \"未通过\" }}".to_string()),
-            ContentBlock::Text("{{ score >= 60 ? \"及格\" : \"不及格\" }}".to_string()),
+            ContentBlock::Text("{{ passed == \"yes\" ? \"Passed\" : \"Failed\" }}".to_string()), // {{ passed == \"yes\" ? \"通过\" : \"未通过\" }}
+            ContentBlock::Text("{{ score >= 60 ? \"Pass\" : \"Fail\" }}".to_string()), // {{ score >= 60 ? \"及格\" : \"不及格\" }}
         ];
 
         let template_obj = create_dummy_template(
@@ -1206,7 +1206,7 @@ mod tests {
 
         if let ContentBlock::Text(ref text) = content_blocks[1] {
             let replaced_score = manager.replace_variables(text, Some("template3"), None);
-            assert_eq!(replaced_score, "不及格");
+            assert_eq!(replaced_score, "Fail"); // 不及格
         } else {
             panic!("ContentBlock is not Text variant");
         }
@@ -1215,7 +1215,7 @@ mod tests {
         manager.set_variable("template3", "GLOBAL", "score", "60").unwrap();
         if let ContentBlock::Text(ref text) = content_blocks[1] {
             let replaced_score2 = manager.replace_variables(text, Some("template3"), None);
-            assert_eq!(replaced_score2, "及格");
+            assert_eq!(replaced_score2, "Pass"); // 及格
         } else {
             panic!("ContentBlock is not Text variant");
         }
@@ -1226,8 +1226,8 @@ mod tests {
         let mut manager = VariableManager::new();
 
         let content_blocks = vec![
-            ContentBlock::Text("你好, {{ user }}! 状态: {{ status }}".to_string()),
-            ContentBlock::Text("{{ status == \"active\" ? \"欢迎回来\" : \"请激活\" }}".to_string()),
+            ContentBlock::Text("Hello, {{ user }}! Status: {{ status }}".to_string()), // 你好, {{ user }}! 状态: {{ status }}
+            ContentBlock::Text("{{ status == \"active\" ? \"Welcome back\" : \"Please activate\" }}".to_string()), // {{ status == \"active\" ? \"欢迎回来\" : \"请激活\" }}
         ];
 
         let template_obj = create_dummy_template(
@@ -1238,19 +1238,19 @@ mod tests {
         );
         manager.register_template(&template_obj, Some("template4")).unwrap();
 
-        manager.set_variable("template4", "GLOBAL", "user", "张三").unwrap();
+        manager.set_variable("template4", "GLOBAL", "user", "ZhangSan").unwrap(); // 张三
         manager.set_variable("template4", "GLOBAL", "status", "active").unwrap();
 
         if let ContentBlock::Text(ref text) = content_blocks[0] {
             let replaced_text = manager.replace_variables(text, Some("template4"), None);
-            assert_eq!(replaced_text, "你好, 张三! 状态: active");
+            assert_eq!(replaced_text, "Hello, ZhangSan! Status: active"); // 你好, 张三! 状态: active
         } else {
             panic!("ContentBlock is not Text variant");
         }
 
         if let ContentBlock::Text(ref text) = content_blocks[1] {
             let replaced_cond2 = manager.replace_variables(text, Some("template4"), None);
-            assert_eq!(replaced_cond2, "欢迎回来");
+            assert_eq!(replaced_cond2, "Welcome back"); // 欢迎回来
         } else {
             panic!("ContentBlock is not Text variant");
         }

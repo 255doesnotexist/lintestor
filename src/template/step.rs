@@ -7,7 +7,7 @@
 use std::collections::{HashMap, HashSet};
 use serde::{Serialize, Deserialize};
 
-use crate::template::ParsedTestStep; // 从 template 模块导入原始的 ParsedTestStep
+use crate::template::ParsedTestStep; // Import the original ParsedTestStep from template module // 从 template 模块导入原始的 ParsedTestStep
 
 /// 全局步骤ID类型别名
 ///

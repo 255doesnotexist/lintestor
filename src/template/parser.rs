@@ -67,26 +67,26 @@ pub fn parse_template_into_content_blocks_and_steps(
     file_path: &Path,
 ) -> Result<(TemplateMetadata, Vec<ExecutionStep>, Vec<ContentBlock>)> {
     info!(
-        "开始解析测试模板 (结构化内容和步骤): {}",
+        "Starting to parse test template (structured content and steps): {}", // 开始解析测试模板 (结构化内容和步骤): {}
         file_path.display()
     );
 
     let mut content_blocks = Vec::new();
 
     let (yaml_front_matter, markdown_content) = extract_front_matter(content)?;
-    debug!("YAML前置数据长度: {} 字节", yaml_front_matter.len());
-    debug!("Markdown内容长度: {} 字节", markdown_content.len());
+    debug!("YAML front matter length: {} bytes", yaml_front_matter.len()); // YAML前置数据长度: {} 字节
+    debug!("Markdown content length: {} bytes", markdown_content.len()); // Markdown内容长度: {} 字节
 
     content_blocks.push(ContentBlock::Metadata(yaml_front_matter.clone()));
 
     let metadata = parse_metadata(&yaml_front_matter)?;
     info!(
-        "模板元数据解析完成: title=\"{}\", unit=\"{}\"",
+        "Template metadata parsing completed: title=\"{}\", unit=\"{}\"", // 模板元数据解析完成: title=\"{}\", unit=\"{}\"
         metadata.title, metadata.unit_name
     );
 
     let template_id = utils::get_template_id_from_path(file_path);
-    debug!("生成的模板 ID: {template_id}");
+    debug!("Generated template ID: {template_id}"); // 生成的模板 ID: {template_id}
 
     // 同时解析步骤和内容块
     let (execution_steps, md_content_blocks) =
@@ -94,7 +94,7 @@ pub fn parse_template_into_content_blocks_and_steps(
     content_blocks.extend(md_content_blocks);
 
     info!(
-        "已解析 {} 个执行步骤和 {} 个内容块",
+        "Parsed {} execution steps and {} content blocks", // 已解析 {} 个执行步骤和 {} 个内容块
         execution_steps.len(),
         content_blocks.len()
     );
@@ -124,7 +124,7 @@ fn parse_markdown_to_steps_and_content_blocks(
     template_id: &str,
     metadata: &TemplateMetadata,
 ) -> Result<(Vec<ExecutionStep>, Vec<ContentBlock>)> {
-    debug!("开始将Markdown内容解析为 ExecutionSteps 和 ContentBlocks (template_id: {template_id})");
+    debug!("Starting to parse Markdown content into ExecutionSteps and ContentBlocks (template_id: {template_id})"); // 开始将Markdown内容解析为 ExecutionSteps 和 ContentBlocks (template_id: {template_id})
     let mut execution_steps: Vec<ExecutionStep> = Vec::new();
     let mut content_blocks = Vec::new();
     let mut all_local_ids: HashSet<String> = HashSet::new();
@@ -134,8 +134,8 @@ fn parse_markdown_to_steps_and_content_blocks(
     let output_block_re = match Regex::new(r#"(?ms)^```output\s*\{([^\r\n}]*)\}.*?^```\s*$"#) {
         Ok(re) => re,
         Err(e) => {
-            error!("正则表达式编译失败: {e}");
-            return Err(anyhow!("正则表达式编译失败: {}", e));
+            error!("Failed to compile regex: {e}"); // 正则表达式编译失败: {e}
+            return Err(anyhow!("Failed to compile regex: {}", e)); // 正则表达式编译失败: {}
         }
     };
     let summary_table_re = Regex::new(r#"(?im)^\s*<!--\s*LINTESOR_SUMMARY_TABLE\s*-->\s*$"#)?;
@@ -229,12 +229,12 @@ fn parse_markdown_to_steps_and_content_blocks(
             }
         } else if let Some(output_match) = captures.name("output_block") {
             if let Some(caps) = output_block_re.captures(output_match.as_str()) {
-                debug!("发现 output_block: {}", output_match.as_str());
+                debug!("Found output_block: {}", output_match.as_str()); // 发现 output_block: {}
                 let attributes_str = caps.get(1).map_or("", |m| m.as_str());
                 let attributes = parse_inline_attributes(attributes_str);
                 let ref_id_attr = attributes
                     .get("ref")
-                    .ok_or_else(|| anyhow!("output_block 缺少 ref 属性"))?;
+                    .ok_or_else(|| anyhow!("output_block missing ref attribute"))?; // output_block 缺少 ref 属性
                 let stream = match attributes.get("stream") {
                     Some(stream) => stream.to_string(),
                     _ => "stdout".to_string(),
@@ -381,11 +381,11 @@ fn parse_markdown_to_steps_and_content_blocks(
     // 检查所有 depends_on 的 id 是否都存在
     for (from_id, dep_id) in &all_depends_refs {
         if !all_local_ids.contains(dep_id) {
-            panic!("depends_on 中引用了不存在的步骤 id: {dep_id} (from step {from_id})");
+            panic!("depends_on references non-existent step id: {dep_id} (from step {from_id})"); // depends_on 中引用了不存在的步骤 id: {dep_id} (from step {from_id})
         }
     }
     debug!(
-        "完成 ExecutionSteps ({}) 和 ContentBlocks ({}) 解析",
+        "Completed ExecutionSteps ({}) and ContentBlocks ({}) parsing", // 完成 ExecutionSteps ({}) 和 ContentBlocks ({}) 解析
         execution_steps.len(),
         content_blocks.len()
     );
@@ -394,56 +394,56 @@ fn parse_markdown_to_steps_and_content_blocks(
 
 /// 从Markdown内容中提取YAML前置数据
 fn extract_front_matter(content: &str) -> Result<(String, &str)> {
-    debug!("从模板内容中提取YAML前置数据");
+    debug!("Extracting YAML front matter from template content"); // 从模板内容中提取YAML前置数据
     let re = Regex::new(r"(?s)^---\s*\n(.*?)\n---\s*\n(.*)$")?;
 
     match re.captures(content) {
         Some(caps) => {
             let yaml = caps.get(1).unwrap().as_str();
             let markdown = caps.get(2).unwrap().as_str();
-            debug!("成功提取YAML前置数据");
+            debug!("Successfully extracted YAML front matter"); // 成功提取YAML前置数据
             Ok((yaml.to_string(), markdown))
         }
         None => {
-            error!("未找到YAML前置数据");
-            bail!("未找到YAML前置数据，格式应为 '---\\n<yaml>\\n---\\n<markdown>'")
+            error!("YAML front matter not found"); // 未找到YAML前置数据
+            bail!("YAML front matter not found, format should be '---\\n<yaml>\\n---\\n<markdown>'") // 未找到YAML前置数据，格式应为 '---\\n<yaml>\\n---\\n<markdown>'
         }
     }
 }
 
 /// 解析YAML元数据
 fn parse_metadata(yaml: &str) -> Result<TemplateMetadata> {
-    debug!("解析YAML元数据");
+    debug!("Parsing YAML metadata"); // 解析YAML元数据
     let yaml_value: serde_yaml::Value =
-        serde_yaml::from_str(yaml).with_context(|| "无法解析YAML前置数据")?;
+        serde_yaml::from_str(yaml).with_context(|| "Unable to parse YAML front matter")?; // 无法解析YAML前置数据
 
-    debug!("YAML解析成功，开始提取字段");
+    debug!("YAML parsing successful, starting field extraction"); // YAML解析成功，开始提取字段
 
     let title = yaml_value["title"]
         .as_str()
-        .ok_or_else(|| anyhow!("元数据缺少'title'字段"))?
+        .ok_or_else(|| anyhow!("Metadata missing 'title' field"))?  // 元数据缺少'title'字段
         .to_string();
-    debug!("提取title: {title}");
+    debug!("Extracted title: {title}"); // 提取title: {title}
 
     let target_config_str = yaml_value["target_config"]
         .as_str()
-        .ok_or_else(|| anyhow!("元数据缺少'target_config'字段"))?;
-    debug!("提取target_config: {target_config_str}");
+        .ok_or_else(|| anyhow!("Metadata missing 'target_config' field"))?; // 元数据缺少'target_config'字段
+    debug!("Extracted target_config: {target_config_str}"); // 提取target_config: {target_config_str}
 
     let target_config = TargetConfig::from_file(target_config_str)
-        .unwrap_or_else(|_| panic!("无法加载 target_config 文件: {target_config_str}"));
+        .unwrap_or_else(|_| panic!("Unable to load target_config file: {target_config_str}")); // 无法加载 target_config 文件: {target_config_str}
 
     let unit_name = yaml_value["unit_name"]
         .as_str()
-        .ok_or_else(|| anyhow!("元数据缺少'unit_name'字段"))?
+        .ok_or_else(|| anyhow!("Metadata missing 'unit_name' field"))? // 元数据缺少'unit_name'字段
         .to_string();
-    debug!("提取unit_name: {unit_name}");
+    debug!("Extracted unit_name: {unit_name}"); // 提取unit_name: {unit_name}
 
     let unit_version = yaml_value["unit_version"]
         .as_str()
-        .ok_or_else(|| anyhow!("元数据缺少'unit_version'字段"))?
+        .ok_or_else(|| anyhow!("Metadata missing 'unit_version' field"))? // 元数据缺少'unit_version'字段
         .to_string();
-    debug!("提取unit_version: {unit_version}");
+    debug!("Extracted unit_version: {unit_version}"); // 提取unit_version: {unit_version}
 
     let tags = match yaml_value["tags"] {
         serde_yaml::Value::Sequence(ref seq) => {
@@ -451,7 +451,7 @@ fn parse_metadata(yaml: &str) -> Result<TemplateMetadata> {
                 .iter()
                 .filter_map(|v| v.as_str().map(|s| s.to_string()))
                 .collect();
-            debug!("提取tags: {tags:?}");
+            debug!("Extracted tags: {tags:?}"); // 提取tags: {tags:?}
             tags
         }
         _ => Vec::new(),
@@ -470,16 +470,16 @@ fn parse_metadata(yaml: &str) -> Result<TemplateMetadata> {
                         .and_then(|v| v.as_str())
                         .map(|s| s.to_string())
                         .ok_or_else(|| {
-                            anyhow!("references中的项缺少'template(template_path)'字段")
+                            anyhow!("Item in references missing 'template(template_path)' field") // references中的项缺少'template(template_path)'字段
                         })?;
 
                     let namespace = mapping
                         .get(serde_yaml::Value::String("as".to_string()))
                         .and_then(|v| v.as_str())
                         .map(|s| s.to_string())
-                        .ok_or_else(|| anyhow!("references中的项缺少'as(namespace)'字段"))?;
+                        .ok_or_else(|| anyhow!("Item in references missing 'as(namespace)' field"))?; // references中的项缺少'as(namespace)'字段
 
-                    debug!("提取模板引用: template_path={template_path}, namespace={namespace}");
+                    debug!("Extracted template reference: template_path={template_path}, namespace={namespace}"); // 提取模板引用: template_path={template_path}, namespace={namespace}
                     refs.push(TemplateReference {
                         template_path,
                         namespace,
@@ -492,7 +492,7 @@ fn parse_metadata(yaml: &str) -> Result<TemplateMetadata> {
     };
 
     if !references.is_empty() {
-        debug!("共提取到 {} 个外部模板引用", references.len());
+        debug!("Extracted {} external template references in total", references.len()); // 共提取到 {} 个外部模板引用
     }
 
     let mut custom = HashMap::new();
@@ -513,7 +513,7 @@ fn parse_metadata(yaml: &str) -> Result<TemplateMetadata> {
                 }
 
                 if let Some(value_str) = value.as_str() {
-                    debug!("提取自定义字段: {key_str} = {value_str}");
+                    debug!("Extracted custom field: {key_str} = {value_str}"); // 提取自定义字段: {key_str} = {value_str}
                     custom.insert(key_str.to_string(), value_str.to_string());
                 }
             }
@@ -549,7 +549,7 @@ fn extract_dep_id_from_dep_str(dep_str: &str) -> &str {
 /// 实现方式是使用有限状态机来解析键值对，内部状态似乎没什么复用的可能性所以 State 就不对外暴露了
 /// 注意我们在状态里没考虑 { 和 } 所以不许传入整个带 {} 的 attr_str
 fn parse_inline_attributes(input: &str) -> HashMap<String, String> {
-    debug!("解析内联属性: {input}");
+    debug!("Parsing inline attributes: {input}"); // 解析内联属性: {input}
 
     let mut result = HashMap::new();
     let mut chars = input.chars().peekable();
@@ -828,11 +828,11 @@ fn parse_inline_attributes(input: &str) -> HashMap<String, String> {
         }
     }
 
-    debug!("解析内联属性完成: {input} -> {result:?}");
+    debug!("Inline attribute parsing completed: {input} -> {result:?}"); // 解析内联属性完成: {input} -> {result:?}
 
     if chars.peek().is_some() {
         // If we reach here and there are still characters left, it means we didn't close the attributes properly
-        panic!("未闭合的属性定义，可能缺少 '}}' ");
+        panic!("Unclosed attribute definition, possibly missing '}}'"); // 未闭合的属性定义，可能缺少 '}}'
     }
 
     result
@@ -909,7 +909,7 @@ fn parse_assertions_from_attributes(attributes: &HashMap<String, String>) -> Vec
                     assertions.push(AssertionType::StderrNotContains(value.clone()))
                 }
                 "stderr_matches" => assertions.push(AssertionType::StderrMatches(value.clone())),
-                _ => warn!("未知断言类型: {key}"),
+                _ => warn!("Unknown assertion type: {key}"), // 未知断言类型: {key}
             }
         }
     }

@@ -108,7 +108,7 @@ impl StepDependencyManager {
             .cloned()
             .collect();
         if !undefined_nodes.is_empty() {
-            panic!("存在未定义的依赖节点：{undefined_nodes:?}。请检查文档，确保所有依赖的步骤都已定义。");
+            panic!("Undefined dependency nodes exist: {undefined_nodes:?}. Please check documentation to ensure all dependent steps are defined."); // 存在未定义的依赖节点：{undefined_nodes:?}。请检查文档，确保所有依赖的步骤都已定义。
         }
     }
 

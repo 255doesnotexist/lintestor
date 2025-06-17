@@ -34,7 +34,7 @@ impl SerialConnectionManager {
     fn open_port(&self) -> Result<Box<dyn SerialPort + Send>> {
         let mut builder = mio_serial::new(&self.config.port, self.config.baud_rate);
         builder = builder.timeout(Duration::from_secs(self.executor_options.command_timeout));
-        let stream = builder.open_native().with_context(|| format!("无法打开串口: {}", self.config.port))?;
+        let stream = builder.open_native().with_context(|| format!("Unable to open serial port: {}", self.config.port))?; // 无法打开串口: {}
         Ok(Box::new(stream))
     }
 
@@ -55,7 +55,7 @@ impl SerialConnectionManager {
                 _ => thread::sleep(Duration::from_millis(50)),
             }
         }
-        Err(anyhow::anyhow!("等待pattern超时: {pattern}"))
+        Err(anyhow::anyhow!("Waiting for pattern timeout: {pattern}")) // 等待pattern超时: {pattern}
     }
 
     /// 发送一行并刷新
@@ -70,7 +70,7 @@ impl SerialConnectionManager {
 impl ConnectionManager for SerialConnectionManager {
     /// 建立串口连接并登录shell
     fn setup(&mut self) -> Result<()> {
-        debug!("串口setup: 打开串口并等待shell");
+        debug!("Serial setup: open serial port and wait for shell"); // 串口setup: 打开串口并等待shell
         let mut port: Box<dyn SerialPort + Send + 'static> = self.open_port()?;
         let timeout = Duration::from_secs(self.executor_options.command_timeout);
         // 登录流程
@@ -94,7 +94,7 @@ impl ConnectionManager for SerialConnectionManager {
 
     /// 关闭串口连接（可选logout）
     fn destroy(&mut self) -> Result<()> {
-        debug!("串口destroy: logout并关闭串口");
+        debug!("Serial destroy: logout and close serial port"); // 串口destroy: logout并关闭串口
         if let Some(ref mut port) = self.port {
             let _ = Self::send_line(&mut **port, "logout");
         }
@@ -106,8 +106,8 @@ impl ConnectionManager for SerialConnectionManager {
     fn execute_command(&mut self, command: &str, timeout: Option<Duration>) -> Result<CommandOutput> {
         let timeout = timeout.unwrap_or(Duration::from_secs(self.executor_options.command_timeout));
         let shell_prompt = &self.config.shell_prompt;
-        let port = self.port.as_mut().ok_or_else(|| anyhow::anyhow!("串口未连接，请先setup"))?;
-        debug!("串口执行命令: {command}");
+        let port = self.port.as_mut().ok_or_else(|| anyhow::anyhow!("Serial port not connected, please setup first"))?; // 串口未连接，请先setup
+        debug!("Serial executing command: {command}"); // 串口执行命令: {command}
         // 清空缓冲区
         let mut buf = [0u8; 4096];
         while let Ok(n) = port.read(&mut buf) {

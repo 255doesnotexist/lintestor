@@ -58,17 +58,17 @@ impl Reporter {
         result: &ExecutionResult,
         var_manager: &VariableManager,
     ) -> Result<PathBuf> {
-        debug!("开始为模板生成测试报告: {}", result.template_id());
-        debug!("模板标题: {}", result.template_title());
+        debug!("Starting to generate test report for template: {}", result.template_id()); // 开始为模板生成测试报告: {}
+        debug!("Template title: {}", result.template_title()); // 模板标题: {}
         debug!(
-            "模板文件所在目录 (基准目录): {}",
+            "Template file directory (base directory): {}", // 模板文件所在目录 (基准目录): {}
             self.test_dir.display()
         );
-        debug!("报告计划输出目录: {}", self.report_dir.display());
+        debug!("Report planned output directory: {}", self.report_dir.display()); // 报告计划输出目录: {}
 
         // 确保报告输出目录存在
         fs::create_dir_all(&self.report_dir).with_context(|| {
-            format!("无法创建报告输出目录: {}", self.report_dir.display())
+            format!("Unable to create report output directory: {}", self.report_dir.display()) // 无法创建报告输出目录: {}
         })?;
 
         // 构建报告文件的完整路径 (result 传过来的)
@@ -84,9 +84,9 @@ impl Reporter {
 
         // 将生成的Markdown内容写入报告文件
         fs::write(&report_path, &report_content)
-            .with_context(|| format!("无法写入报告文件: {}", report_path.display()))?;
+            .with_context(|| format!("Unable to write report file: {}", report_path.display()))?; // 无法写入报告文件: {}
 
-        info!("已成功生成测试报告: {}", report_path.display());
+        info!("Successfully generated test report: {}", report_path.display()); // 已成功生成测试报告: {}
         Ok(report_path)
     }
 
@@ -272,8 +272,8 @@ impl Reporter {
         template_id: &str,
     ) -> Result<String> {
         let mut table = String::new();
-        table.push_str("| 步骤ID | 描述 | 状态 | 退出码 | 输出摘要 | 错误信息 |\n");
-        table.push_str("|--------|------|------|--------|----------|----------|\n");
+        table.push_str("| Step ID | Description | Status | Exit Code | Output Summary | Error Message |\n"); // | 步骤ID | 描述 | 状态 | 退出码 | 输出摘要 | 错误信息 |
+        table.push_str("|---------|-------------|--------|-----------|----------------|---------------|\n");
 
         let mut sorted_step_global_ids: Vec<_> = result.step_results.keys().cloned().collect();
         sorted_step_global_ids.sort();
@@ -414,9 +414,9 @@ mod tests {
         // 写入 /tmp/dummy_target.toml，内容为本地测试
         let dummy_target_path = "/tmp/dummy_target.toml";
         let dummy_target_content = r#"
-    name = "本地测试"
+    name = "Local Test" 
     testing_type = "local"
-    description = "本地测试"
+    description = "Local Test"
     "#;
         let _ = std::fs::write(dummy_target_path, dummy_target_content);
 
@@ -592,9 +592,9 @@ echo "Hello, {{ execution_time }}"
 
         // 验证报告内容
         let report_content = fs::read_to_string(report_path)?;
-        debug!("报告内容:\n{}", report_content);
+        debug!("Report content:\n{}", report_content); // 报告内容:\n{}
         assert!(report_content.contains("Test Report"));
-        assert!(report_content.contains("This is a test report for test_template_unit targeting 本地测试."));
+        assert!(report_content.contains("This is a test report for test_template_unit targeting Local Test.")); // This is a test report for test_template_unit targeting 本地测试.
         assert!(report_content.contains("Hello"));
 
         Ok(())

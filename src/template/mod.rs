@@ -189,12 +189,12 @@ impl TestTemplate {
     pub fn from_file<P: AsRef<Path>>(path: P) -> Result<Self> {
         let path = path.as_ref();
         let content = std::fs::read_to_string(path)
-            .with_context(|| format!("无法读取模板文件: {}", path.display()))?;
+            .with_context(|| format!("Unable to read template file: {}", path.display()))?; // 无法读取模板文件: {}
 
         // Use the new parser function that returns content_blocks as well
         let (metadata, steps, content_blocks) =
             parser::parse_template_into_content_blocks_and_steps(&content, path)
-                .with_context(|| format!("解析模板失败: {}", path.display()))?;
+                .with_context(|| format!("Failed to parse template: {}", path.display()))?; // 解析模板失败: {}
 
         Ok(TestTemplate {
             metadata,

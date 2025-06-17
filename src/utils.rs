@@ -32,7 +32,7 @@ pub fn normalize_template_id(template_id: &str) -> String {
     };
 
     if clean_id.contains("::") {
-        warn!("模板ID不应包含'::'分隔符: {clean_id}, 进行清理");
+        warn!("Template ID should not contain '::' separator: {clean_id}, cleaning up"); // 模板ID不应包含'::'分隔符: {clean_id}, 进行清理
         clean_id.split("::").next().unwrap_or(clean_id).to_string()
     } else {
         clean_id.to_string()

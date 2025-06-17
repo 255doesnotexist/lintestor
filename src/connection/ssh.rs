@@ -69,7 +69,7 @@ impl SSHConnectionManager {
         let public_key_path = connection_config.public_key_path.as_deref();
         let jump_hosts = &connection_config.jump_hosts;
 
-        debug!("创建SSH连接: {username}@{host}:{port}");
+        debug!("Creating SSH connection: {username}@{host}:{port}"); // 创建SSH连接: {username}@{host}:{port}
 
         // 从executor_options获取重试和超时设置
         let max_retries = _executor_options.retry_count;
@@ -78,7 +78,7 @@ impl SSHConnectionManager {
         // 处理跳板机连接
         if let Some(jumps) = jump_hosts {
             if !jumps.is_empty() {
-                debug!("通过{}个跳板机创建SSH连接", jumps.len());
+                debug!("Creating SSH connection through {} jump hosts", jumps.len()); // 通过{}个跳板机创建SSH连接
 
                 // 使用系统SSH客户端建立带跳板机的连接并创建本地端口转发
                 let local_port = Self::setup_ssh_proxy_with_jumphosts(
@@ -91,18 +91,18 @@ impl SSHConnectionManager {
                 )?;
 
                 // 连接到本地转发端口
-                debug!("连接到本地转发端口: localhost:{local_port}");
+                debug!("Connecting to local forwarded port: localhost:{local_port}"); // 连接到本地转发端口: localhost:{local_port}
                 let tcp = Self::connect_with_retry(
                     || TcpStream::connect(format!("localhost:{local_port}")),
                     max_retries as usize,
                     connect_timeout_secs,
-                    &format!("无法连接到本地转发端口 localhost:{local_port}"),
+                    &format!("Unable to connect to local forwarded port localhost:{local_port}"), // 无法连接到本地转发端口 localhost:{local_port}
                 )?;
 
                 // 创建SSH会话
-                let mut session = Session::new().with_context(|| "无法创建SSH会话")?;
+                let mut session = Session::new().with_context(|| "Unable to create SSH session")?; // 无法创建SSH会话
                 session.set_tcp_stream(tcp);
-                session.handshake().with_context(|| "SSH握手失败")?;
+                session.handshake().with_context(|| "SSH handshake failed")?; // SSH握手失败
 
                 // 身份验证
                 Self::authenticate_session(
@@ -128,13 +128,13 @@ impl SSHConnectionManager {
             || TcpStream::connect(format!("{host}:{port}")),
             max_retries as usize,
             connect_timeout_secs,
-            &format!("无法连接到 {host}:{port}"),
+            &format!("Unable to connect to {host}:{port}"), // 无法连接到 {host}:{port}
         )?;
 
         // 创建SSH会话
-        let mut session = Session::new().with_context(|| "无法创建SSH会话")?;
+        let mut session = Session::new().with_context(|| "Unable to create SSH session")?; // 无法创建SSH会话
         session.set_tcp_stream(tcp);
-        session.handshake().with_context(|| "SSH握手失败")?;
+        session.handshake().with_context(|| "SSH handshake failed")?; // SSH握手失败
 
         // 身份验证
         Self::authenticate_session(
@@ -170,7 +170,7 @@ impl SSHConnectionManager {
         // 重试循环
         for retry in 0..max_retries {
             if retry > 0 {
-                debug!("SSH转发连接重试 #{retry}");
+                debug!("SSH forwarding connection retry #{retry}"); // SSH转发连接重试 #{retry}
                 std::thread::sleep(Duration::from_secs(1)); // 重试前短暂等待
             }
 
@@ -181,7 +181,7 @@ impl SSHConnectionManager {
                     if e.kind() == ErrorKind::AddrInUse {
                         continue; // 重试
                     } else {
-                        return Err(anyhow::anyhow!("无法绑定本地端口: {}", e));
+                        return Err(anyhow::anyhow!("Unable to bind local port: {}", e)); // 无法绑定本地端口: {}
                     }
                 }
             };
@@ -222,7 +222,7 @@ impl SSHConnectionManager {
             cmd.arg(format!("{final_username}@{final_host}"));
 
             // 在后台启动ssh
-            debug!("执行SSH转发命令: {cmd:?}");
+            debug!("Executing SSH forwarding command: {cmd:?}"); // 执行SSH转发命令: {cmd:?}
 
             let mut child = match cmd.stdout(Stdio::piped()).stderr(Stdio::piped()).spawn() {
                 Ok(c) => c,
@@ -280,7 +280,7 @@ impl SSHConnectionManager {
 
             // 检查是否成功连接
             if connected {
-                debug!("SSH转发已成功建立，本地端口: {local_port}");
+                debug!("SSH forwarding successfully established, local port: {local_port}"); // SSH转发已成功建立，本地端口: {local_port}
 
                 // 如果一切正常，保持SSH进程在后台运行
                 std::mem::forget(child); // 防止进程被终止
@@ -293,7 +293,7 @@ impl SSHConnectionManager {
         }
 
         // 所有重试都失败了
-        Err(anyhow::anyhow!("无法建立SSH跳板机连接，达到最大重试次数"))
+        Err(anyhow::anyhow!("Failed to establish SSH jump host connection, maximum retries reached")) // 无法建立SSH跳板机连接，达到最大重试次数
     }
 
     /// 使用密钥文件进行认证
@@ -303,17 +303,17 @@ impl SSHConnectionManager {
         private_key_path: &str,
     ) -> Result<()> {
         let mut prikey_file = File::open(private_key_path)
-            .with_context(|| format!("无法打开密钥文件: {private_key_path}"))?;
+            .with_context(|| format!("Unable to open key file: {private_key_path}"))?; // 无法打开密钥文件: {private_key_path}
 
         let mut prikey_contents = Vec::new();
         prikey_file
             .read_to_end(&mut prikey_contents)
-            .with_context(|| format!("无法读取密钥文件: {private_key_path}"))?;
+            .with_context(|| format!("Unable to read key file: {private_key_path}"))?; // 无法读取密钥文件: {private_key_path}
 
         if !prikey_contents.starts_with(b"-----BEGIN RSA PRIVATE KEY-----")
             && !prikey_contents.starts_with(b"-----BEGIN OPENSSH PRIVATE KEY-----")
         {
-            debug!("密钥文件不是PEM格式");
+            debug!("Key file is not in PEM format"); // 密钥文件不是PEM格式
         }
 
         let res = session.userauth_pubkey_memory(
@@ -325,10 +325,10 @@ impl SSHConnectionManager {
 
         match res {
             Ok(_) => {
-                debug!("公钥认证成功");
+                debug!("Public key authentication successful"); // 公钥认证成功
             }
             Err(e) => {
-                debug!("公钥认证失败: {e}");
+                debug!("Public key authentication failed: {e}"); // 公钥认证失败: {e}
             }
         }
 
@@ -345,21 +345,21 @@ impl SSHConnectionManager {
     ) -> Result<()> {
         if let Some(private_key) = private_key_path {
             Self::authenticate_with_key(session, username, private_key)
-                .with_context(|| format!("密钥认证失败: {private_key}"))?;
+                .with_context(|| format!("Key authentication failed: {private_key}"))?; // 密钥认证失败: {private_key}
         } else if let Some(pass) = password {
-            debug!("使用密码进行认证");
+            debug!("Using password authentication"); // 使用密码进行认证
             session
                 .userauth_password(username, pass)
-                .with_context(|| "密码认证失败")?;
+                .with_context(|| "Password authentication failed")?; // 密码认证失败
         } else {
-            debug!("尝试无密码认证");
+            debug!("Attempting passwordless authentication"); // 尝试无密码认证
             session
                 .userauth_agent(username)
-                .with_context(|| "SSH代理认证失败")?;
+                .with_context(|| "SSH agent authentication failed")?; // SSH代理认证失败
         }
 
         if !session.authenticated() {
-            bail!("SSH认证失败");
+            bail!("SSH authentication failed"); // SSH认证失败
         }
 
         Ok(())
@@ -382,7 +382,7 @@ impl SSHConnectionManager {
             match connect_fn() {
                 Ok(stream) => return Ok(stream),
                 Err(e) => {
-                    debug!("连接失败: {e}");
+                    debug!("Connection failed: {e}"); // 连接失败: {e}
                     if start_time.elapsed() > timeout {
                         return Err(anyhow::anyhow!(error_message.to_string()));
                     }
@@ -392,7 +392,7 @@ impl SSHConnectionManager {
             if retry > max_retries {
                 return Err(anyhow::anyhow!(error_message.to_string()));
             }
-            debug!("连接重试 #{retry}");
+            debug!("Connection retry #{retry}"); // 连接重试 #{retry}
             std::thread::sleep(Duration::from_secs(1));
         }
     }
@@ -403,11 +403,11 @@ impl ConnectionManager for SSHConnectionManager {
     fn setup(&mut self) -> Result<()> {
         // 如果连接已关闭，尝试重新连接（这里简化处理，实际可能需要存储重连信息）
         if !self.connected {
-            debug!("SSH连接已关闭，需要重新连接");
-            return Err(anyhow::anyhow!("SSH连接已关闭，需要重新连接"));
+            debug!("SSH connection closed, need to reconnect"); // SSH连接已关闭，需要重新连接
+            return Err(anyhow::anyhow!("SSH connection closed, need to reconnect")); // SSH连接已关闭，需要重新连接
         }
 
-        debug!("SSH连接设置完成");
+        debug!("SSH connection setup completed"); // SSH连接设置完成
         Ok(())
     }
 
@@ -418,10 +418,10 @@ impl ConnectionManager for SSHConnectionManager {
         timeout: Option<Duration>,
     ) -> Result<CommandOutput> {
         if !self.connected {
-            bail!("SSH连接已关闭");
+            bail!("SSH connection closed"); // SSH连接已关闭
         }
 
-        debug!("执行SSH命令: {command}");
+        debug!("Executing SSH command: {command}"); // 执行SSH命令: {command}
 
         // 创建命令
         let mut actual_command = String::new();
@@ -440,26 +440,26 @@ impl ConnectionManager for SSHConnectionManager {
         let mut channel = self
             .session
             .channel_session()
-            .with_context(|| "无法打开SSH会话通道")?;
+            .with_context(|| "Unable to open SSH session channel")?; // 无法打开SSH会话通道
 
         // 执行命令
         channel
             .exec(&actual_command)
-            .with_context(|| format!("无法执行远程命令: {actual_command}"))?;
+            .with_context(|| format!("Unable to execute remote command: {actual_command}"))?; // 无法执行远程命令: {actual_command}
 
         // 关闭标准输入
-        channel.send_eof().with_context(|| "无法关闭标准输入")?;
+        channel.send_eof().with_context(|| "Unable to close stdin")?; // 无法关闭标准输入
 
         // 读取输出（带超时）
         let (stdout, stderr) = read_channel_with_timeout(&mut channel, timeout)?;
 
         // 获取退出码
-        let exit_code = channel.exit_status().with_context(|| "无法获取退出码")?;
+        let exit_code = channel.exit_status().with_context(|| "Unable to get exit code")?; // 无法获取退出码
 
         // 关闭通道
-        channel.wait_close().with_context(|| "等待通道关闭失败")?;
+        channel.wait_close().with_context(|| "Failed to wait for channel close")?; // 等待通道关闭失败
 
-        debug!("SSH命令执行完成: exit_code={exit_code}");
+        debug!("SSH command execution completed: exit_code={exit_code}"); // SSH命令执行完成: exit_code={exit_code}
 
         // 解析命令的环境变量设置（如果启用了会话状态保持）
         if self.maintain_session {
@@ -484,8 +484,8 @@ impl ConnectionManager for SSHConnectionManager {
     fn close(&mut self) -> Result<()> {
         if self.connected {
             self.session
-                .disconnect(None, "正常关闭", None)
-                .with_context(|| "关闭SSH连接失败")?;
+                .disconnect(None, "Normal shutdown", None) // 正常关闭
+                .with_context(|| "Failed to close SSH connection")?; // 关闭SSH连接失败
             self.connected = false;
         }
         Ok(())
@@ -495,8 +495,8 @@ impl ConnectionManager for SSHConnectionManager {
 impl Drop for SSHConnectionManager {
     fn drop(&mut self) {
         if self.connected {
-            if let Err(e) = self.session.disconnect(None, "连接被丢弃", None) {
-                error!("关闭SSH连接失败: {e}");
+            if let Err(e) = self.session.disconnect(None, "Connection dropped", None) { // 连接被丢弃
+                error!("Failed to close SSH connection: {e}"); // 关闭SSH连接失败: {e}
             }
         }
     }
@@ -551,7 +551,7 @@ fn read_channel_with_timeout(
     while !channel.eof() {
         // 检查超时
         if start_time.elapsed() > timeout_duration {
-            warn!("SSH命令执行超时");
+            warn!("SSH command execution timeout"); // SSH命令执行超时
             break;
         }
 
@@ -564,7 +564,7 @@ fn read_channel_with_timeout(
             }
             Err(e) => {
                 if e.kind() != std::io::ErrorKind::WouldBlock {
-                    return Err(anyhow::Error::from(e).context("读取标准输出失败"));
+                    return Err(anyhow::Error::from(e).context("Failed to read stdout")); // 读取标准输出失败
                 }
             }
         }
@@ -578,7 +578,7 @@ fn read_channel_with_timeout(
             }
             Err(e) => {
                 if e.kind() != std::io::ErrorKind::WouldBlock {
-                    return Err(anyhow::Error::from(e).context("读取标准错误失败"));
+                    return Err(anyhow::Error::from(e).context("Failed to read stderr")); // 读取标准错误失败
                 }
             }
         }

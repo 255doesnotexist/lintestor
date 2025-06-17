@@ -26,21 +26,21 @@ pub fn discover_templates<P: AsRef<Path>>(dir: P, recursive: bool) -> Result<Vec
     let mut templates = Vec::new();
 
     if !dir.exists() {
-        debug!("目录不存在: {}", dir.display());
+        debug!("Directory does not exist: {}", dir.display()); // 目录不存在: {}
         return Ok(templates);
     }
 
     if !dir.is_dir() {
-        debug!("路径不是目录: {}", dir.display());
+        debug!("Path is not a directory: {}", dir.display()); // 路径不是目录: {}
         return Ok(templates);
     }
 
     walk_directory(dir, &mut templates, recursive)?;
 
     info!(
-        "在 {} 下发现了 {} 个测试模板",
-        dir.display(),
-        templates.len()
+        "Found {} test templates under {}",  // 在 {} 下发现了 {} 个测试模板
+        templates.len(),
+        dir.display()
     );
 
     Ok(templates)
@@ -89,13 +89,13 @@ pub fn filter_templates(
                 }
             }
             Err(e) => {
-                warn!("解析模板 {} 失败: {}", path.display(), e);
+                warn!("Failed to parse template {}: {}", path.display(), e); // 解析模板 {} 失败: {}
                 continue;
             }
         }
     }
 
-    info!("过滤后剩余 {} 个测试模板", filtered_templates.len());
+    info!("Remaining {} test templates after filtering", filtered_templates.len()); // 过滤后剩余 {} 个测试模板
 
     Ok(filtered_templates)
 }
