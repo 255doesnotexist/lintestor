@@ -26,7 +26,7 @@ openssl = { version = "0.10.73", features = ["vendored"] }
 [dev-dependencies]
 assert_cmd = "2.0.17"
 tempfile = "3.20"
-mockall = "0.12"
+mockall = "0.13"
 mockall_double = "0.3.1"
 
 [profile.release]
