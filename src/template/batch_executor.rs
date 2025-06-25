@@ -680,9 +680,6 @@ impl BatchExecutor {
             return Ok(all_results);
         }
 
-        // Create a name for the virtual summary template
-        let summary_template_id = "summary.test.md".to_string();
-
         for template_id in &all_template_ids {
             match self.execute(template_id) {
                 Ok(result) => {
