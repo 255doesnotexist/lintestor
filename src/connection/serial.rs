@@ -76,25 +76,30 @@ impl SerialConnectionManager {
 impl ConnectionManager for SerialConnectionManager {
     /// 建立串口连接并登录shell
     fn setup(&mut self) -> Result<()> {
-        debug!("Serial setup: open serial port and wait for shell"); // 串口setup: 打开串口并等待shell
-        let mut port: Box<dyn SerialPort + Send + 'static> = self.open_port()?;
-        let timeout = Duration::from_secs(self.executor_options.command_timeout);
-        // 登录流程
-        if let Some(ref user_pat) = self.config.user_prompt {
-            let _ = Self::wait_for_pattern(&mut *port, user_pat, timeout)?;
-            if let Some(ref user) = self.config.username {
-                Self::send_line(&mut *port, user)?;
+        if self.port.is_none() {
+            debug!("Serial setup: open serial port and wait for shell"); // 串口setup: 打开串口并等待shell
+            let mut port: Box<dyn SerialPort + Send + 'static> = self.open_port()?;
+            let timeout = Duration::from_secs(self.executor_options.command_timeout);
+            // 登录流程
+            let _ = Self::send_line(&mut *port, "\n"); // workaround for proper input response
+            if let Some(ref user_pat) = self.config.user_prompt {
+                let _ = Self::wait_for_pattern(&mut *port, user_pat, timeout)?;
+                if let Some(ref user) = self.config.username {
+                    Self::send_line(&mut *port, user)?;
+                }
             }
-        }
-        if let Some(ref pass_pat) = self.config.pass_prompt {
-            let _ = Self::wait_for_pattern(&mut *port, pass_pat, timeout)?;
-            if let Some(ref pass) = self.config.password {
-                Self::send_line(&mut *port, pass)?;
+            if let Some(ref pass_pat) = self.config.pass_prompt {
+                let _ = Self::wait_for_pattern(&mut *port, pass_pat, timeout)?;
+                if let Some(ref pass) = self.config.password {
+                    Self::send_line(&mut *port, pass)?;
+                }
             }
+            // 等待shell提示符
+            let _ = Self::wait_for_pattern(&mut *port, &self.config.shell_prompt, timeout)?;
+            self.port = Some(port);
+        } else {
+            debug!("Serial setup: reusing existing serial session");
         }
-        // 等待shell提示符
-        let _ = Self::wait_for_pattern(&mut *port, &self.config.shell_prompt, timeout)?;
-        self.port = Some(port);
         Ok(())
     }
 
